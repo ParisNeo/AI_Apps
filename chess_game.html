@@ -92,6 +92,37 @@
         .leaderboard ol {
             padding-left: 20px;
         }
+        .winner-input {
+            display: none;
+            margin-top: 20px;
+        }
+        .credits {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .credits h1 {
+            margin: 0;
+            font-size: 48px;
+        }
+        .credits p {
+            font-size: 24px;
+        }
+        .credits button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -107,7 +138,17 @@
                 <h3>Leaderboard</h3>
                 <ol id="leaderboardList"></ol>
             </div>
+            <div class="winner-input" id="winnerInput">
+                <input type="text" id="winnerName" placeholder="Enter your name">
+                <button onclick="saveWinner()">Save</button>
+            </div>
         </div>
+    </div>
+    <div class="credits" id="credits">
+        <h1>Congratulations!</h1>
+        <p>Game created by WebCraft Maestro, prompted by ParisNeo on lollms system.</p>
+        <button onclick="playAgain()">Play Again</button>
+        <audio id="creditMusic" src="https://www.bensound.com/bensound-music/bensound-sunny.mp3" loop></audio>
     </div>
 
     <script>
@@ -117,6 +158,10 @@
         const whiteScoreElement = document.getElementById('whiteScore');
         const blackScoreElement = document.getElementById('blackScore');
         const leaderboardList = document.getElementById('leaderboardList');
+        const winnerInput = document.getElementById('winnerInput');
+        const winnerNameInput = document.getElementById('winnerName');
+        const credits = document.getElementById('credits');
+        const creditMusic = document.getElementById('creditMusic');
         let selectedPiece = null;
         let currentPlayer = 'white';
         let whiteScore = 0;
@@ -181,6 +226,8 @@
                     if (isInCheck(oppositeColor)) {
                         if (isCheckmate(oppositeColor)) {
                             gameStatus.textContent = `Checkmate! ${currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1)} wins!`;
+                            winnerInput.style.display = 'block';
+                            showCredits();
                         } else {
                             gameStatus.textContent = `${oppositeColor.charAt(0).toUpperCase() + oppositeColor.slice(1)} is in check!`;
                         }
@@ -431,7 +478,7 @@
 
         function isInCheck(color) {
             const king = color === 'white' ? '♔' : '♚';
-            let kingPosition;
+                       let kingPosition;
 
             // Find the king's position
             for (let row = 0; row < 8; row++) {
@@ -542,6 +589,47 @@
                 }
             }
             return true;
+        }
+
+        function saveWinner() {
+            const winnerName = winnerNameInput.value.trim();
+            if (winnerName) {
+                const winner = leaderboard.find(entry => entry.name === winnerName);
+                if (winner) {
+                    winner.score += 1;
+                } else {
+                    leaderboard.push({ name: winnerName, score: 1 });
+                }
+                updateLeaderboard();
+                winnerInput.style.display = 'none';
+                winnerNameInput.value = '';
+            }
+        }
+
+        function showCredits() {
+            credits.style.display = 'flex';
+            creditMusic.play();
+        }
+
+        function playAgain() {
+            credits.style.display = 'none';
+            creditMusic.pause();
+            creditMusic.currentTime = 0;
+            resetGame();
+        }
+
+        function resetGame() {
+            board.innerHTML = '';
+            gameStatus.textContent = '';
+            winnerInput.style.display = 'none';
+            selectedPiece = null;
+            currentPlayer = 'white';
+            whiteScore = 0;
+            blackScore = 0;
+            gameBoard = [];
+            createBoard();
+            updateTurnIndicator();
+            updateScore();
         }
 
         createBoard();
