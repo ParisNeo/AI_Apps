@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Loss Tracker</title>
+    <style>
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .motivation {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group button {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background: #218838;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 300px;
+        }
+        .weight-list {
+            margin-top: 20px;
+        }
+        .weight-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .weight-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .weight-list li span {
+            flex: 1;
+        }
+        .weight-list li button {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        .weight-list li button:hover {
+            background: #c82333;
+        }
+        .glow {
+            color: #ff69b4;
+            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4, 0 0 50px #ff69b4, 0 0 60px #ff69b4, 0 0 70px #ff69b4;
+            animation: heartbeat 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainPage">
+        <h1>Weight Loss Tracker</h1>
+        <div class="motivation" id="motivationText">Stay motivated and achieve your weight loss goals!</div>
+        <div class="form-group">
+            <button onclick="showEntries()">Show Entries</button>
+        </div>
+        <div class="form-group">
+            <button onclick="setObjective()">Set Objective</button>
+        </div>
+        <div class="form-group">
+            <button onclick="exportToCSV()">Export to CSV</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+        </div>
+    </div>
+    <div class="container" id="entriesPage" style="display: none;">
+        <h1>Weight Loss Tracker - Entries</h1>
+        <div class="form-group">
+            <label for="weight">Enter your weight (kg):</label>
+            <input type="number" id="weight" step="0.1">
+        </div>
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date">
+        </div>
+        <div class="form-group">
+            <button onclick="addWeight()">Add Weight</button>
+        </div>
+        <div class="weight-list">
+            <ul id="weightList"></ul>
+        </div>
+        <div class="form-group">
+            <button onclick="showMainPage()">Back to Main</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti"></script>
+    <script>
+        let weights = JSON.parse(localStorage.getItem('weights')) || [];
+        let objective = localStorage.getItem('objective') || null;
+        const weightChartCtx = document.getElementById('weightChart').getContext('2d');
+        let weightChart;
+
+        function showEntries() {
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('entriesPage').style.display = 'block';
+            renderWeights();
+        }
+
+        function showMainPage() {
+            document.getElementById('entriesPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            renderChart();
+        }
+
+        function setObjective() {
+            const newObjective = prompt("Set your weight loss objective (kg):", objective);
+            if (newObjective !== null) {
+                objective = newObjective;
+                localStorage.setItem('objective', objective);
+                alert(`Your objective is set to ${objective} kg`);
+                renderChart();
+            }
+        }
+
+        function renderChart() {
+            const labels = weights.map(weight => weight.date);
+            const data = weights.map(weight => weight.value);
+            if (weightChart) {
+                weightChart.destroy();
+            }
+            weightChart = new Chart(weightChartCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: data,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: objective,
+                                    yMax: objective,
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    label: {
+                                        content: 'Objective',
+                                        enabled: true,
+                                        position: 'center'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            updateMotivationText();
+        }
+
+        function updateMotivationText() {
+            const motivationText = document.getElementById('motivationText');
+            if (weights.length > 0 && objective) {
+                const lastWeight = weights[weights.length - 1].value;
+                const difference = lastWeight - objective;
+                if (difference > 0) {
+                    motivationText.textContent = `You are ${difference} kg away from your goal. Keep going!`;
+                    motivationText.classList.remove('glow');
+                } else {
+                    motivationText.textContent = `Congratulations! You've reached your goal!`;
+                    motivationText.classList.add('glow');
+                    confetti();
+                }
+            }
+        }
+
+        function renderWeights() {
+            const weightList = document.getElementById('weightList');
+            weightList.innerHTML = '';
+            weights.forEach((weight, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${weight.date}: ${weight.value} kg</span>
+                                <button onclick="editWeight(${index})">Edit</button>
+                                <button onclick="removeWeight(${index})">Remove</button>`;
+                weightList.appendChild(li);
+            });
+        }
+
+        function addWeight() {
+            const weightInput = document.getElementById('weight');
+            const dateInput = document.getElementById('date');
+            const weightValue = parseFloat(weightInput.value);
+            const dateValue = dateInput.value;
+            if (!isNaN(weightValue) && dateValue) {
+                const weight = {
+                    date: dateValue,
+                    value: weightValue
+                };
+                weights.push(weight);
+                localStorage.setItem('weights', JSON.stringify(weights));
+                weightInput.value = '';
+                dateInput.value = '';
+                renderWeights();
+            }
+        }
+
+        function editWeight(index) {
+            const weight = weights[index];
+            const newWeight = prompt("Edit weight (kg):", weight.value);
+            const newDate = prompt("Edit date:", weight.date);
+            if (newWeight !== null && newDate !== null) {
+                weights[index] = { date: newDate, value: parseFloat(newWeight) };
+                localStorage.setItem('weights', JSON.stringify(weights));
+                renderWeights();
+            }
+        }
+
+        function removeWeight(index) {
+            weights.splice(index, 1);
+            localStorage.setItem('weights', JSON.stringify(weights));
+            renderWeights();
+        }
+
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Date,Weight (kg)\n";
+            weights.forEach(weight => {
+                csvContent += `${weight.date},${weight.value}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "weight_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function confetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        renderChart();
+    </script>
+</body>
+</html>
