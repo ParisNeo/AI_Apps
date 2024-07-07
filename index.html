@@ -37,10 +37,10 @@
         .card:hover {
             transform: scale(1.05);
         }
-        .card iframe {
+        .card img {
             width: 100%;
             height: 200px;
-            border: none;
+            object-fit: cover;
         }
         .card-content {
             padding: 15px;
@@ -65,20 +65,20 @@
 <body>
     <h1>WebCraftorApps</h1>
     <div class="card-container">
-        <div class="card" onclick="window.location.href='chess_game.html'">
-            <img src="chess_game/icon.png"></img>
+        <div class="card" onclick="window.location.href='chess_game/index.html'">
+            <img src="chess_game/icon.png" alt="Chess Game">
             <div class="card-content">
-                <a href="chess_game.html">Chess Game</a>
+                <a href="chess_game/index.html">Chess Game</a>
             </div>
         </div>
-        <div class="card" onclick="window.location.href='todo_app.html'">
-            <img src="todo_app/icon.png"></img>
+        <div class="card" onclick="window.location.href='todo_app/index.html'">
+            <img src="todo_app/icon.png" alt="Todo App">
             <div class="card-content">
                 <a href="todo_app/index.html">Todo App</a>
             </div>
         </div>
-        <div class="card" onclick="window.location.href='weight_tracking_app.html'">
-            <img src="weight_tracking_app/icon.png"></img>
+        <div class="card" onclick="window.location.href='weight_tracking_app/index.html'">
+            <img src="weight_tracking_app/icon.png" alt="Weight Tracking App">
             <div class="card-content">
                 <a href="weight_tracking_app/index.html">Weight Tracking App</a>
             </div>
