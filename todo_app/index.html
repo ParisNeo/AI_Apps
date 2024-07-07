@@ -340,21 +340,6 @@
         renderProjects();
         updateLanguage();
 
-        // Create example project if no projects exist
-        if (projects.length === 0) {
-            projects.push({
-                name: "Groceries",
-                todos: [
-                    { text: "Milk", done: false },
-                    { text: "Bread", done: false },
-                    { text: "Eggs", done: false },
-                    { text: "Cheese", done: false },
-                    { text: "Fruits", done: false }
-                ]
-            });
-            saveProjects();
-            renderProjects();
-        }
     </script>
 </body>
 </html>
