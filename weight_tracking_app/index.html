@@ -98,23 +98,55 @@
             text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4, 0 0 50px #ff69b4, 0 0 60px #ff69b4, 0 0 70px #ff69b4;
             animation: heartbeat 1.5s infinite;
         }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .popup .form-group {
+            margin-bottom: 10px;
+        }
+        .popup .form-group button {
+            width: auto;
+            padding: 5px 10px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .edit-button {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            cursor: pointer;
+        }
+        .edit-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #28a745;
+        }
     </style>
 </head>
 <body>
     <div class="container" id="mainPage">
         <h1>Weight Loss Tracker</h1>
         <div class="motivation" id="motivationText">Stay motivated and achieve your weight loss goals!</div>
-        <div class="form-group">
-            <button onclick="showEntries()">Show Entries</button>
-        </div>
-        <div class="form-group">
-            <button onclick="setObjective()">Set Objective</button>
-        </div>
-        <div class="form-group">
-            <button onclick="exportToCSV()">Export to CSV</button>
-        </div>
         <div class="chart-container">
             <canvas id="weightChart"></canvas>
+        </div>
+        <div class="form-group edit-button" onclick="showEditOptions()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zm14.71-9.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
         </div>
     </div>
     <div class="container" id="entriesPage" style="display: none;">
@@ -128,6 +160,10 @@
             <input type="date" id="date">
         </div>
         <div class="form-group">
+            <label for="time">Time:</label>
+            <input type="time" id="time">
+        </div>
+        <div class="form-group">
             <button onclick="addWeight()">Add Weight</button>
         </div>
         <div class="weight-list">
@@ -137,6 +173,47 @@
             <button onclick="showMainPage()">Back to Main</button>
         </div>
     </div>
+    <div class="container" id="editOptionsPage" style="display: none;">
+        <h1>Edit Options</h1>
+        <div class="form-group">
+            <button onclick="showEntries()">Show Entries</button>
+        </div>
+        <div class="form-group">
+            <button onclick="setObjective()">Set Objective</button>
+        </div>
+        <div class="form-group">
+            <button onclick="exportToCSV()">Export to CSV</button>
+        </div>
+        <div class="form-group">
+            <button onclick="importFromCSV()">Import from CSV</button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+        <div class="form-group">
+            <button onclick="showMainPage()">Back to Main</button>
+        </div>
+    </div>
+    <div id="popupContainer" style="display: none;">
+        <div class="overlay" onclick="closePopup()"></div>
+        <div class="popup">
+            <h2>Edit Weight Entry</h2>
+            <div class="form-group">
+                <label for="editWeight">Weight (kg):</label>
+                <input type="number" id="editWeight" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="editDate">Date:</label>
+                <input type="date" id="editDate">
+            </div>
+            <div class="form-group">
+                <label for="editTime">Time:</label>
+                <input type="time" id="editTime">
+            </div>
+            <div class="form-group">
+                <button onclick="saveEdit()">Save</button>
+                <button onclick="closePopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti"></script>
     <script>
@@ -144,17 +221,27 @@
         let objective = localStorage.getItem('objective') || null;
         const weightChartCtx = document.getElementById('weightChart').getContext('2d');
         let weightChart;
+        let editIndex = null;
 
         function showEntries() {
             document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('editOptionsPage').style.display = 'none';
             document.getElementById('entriesPage').style.display = 'block';
+            prefillDateTime();
             renderWeights();
         }
 
         function showMainPage() {
             document.getElementById('entriesPage').style.display = 'none';
+            document.getElementById('editOptionsPage').style.display = 'none';
             document.getElementById('mainPage').style.display = 'block';
             renderChart();
+        }
+
+        function showEditOptions() {
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('entriesPage').style.display = 'none';
+            document.getElementById('editOptionsPage').style.display = 'block';
         }
 
         function setObjective() {
@@ -168,8 +255,9 @@
         }
 
         function renderChart() {
-            const labels = weights.map(weight => weight.date);
+            const labels = weights.map(weight => `${weight.date} ${weight.time}`);
             const data = weights.map(weight => weight.value);
+            const objectiveData = new Array(labels.length).fill(objective);
             if (weightChart) {
                 weightChart.destroy();
             }
@@ -183,30 +271,19 @@
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderWidth: 1
+                    }, {
+                        label: 'Objective',
+                        data: objectiveData,
+                        borderColor: 'rgba(255, 0, 0, 1)',
+                        borderDash: [5, 5],
+                        fill: false,
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     scales: {
                         y: {
                             beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        annotation: {
-                            annotations: {
-                                line1: {
-                                    type: 'line',
-                                    yMin: objective,
-                                    yMax: objective,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    label: {
-                                        content: 'Objective',
-                                        enabled: true,
-                                        position: 'center'
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -235,8 +312,8 @@
             weightList.innerHTML = '';
             weights.forEach((weight, index) => {
                 const li = document.createElement('li');
-                li.innerHTML = `<span>${weight.date}: ${weight.value} kg</span>
-                                <button onclick="editWeight(${index})">Edit</button>
+                li.innerHTML = `<span>${weight.date} ${weight.time}: ${weight.value} kg</span>
+                                <button onclick="openEditPopup(${index})">Edit</button>
                                 <button onclick="removeWeight(${index})">Remove</button>`;
                 weightList.appendChild(li);
             });
@@ -245,29 +322,51 @@
         function addWeight() {
             const weightInput = document.getElementById('weight');
             const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
             const weightValue = parseFloat(weightInput.value);
             const dateValue = dateInput.value;
-            if (!isNaN(weightValue) && dateValue) {
+            const timeValue = timeInput.value;
+            if (!isNaN(weightValue) && dateValue && timeValue) {
                 const weight = {
                     date: dateValue,
+                    time: timeValue,
                     value: weightValue
                 };
                 weights.push(weight);
                 localStorage.setItem('weights', JSON.stringify(weights));
                 weightInput.value = '';
                 dateInput.value = '';
+                timeInput.value = '';
                 renderWeights();
             }
         }
 
-        function editWeight(index) {
+        function openEditPopup(index) {
+            editIndex = index;
             const weight = weights[index];
-            const newWeight = prompt("Edit weight (kg):", weight.value);
-            const newDate = prompt("Edit date:", weight.date);
-            if (newWeight !== null && newDate !== null) {
-                weights[index] = { date: newDate, value: parseFloat(newWeight) };
+            document.getElementById('editWeight').value = weight.value;
+            document.getElementById('editDate').value = weight.date;
+            document.getElementById('editTime').value = weight.time;
+            document.getElementById('popupContainer').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popupContainer').style.display = 'none';
+        }
+
+        function saveEdit() {
+            const weightValue = parseFloat(document.getElementById('editWeight').value);
+            const dateValue = document.getElementById('editDate').value;
+            const timeValue = document.getElementById('editTime').value;
+            if (!isNaN(weightValue) && dateValue && timeValue) {
+                weights[editIndex] = {
+                    date: dateValue,
+                    time: timeValue,
+                    value: weightValue
+                };
                 localStorage.setItem('weights', JSON.stringify(weights));
                 renderWeights();
+                closePopup();
             }
         }
 
@@ -278,9 +377,9 @@
         }
 
         function exportToCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,Date,Weight (kg)\n";
+            let csvContent = "data:text/csv;charset=utf-8,Date,Time,Weight (kg)\n";
             weights.forEach(weight => {
-                csvContent += `${weight.date},${weight.value}\n`;
+                csvContent += `${weight.date},${weight.time},${weight.value}\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -291,6 +390,35 @@
             document.body.removeChild(link);
         }
 
+        function importFromCSV() {
+            document.getElementById('csvFileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const rows = csv.split('\n').slice(1);
+                    const newWeights = rows.map(row => {
+                        const [date, time, value] = row.split(',');
+                        return { date, time, value: parseFloat(value) };
+                    }).filter(weight => !isNaN(weight.value));
+                    const action = confirm("Do you want to replace the current data? Click 'OK' to replace, 'Cancel' to fuse.");
+                    if (action) {
+                        weights = newWeights;
+                    } else {
+                        weights = weights.concat(newWeights);
+                    }
+                    localStorage.setItem('weights', JSON.stringify(weights));
+                    renderWeights();
+                    renderChart();
+                };
+                reader.readAsText(file);
+            }
+        }
+
         function confetti() {
             confetti({
                 particleCount: 100,
@@ -299,8 +427,15 @@
             });
         }
 
+        function prefillDateTime() {
+            const now = new Date();
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+            dateInput.value = now.toISOString().split('T')[0];
+            timeInput.value = now.toTimeString().split(' ')[0].substring(0, 5);
+        }
+
         renderChart();
     </script>
 </body>
 </html>
-

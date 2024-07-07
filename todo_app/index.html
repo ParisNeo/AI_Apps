@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoMaster Pro</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f39c12;
+            --background-color: #f4f4f4;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --done-color: #2ecc71;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+        }
+        nav {
+            background-color: var(--secondary-color);
+            padding: 10px 0;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav ul li {
+            margin: 0 10px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .project-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        .project-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #3a7bc8;
+        }
+        #todo-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        #todo-list li {
+            background-color: var(--card-bg);
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #todo-list li.done {
+            text-decoration: line-through;
+            color: var(--done-color);
+        }
+        #todo-input {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #add-todo {
+            padding: 10px 20px;
+        }
+        .voice-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #settings, #help {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TodoMaster Pro</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="#" onclick="showPage('home')">Home</a></li>
+            <li><a href="#" onclick="showPage('settings')">Settings</a></li>
+            <li><a href="#" onclick="showPage('help')">Help</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div id="home">
+            <h2>Your Todo Projects</h2>
+            <div class="project-grid" id="project-grid"></div>
+            <button class="btn" onclick="createNewProject()">Create New Project</button>
+        </div>
+        <div id="settings" style="display: none;">
+            <h2>Settings</h2>
+            <label for="language">Language:</label>
+            <select id="language" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+            </select>
+        </div>
+        <div id="help" style="display: none;">
+            <h2>Help</h2>
+            <p>Welcome to TodoMaster Pro! Here's how to use the app:</p>
+            <ul>
+                <li>Create new projects from the home page</li>
+                <li>Add, edit, and remove tasks within each project</li>
+                <li>Use voice commands to add tasks or read your list</li>
+                <li>Change the language in the settings</li>
+            </ul>
+        </div>
+        <div id="project-view" style="display: none;">
+            <h2 id="project-title"></h2>
+            <input type="text" id="todo-input" placeholder="Add a new todo">
+            <button class="btn" id="add-todo" onclick="addTodo()">Add</button>
+            <button class="voice-btn" onclick="startVoiceRecognition()">Voice Input</button>
+            <button class="voice-btn" onclick="readTodoList()">Read List</button>
+            <ul id="todo-list"></ul>
+        </div>
+    </div>
+    <script>
+        let currentLanguage = 'en';
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        let currentProject = null;
+
+        const translations = {
+            en: {
+                addTodo: "Add",
+                voiceInput: "Voice Input",
+                readList: "Read List",
+                createNewProject: "Create New Project",
+                settings: "Settings",
+                help: "Help",
+                language: "Language",
+                welcomeMessage: "Welcome to TodoMaster Pro!"
+            },
+            fr: {
+                addTodo: "Ajouter",
+                voiceInput: "Entrée Vocale",
+                readList: "Lire la Liste",
+                createNewProject: "Créer un Nouveau Projet",
+                settings: "Paramètres",
+                help: "Aide",
+                language: "Langue",
+                welcomeMessage: "Bienvenue sur TodoMaster Pro !"
+            },
+            es: {
+                addTodo: "Añadir",
+                voiceInput: "Entrada de Voz",
+                readList: "Leer Lista",
+                createNewProject: "Crear Nuevo Proyecto",
+                settings: "Configuración",
+                help: "Ayuda",
+                language: "Idioma",
+                welcomeMessage: "¡Bienvenido a TodoMaster Pro!"
+            }
+        };
+
+        function showPage(pageId) {
+            document.getElementById('home').style.display = 'none';
+            document.getElementById('settings').style.display = 'none';
+            document.getElementById('help').style.display = 'none';
+            document.getElementById('project-view').style.display = 'none';
+            document.getElementById(pageId).style.display = 'block';
+        }
+
+        function createNewProject() {
+            const projectName = prompt("Enter project name:");
+            if (projectName) {
+                const newProject = { name: projectName, todos: [] };
+                projects.push(newProject);
+                saveProjects();
+                renderProjects();
+            }
+        }
+
+        function renderProjects() {
+            const projectGrid = document.getElementById('project-grid');
+            projectGrid.innerHTML = '';
+            projects.forEach((project, index) => {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.innerHTML = `
+                    <h3>${project.name}</h3>
+                    <p>${project.todos.length} items</p>
+                    <button class="btn" onclick="openProject(${index})">Open</button>
+                    <button class="btn" onclick="deleteProject(${index})">Delete</button>
+                `;
+                projectGrid.appendChild(card);
+            });
+        }
+
+        function openProject(index) {
+            currentProject = projects[index];
+            document.getElementById('project-title').textContent = currentProject.name;
+            renderTodos();
+            showPage('project-view');
+        }
+
+        function deleteProject(index) {
+            if (confirm('Are you sure you want to delete this project?')) {
+                projects.splice(index, 1);
+                saveProjects();
+                renderProjects();
+            }
+        }
+
+        function renderTodos() {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            currentProject.todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${todo.text}</span>
+                    <div>
+                        <button onclick="toggleTodo(${index})">${todo.done ? 'Undo' : 'Done'}</button>
+                        <button onclick="deleteTodo(${index})">Delete</button>
+                    </div>
+                `;
+                if (todo.done) li.classList.add('done');
+                todoList.appendChild(li);
+            });
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            if (input.value.trim()) {
+                currentProject.todos.push({ text: input.value, done: false });
+                input.value = '';
+                saveProjects();
+                renderTodos();
+            }
+        }
+
+        function toggleTodo(index) {
+            currentProject.todos[index].done = !currentProject.todos[index].done;
+            saveProjects();
+            renderTodos();
+        }
+
+        function deleteTodo(index) {
+            currentProject.todos.splice(index, 1);
+            saveProjects();
+            renderTodos();
+        }
+
+        function saveProjects() {
+            localStorage.setItem('projects', JSON.stringify(projects));
+        }
+
+        function changeLanguage() {
+            currentLanguage = document.getElementById('language').value;
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.getElementById('add-todo').textContent = translations[currentLanguage].addTodo;
+            document.querySelectorAll('.voice-btn')[0].textContent = translations[currentLanguage].voiceInput;
+            document.querySelectorAll('.voice-btn')[1].textContent = translations[currentLanguage].readList;
+            document.querySelector('button.btn').textContent = translations[currentLanguage].createNewProject;
+            document.querySelectorAll('nav ul li a')[1].textContent = translations[currentLanguage].settings;
+            document.querySelectorAll('nav ul li a')[2].textContent = translations[currentLanguage].help;
+            document.querySelector('label[for="language"]').textContent = translations[currentLanguage].language;
+            document.querySelector('#help p').textContent = translations[currentLanguage].welcomeMessage;
+        }
+
+        function startVoiceRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = currentLanguage;
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                document.getElementById('todo-input').value = text;
+                addTodo();
+            };
+            recognition.start();
+        }
+
+        function readTodoList() {
+            const speech = new SpeechSynthesisUtterance();
+            speech.lang = currentLanguage;
+            speech.text = currentProject.todos.map(todo => todo.text).join('. ');
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Initialize
+        renderProjects();
+        updateLanguage();
+
+        // Create example project if no projects exist
+        if (projects.length === 0) {
+            projects.push({
+                name: "Groceries",
+                todos: [
+                    { text: "Milk", done: false },
+                    { text: "Bread", done: false },
+                    { text: "Eggs", done: false },
+                    { text: "Cheese", done: false },
+                    { text: "Fruits", done: false }
+                ]
+            });
+            saveProjects();
+            renderProjects();
+        }
+    </script>
+</body>
+</html>
