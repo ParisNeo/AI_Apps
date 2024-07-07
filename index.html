@@ -32,17 +32,19 @@
             width: 300px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s;
+            cursor: pointer;
         }
         .card:hover {
             transform: scale(1.05);
         }
-        .card img {
+        .card iframe {
             width: 100%;
             height: 200px;
-            object-fit: cover;
+            border: none;
         }
         .card-content {
             padding: 15px;
+            text-align: center;
         }
         .card-content a {
             color: #61dafb;
@@ -63,20 +65,20 @@
 <body>
     <h1>WebCraftorApps</h1>
     <div class="card-container">
-        <div class="card">
-            <img src="chess_game_snapshot.png" alt="Chess Game">
+        <div class="card" onclick="window.location.href='chess_game.html'">
+            <iframe src="chess_game.html"></iframe>
             <div class="card-content">
                 <a href="chess_game.html">Chess Game</a>
             </div>
         </div>
-        <div class="card">
-            <img src="todo_app_snapshot.png" alt="Todo App">
+        <div class="card" onclick="window.location.href='todo_app.html'">
+            <iframe src="todo_app.html"></iframe>
             <div class="card-content">
                 <a href="todo_app.html">Todo App</a>
             </div>
         </div>
-        <div class="card">
-            <img src="weight_tracking_app_snapshot.png" alt="Weight Tracking App">
+        <div class="card" onclick="window.location.href='weight_tracking_app.html'">
+            <iframe src="weight_tracking_app.html"></iframe>
             <div class="card-content">
                 <a href="weight_tracking_app.html">Weight Tracking App</a>
             </div>
