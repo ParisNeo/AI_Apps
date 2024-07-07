@@ -8,17 +8,28 @@
         :root {
             --primary-color: #4a90e2;
             --secondary-color: #f39c12;
-            --background-color: #f4f4f4;
-            --text-color: #333;
-            --card-bg: #ffffff;
+            --background-color-light: #f4f4f4;
+            --background-color-dark: #333;
+            --text-color-light: #333;
+            --text-color-dark: #f4f4f4;
+            --card-bg-light: #ffffff;
+            --card-bg-dark: #444;
             --done-color: #2ecc71;
+            --header-bg-light: #d3d3d3;
+            --header-bg-dark: #555;
+            --nav-bg-light: #d3d3d3;
+            --nav-bg-dark: #555;
         }
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
+            background-color: var(--background-color-light);
+            color: var(--text-color-light);
+        }
+        body.dark-mode {
+            background-color: var(--background-color-dark);
+            color: var(--text-color-dark);
         }
         .container {
             max-width: 1200px;
@@ -26,17 +37,34 @@
             padding: 20px;
         }
         header {
-            background-color: var(--primary-color);
-            color: white;
+            background-color: var(--header-bg-light);
+            color: var(--text-color-light);
             padding: 20px 0;
             text-align: center;
+            position: relative;
         }
-        h1 {
+        body.dark-mode header {
+            background-color: var(--header-bg-dark);
+            color: var(--text-color-dark);
+        }
+        header h1 {
             margin: 0;
+            font-size: 2.5em;
+        }
+        header .theme-toggle {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.5em;
         }
         nav {
-            background-color: var(--secondary-color);
+            background-color: var(--nav-bg-light);
             padding: 10px 0;
+        }
+        body.dark-mode nav {
+            background-color: var(--nav-bg-dark);
         }
         nav ul {
             list-style-type: none;
@@ -60,11 +88,15 @@
             margin-top: 20px;
         }
         .project-card {
-            background-color: var(--card-bg);
+            background-color: var(--card-bg-light);
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 20px;
             transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        body.dark-mode .project-card {
+            background-color: var(--card-bg-dark);
         }
         .project-card:hover {
             transform: translateY(-5px);
@@ -81,16 +113,17 @@
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.3s ease;
+            margin-top: 20px;
         }
         .btn:hover {
             background-color: #3a7bc8;
         }
-        #todo-list {
+        #todo-list, #done-list {
             list-style-type: none;
             padding: 0;
         }
-        #todo-list li {
-            background-color: var(--card-bg);
+        #todo-list li, #done-list li {
+            background-color: var(--card-bg-light);
             margin-bottom: 10px;
             padding: 10px;
             border-radius: 5px;
@@ -98,7 +131,10 @@
             justify-content: space-between;
             align-items: center;
         }
-        #todo-list li.done {
+        body.dark-mode #todo-list li, body.dark-mode #done-list li {
+            background-color: var(--card-bg-dark);
+        }
+        #done-list li {
             text-decoration: line-through;
             color: var(--done-color);
         }
@@ -120,16 +156,24 @@
             margin-right: 10px;
         }
         #settings, #help {
-            background-color: var(--card-bg);
+            background-color: var(--card-bg-light);
             padding: 20px;
             border-radius: 8px;
             margin-top: 20px;
+        }
+        body.dark-mode #settings, body.dark-mode #help {
+            background-color: var(--card-bg-dark);
+        }
+        .theme-toggle {
+            cursor: pointer;
+            margin-left: 10px;
         }
     </style>
 </head>
 <body>
     <header>
         <h1>TodoMaster Pro</h1>
+        <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
     </header>
     <nav>
         <ul>
@@ -167,9 +211,16 @@
             <h2 id="project-title"></h2>
             <input type="text" id="todo-input" placeholder="Add a new todo">
             <button class="btn" id="add-todo" onclick="addTodo()">Add</button>
-            <button class="voice-btn" onclick="startVoiceRecognition()">Voice Input</button>
-            <button class="voice-btn" onclick="readTodoList()">Read List</button>
+            <button class="voice-btn" onclick="startVoiceRecognition()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 1c-1.104 0-2 .896-2 2v9c0 1.104.896 2 2 2s2-.896 2-2v-9c0-1.104-.896-2-2-2zm-1 2h2v9h-2v-9zm-1 11h4v2h-4v-2zm-2 2h8v2h-8v-2zm-2 2h12v2h-12v-2zm-2 2h16v2h-16v-2z"/></svg>
+            </button>
+            <button class="voice-btn" onclick="readTodoList()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 1c-1.104 0-2 .896-2 2v9c0 1.104.896 2 2 2s2-.896 2-2v-9c0-1.104-.896-2-2-2zm-1 2h2v9h-2v-9zm-1 11h4v2h-4v-2zm-2 2h8v2h-8v-2zm-2 2h12v2h-12v-2zm-2 2h16v2h-16v-2z"/></svg>
+            </button>
+            <h3>Undone Todos</h3>
             <ul id="todo-list"></ul>
+            <h3>Done Todos</h3>
+            <ul id="done-list"></ul>
         </div>
     </div>
     <script>
@@ -237,9 +288,8 @@
                 card.innerHTML = `
                     <h3>${project.name}</h3>
                     <p>${project.todos.length} items</p>
-                    <button class="btn" onclick="openProject(${index})">Open</button>
-                    <button class="btn" onclick="deleteProject(${index})">Delete</button>
                 `;
+                card.onclick = () => openProject(index);
                 projectGrid.appendChild(card);
             });
         }
@@ -261,7 +311,9 @@
 
         function renderTodos() {
             const todoList = document.getElementById('todo-list');
+            const doneList = document.getElementById('done-list');
             todoList.innerHTML = '';
+            doneList.innerHTML = '';
             currentProject.todos.forEach((todo, index) => {
                 const li = document.createElement('li');
                 li.innerHTML = `
@@ -271,8 +323,11 @@
                         <button onclick="deleteTodo(${index})">Delete</button>
                     </div>
                 `;
-                if (todo.done) li.classList.add('done');
-                todoList.appendChild(li);
+                if (todo.done) {
+                    doneList.appendChild(li);
+                } else {
+                    todoList.appendChild(li);
+                }
             });
         }
 
@@ -334,6 +389,10 @@
             speech.lang = currentLanguage;
             speech.text = currentProject.todos.map(todo => todo.text).join('. ');
             window.speechSynthesis.speak(speech);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
         }
 
         // Initialize
