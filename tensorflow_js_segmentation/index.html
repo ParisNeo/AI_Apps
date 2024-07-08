@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Segmentation with TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        header {
+            width: 100%;
+            background-color: #1f1f1f;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .button-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #1f1f1f;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #ffffff;
+        }
+        button svg {
+            margin-right: 10px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .image-grid img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border 0.3s;
+        }
+        .image-grid img:hover {
+            border: 2px solid #ffffff;
+        }
+        .page {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .page.active {
+            display: block;
+        }
+        .page p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Image Segmentation with TensorFlow.js</h1>
+    </header>
+    <nav>
+        <a href="#main" onclick="showPage('main')">Main</a>
+        <a href="#settings" onclick="showPage('settings')">Settings</a>
+        <a href="#help" onclick="showPage('help')">Help</a>
+        <a href="#credits" onclick="showPage('credits')">Credits</a>
+    </nav>
+    <div id="main" class="page active">
+        <canvas id="output" width="640" height="480"></canvas>
+        <div class="button-row">
+            <button id="startButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Start Streaming
+            </button>
+            <button id="stopButton" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                Stop Streaming
+            </button>
+            <button id="backgroundButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+                Select Background Image
+            </button>
+            <button id="removeButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14H7L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 6l1-4h12l1 4"></path></svg>
+                Remove Background Image
+            </button>
+            <button id="recordButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-circle"><circle cx="12" cy="12" r="10"></circle></svg>
+                Record
+            </button>
+            <button id="stopRecordButton" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                Stop Recording
+            </button>
+            <button id="saveButton" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save
+            </button>
+        </div>
+        <input type="file" id="backgroundInput" accept="image/*">
+        <div class="image-grid" id="imageGrid"></div>
+    </div>
+    <div id="settings" class="page">
+        <h2>Settings</h2>
+        <p>Settings content goes here.</p>
+    </div>
+    <div id="help" class="page">
+        <h2>Help</h2>
+        <p>Click "Start Streaming" to begin video capture and segmentation.</p>
+        <p>Click "Select Background Image" to choose a background image from your device.</p>
+        <p>Click "Remove Background Image" to remove the current background image.</p>
+        <p>Click on any image in the grid to set it as the background image.</p>
+    </div>
+    <div id="credits" class="page">
+        <h2>Credits</h2>
+        <p>Developed with the assistance of WebCraft Maestro.</p>
+        <p>Special thanks to ParisNeo for the project concept and guidance.</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('output');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const backgroundButton = document.getElementById('backgroundButton');
+        const removeButton = document.getElementById('removeButton');
+        const recordButton = document.getElementById('recordButton');
+        const stopRecordButton = document.getElementById('stopRecordButton');
+        const saveButton = document.getElementById('saveButton');
+        const backgroundInput = document.getElementById('backgroundInput');
+        const imageGrid = document.getElementById('imageGrid');
+        let backgroundImage = null;
+        let video = null;
+        let streaming = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        function loadImagesFromLocalStorage() {
+            const images = JSON.parse(localStorage.getItem('backgroundImages')) || [];
+            imageGrid.innerHTML = '';
+            images.forEach((src, index) => {
+                const img = new Image();
+                img.src = src;
+                img.addEventListener('click', () => {
+                    backgroundImage = img;
+                });
+                imageGrid.appendChild(img);
+            });
+        }
+
+        function saveImageToLocalStorage(src) {
+            const images = JSON.parse(localStorage.getItem('backgroundImages')) || [];
+            images.push(src);
+            localStorage.setItem('backgroundImages', JSON.stringify(images));
+            loadImagesFromLocalStorage();
+        }
+
+        async function setupWebcam() {
+            return new Promise((resolve, reject) => {
+                const constraints = {
+                    video: true
+                };
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then((stream) => {
+                        video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.autoplay = true;
+                        video.playsInline = true;
+                        video.addEventListener('loadeddata', () => resolve(), false);
+                    })
+                    .catch((error) => reject(error));
+            });
+        }
+
+        async function loadAndPredict() {
+            await setupWebcam();
+            const net = await bodyPix.load();
+            streaming = true;
+            while (streaming) {
+                const segmentation = await net.segmentPerson(video);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const mask = bodyPix.toMask(segmentation, {r: 0, g: 0, b: 0, a: 255}, {r: 0, g: 0, b: 0, a: 0});
+                ctx.putImageData(mask, 0, 0);
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.globalCompositeOperation = 'destination-over';
+                if (backgroundImage) {
+                    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                }
+                await tf.nextFrame();
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            stopButton.style.display = 'inline-block';
+            loadAndPredict();
+        });
+
+        stopButton.addEventListener('click', () => {
+            streaming = false;
+            stopButton.style.display = 'none';
+            startButton.style.display = 'inline-block';
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        backgroundButton.addEventListener('click', () => {
+            backgroundInput.click();
+        });
+
+        backgroundInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        backgroundImage = img;
+                        saveImageToLocalStorage(e.target.result);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeButton.addEventListener('click', () => {
+            backgroundImage = null;
+        });
+
+        recordButton.addEventListener('click', () => {
+            recordedChunks = [];
+            const stream = canvas.captureStream();
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            mediaRecorder.onstop = () => {
+                saveButton.style.display = 'inline-block';
+            };
+            mediaRecorder.start();
+            recordButton.style.display = 'none';
+            stopRecordButton.style.display = 'inline-block';
+        });
+
+        stopRecordButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            stopRecordButton.style.display = 'none';
+            recordButton.style.display = 'inline-block';
+        });
+
+        saveButton.addEventListener('click', () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'recording.webm';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            saveButton.style.display = 'none';
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        loadImagesFromLocalStorage();
+    </script>
+</body>
+</html>
