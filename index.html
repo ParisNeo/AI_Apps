@@ -89,12 +89,12 @@
                 <a href="snake_game/index.html">Snake game</a>
             </div>
         </div>
-        <div class="card" onclick="window.location.href='tensorflow_js_segmentation/index.html'">
-            <img src="tensorflow_js_segmentation/icon.png" alt="Snake game">
+        <div class="card" onclick="downloadFile('tensorflow_js_segmentation/index.html')">
+            <img src="tensorflow_js_segmentation/icon.png" alt="Tensorflow Video segmentation app">
             <div class="card-content">
-                <a href="tensorflow_js_segmentation/index.html">Tensorflow Video segmentation app</a>
+                <a href="javascript:void(0);">Tensorflow Video segmentation app (only runs locally)</a>
             </div>
-        </div>        
+        </div>      
         <div class="card" onclick="window.location.href='level_app/index.html'">
             <img src="level_app/icon.png" alt="Snake game">
             <div class="card-content">
@@ -102,5 +102,15 @@
             </div>
         </div>        
     </div>
+    <script>
+        function downloadFile(filePath) {
+            const link = document.createElement('a');
+            link.href = filePath;
+            link.download = filePath.split('/').pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>    
 </body>
 </html>
