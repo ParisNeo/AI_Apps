@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Measurement App</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        #level {
+            width: 300px;
+            height: 300px;
+            border: 5px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: #fff;
+        }
+        #bubble {
+            width: 30px;
+            height: 30px;
+            background: #ff0000;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="level">
+        <div id="bubble"></div>
+    </div>
+    <script>
+        if (window.DeviceMotionEvent) {
+            window.addEventListener('devicemotion', function(event) {
+                const bubble = document.getElementById('bubble');
+                const x = event.accelerationIncludingGravity.x;
+                const y = event.accelerationIncludingGravity.y;
+                const maxOffset = 135; // half of the level's width/height minus half of the bubble's width/height
+
+                const offsetX = Math.min(Math.max(x * 10, -maxOffset), maxOffset);
+                const offsetY = Math.min(Math.max(y * 10, -maxOffset), maxOffset);
+
+                bubble.style.transform = `translate(${offsetX}px, ${-offsetY}px)`;
+            });
+        } else {
+            alert("DeviceMotionEvent is not supported on your device.");
+        }
+    </script>
+</body>
+</html>

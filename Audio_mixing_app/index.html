@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Mixing App</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        #upload {
+            margin-bottom: 20px;
+        }
+        #file-list {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .file-item {
+            background-color: #4caf50;
+            color: white;
+            padding: 5px;
+            cursor: move;
+            width: 100px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        #timeline-container {
+            width: 100%;
+            max-width: 800px;
+            overflow-x: scroll;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            background-color: #1e1e1e;
+            border-radius: 5px;
+        }
+        #timeline {
+            display: flex;
+            flex-direction: column;
+            width: 2000px; /* Initial width, can be increased dynamically */
+            padding: 10px;
+            position: relative;
+        }
+        .channel {
+            display: flex;
+            align-items: center;
+            border: 1px solid #333;
+            margin-bottom: 10px;
+            padding: 5px;
+            min-height: 50px;
+            background-color: #2e2e2e;
+            position: relative;
+            border-radius: 5px;
+        }
+        .audio-segment {
+            background-color: #4caf50;
+            color: white;
+            padding: 5px;
+            margin-right: 10px;
+            cursor: move;
+            position: absolute;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .audio-segment button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        .volume-control {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+        .button svg {
+            width: 24px;
+            height: 24px;
+        }
+        #save {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #playhead {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background-color: red;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Mixing App</h1>
+    <input type="file" id="upload" multiple accept="audio/*">
+    <div id="file-list"></div>
+    <div id="timeline-container">
+        <div id="timeline">
+            <div id="playhead"></div>
+            <div class="channel" id="channel1">
+                <input type="range" min="0" max="1" step="0.01" value="1" class="volume-control" data-channel="1">
+            </div>
+            <div class="channel" id="channel2">
+                <input type="range" min="0" max="1" step="0.01" value="1" class="volume-control" data-channel="2">
+            </div>
+            <div class="channel" id="channel3">
+                <input type="range" min="0" max="1" step="0.01" value="1" class="volume-control" data-channel="3">
+            </div>
+        </div>
+    </div>
+    <div id="controls">
+        <button class="button" id="play">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+        </button>
+        <button class="button" id="pause">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6zm8-14v14h4V5z"/>
+            </svg>
+        </button>
+        <button class="button" id="stop">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 6h12v12H6z"/>
+            </svg>
+        </button>
+        <button class="button" id="zoom-in">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 14H9v-3H6v-1h3V7h1v3h3v1h-3v3z"/>
+            </svg>
+        </button>
+        <button class="button" id="zoom-out">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M15 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 14H9v-3H6v-1h3V7h1v3h3v1h-3v3z"/>
+            </svg>
+        </button>
+    </div>
+    <button id="save">Save and Download</button>
+    <script>
+        const upload = document.getElementById('upload');
+        const fileList = document.getElementById('file-list');
+        const timelineContainer = document.getElementById('timeline-container');
+        const timeline = document.getElementById('timeline');
+        const playhead = document.getElementById('playhead');
+        const playButton = document.getElementById('play');
+        const pauseButton = document.getElementById('pause');
+        const stopButton = document.getElementById('stop');
+        const zoomInButton = document.getElementById('zoom-in');
+        const zoomOutButton = document.getElementById('zoom-out');
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioBuffers = [];
+        let source;
+        let startTime;
+        let isPlaying = false;
+        let animationFrame;
+        let zoomLevel = 1;
+
+        upload.addEventListener('change', async (event) => {
+            const files = event.target.files;
+            for (let file of files) {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                audioBuffers.push(audioBuffer);
+                const segment = document.createElement('div');
+                segment.className = 'file-item';
+                segment.draggable = true;
+                segment.textContent = file.name;
+                segment.dataset.index = audioBuffers.length - 1;
+                segment.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.index);
+                });
+                fileList.appendChild(segment);
+            }
+        });
+
+        timeline.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        timeline.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const index = e.dataTransfer.getData('text/plain');
+            const segment = document.querySelector(`.file-item[data-index='${index}']`);
+            const clone = segment.cloneNode(true);
+            clone.className = 'audio-segment';
+            clone.style.width = `${audioBuffers[index].duration * 100}px`;
+            const channel = e.target.closest('.channel');
+            if (channel) {
+                const existingSegments = channel.querySelectorAll('.audio-segment');
+                if (existingSegments.length > 0) {
+                    const lastSegment = existingSegments[existingSegments.length - 1];
+                    const lastSegmentRight = parseFloat(lastSegment.style.left) + lastSegment.offsetWidth;
+                    clone.style.left = `${lastSegmentRight}px`;
+                } else {
+                    clone.style.left = `${e.offsetX}px`;
+                }
+                clone.style.top = `${e.target.offsetTop}px`;
+                clone.draggable = true;
+                clone.dataset.index = index;
+                clone.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.index);
+                    e.dataTransfer.setData('offsetX', e.offsetX);
+                    e.dataTransfer.setData('offsetY', e.offsetY);
+                });
+                clone.addEventListener('dblclick', () => {
+                    clone.remove();
+                });
+                const removeButton = document.createElement('button');
+                removeButton.innerHTML = '&times;';
+                removeButton.addEventListener('click', () => {
+                    clone.remove();
+                });
+                clone.appendChild(removeButton);
+                channel.appendChild(clone);
+            }
+        });
+
+        timeline.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        timeline.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const index = e.dataTransfer.getData('text/plain');
+            const offsetX = e.dataTransfer.getData('offsetX');
+            const offsetY = e.dataTransfer.getData('offsetY');
+            const segment = document.querySelector(`.audio-segment[data-index='${index}']`);
+            segment.style.left = `${e.offsetX - offsetX}px`;
+            segment.style.top = `${e.offsetY - offsetY}px`;
+        });
+
+        playButton.addEventListener('click', () => {
+            if (!isPlaying) {
+                startTime = audioContext.currentTime;
+                isPlaying = true;
+                playSegments();
+                animatePlayhead();
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            if (isPlaying) {
+                audioContext.suspend();
+                isPlaying = false;
+                cancelAnimationFrame(animationFrame);
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (isPlaying) {
+                audioContext.close();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                isPlaying = false;
+                cancelAnimationFrame(animationFrame);
+                playhead.style.left = '0px';
+            }
+        });
+
+        zoomInButton.addEventListener('click', () => {
+            zoomLevel *= 1.2;
+            timeline.style.transform = `scaleX(${zoomLevel})`;
+        });
+
+        zoomOutButton.addEventListener('click', () => {
+            zoomLevel /= 1.2;
+            timeline.style.transform = `scaleX(${zoomLevel})`;
+        });
+
+        function playSegments() {
+            const segments = document.querySelectorAll('.audio-segment');
+            segments.forEach(segment => {
+                const index = segment.dataset.index;
+                const buffer = audioBuffers[index];
+                const offset = parseFloat(segment.style.left) / 100;
+                const volumeControl = document.querySelector(`.volume-control[data-channel='${segment.parentElement.id.replace('channel', '')}']`);
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = volumeControl.value;
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(gainNode).connect(audioContext.destination);
+                source.start(audioContext.currentTime + offset);
+            });
+        }
+
+        function animatePlayhead() {
+            const elapsedTime = audioContext.currentTime - startTime;
+            const playheadPosition = (elapsedTime / 60) * timeline.clientWidth;
+            playhead.style.left = `${playheadPosition}px`;
+            if (isPlaying) {
+                animationFrame = requestAnimationFrame(animatePlayhead);
+            }
+        }
+
+        document.getElementById('save').addEventListener('click', async () => {
+            const mixedBuffer = audioContext.createBuffer(2, audioContext.sampleRate * 60, audioContext.sampleRate);
+            const segments = document.querySelectorAll('.audio-segment');
+            segments.forEach(segment => {
+                const index = segment.dataset.index;
+                const buffer = audioBuffers[index];
+                const offset = parseFloat(segment.style.left) / 100;
+                const volumeControl = document.querySelector(`.volume-control[data-channel='${segment.parentElement.id.replace('channel', '')}']`);
+                const gain = volumeControl.value;
+                for (let channel = 0; channel < mixedBuffer.numberOfChannels; channel++) {
+                    const output = mixedBuffer.getChannelData(channel);
+                    const input = buffer.getChannelData(channel);
+                    for (let sample = 0; sample < input.length; sample++) {
+                        output[sample + offset * audioContext.sampleRate] += input[sample] * gain;
+                    }
+                }
+            });
+            const blob = new Blob([mixedBuffer], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mixed_audio.wav';
+            a.click();
+        });
+    </script>
+</body>
+</html>
