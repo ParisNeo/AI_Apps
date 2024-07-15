@@ -51,8 +51,20 @@
 
                 bubble.style.transform = `translate(${offsetX}px, ${-offsetY}px)`;
             });
+        } else if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', function(event) {
+                const bubble = document.getElementById('bubble');
+                const x = event.beta; // In degree in the range [-180,180]
+                const y = event.gamma; // In degree in the range [-90,90]
+                const maxOffset = 135; // half of the level's width/height minus half of the bubble's width/height
+
+                const offsetX = Math.min(Math.max(y * 1.5, -maxOffset), maxOffset);
+                const offsetY = Math.min(Math.max(x * 1.5, -maxOffset), maxOffset);
+
+                bubble.style.transform = `translate(${offsetX}px, ${-offsetY}px)`;
+            });
         } else {
-            alert("DeviceMotionEvent is not supported on your device.");
+            alert("DeviceMotionEvent and DeviceOrientationEvent are not supported on your device.");
         }
     </script>
 </body>
