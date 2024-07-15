@@ -7,6 +7,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -15,16 +16,20 @@
             background: #f0f0f0;
         }
         #level {
-            width: 300px;
-            height: 300px;
+            width: 80vw;
+            height: 80vw;
+            max-width: 300px;
+            max-height: 300px;
             border: 5px solid #333;
             border-radius: 50%;
             position: relative;
             background: #fff;
         }
         #bubble {
-            width: 30px;
-            height: 30px;
+            width: 10vw;
+            height: 10vw;
+            max-width: 30px;
+            max-height: 30px;
             background: #ff0000;
             border-radius: 50%;
             position: absolute;
@@ -32,40 +37,82 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+        #start_demo {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start_demo.btn-danger {
+            background: #dc3545;
+        }
+        #orientation_info {
+            margin-top: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div id="level">
         <div id="bubble"></div>
     </div>
+    <button id="start_demo" class="btn-success">Start demo</button>
+    <div id="orientation_info">
+        <p>Alpha (α): <span id="alpha">0</span>°</p>
+        <p>Beta (β): <span id="beta">0</span>°</p>
+        <p>Gamma (γ): <span id="gamma">0</span>°</p>
+    </div>
     <script>
-        if (window.DeviceMotionEvent) {
-            window.addEventListener('devicemotion', function(event) {
-                const bubble = document.getElementById('bubble');
-                const x = event.accelerationIncludingGravity.x;
-                const y = event.accelerationIncludingGravity.y;
-                const maxOffset = 135; // half of the level's width/height minus half of the bubble's width/height
+        function handleOrientation(event) {
+            const bubble = document.getElementById('bubble');
+            const level = document.getElementById('level');
+            const maxX = level.clientWidth - bubble.clientWidth;
+            const maxY = level.clientHeight - bubble.clientHeight;
 
-                const offsetX = Math.min(Math.max(x * 10, -maxOffset), maxOffset);
-                const offsetY = Math.min(Math.max(y * 10, -maxOffset), maxOffset);
+            let x = (event.gamma / 90) * (maxX / 2) + (maxX / 2);
+            let y = (event.beta / 90) * (maxY / 2) + (maxY / 2);
 
-                bubble.style.transform = `translate(${offsetX}px, ${-offsetY}px)`;
-            });
-        } else if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', function(event) {
-                const bubble = document.getElementById('bubble');
-                const x = event.beta; // In degree in the range [-180,180]
-                const y = event.gamma; // In degree in the range [-90,90]
-                const maxOffset = 135; // half of the level's width/height minus half of the bubble's width/height
+            x = Math.min(Math.max(0, x), maxX);
+            y = Math.min(Math.max(0, y), maxY);
 
-                const offsetX = Math.min(Math.max(y * 1.5, -maxOffset), maxOffset);
-                const offsetY = Math.min(Math.max(x * 1.5, -maxOffset), maxOffset);
+            bubble.style.left = `${x}px`;
+            bubble.style.top = `${y}px`;
 
-                bubble.style.transform = `translate(${offsetX}px, ${-offsetY}px)`;
-            });
-        } else {
-            alert("DeviceMotionEvent and DeviceOrientationEvent are not supported on your device.");
+            document.getElementById('alpha').innerText = event.alpha.toFixed(2);
+            document.getElementById('beta').innerText = event.beta.toFixed(2);
+            document.getElementById('gamma').innerText = event.gamma.toFixed(2);
         }
+
+        let is_running = false;
+        const demo_button = document.getElementById("start_demo");
+        demo_button.onclick = function(e) {
+            e.preventDefault();
+            
+            // Request permission for iOS 13+ devices
+            if (
+                DeviceMotionEvent &&
+                typeof DeviceMotionEvent.requestPermission === "function"
+            ) {
+                DeviceMotionEvent.requestPermission();
+            }
+            
+            if (is_running){
+                window.removeEventListener("deviceorientation", handleOrientation);
+                demo_button.innerHTML = "Start demo";
+                demo_button.classList.add('btn-success');
+                demo_button.classList.remove('btn-danger');
+                is_running = false;
+            } else {
+                window.addEventListener("deviceorientation", handleOrientation);
+                demo_button.innerHTML = "Stop demo";
+                demo_button.classList.remove('btn-success');
+                demo_button.classList.add('btn-danger');
+                is_running = true;
+            }
+        };
     </script>
 </body>
 </html>
