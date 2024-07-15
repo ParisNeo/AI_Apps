@@ -60,6 +60,19 @@
                 max-width: 300px;
             }
         }
+        .refresh-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #61dafb;
+            color: #1e1e1e;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .refresh-button:hover {
+            background-color: #4ca3d9;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +115,7 @@
             </div>
         </div>        
     </div>
+    <button class="refresh-button" onclick="forceRefresh()">Refresh Page</button>
     <script>
         function downloadFile(filePath) {
             const link = document.createElement('a');
@@ -110,6 +124,9 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+        function forceRefresh() {
+            window.location.reload(true);
         }
     </script>    
 </body>
