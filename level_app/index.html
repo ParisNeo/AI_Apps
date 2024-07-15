@@ -25,6 +25,15 @@
             position: relative;
             background: #fff;
         }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+        }
+        .circle:nth-child(1) { width: 100%; height: 100%; background-color: rgba(255, 0, 0, 0.2); }
+        .circle:nth-child(2) { width: 80%; height: 80%; background-color: rgba(255, 165, 0, 0.2); top: 10%; left: 10%; }
+        .circle:nth-child(3) { width: 60%; height: 60%; background-color: rgba(255, 255, 0, 0.2); top: 20%; left: 20%; }
+        .circle:nth-child(4) { width: 40%; height: 40%; background-color: rgba(144, 238, 144, 0.2); top: 30%; left: 30%; }
+        .circle:nth-child(5) { width: 20%; height: 20%; background-color: rgba(0, 128, 0, 0.2); top: 40%; left: 40%; }
         #bubble {
             width: 10vw;
             height: 10vw;
@@ -37,7 +46,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
-        #start_demo {
+        #start_demo, #calibrate {
             margin-top: 20px;
             padding: 10px 20px;
             background: #28a745;
@@ -46,34 +55,52 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #start_demo.btn-danger {
+        #start_demo.btn-danger, #calibrate.btn-danger {
             background: #dc3545;
         }
         #orientation_info {
             margin-top: 20px;
             text-align: center;
         }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="level">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
         <div id="bubble"></div>
     </div>
     <button id="start_demo" class="btn-success">Start demo</button>
+    <button id="calibrate" class="btn-success">Calibrate</button>
     <div id="orientation_info">
         <p>Alpha (α): <span id="alpha">0</span>°</p>
         <p>Beta (β): <span id="beta">0</span>°</p>
         <p>Gamma (γ): <span id="gamma">0</span>°</p>
     </div>
+    <div id="status">Hold your phone horizontally</div>
     <script>
+        let alphaOffset = 0;
+        let betaOffset = 0;
+        let gammaOffset = 0;
+
         function handleOrientation(event) {
             const bubble = document.getElementById('bubble');
             const level = document.getElementById('level');
             const maxX = level.clientWidth - bubble.clientWidth;
             const maxY = level.clientHeight - bubble.clientHeight;
 
-            let x = (event.gamma / 90) * (maxX / 2) + (maxX / 2);
-            let y = (event.beta / 90) * (maxY / 2) + (maxY / 2);
+            let x = ((event.gamma - gammaOffset) / 90) * (maxX / 2) + (maxX / 2);
+            let y = ((event.beta - betaOffset) / 90) * (maxY / 2) + (maxY / 2);
 
             x = Math.min(Math.max(0, x), maxX);
             y = Math.min(Math.max(0, y), maxY);
@@ -81,9 +108,18 @@
             bubble.style.left = `${x}px`;
             bubble.style.top = `${y}px`;
 
-            document.getElementById('alpha').innerText = event.alpha.toFixed(2);
-            document.getElementById('beta').innerText = event.beta.toFixed(2);
-            document.getElementById('gamma').innerText = event.gamma.toFixed(2);
+            document.getElementById('alpha').innerText = (event.alpha - alphaOffset).toFixed(2);
+            document.getElementById('beta').innerText = (event.beta - betaOffset).toFixed(2);
+            document.getElementById('gamma').innerText = (event.gamma - gammaOffset).toFixed(2);
+
+            const status = document.getElementById('status');
+            if (Math.abs(event.beta - betaOffset) < 5 && Math.abs(event.gamma - gammaOffset) < 5) {
+                status.innerText = "Perfectly Horizontal!";
+                status.style.backgroundColor = "#28a745"; // Green
+            } else {
+                status.innerText = "Hold your phone horizontally";
+                status.style.backgroundColor = "#dc3545"; // Red
+            }
         }
 
         let is_running = false;
@@ -112,6 +148,16 @@
                 demo_button.classList.add('btn-danger');
                 is_running = true;
             }
+        };
+
+        const calibrate_button = document.getElementById("calibrate");
+        calibrate_button.onclick = function(e) {
+            e.preventDefault();
+            window.addEventListener("deviceorientation", function(event) {
+                alphaOffset = event.alpha;
+                betaOffset = event.beta;
+                gammaOffset = event.gamma;
+            }, { once: true });
         };
     </script>
 </body>
