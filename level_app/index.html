@@ -46,6 +46,24 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+        #needle {
+            width: 2px;
+            height: 50%;
+            background: red;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom;
+        }
+        .vertical-line {
+            width: 2px;
+            height: 100%;
+            background: blue;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
         .button-container {
             display: flex;
             justify-content: center;
@@ -92,13 +110,15 @@
         <div class="circle"></div>
         <div class="circle"></div>
         <div id="bubble"></div>
+        <div id="needle"></div>
+        <div class="vertical-line"></div>
     </div>
     <div class="button-container">
         <button id="start_demo" class="btn-success">
             <svg width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16">
                 <path d="M11.596 8.697l-6.363 3.692A.5.5 0 0 1 4 12.5V3.5a.5.5 0 0 1 .757-.429l6.363 3.692a.5.5 0 0 1 0 .866z"/>
             </svg>
-            Start
+            Start demo
         </button>
         <button id="calibrate" class="btn-success">
             <svg width="16" height="16" fill="currentColor" class="bi bi-compass" viewBox="0 0 16 16">
@@ -154,6 +174,10 @@
                 status.innerText = "Hold your phone horizontally";
                 status.style.backgroundColor = "#dc3545"; // Red
             }
+
+            // Rotate the needle to point north
+            const needle = document.getElementById('needle');
+            needle.style.transform = `rotate(${event.alpha - alphaOffset}deg)`;
         }
 
         let is_running = false;
@@ -186,7 +210,7 @@
                     <svg width="16" height="16" fill="currentColor" class="bi bi-stop-fill" viewBox="0 0 16 16">
                         <path d="M5.5 3.5A.5.5 0 0 1 6 3h4a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5v-9z"/>
                     </svg>
-                    Stop
+                    Stop demo
                 `;
                 demo_button.classList.remove('btn-success');
                 demo_button.classList.add('btn-danger');
@@ -211,6 +235,13 @@
             betaOffset = 0;
             gammaOffset = 0;
         };
+
+        // Lock screen orientation
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(function(error) {
+                console.error('Screen orientation lock failed:', error);
+            });
+        }
     </script>
 </body>
 </html>
