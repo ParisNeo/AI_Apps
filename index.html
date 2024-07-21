@@ -6,7 +6,7 @@
     <title>WebCraftorApps</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #1e1e1e;
             color: #c7c7c7;
             display: flex;
@@ -15,32 +15,48 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         h1 {
             margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
         }
         .card-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 20px;
+            padding: 20px;
         }
         .card {
             background-color: #2e2e2e;
             border-radius: 10px;
             overflow: hidden;
             width: 300px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
         .card:hover {
-            transform: scale(1.05);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
         }
         .card img {
             width: 100%;
             height: 200px;
             object-fit: cover;
+            transition: transform 0.5s;
+        }
+        .card:hover img {
+            transform: scale(1.1);
         }
         .card-content {
             padding: 15px;
@@ -50,14 +66,19 @@
             color: #61dafb;
             text-decoration: none;
             font-size: 18px;
+            transition: color 0.3s;
         }
         .card-content a:hover {
+            color: #4ca3d9;
             text-decoration: underline;
         }
         @media (max-width: 768px) {
             .card {
-                width: 100%;
+                width: 90%;
                 max-width: 300px;
+            }
+            h1 {
+                font-size: 2em;
             }
         }
         .refresh-button {
@@ -69,6 +90,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s;
         }
         .refresh-button:hover {
             background-color: #4ca3d9;
@@ -87,7 +109,13 @@
         <div class="card" onclick="window.location.href='todo_app/index.html'">
             <img src="todo_app/icon.png" alt="Todo App">
             <div class="card-content">
-                <a href="todo_app/index.html">Todo App</a>
+                <a href="todo_app/index.html">Todo App projects</a>
+            </div>
+        </div>
+        <div class="card" onclick="window.location.href='simple_todo_app/index.html'">
+            <img src="simple_todo_app/icon.png" alt="Todo App">
+            <div class="card-content">
+                <a href="simple_todo_app/index.html">Todo App</a>
             </div>
         </div>
         <div class="card" onclick="window.location.href='weight_tracking_app/index.html'">
@@ -109,7 +137,7 @@
             </div>
         </div>      
         <div class="card" onclick="window.location.href='level_app/index.html'">
-            <img src="level_app/icon.png" alt="Snake game">
+            <img src="level_app/icon.png" alt="Level App">
             <div class="card-content">
                 <a href="level_app/index.html">Level app (mobile only)</a>
             </div>

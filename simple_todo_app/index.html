@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish To-Do List App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { transition: background-color 0.5s; }
+        .theme-light { background-color: #f9fafb; color: #111827; }
+        .theme-dark { background-color: #111827; color: #f9fafb; }
+        .theme-gray { background-color: #6b7280; color: #f9fafb; }
+        .theme-blue { background-color: #3b82f6; color: #f9fafb; }
+        .theme-green { background-color: #10b981; color: #f9fafb; }
+        .input-dark { background-color: #374151; color: #f9fafb; }
+        .settings { display: none; transition: opacity 0.5s; }
+        .settings.active { display: block; opacity: 1; }
+        .settings.hidden { opacity: 0; }
+        .todo-item-dark { background-color: #374151; color: #f9fafb; }
+    </style>
+</head>
+<body class="theme-gray" id="body">
+    <div class="max-w-md mx-auto p-5">
+        <h1 class="text-2xl font-bold text-center mb-4">To-Do List</h1>
+        <input type="text" id="todo-input" placeholder="Add a new task..." class="border p-2 w-full mb-2">
+        <button id="add-task-btn" onclick="addTodo()" class="bg-green-500 text-white p-2 w-full mb-2">Add Task</button>
+        <button id="export-btn" onclick="exportToExcel()" class="bg-blue-500 text-white p-2 w-full mb-2">Export to Excel</button>
+        <button onclick="toggleSettings()" class="bg-gray-500 text-white p-2 w-full mb-4">Settings</button>
+        <ul id="todo-list" class="space-y-2"></ul>
+        <div id="settings" class="settings hidden">
+            <h2 class="text-xl font-bold mb-2">Settings</h2>
+            <button onclick="toggleSettings()" class="bg-red-500 text-white p-2 mb-4">Back</button>
+            <label for="theme-selector" class="block mb-2">Select Theme:</label>
+            <select id="theme-selector" class="border p-2 w-full mb-4" onchange="changeTheme()">
+                <option value="gray">Gray Theme</option>
+                <option value="light">Light Theme</option>
+                <option value="dark">Dark Theme</option>
+                <option value="blue">Blue Theme</option>
+                <option value="green">Green Theme</option>
+            </select>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTodos);
+        
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            const todoText = input.value.trim();
+            if (todoText) {
+                const todos = JSON.parse(localStorage.getItem('todos')) || [];
+                todos.push({ text: todoText, done: false });
+                localStorage.setItem('todos', JSON.stringify(todos));
+                renderTodos();
+                input.value = '';
+            }
+        }
+        function removeTodo(index) {
+            const todos = JSON.parse(localStorage.getItem('todos'));
+            todos.splice(index, 1);
+            localStorage.setItem('todos', JSON.stringify(todos));
+            renderTodos();
+        }
+        function toggleDone(index) {
+            const todos = JSON.parse(localStorage.getItem('todos'));
+            todos[index].done = !todos[index].done;
+            localStorage.setItem('todos', JSON.stringify(todos));
+            renderTodos();
+        }
+        function renderTodos() {
+            const todos = JSON.parse(localStorage.getItem('todos')) || [];
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `flex justify-between items-center p-2 rounded shadow ${todo.done ? 'line-through text-gray-500' : ''} ${document.body.classList.contains('theme-dark') ? 'todo-item-dark' : 'bg-white'}`;
+                li.innerHTML = `
+                    <span onclick="toggleDone(${index})">${todo.text}</span>
+                    <div>
+                        <button class="bg-yellow-500 text-white p-1 rounded mr-1" onclick="toggleDone(${index})">Done</button>
+                        <button class="bg-red-500 text-white p-1 rounded" onclick="removeTodo(${index})">Remove</button>
+                    </div>
+                `;
+                todoList.appendChild(li);
+            });
+        }
+        function exportToExcel() {
+            let data = [];
+            const todos = JSON.parse(localStorage.getItem('todos')) || [];
+            todos.forEach(todo => {
+                data.push([todo.text]);
+            });
+            const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "todo_list.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function changeTheme() {
+            const body = document.getElementById('body');
+            const theme = document.getElementById('theme-selector').value;
+            body.className = `theme-${theme}`;
+            document.getElementById('todo-input').className = theme === 'dark' ? 'border p-2 w-full mb-2 input-dark' : 'border p-2 w-full mb-2';
+            localStorage.setItem('theme', theme);
+            renderTodos();
+        }
+        function toggleSettings() {
+            const settings = document.getElementById('settings');
+            const isActive = settings.classList.toggle('active');
+            settings.classList.toggle('hidden');
+            const elementsToHide = [document.getElementById('add-task-btn'), document.getElementById('export-btn'), document.getElementById('todo-list')];
+            elementsToHide.forEach(el => el.style.display = isActive ? 'none' : 'block');
+        }
+        function loadTodos() {
+            const theme = localStorage.getItem('theme') || 'gray';
+            document.getElementById('body').className = `theme-${theme}`;
+            document.getElementById('todo-input').className = theme === 'dark' ? 'border p-2 w-full mb-2 input-dark' : 'border p-2 w-full mb-2';
+            document.getElementById('theme-selector').value = theme;
+            renderTodos();
+        }
+    </script>
+</body>
+</html>
