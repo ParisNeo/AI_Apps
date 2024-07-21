@@ -12,10 +12,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
+            overflow-y: auto;
             animation: fadeIn 1s ease-in-out;
         }
         @keyframes fadeIn {
@@ -23,7 +23,7 @@
             to { opacity: 1; }
         }
         h1 {
-            margin-bottom: 20px;
+            margin: 20px 0;
             font-size: 2.5em;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
         }
@@ -33,6 +33,8 @@
             justify-content: center;
             gap: 20px;
             padding: 20px;
+            width: 100%;
+            max-width: 1200px;
         }
         .card {
             background-color: #2e2e2e;
@@ -82,7 +84,7 @@
             }
         }
         .refresh-button {
-            margin-top: 20px;
+            margin: 20px;
             padding: 10px 20px;
             background-color: #61dafb;
             color: #1e1e1e;
