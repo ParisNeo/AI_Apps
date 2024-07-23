@@ -78,45 +78,45 @@
     </header>
     <nav class="bg-gray-400 p-2">
         <ul class="flex justify-center space-x-4">
-            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('home')">Home</a></li>
-            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('settings')">Settings</a></li>
-            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('help')">Help</a></li>
+            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('home')">Accueil</a></li>
+            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('settings')">Paramètres</a></li>
+            <li><a href="#" class="text-white font-bold transition duration-300" onclick="showPage('help')">Aide</a></li>
         </ul>
     </nav>
     <div class="container mx-auto p-5">
         <div id="home" class="fade-in">
-            <h2 class="text-3xl font-semibold">Your Todo Projects</h2>
+            <h2 class="text-3xl font-semibold">Vos Projets de Tâches</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5" id="project-grid"></div>
-            <button class="bg-blue-500 text-white px-4 py-2 rounded mt-5" onclick="createNewProject()">Create New Project</button>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded mt-5" onclick="createNewProject()">Créer un Nouveau Projet</button>
         </div>
         <div id="settings" style="display: none;" class="fade-in">
-            <h2 class="text-3xl font-semibold">Settings</h2>
-            <label for="language" class="block mt-4">Language:</label>
+            <h2 class="text-3xl font-semibold">Paramètres</h2>
+            <label for="language" class="block mt-4">Langue :</label>
             <select id="language" class="mt-2 p-2 border" onchange="changeLanguage()">
-                <option value="en">English</option>
+                <option value="en">Anglais</option>
                 <option value="fr">Français</option>
-                <option value="es">Español</option>
+                <option value="es">Espagnol</option>
             </select>
         </div>
         <div id="help" style="display: none;" class="fade-in">
-            <h2 class="text-3xl font-semibold">Help</h2>
-            <p class="mt-2">Welcome to TodoMaster Pro! Here's how to use the app:</p>
+            <h2 class="text-3xl font-semibold">Aide</h2>
+            <p class="mt-2">Bienvenue sur TodoMaster Pro ! Voici comment utiliser l'application :</p>
             <ul class="list-disc ml-5 mt-2">
-                <li>Create new projects from the home page</li>
-                <li>Add, edit, and remove tasks within each project</li>
-                <li>Use voice commands to add tasks or read your list</li>
-                <li>Change the language in the settings</li>
+                <li>Créez de nouveaux projets depuis la page d'accueil</li>
+                <li>Ajoutez, modifiez et supprimez des tâches dans chaque projet</li>
+                <li>Utilisez des commandes vocales pour ajouter des tâches ou lire votre liste</li>
+                <li>Changez la langue dans les paramètres</li>
             </ul>
         </div>
         <div id="project-view" style="display: none;" class="fade-in">
             <h2 id="project-title" class="text-3xl font-semibold"></h2>
-            <input type="text" id="todo-input" placeholder="Add a new todo" class="border p-2 mt-2 w-full md:w-3/4">
-            <button class="bg-blue-500 text-white px-4 py-2 rounded mt-2" id="add-todo" onclick="addTodo()">Add</button>
+            <input type="text" id="todo-input" placeholder="Ajouter une nouvelle tâche" class="border p-2 mt-2 w-full md:w-3/4">
+            <button class="bg-blue-500 text-white px-4 py-2 rounded mt-2" id="add-todo" onclick="addTodo()">Ajouter</button>
             <button class="voice-btn bg-orange-500 text-white px-4 py-2 rounded mt-2" onclick="startVoiceRecognition()">🎤</button>
             <button class="voice-btn bg-orange-500 text-white px-4 py-2 rounded mt-2" onclick="readTodoList()">🔊</button>
-            <h3 class="mt-5">Undone Todos</h3>
+            <h3 class="mt-5">Tâches Non Terminées</h3>
             <ul id="todo-list" class="list-none p-0"></ul>
-            <h3 class="mt-5">Done Todos</h3>
+            <h3 class="mt-5">Tâches Terminées</h3>
             <ul id="done-list" class="list-none p-0"></ul>
         </div>
     </div>
@@ -248,8 +248,8 @@
                 li.innerHTML = `
                     <span>${todo.text}</span>
                     <div>
-                        <button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="toggleTodo(${index})">${todo.done ? 'Undo' : 'Done'}</button>
-                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteTodo(${index})">Delete</button>
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded" onclick="toggleTodo(${index})">${todo.done ? 'Annuler' : 'Fait'}</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteTodo(${index})">Supprimer</button>
                     </div>
                 `;
                 if (todo.done) {
