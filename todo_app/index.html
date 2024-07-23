@@ -50,11 +50,26 @@
         nav a:hover {
             color: #ffcc00; /* Change color on hover */
         }
+        .title-animation {
+            animation: titleBounce 1s infinite;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes titleBounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 transition-colors duration-300">
     <header class="bg-gray-300 text-gray-800 p-5 text-center relative">
-        <h1 class="text-4xl font-bold">TodoMaster Pro</h1>
+        <h1 class="text-4xl font-bold title-animation">TodoMaster Pro</h1>
         <span class="theme-toggle absolute top-1/2 right-5 transform -translate-y-1/2 cursor-pointer text-3xl" onclick="toggleTheme()">🌙</span>
     </header>
     <nav class="bg-gray-400 p-2">
