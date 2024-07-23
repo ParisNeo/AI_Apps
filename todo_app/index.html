@@ -13,10 +13,14 @@
         body {
             color: black; /* Set text color to black in light theme */
         }
+        body.dark-mode header {
+            background-color: #fff; /* Change header background color in dark mode */
+            color: #222; /* Change text color in dark mode */
+        }
         .dark-mode .project-card {
             background-color: #333;
         }
-        .dark-mode header, .dark-mode nav {
+        .dark-mode nav {
             background-color: #444;
         }
         .dark-mode #settings, .dark-mode #help {
@@ -203,8 +207,8 @@
             projects.forEach((project, index) => {
                 const card = document.createElement('div');
                 card.className = 'project-card bg-white rounded-lg shadow p-5 cursor-pointer hover:shadow-lg transition fade-in';
-                const undoneCount = project.todos.filter(todo => !todo.done).length;
-                const doneCount = project.todos.filter(todo => todo.done).length;
+                const undoneCount = project.todos ? project.todos.filter(todo => !todo.done).length : 0;
+                const doneCount = project.todos ? project.todos.filter(todo => todo.done).length : 0;
                 card.innerHTML = `
                     <h3 class="text-lg font-semibold">${project.name}</h3>
                     <p>${undoneCount} ${translations[currentLanguage].undoneTodos}, ${doneCount} ${translations[currentLanguage].doneTodos}</p>
@@ -342,8 +346,8 @@
             projects.forEach((project, index) => {
                 const card = document.createElement('div');
                 card.className = 'project-card bg-white rounded-lg shadow p-5 cursor-pointer hover:shadow-lg transition fade-in';
-                const undoneCount = project.todos.filter(todo => !todo.done).length;
-                const doneCount = project.todos.filter(todo => todo.done).length;
+                const undoneCount = project.todos ? project.todos.filter(todo => !todo.done).length : 0;
+                const doneCount = project.todos ? project.todos.filter(todo => todo.done).length : 0;
                 card.innerHTML = `
                     <h3 class="text-lg font-semibold">${project.name}</h3>
                     <p>${undoneCount} ${translations[currentLanguage].undoneTodos}, ${doneCount} ${translations[currentLanguage].doneTodos}</p>
