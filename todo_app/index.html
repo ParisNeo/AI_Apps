@@ -26,6 +26,9 @@
         .dark-mode #settings, .dark-mode #help {
             background-color: #333;
         }
+        .dark-mode .todo-item {
+            background-color: #444; /* Dark background for todo items in dark mode */
+        }
         .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
@@ -215,6 +218,7 @@
                     <div class="flex space-x-2 mt-3">
                         <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="exportProject(${index})">${translations[currentLanguage].exportProject}</button>
                         <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="importProject(${index})">${translations[currentLanguage].importProject}</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteProject(${index})">❌</button>
                     </div>
                 `;
                 card.onclick = () => openProject(index);
@@ -244,7 +248,7 @@
             doneList.innerHTML = '';
             currentProject.todos.forEach((todo, index) => {
                 const li = document.createElement('li');
-                li.className = 'bg-white rounded-lg shadow p-2 mb-2 flex justify-between items-center';
+                li.className = 'todo-item bg-white rounded-lg shadow p-2 mb-2 flex justify-between items-center dark:bg-gray-600'; // Added dark mode class
                 li.innerHTML = `
                     <span>${todo.text}</span>
                     <div>
@@ -354,6 +358,7 @@
                     <div class="flex space-x-2 mt-3">
                         <button class="bg-green-500 text-white px-2 py-1 rounded" onclick="exportProject(${index})">${translations[currentLanguage].exportProject}</button>
                         <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="importProject(${index})">${translations[currentLanguage].importProject}</button>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteProject(${index})">❌</button>
                     </div>
                 `;
                 card.onclick = () => openProject(index);
