@@ -13,7 +13,7 @@
     <div class="container bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-xl font-bold">Chat with LoLLMS</h1>
-            <button class="md:hidden">☰</button>
+            <button class="md:hidden" id="mobileSettingsButton">☰</button>
         </div>
         <div id="discussionList" class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2 mb-4"></div>
         <button id="newDiscussionButton" class="w-full bg-green-500 text-white p-2 rounded-lg mb-4">New Discussion</button>
@@ -21,13 +21,6 @@
         <textarea id="userInput" class="w-full p-2 border border-gray-300 rounded-lg mb-2" rows="3" placeholder="Type your message..."></textarea>
         <button id="sendButton" class="w-full bg-blue-500 text-white p-2 rounded-lg mb-2">Send</button>
         <button id="settingsButton" class="w-full bg-gray-500 text-white p-2 rounded-lg mb-4 md:block hidden">Settings</button>
-        <div class="mb-4">
-            <label class="block mb-2">Select Mode:</label>
-            <select id="modeSelect" class="w-full p-2 border border-gray-300 rounded-lg">
-                <option value="instruct">Instruct Mode</option>
-                <option value="chat">Chat Mode</option>
-            </select>
-        </div>
     </div>
 
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
@@ -43,6 +36,11 @@
             <select id="modelSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4"></select>
             <input type="text" id="newModelInput" class="w-full p-2 border border-gray-300 rounded-lg mb-2" placeholder="Enter new model name">
             <button id="addModelButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg mb-4">Add Model</button>
+            <label for="modeSelect" class="block mb-2">Select Mode:</label>
+            <select id="modeSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+                <option value="instruct">Instruct Mode</option>
+                <option value="chat">Chat Mode</option>
+            </select>
             <label for="corsProxy" class="block mb-2">CORS Proxy URL (optional):</label>
             <input type="text" id="corsProxy" class="w-full p-2 border border-gray-300 rounded-lg mb-4" placeholder="Enter CORS proxy URL">
             <button id="saveSettings" class="w-full bg-blue-500 text-white p-2 rounded-lg mb-2">Save</button>
@@ -51,31 +49,34 @@
     </div>
 
     <script>
-        const defaultApiKey = localStorage.getItem('apiKey') || 'your_api_key_here'; // Default API key
-        const defaultApiUrl = localStorage.getItem('apiUrl') || 'http://localhost:9600/v1/completions'; // Default server address
-        const defaultUserIcon = localStorage.getItem('userIcon') || 'https://via.placeholder.com/30'; // Default user icon
-        const defaultAssistantIcon = localStorage.getItem('assistantIcon') || 'https://via.placeholder.com/30'; // Default assistant icon
-        const defaultModel = localStorage.getItem('model') || 'gpt-4o-mini'; // Default model
+        const defaultApiKey = localStorage.getItem('apiKey') || 'your_api_key_here';
+        const defaultApiUrl = localStorage.getItem('apiUrl') || 'http://localhost:9600/v1/completions';
+        const defaultUserIcon = localStorage.getItem('userIcon') || 'https://via.placeholder.com/30';
+        const defaultAssistantIcon = localStorage.getItem('assistantIcon') || 'https://via.placeholder.com/30';
+        const defaultModel = localStorage.getItem('model') || 'gpt-4o-mini';
+        const defaultCorsProxy = localStorage.getItem('corsProxy') || '';
+        const defaultMode = localStorage.getItem('mode') || 'instruct';
         let apiKey = defaultApiKey;
         let apiUrl = defaultApiUrl;
         let userIcon = defaultUserIcon;
         let assistantIcon = defaultAssistantIcon;
-        let conversationHistory = ""; // To store the conversation history
-        let discussions = JSON.parse(localStorage.getItem('discussions')) || []; // Load discussions from localStorage
-        let models = JSON.parse(localStorage.getItem('models')) || ['gpt-4o-mini', 'lollms']; // Load models from localStorage
-        let servers = JSON.parse(localStorage.getItem('servers')) || ['http://localhost:9600/v1/completions']; // Load servers from localStorage
+        let corsProxy = defaultCorsProxy;
+        let conversationHistory = "";
+        let discussions = JSON.parse(localStorage.getItem('discussions')) || [];
+        let models = JSON.parse(localStorage.getItem('models')) || ['gpt-4o-mini', 'lollms'];
+        let servers = JSON.parse(localStorage.getItem('servers')) || ['http://localhost:9600/v1/completions'];
 
         function renderDiscussionList() {
             const discussionList = document.getElementById('discussionList');
-            discussionList.innerHTML = ''; // Clear the list
+            discussionList.innerHTML = '';
             discussions.forEach((discussion, index) => {
                 const discussionItem = document.createElement('div');
-                discussionItem.className = 'discussion-item';
+                discussionItem.className = 'flex justify-between items-center p-2 bg-gray-200 rounded mb-2';
                 discussionItem.innerHTML = `
                     <span>Discussion ${index + 1}</span>
                     <div>
-                        <button class="view-button bg-blue-500 text-white p-1 rounded-lg" data-index="${index}">View</button>
-                        <button class="remove-button bg-red-500 text-white p-1 rounded-lg ml-2" data-index="${index}">Remove</button>
+                        <button class="view-button bg-blue-500 text-white px-2 py-1 rounded mr-2" data-index="${index}">View</button>
+                        <button class="remove-button bg-red-500 text-white px-2 py-1 rounded" data-index="${index}">Remove</button>
                     </div>
                 `;
                 discussionList.appendChild(discussionItem);
@@ -84,26 +85,26 @@
 
         function renderModelSelect() {
             const modelSelect = document.getElementById('modelSelect');
-            modelSelect.innerHTML = ''; // Clear existing options
+            modelSelect.innerHTML = '';
             models.forEach(model => {
                 const option = document.createElement('option');
                 option.value = model;
-                option.textContent = model.charAt(0).toUpperCase() + model.slice(1); // Capitalize first letter
+                option.textContent = model.charAt(0).toUpperCase() + model.slice(1);
                 modelSelect.appendChild(option);
             });
-            modelSelect.value = defaultModel; // Set the default model
+            modelSelect.value = defaultModel;
         }
 
         function renderServerSelect() {
             const serverSelect = document.getElementById('serverSelect');
-            serverSelect.innerHTML = ''; // Clear existing options
+            serverSelect.innerHTML = '';
             servers.forEach(server => {
                 const option = document.createElement('option');
                 option.value = server;
-                option.textContent = server; // Display server address
+                option.textContent = server;
                 serverSelect.appendChild(option);
             });
-            serverSelect.value = apiUrl; // Set the default server
+            serverSelect.value = apiUrl;
         }
 
         document.getElementById('addServerButton').addEventListener('click', () => {
@@ -111,9 +112,9 @@
             const newServer = newServerInput.value.trim();
             if (newServer && !servers.includes(newServer)) {
                 servers.push(newServer);
-                localStorage.setItem('servers', JSON.stringify(servers)); // Save servers to localStorage
-                renderServerSelect(); // Refresh server select options
-                newServerInput.value = ''; // Clear input
+                localStorage.setItem('servers', JSON.stringify(servers));
+                renderServerSelect();
+                newServerInput.value = '';
             } else {
                 alert('Server address is either empty or already exists.');
             }
@@ -124,18 +125,18 @@
             const newModel = newModelInput.value.trim();
             if (newModel && !models.includes(newModel)) {
                 models.push(newModel);
-                localStorage.setItem('models', JSON.stringify(models)); // Save models to localStorage
-                renderModelSelect(); // Refresh model select options
-                newModelInput.value = ''; // Clear input
+                localStorage.setItem('models', JSON.stringify(models));
+                renderModelSelect();
+                newModelInput.value = '';
             } else {
                 alert('Model name is either empty or already exists.');
             }
         });
 
         document.getElementById('newDiscussionButton').addEventListener('click', () => {
-            conversationHistory = ""; // Reset conversation history for new discussion
-            renderDiscussionList(); // Refresh the discussion list
-            document.getElementById('chat').innerHTML = ''; // Clear chat messages
+            conversationHistory = "";
+            renderDiscussionList();
+            document.getElementById('chat').innerHTML = '';
         });
 
         document.getElementById('sendButton').addEventListener('click', async () => {
@@ -153,25 +154,30 @@
         });
 
         document.getElementById('settingsButton').addEventListener('click', () => {
-            document.getElementById('settingsModal').style.display = 'flex';
-            document.getElementById('apiKey').value = apiKey;
-            renderServerSelect(); // Populate server select options
-            renderModelSelect(); // Populate model select options
+            document.getElementById('settingsModal').classList.remove('hidden');
+        });
+
+        document.getElementById('mobileSettingsButton').addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.remove('hidden');
         });
 
         document.getElementById('saveSettings').addEventListener('click', () => {
             apiKey = document.getElementById('apiKey').value;
-            apiUrl = document.getElementById('serverSelect').value; // Get selected server address
+            apiUrl = document.getElementById('serverSelect').value;
             const selectedModel = document.getElementById('modelSelect').value;
+            corsProxy = document.getElementById('corsProxy').value.trim();
+            const selectedMode = document.getElementById('modeSelect').value;
             localStorage.setItem('apiKey', apiKey);
             localStorage.setItem('apiUrl', apiUrl);
-            localStorage.setItem('model', selectedModel); // Save selected model to local storage
+            localStorage.setItem('model', selectedModel);
+            localStorage.setItem('corsProxy', corsProxy);
+            localStorage.setItem('mode', selectedMode);
             alert('Settings saved!');
-            document.getElementById('settingsModal').style.display = 'none';
+            document.getElementById('settingsModal').classList.add('hidden');
         });
 
         document.getElementById('closeSettings').addEventListener('click', () => {
-            document.getElementById('settingsModal').style.display = 'none';
+            document.getElementById('settingsModal').classList.add('hidden');
         });
 
         async function generateText(userPrompt, model, mode) {
@@ -183,7 +189,6 @@
                     temperature: 0.7
                 };
             } else {
-                // Instruct mode
                 const systemPrompt = "You are a helpful assistant.";
                 const fullPrompt = `${systemPrompt}\n${conversationHistory}<@>user: ${userPrompt}<@>assistant:`;
                 data = {
@@ -196,7 +201,12 @@
             }
 
             try {
-                const response = await fetch(apiUrl, {
+                let fetchUrl = apiUrl;
+                if (corsProxy) {
+                    fetchUrl = `${corsProxy}${encodeURIComponent(apiUrl)}`;
+                }
+
+                const response = await fetch(fetchUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -205,12 +215,10 @@
                     body: JSON.stringify(data)
                 });
 
-                const responseData = await response.json();
-
                 if (mode === "chat") {
-                    return responseData.choices[0].message.content; // Return content from chat mode
+                    const responseData = await response.json();
+                    return responseData.choices[0].message.content;
                 } else {
-                    // Handle instruct mode response
                     let text = '';
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder('utf-8');
@@ -223,9 +231,9 @@
 
                         for (const line of lines) {
                             if (line.startsWith('data: ')) {
-                                const jsonData = line.substring(6).trim(); // Remove 'data: ' prefix
+                                const jsonData = line.substring(6).trim();
                                 if (jsonData === '[DONE]') {
-                                    break; // Stop processing on '[DONE]'
+                                    break;
                                 }
                                 try {
                                     const parsedData = JSON.parse(jsonData);
@@ -237,13 +245,12 @@
                         }
                     }
 
-                    // Update conversation history
                     conversationHistory += `<@>user: ${userPrompt}<@>assistant: ${text}\n`;
                     return text;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                return 'Error occurred while generating text.';
+                return 'Error occurred while generating text. Please check your settings and try again.';
             }
         }
 
@@ -266,12 +273,12 @@
 
             Prism.highlightAll();
         }
-        
+
         document.getElementById('discussionList').addEventListener('click', (event) => {
             if (event.target.classList.contains('view-button')) {
                 const index = event.target.getAttribute('data-index');
-                conversationHistory = discussions[index]; // Load the selected discussion
-                document.getElementById('chat').innerHTML = ''; // Clear chat messages
+                conversationHistory = discussions[index];
+                document.getElementById('chat').innerHTML = '';
                 const messages = conversationHistory.split('\n');
                 messages.forEach(msg => {
                     if (msg) {
@@ -281,16 +288,17 @@
                 });
             } else if (event.target.classList.contains('remove-button')) {
                 const index = event.target.getAttribute('data-index');
-                discussions.splice(index, 1); // Remove the selected discussion
-                localStorage.setItem('discussions', JSON.stringify(discussions)); // Update localStorage
-                renderDiscussionList(); // Refresh the discussion list
+                discussions.splice(index, 1);
+                localStorage.setItem('discussions', JSON.stringify(discussions));
+                renderDiscussionList();
             }
         });
 
-        // Initial render of discussions, models, and servers
+        // Initial render
         renderDiscussionList();
         renderModelSelect();
         renderServerSelect();
+        document.getElementById('modeSelect').value = defaultMode;
     </script>
 </body>
 </html>
