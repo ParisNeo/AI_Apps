@@ -4,91 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat with LoLLMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
-    <style>
-        #chat {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0; /* Light gray border */
-            border-radius: 0.5rem; /* Rounded corners */
-            background-color: #f7fafc; /* Light gray background */
-            padding: 1rem; /* Padding inside the chat area */
-        }
-        .message {
-            padding: 0.5rem;
-            border-radius: 0.375rem; /* Rounded corners for messages */
-            margin-bottom: 0.5rem; /* Space between messages */
-            display: flex; /* Flexbox for icon and message */
-            align-items: center; /* Center items vertically */
-        }
-        .user {
-            background-color: #cbd5e0; /* Light blue for user messages */
-            text-align: right; /* Align user messages to the right */
-        }
-        .assistant {
-            background-color: #e6fffa; /* Light green for assistant messages */
-            text-align: left; /* Align assistant messages to the left */
-        }
-        .icon {
-            width: 30px; /* Icon size */
-            height: 30px; /* Icon size */
-            border-radius: 50%; /* Circular icon */
-            margin-right: 0.5rem; /* Space between icon and message */
-        }
-        .settings-modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-            justify-content: center;
-            align-items: center;
-        }
-        .settings-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .discussion-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0; /* Light gray border */
-            border-radius: 0.5rem; /* Rounded corners */
-            background-color: #f7fafc; /* Light gray background */
-            padding: 1rem; /* Padding inside the discussion list */
-            margin-bottom: 1rem; /* Space below the discussion list */
-        }
-        .discussion-item {
-            padding: 0.5rem;
-            border-radius: 0.375rem; /* Rounded corners for discussion items */
-            margin-bottom: 0.5rem; /* Space between discussion items */
-            display: flex; /* Flexbox for discussion item */
-            justify-content: space-between; /* Space between text and button */
-            align-items: center; /* Center items vertically */
-            background-color: #e2e8f0; /* Light gray background for items */
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" />
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h1 class="text-xl font-bold mb-4">Chat with LoLLMS</h1>
-        <div class="discussion-list" id="discussionList">
-            <!-- Old discussions will be listed here -->
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-bold">Chat with LoLLMS</h1>
+            <button class="md:hidden">☰</button>
         </div>
-        <button id="newDiscussionButton" class="mt-2 w-full bg-green-500 text-white p-2 rounded-lg">New Discussion</button>
-        <div id="chat" class="mb-4 p-4">
-            <!-- Chat messages will be appended here -->
-        </div>
-        <textarea id="userInput" class="w-full p-2 border border-gray-300 rounded-lg" rows="3" placeholder="Type your message..."></textarea>
-        <button id="sendButton" class="mt-2 w-full bg-blue-500 text-white p-2 rounded-lg">Send</button>
-        <button id="settingsButton" class="mt-2 w-full bg-gray-500 text-white p-2 rounded-lg">Settings</button>
-        <div class="mt-4">
+        <div id="discussionList" class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2 mb-4"></div>
+        <button id="newDiscussionButton" class="w-full bg-green-500 text-white p-2 rounded-lg mb-4">New Discussion</button>
+        <div id="chat" class="h-64 mb-4 p-4 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50"></div>
+        <textarea id="userInput" class="w-full p-2 border border-gray-300 rounded-lg mb-2" rows="3" placeholder="Type your message..."></textarea>
+        <button id="sendButton" class="w-full bg-blue-500 text-white p-2 rounded-lg mb-2">Send</button>
+        <button id="settingsButton" class="w-full bg-gray-500 text-white p-2 rounded-lg mb-4 md:block hidden">Settings</button>
+        <div class="mb-4">
             <label class="block mb-2">Select Mode:</label>
             <select id="modeSelect" class="w-full p-2 border border-gray-300 rounded-lg">
                 <option value="instruct">Instruct Mode</option>
@@ -97,25 +30,23 @@
         </div>
     </div>
 
-    <div id="settingsModal" class="settings-modal flex">
-        <div class="settings-content">
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
             <h2 class="text-lg font-bold mb-4">Settings</h2>
             <label for="apiKey" class="block mb-2">API Key:</label>
             <input type="text" id="apiKey" class="w-full p-2 border border-gray-300 rounded-lg mb-4" placeholder="Enter API Key">
             <label for="serverAddress" class="block mb-2">Select Server Address:</label>
             <select id="serverSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4"></select>
-            <input type="text" id="newServerInput" class="w-full p-2 border border-gray-300 rounded-lg mb-4" placeholder="Enter new server address">
-            <button id="addServerButton" class="mt-2 w-full bg-yellow-500 text-white p-2 rounded-lg">Add Server</button>
+            <input type="text" id="newServerInput" class="w-full p-2 border border-gray-300 rounded-lg mb-2" placeholder="Enter new server address">
+            <button id="addServerButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg mb-4">Add Server</button>
             <label for="modelSelect" class="block mb-2">Select Model:</label>
             <select id="modelSelect" class="w-full p-2 border border-gray-300 rounded-lg mb-4"></select>
-            <button id="addModelButton" class="mt-2 w-full bg-yellow-500 text-white p-2 rounded-lg">Add Model</button>
-            <input type="text" id="newModelInput" class="w-full p-2 border border-gray-300 rounded-lg mb-4" placeholder="Enter new model name">
-            <label for="userIcon" class="block mb-2">Your Icon:</label>
-            <input type="file" id="userIcon" class="w-full mb-4" accept="image/*">
-            <label for="assistantIcon" class="block mb-2">Assistant Icon:</label>
-            <input type="file" id="assistantIcon" class="w-full mb-4" accept="image/*">
-            <button id="saveSettings" class="w-full bg-blue-500 text-white p-2 rounded-lg">Save</button>
-            <button id="closeSettings" class="w-full bg-red-500 text-white p-2 rounded-lg mt-2">Close</button>
+            <input type="text" id="newModelInput" class="w-full p-2 border border-gray-300 rounded-lg mb-2" placeholder="Enter new model name">
+            <button id="addModelButton" class="w-full bg-yellow-500 text-white p-2 rounded-lg mb-4">Add Model</button>
+            <label for="corsProxy" class="block mb-2">CORS Proxy URL (optional):</label>
+            <input type="text" id="corsProxy" class="w-full p-2 border border-gray-300 rounded-lg mb-4" placeholder="Enter CORS proxy URL">
+            <button id="saveSettings" class="w-full bg-blue-500 text-white p-2 rounded-lg mb-2">Save</button>
+            <button id="closeSettings" class="w-full bg-red-500 text-white p-2 rounded-lg">Close</button>
         </div>
     </div>
 
@@ -319,27 +250,23 @@
         function appendMessage(message, sender) {
             const chat = document.getElementById('chat');
             const messageElement = document.createElement('div');
-            messageElement.className = `message ${sender}`; // Add class based on sender
+            messageElement.className = `mb-2 p-2 rounded-lg ${sender === 'user' ? 'bg-blue-100 text-right' : 'bg-green-100'}`;
 
             const iconUrl = sender === 'user' ? userIcon : assistantIcon;
             const name = sender === 'user' ? 'You' : 'LoLLMS';
 
-            // Render Markdown and highlight code blocks
             const renderedMessage = marked.parse(message);
             messageElement.innerHTML = `
-                <img src="${iconUrl}" alt="${name}'s icon" class="icon">
-                <div>
-                    <strong>${name}:</strong>
-                    <div>${renderedMessage}</div>
-                </div>
-            `; // Render Markdown
+                <img src="${iconUrl}" alt="${name}'s icon" class="w-6 h-6 rounded-full inline-block mr-2">
+                <strong>${name}:</strong>
+                <div class="mt-1">${renderedMessage}</div>
+            `;
             chat.appendChild(messageElement);
-            chat.scrollTop = chat.scrollHeight; // Scroll to the bottom
+            chat.scrollTop = chat.scrollHeight;
 
-            // Highlight code blocks
             Prism.highlightAll();
         }
-
+        
         document.getElementById('discussionList').addEventListener('click', (event) => {
             if (event.target.classList.contains('view-button')) {
                 const index = event.target.getAttribute('data-index');
