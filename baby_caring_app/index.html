@@ -65,6 +65,9 @@
           <button id="import-btn" class="w-full flex justify-center items-center p-3 bg-green-400 rounded-full hover:bg-green-500 text-white" title="Import Data">
             <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
           </button>
+          <button id="share-btn" class="w-full flex justify-center items-center p-3 bg-yellow-400 rounded-full hover:bg-yellow-500 text-white" title="Share Data">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+          </button>
           <button id="toggle-lang-btn" class="w-full flex justify-center items-center p-3 bg-gray-400 rounded-full hover:bg-gray-500 text-white" title="Switch to French">
             <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
           </button>
@@ -73,7 +76,7 @@
           </button>
         </div>
       </div>
-      <!-- Settings Menu -->
+      <!-- Settings Menu (unchanged) -->
       <div id="settings-menu" class="slide-menu hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-soft z-20 rounded-l-3xl">
         <div class="flex justify-end mb-6">
           <button id="close-settings" class="text-gray-600 focus:outline-none">
@@ -90,7 +93,7 @@
         </div>
       </div>
     </div>
-    <!-- Main Area -->
+    <!-- Main Area (unchanged) -->
     <div class="w-full md:w-3/4 p-6 md:ml-0">
       <div class="flex justify-between items-center mb-6">
         <h2 id="current-child-name" class="text-2xl font-bold text-blue-600">Select a child</h2>
@@ -98,7 +101,6 @@
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
       </div>
-      <!-- Milk Intake Section -->
       <div class="mb-8 bg-white p-6 rounded-3xl shadow-soft">
         <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">Milk Intake</h3>
         <form id="milk-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
@@ -110,7 +112,6 @@
         </form>
         <ul id="milk-list" class="list-disc pl-5 space-y-2"></ul>
       </div>
-      <!-- Diaper Change Section -->
       <div class="bg-white p-6 rounded-3xl shadow-soft">
         <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">Diaper Changes</h3>
         <form id="diaper-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
@@ -130,27 +131,85 @@
   </div>
 
   <script>
-    // Localization dictionary (unchanged for brevity, same as original)
-    const translations = { /* ... */ };
+    // Localization dictionary (unchanged for brevity)
+    const translations = {
+      en: {
+        appTitle: "Baby Caring",
+        exportBtn: "Export Data",
+        importBtn: "Import Data",
+        shareBtn: "Share Data",
+        toggleLangBtn: "Switch to French",
+        childrenTitle: "Children",
+        addChildBtn: "Add Child",
+        selectChild: "Select a child",
+        milkTitle: "Milk Intake",
+        milkAmountPlaceholder: "Amount (ml)",
+        milkAddBtn: "Add",
+        diaperTitle: "Diaper Changes",
+        diaperWet: "Wet",
+        diaperDirty: "Dirty",
+        diaperBoth: "Both",
+        diaperAddBtn: "Add",
+        addChildPrompt: "Enter child's name:",
+        selectChildAlert: "Please select a child first.",
+        milkValidationAlert: "Please fill in valid time and amount.",
+        diaperValidationAlert: "Please fill in a valid time.",
+        importSuccessAlert: "Data imported successfully.",
+        importFormatAlert: "Invalid data format.",
+        importErrorAlert: "Error parsing JSON: ",
+        deleteChildConfirm: "Are you sure you want to delete this child?",
+        shareSuccess: "Data copied to clipboard! Paste it anywhere or use the email link.",
+        shareError: "Sharing not supported. Data copied to clipboard instead."
+      },
+      fr: { /* ... */ }
+    };
 
     // Initialize data and settings
     let data = { nextId: 1, children: [] };
     let currentChildId = null;
-    let currentLang = localStorage.getItem('baby intrapCaringLang') || 'en';
+    let currentLang = localStorage.getItem('babyCaringLang') || 'en';
     let settings = {
-      milkInterval: parseInt(localStorage.getItem('milkInterval')) || 3, // Default 3 hours
+      milkInterval: parseInt(localStorage.getItem('milkInterval')) || 3,
       notificationsEnabled: localStorage.getItem('notificationsEnabled') === 'true' || false
     };
 
-    // Load data from local storage
-    function loadData() {
-      const savedData = localStorage.getItem('babyCaringData');
-      if (savedData) data = JSON.parse(savedData);
+    // IndexedDB setup
+    const dbName = "BabyCaringDB";
+    const dbVersion = 1;
+    let db;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, dbVersion);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve();
+        };
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          db.createObjectStore("data", { keyPath: "id" });
+        };
+      });
     }
 
-    // Save data to local storage
+    function loadData() {
+      return new Promise((resolve) => {
+        const transaction = db.transaction(["data"], "readonly");
+        const store = transaction.objectStore("data");
+        const request = store.get("babyData");
+        request.onsuccess = () => {
+          if (request.result) data = request.result.value;
+          resolve();
+        };
+        request.onerror = () => resolve(); // Fallback to default data if none exists
+      });
+    }
+
     function saveData() {
-      localStorage.setItem('babyCaringData', JSON.stringify(data));
+      const transaction = db.transaction(["data"], "readwrite");
+      const store = transaction.objectStore("data");
+      store.put({ id: "babyData", value: data });
     }
 
     // Update UI with current language
@@ -159,6 +218,7 @@
       document.getElementById('app-title').textContent = t.appTitle;
       document.getElementById('export-btn').title = t.exportBtn;
       document.getElementById('import-btn').title = t.importBtn;
+      document.getElementById('share-btn').title = t.shareBtn;
       document.getElementById('toggle-lang-btn').title = t.toggleLangBtn;
       document.getElementById('children-title').textContent = t.childrenTitle;
       document.getElementById('add-child-btn').title = t.addChildBtn;
@@ -177,7 +237,7 @@
       renderDiaperChanges();
     }
 
-    // Toggle language
+    // Toggle language (unchanged)
     document.getElementById('toggle-lang-btn').addEventListener('click', () => {
       currentLang = currentLang === 'en' ? 'fr' : 'en';
       localStorage.setItem('babyCaringLang', currentLang);
@@ -185,7 +245,7 @@
       toggleMenu();
     });
 
-    // Render child list, milk intake, diaper changes (unchanged for brevity)
+    // Render functions (unchanged for brevity)
     function renderChildList() { /* ... */ }
     function selectChild(id) { /* ... */ }
     function deleteChild(id) { /* ... */ }
@@ -224,99 +284,55 @@
     // Handle diaper change form submission (unchanged)
     document.getElementById('diaper-form').addEventListener('submit', (e) => { /* ... */ });
 
-    // Export and import data (unchanged)
-    document.getElementById('export-btn').addEventListener('click', (e) => { /* ... */ });
-    document.getElementById('import-btn').addEventListener('click', (e) => { /* ... */ });
-    document.getElementById('import-input').addEventListener('change', (e) => { /* ... */ });
-
-    // Sidebar and menu toggles (unchanged)
-    function toggleSidebar() { /* ... */ }
-    document.getElementById('open-sidebar').addEventListener('click', toggleSidebar);
-    document.getElementById('close-sidebar').addEventListener('click', toggleSidebar);
-    function toggleMenu() { /* ... */ }
-    document.getElementById('open-menu').addEventListener('click', toggleMenu);
-    document.getElementById('close-menu').addEventListener('click', toggleMenu);
-
-    // Settings menu toggle
-    function toggleSettings() {
-      const settingsMenu = document.getElementById('settings-menu');
-      settingsMenu.classList.toggle('hidden');
-      if (!settingsMenu.classList.contains('hidden')) {
-        document.getElementById('milk-interval').value = settings.milkInterval;
-        document.getElementById('notifications-enabled').checked = settings.notificationsEnabled;
-      }
-    }
-
-    document.getElementById('settings-btn').addEventListener('click', () => {
-      toggleSettings();
+    // Export data as Markdown
+    document.getElementById('export-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      let markdown = "# Baby Caring Data\n\n";
+      data.children.forEach(child => {
+        markdown += `## ${child.name}\n\n`;
+        markdown += "### Milk Intake\n";
+        child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.milkIntake.forEach(intake => {
+          markdown += `- ${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml\n`;
+        });
+        markdown += "\n### Diaper Changes\n";
+        child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.diaperChanges.forEach(change => {
+          markdown += `- ${new Date(change.timestamp).toLocaleString()} - ${change.type}\n`;
+        });
+        markdown += "\n";
+      });
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'baby_caring_data.md';
+      a.click();
+      URL.revokeObjectURL(url);
       toggleMenu();
     });
-    document.getElementById('close-settings').addEventListener('click', toggleSettings);
 
-    // Save settings
-    document.getElementById('save-settings').addEventListener('click', () => {
-      settings.milkInterval = parseInt(document.getElementById('milk-interval').value) || 3;
-      settings.notificationsEnabled = document.getElementById('notifications-enabled').checked;
-      localStorage.setItem('milkInterval', settings.milkInterval);
-      localStorage.setItem('notificationsEnabled', settings.notificationsEnabled);
-      if (settings.notificationsEnabled) requestNotificationPermission();
-      toggleSettings();
-      scheduleAllReminders();
-    });
-
-    // Request notification permission
-    function requestNotificationPermission() {
-      if (!("Notification" in window)) {
-        alert("This browser does not support notifications.");
-        settings.notificationsEnabled = false;
-        localStorage.setItem('notificationsEnabled', false);
-      } else if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            console.log("Notification permission granted.");
-          } else {
-            settings.notificationsEnabled = false;
-            localStorage.setItem('notificationsEnabled', false);
-            alert("Notifications disabled due to permission denial.");
-          }
+    // Share data
+    document.getElementById('share-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      let markdown = "# Baby Caring Data\n\n";
+      data.children.forEach(child => {
+        markdown += `## ${child.name}\n\n### Milk Intake\n`;
+        child.milkIntake.forEach(intake => {
+          markdown += `- ${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml\n`;
         });
-      }
-    }
-
-    // Schedule milk reminder
-    function scheduleMilkReminder(child) {
-      if (!settings.notificationsEnabled || Notification.permission !== "granted") return;
-
-      const lastIntake = child.milkIntake[child.milkIntake.length - 1];
-      if (!lastIntake) return;
-
-      const lastTime = new Date(lastIntake.timestamp);
-      const nextTime = new Date(lastTime.getTime() + settings.milkInterval * 60 * 60 * 1000);
-      const now = new Date();
-
-      if (nextTime > now) {
-        const delay = nextTime - now;
-        setTimeout(() => {
-          new Notification(`Milk Time for ${child.name}!`, {
-            body: `It's been ${settings.milkInterval} hours since the last milk intake.`,
-            icon: 'https://via.placeholder.com/32?text=🍼'
-          });
-        }, delay);
-      }
-    }
-
-    // Schedule reminders for all children
-    function scheduleAllReminders() {
-      if (!settings.notificationsEnabled || Notification.permission !== "granted") return;
-      data.children.forEach(child => scheduleMilkReminder(child));
-    }
-
-    // Initialize the app
-    loadData();
-    updateLanguage();
-    renderChildList();
-    if (settings.notificationsEnabled) requestNotificationPermission();
-    scheduleAllReminders();
-  </script>
-</body>
-</html>
+        markdown += "\n### Diaper Changes\n";
+        child.diaperChanges.forEach(change => {
+          markdown += `- ${new Date(change.timestamp).toLocaleString()} - ${change.type}\n`;
+        });
+        markdown += "\n";
+      });
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Baby Caring Data',
+          text: markdown,
+        }).then(() => console.log('Shared successfully'))
+          .catch((error) => {
+            console.error('Error sharing:', error);
+            fallback
