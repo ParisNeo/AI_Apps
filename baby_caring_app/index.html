@@ -5,70 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baby Caring App</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .slide-in {
-      transition: transform 0.3s ease-in-out;
-    }
-    .slide-in.hidden {
-      transform: translateX(-100%);
-    }
-    .fade-in {
-      transition: opacity 0.3s ease-in-out;
-    }
-    .fade-in.hidden {
-      opacity: 0;
-    }
+    body { font-family: 'Comic Neue', cursive; }
+    .slide-in { transition: transform 0.3s ease-in-out; }
+    .slide-in.hidden { transform: translateX(-100%); }
+    .fade-in { transition: opacity 0.3s ease-in-out; }
+    .fade-in.hidden { opacity: 0; }
+    .btn-svg { transition: transform 0.2s; }
+    .btn-svg:hover { transform: scale(1.1); }
+    .shadow-soft { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 to-purple-100 min-h-screen">
+<body class="bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 min-h-screen">
   <div class="flex flex-col md:flex-row">
     <!-- Sidebar -->
-    <div id="sidebar" class="w-full md:w-1/4 bg-white p-4 shadow-lg slide-in md:slide-in fixed md:static h-full z-10">
-      <div class="flex justify-between items-center mb-4">
-        <h1 id="app-title" class="text-2xl font-bold text-gray-800">Baby Caring</h1>
+    <div id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-soft slide-in md:slide-in fixed md:static h-full z-10 rounded-r-2xl">
+      <div class="flex justify-between items-center mb-6">
+        <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <button id="close-sidebar" class="md:hidden text-gray-600 focus:outline-none">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
-      <button id="export-btn" class="w-full mb-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Export Data</button>
-      <input type="file" id="import-input" class="hidden" accept=".json">
-      <button id="import-btn" class="w-full mb-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Import Data</button>
-      <button id="toggle-lang-btn" class="w-full mb-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Switch to French</button>
-      <h2 id="children-title" class="text-xl font-semibold text-gray-700 mb-2">Children</h2>
-      <ul id="child-list" class="mb-4 space-y-2"></ul>
-      <button id="add-child-btn" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Add Child</button>
+      <div class="space-y-3">
+        <button id="export-btn" class="w-full flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500" title="Export Data">
+          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
+        </button>
+        <input type="file" id="import-input" class="hidden" accept=".json">
+        <button id="import-btn" class="w-full flex justify-center items-center p-3 bg-green-400 rounded-full hover:bg-green-500" title="Import Data">
+          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
+        </button>
+        <button id="toggle-lang-btn" class="w-full flex justify-center items-center p-3 bg-gray-400 rounded-full hover:bg-gray-500" title="Switch to French">
+          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
+        </button>
+      </div>
+      <h2 id="children-title" class="text-xl font-semibold text-blue-600 mt-6 mb-3">Children</h2>
+      <ul id="child-list" class="mb-6 space-y-3"></ul>
+      <button id="add-child-btn" class="w-full flex justify-center items-center p-3 bg-purple-400 rounded-full hover:bg-purple-500" title="Add Child">
+        <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+      </button>
     </div>
     <!-- Main Area -->
-    <div class="w-full md:w-3/4 p-4 md:ml-0">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="current-child-name" class="text-2xl font-bold text-gray-800">Select a child</h2>
+    <div class="w-full md:w-3/4 p-6 md:ml-0">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="current-child-name" class="text-2xl font-bold text-blue-600">Select a child</h2>
         <button id="open-sidebar" class="md:hidden text-gray-600 focus:outline-none">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
       </div>
       <!-- Milk Intake Section -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow">
-        <h3 id="milk-title" class="text-xl font-semibold text-gray-700 mb-2">Milk Intake</h3>
-        <form id="milk-form" class="mb-4 space-y-2 md:space-y-0 md:flex md:space-x-2">
-          <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <input type="number" id="milk-amount" placeholder="Amount (ml)" min="0" class="w-full md:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <button type="submit" id="milk-add-btn" class="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+      <div class="mb-8 bg-white p-6 rounded-2xl shadow-soft">
+        <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">Milk Intake</h3>
+        <form id="milk-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
+          <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-blue-50">
+          <input type="number" id="milk-amount" placeholder="Amount (ml)" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-blue-50">
+          <button type="submit" id="milk-add-btn" class="w-full md:w-auto flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500" title="Add">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          </button>
         </form>
-        <ul id="milk-list" class="list-disc pl-5 space-y-1"></ul>
+        <ul id="milk-list" class="list-disc pl-5 space-y-2"></ul>
       </div>
       <!-- Diaper Change Section -->
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h3 id="diaper-title" class="text-xl font-semibold text-gray-700 mb-2">Diaper Changes</h3>
-        <form id="diaper-form" class="mb-4 space-y-2 md:space-y-0 md:flex md:space-x-2">
-          <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <select id="diaper-type" class="w-full md:w-auto p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+      <div class="bg-white p-6 rounded-2xl shadow-soft">
+        <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">Diaper Changes</h3>
+        <form id="diaper-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
+          <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-blue-50">
+          <select id="diaper-type" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-blue-50">
             <option value="wet">Wet</option>
             <option value="dirty">Dirty</option>
             <option value="both">Both</option>
           </select>
-          <button type="submit" id="diaper-add-btn" class="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+          <button type="submit" id="diaper-add-btn" class="w-full md:w-auto flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500" title="Add">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          </button>
         </form>
-        <ul id="diaper-list" class="list-disc pl-5 space-y-1"></ul>
+        <ul id="diaper-list" class="list-disc pl-5 space-y-2"></ul>
       </div>
     </div>
   </div>
@@ -148,21 +159,21 @@
     function updateLanguage() {
       const t = translations[currentLang];
       document.getElementById('app-title').textContent = t.appTitle;
-      document.getElementById('export-btn').textContent = t.exportBtn;
-      document.getElementById('import-btn').textContent = t.importBtn;
-      document.getElementById('toggle-lang-btn').textContent = t.toggleLangBtn;
+      document.getElementById('export-btn').title = t.exportBtn;
+      document.getElementById('import-btn').title = t.importBtn;
+      document.getElementById('toggle-lang-btn').title = t.toggleLangBtn;
       document.getElementById('children-title').textContent = t.childrenTitle;
-      document.getElementById('add-child-btn').textContent = t.addChildBtn;
+      document.getElementById('add-child-btn').title = t.addChildBtn;
       document.getElementById('current-child-name').textContent = currentChildId ? data.children.find(c => c.id === currentChildId).name : t.selectChild;
       document.getElementById('milk-title').textContent = t.milkTitle;
       document.getElementById('milk-amount').placeholder = t.milkAmountPlaceholder;
-      document.getElementById('milk-add-btn').textContent = t.milkAddBtn;
+      document.getElementById('milk-add-btn').title = t.milkAddBtn;
       document.getElementById('diaper-title').textContent = t.diaperTitle;
       const diaperType = document.getElementById('diaper-type');
       diaperType.options[0].text = t.diaperWet;
       diaperType.options[1].text = t.diaperDirty;
       diaperType.options[2].text = t.diaperBoth;
-      document.getElementById('diaper-add-btn').textContent = t.diaperAddBtn;
+      document.getElementById('diaper-add-btn').title = t.diaperAddBtn;
       renderChildList();
       renderMilkIntake();
       renderDiaperChanges();
@@ -181,11 +192,11 @@
       childList.innerHTML = '';
       data.children.forEach(child => {
         const li = document.createElement('li');
-        li.classList.add('flex', 'justify-between', 'items-center', 'p-2', 'bg-gray-100', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-200');
+        li.classList.add('flex', 'justify-between', 'items-center', 'p-3', 'bg-blue-100', 'rounded-lg', 'cursor-pointer', 'hover:bg-blue-200');
         li.innerHTML = `
           <span onclick="selectChild('${child.id}')">${child.name}</span>
-          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-700">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600" title="Delete">
+            <svg class="w-5 h-5 btn-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         `;
         childList.appendChild(li);
@@ -223,11 +234,11 @@
         child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         child.milkIntake.forEach((intake, index) => {
           const li = document.createElement('li');
-          li.classList.add('flex', 'justify-between', 'items-center');
+          li.classList.add('flex', 'justify-between', 'items-center', 'text-blue-600');
           li.innerHTML = `
             ${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml
-            <button onclick="deleteMilkIntake(${index})" class="text-red-500 hover:text-red-700">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onclick="deleteMilkIntake(${index})" class="text-red-500 hover:text-red-600" title="Delete">
+              <svg class="w-4 h-4 btn-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           `;
           milkList.appendChild(li);
@@ -252,12 +263,12 @@
         child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         child.diaperChanges.forEach((change, index) => {
           const li = document.createElement('li');
-          li.classList.add('flex', 'justify-between', 'items-center');
+          li.classList.add('flex', 'justify-between', 'items-center', 'text-blue-600');
           const typeText = translations[currentLang][`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
           li.innerHTML = `
             ${new Date(change.timestamp).toLocaleString()} - ${typeText}
-            <button onclick="deleteDiaperChange(${index})" class="text-red-500 hover:text-red-700">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onclick="deleteDiaperChange(${index})" class="text-red-500 hover:text-red-600" title="Delete">
+              <svg class="w-4 h-4 btn-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           `;
           diaperList.appendChild(li);
@@ -319,7 +330,7 @@
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = acidification;
+      a.href = url;
       a.download = 'baby_caring_data.json';
       a.click();
       URL.revokeObjectURL(url);
