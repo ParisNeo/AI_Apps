@@ -28,6 +28,17 @@
     .btn-gradient { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
     .dashboard-card { transition: all 0.2s; }
     .dashboard-card:hover { transform: translateY(-5px); }
+    .tooltip { position: relative; }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%; left: 50%; transform: translateX(-50%);
+      background: #333; color: white; padding: 5px 10px; border-radius: 5px;
+      font-size: 0.9rem; white-space: nowrap; z-index: 10;
+    }
+    .tip-box { animation: fadeIn 1s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .sync-status { font-size: 0.9rem; }
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -44,41 +55,44 @@
       <header class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <div class="flex space-x-4">
-          <button id="menu-toggle" class="text-gray-600">
+          <button id="menu-toggle" class="text-gray-600 tooltip" data-tooltip="Menu">
             <i class="fas fa-bars w-8 h-8"></i>
           </button>
-          <button id="sidebar-close" class="md:hidden text-gray-600">
+          <button id="sidebar-close" class="md:hidden text-gray-600 tooltip" data-tooltip="Close">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
       </header>
       <h2 id="children-title" class="text-xl font-semibold text-blue-600 mb-4">Children</h2>
       <ul id="child-list" class="space-y-3 mb-6"></ul>
-      <button id="add-child" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+      <button id="add-child" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="Add a new child">
         <i class="fas fa-plus btn-icon mr-2"></i> <span>Add Child</span>
       </button>
       <!-- Menu -->
       <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="menu-close" class="text-gray-600">
+          <button id="menu-close" class="text-gray-600 tooltip" data-tooltip="Close">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
         <div class="space-y-4">
-          <button id="export-data" class="w-full p-3 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500">
+          <button id="export-data" class="w-full p-3 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500 tooltip" data-tooltip="Download data as Markdown">
             <i class="fas fa-download btn-icon mr-2"></i> <span>Export Data</span>
           </button>
           <input type="file" id="import-file" class="hidden" accept=".json">
-          <button id="import-data" class="w-full p-3 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500">
+          <button id="import-data" class="w-full p-3 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500 tooltip" data-tooltip="Upload saved data">
             <i class="fas fa-upload btn-icon mr-2"></i> <span>Import Data</span>
           </button>
-          <button id="share-data" class="w-full p-3 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500">
+          <button id="share-data" class="w-full p-3 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500 tooltip" data-tooltip="Share via email or clipboard">
             <i class="fas fa-share-alt btn-icon mr-2"></i> <span>Share Data</span>
           </button>
-          <button id="toggle-lang" class="w-full p-3 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500">
+          <button id="toggle-lang" class="w-full p-3 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500 tooltip" data-tooltip="Switch language">
             <i class="fas fa-language btn-icon mr-2"></i> <span>Switch Language</span>
           </button>
-          <button id="settings-toggle" class="w-full p-3 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500">
+          <button id="sync-bluetooth" class="w-full p-3 bg-indigo-400 text-white rounded-full flex justify-center items-center hover:bg-indigo-500 tooltip" data-tooltip="Sync with another device">
+            <i class="fas fa-bluetooth btn-icon mr-2"></i> <span>Sync via Bluetooth</span>
+          </button>
+          <button id="settings-toggle" class="w-full p-3 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500 tooltip" data-tooltip="Adjust settings">
             <i class="fas fa-cog btn-icon mr-2"></i> <span>Settings</span>
           </button>
         </div>
@@ -86,7 +100,7 @@
       <!-- Settings -->
       <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="settings-close" class="text-gray-600">
+          <button id="settings-close" class="text-gray-600 tooltip" data-tooltip="Close">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
@@ -101,7 +115,7 @@
       </div>
     </aside>
     <!-- Main Content -->
-    <main id="main-content" class="w-full md:w-3/4 p-6"></main>
+    <main id="main-content" class="w-full md:w-3/4 p-6 relative"></main>
   </div>
 
   <script>
@@ -114,9 +128,12 @@
         dashboard: "Dashboard",
         atHome: "At Home",
         nextMilk: "Next Milk",
-        milkTitle: "Milk Intake",
+        milkTitle: "Feeding",
         milkAmount: "Amount (ml)",
+        milkDuration: "Duration (min)",
         milkAdd: "Add",
+        breastFeed: "Breastfeed",
+        bottleFeed: "Bottle Feed",
         diaperTitle: "Diaper Changes",
         diaperWet: "Wet",
         diaperDirty: "Dirty",
@@ -126,17 +143,27 @@
         importData: "Import Data",
         shareData: "Share Data",
         toggleLang: "Switch to French",
+        syncBluetooth: "Sync via Bluetooth",
         settings: "Settings",
+        gender: "Gender",
+        birthdate: "Birthdate",
+        boy: "Boy",
+        girl: "Girl",
         addChildPrompt: "Enter child's name:",
+        genderPrompt: "Select gender (Boy/Girl):",
+        birthdatePrompt: "Enter birthdate (YYYY-MM-DD):",
         selectChildAlert: "Please select a child first.",
-        milkValidation: "Please fill in valid time and amount.",
+        milkValidation: "Please fill in valid time and amount/duration.",
         diaperValidation: "Please fill in a valid time.",
         importSuccess: "Data imported successfully.",
         importFormat: "Invalid data format.",
         importError: "Error parsing JSON: ",
         deleteConfirm: "Are you sure you want to delete this child?",
         shareSuccess: "Data copied to clipboard! Paste it anywhere or use the email link.",
-        shareError: "Sharing not supported. Data copied to clipboard instead."
+        shareError: "Sharing not supported. Data copied to clipboard instead.",
+        bluetoothNotSupported: "Bluetooth not supported on this device.",
+        bluetoothSyncSuccess: "Data synced successfully!",
+        bluetoothSyncError: "Error during Bluetooth sync."
       },
       fr: {
         appTitle: "Soins Bébé",
@@ -145,9 +172,12 @@
         dashboard: "Tableau de bord",
         atHome: "À la maison",
         nextMilk: "Prochain lait",
-        milkTitle: "Prise de lait",
+        milkTitle: "Alimentation",
         milkAmount: "Quantité (ml)",
+        milkDuration: "Durée (min)",
         milkAdd: "Ajouter",
+        breastFeed: "Allaitement",
+        bottleFeed: "Biberon",
         diaperTitle: "Changements de couche",
         diaperWet: "Mouillée",
         diaperDirty: "Sale",
@@ -157,19 +187,41 @@
         importData: "Importer les données",
         shareData: "Partager les données",
         toggleLang: "Passer à l'anglais",
+        syncBluetooth: "Synchroniser via Bluetooth",
         settings: "Paramètres",
+        gender: "Genre",
+        birthdate: "Date de naissance",
+        boy: "Garçon",
+        girl: "Fille",
         addChildPrompt: "Entrez le nom de l'enfant :",
+        genderPrompt: "Sélectionnez le genre (Garçon/Fille) :",
+        birthdatePrompt: "Entrez la date de naissance (AAAA-MM-JJ) :",
         selectChildAlert: "Veuillez d'abord sélectionner un enfant.",
-        milkValidation: "Veuillez remplir une heure et une quantité valides.",
+        milkValidation: "Veuillez remplir une heure et une quantité/durée valides.",
         diaperValidation: "Veuillez remplir une heure valide.",
         importSuccess: "Données importées avec succès.",
         importFormat: "Format de données invalide.",
         importError: "Erreur lors de l'analyse JSON : ",
         deleteConfirm: "Êtes-vous sûr de vouloir supprimer cet enfant ?",
         shareSuccess: "Données copiées dans le presse-papiers ! Collez-les n'importe où ou utilisez le lien email.",
-        shareError: "Partage non supporté. Données copiées dans le presse-papiers à la place."
+        shareError: "Partage non supporté. Données copiées dans le presse-papiers à la place.",
+        bluetoothNotSupported: "Bluetooth non supporté sur cet appareil.",
+        bluetoothSyncSuccess: "Données synchronisées avec succès !",
+        bluetoothSyncError: "Erreur lors de la synchronisation Bluetooth."
       }
     };
+
+    // Parenting Tips
+    const tips = [
+      "Sing to your baby to help them feel calm and secure!",
+      "A warm bath before bedtime can improve sleep.",
+      "Track feeding times to spot patterns in your baby’s routine.",
+      "Skin-to-skin contact boosts bonding and comfort.",
+      "Keep a small toy handy to distract during diaper changes.",
+      "Babies love routine—try to keep nap times consistent.",
+      "A gentle massage can soothe a fussy baby.",
+      "Stay hydrated yourself—it helps with milk supply if breastfeeding!"
+    ];
 
     // State
     let appData = { nextId: 1, children: [] };
@@ -180,6 +232,7 @@
       notifications: localStorage.getItem('notifications') === 'true'
     };
     let db;
+    let isBreastfeeding = false; // Toggle for feeding type
 
     // IndexedDB Setup with Persistent Storage
     const dbName = "BabyCareDB";
@@ -227,6 +280,7 @@
       document.getElementById('import-data').querySelector('span').textContent = t.importData;
       document.getElementById('share-data').querySelector('span').textContent = t.shareData;
       document.getElementById('toggle-lang').querySelector('span').textContent = t.toggleLang;
+      document.getElementById('sync-bluetooth').querySelector('span').textContent = t.syncBluetooth;
       document.getElementById('settings-toggle').querySelector('span').textContent = t.settings;
       renderChildren();
       renderDashboard();
@@ -241,7 +295,7 @@
         li.className = 'flex justify-between items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200';
         li.innerHTML = `
           <span onclick="selectChild('${child.id}')">${child.name}</span>
-          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600">
+          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
           </button>
         `;
@@ -255,11 +309,15 @@
       main.innerHTML = `
         <header class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-blue-600">${t.dashboard}</h2>
-          <button id="sidebar-open" class="md:hidden text-gray-600">
-            <i class="fas fa-bars w-8 h-8"></i>
-          </button>
+          <div class="flex space-x-4">
+            <span id="sync-status" class="sync-status text-gray-600">Sync: Offline</span>
+            <button id="sidebar-open" class="md:hidden text-gray-600 tooltip" data-tooltip="Menu">
+              <i class="fas fa-bars w-8 h-8"></i>
+            </button>
+          </div>
         </header>
         <div id="dashboard" class="dashboard-grid gap-6"></div>
+        <div id="tip-box" class="absolute bottom-4 right-4 bg-yellow-100 p-4 rounded-xl shadow-glow text-blue-600 hidden tip-box"></div>
       `;
       const dashboard = document.getElementById('dashboard');
       appData.children.forEach(child => {
@@ -268,18 +326,22 @@
         const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
         const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
         const timeLeft = nextMilk ? Math.max(0, Math.floor((nextMilk - new Date()) / (1000 * 60))) : 'N/A';
+        const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
         card.innerHTML = `
           <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
           <h3 class="text-xl font-bold text-blue-600">${child.name}</h3>
+          <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
+          <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
           <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
           <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeft === 'N/A' ? 'N/A' : `${timeLeft} min`}</p>
-          <button onclick="showDetails('${child.id}')" class="mt-4 p-2 btn-gradient text-white rounded-full flex items-center">
+          <button onclick="showDetails('${child.id}')" class="mt-4 p-2 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
             <i class="fas fa-info-circle mr-2"></i> Details
           </button>
         `;
         dashboard.appendChild(card);
       });
       document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
+      showRandomTip();
     };
 
     const showDetails = (id) => {
@@ -290,22 +352,30 @@
       main.innerHTML = `
         <header class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-blue-600">${child.name}</h2>
-          <button id="back-to-dashboard" class="text-gray-600">
+          <button id="back-to-dashboard" class="text-gray-600 tooltip" data-tooltip="Back to Dashboard">
             <i class="fas fa-arrow-left w-8 h-8"></i>
           </button>
         </header>
         <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
           <h3 class="text-xl font-semibold text-blue-600 mb-3">${t.milkTitle}</h3>
+          <div class="flex items-center mb-4">
+            <label class="mr-4 text-blue-600">${t.breastFeed}</label>
+            <input type="checkbox" id="feed-type" class="h-5 w-5 text-blue-600" ${isBreastfeeding ? 'checked' : ''}>
+            <label class="ml-2 text-blue-600">${t.bottleFeed}</label>
+          </div>
           <form id="milk-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
             <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-            <input type="number" id="milk-amount" placeholder="${t.milkAmount}" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+            <input type="number" id="milk-value" placeholder="${isBreastfeeding ? t.milkDuration : t.milkAmount}" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="Add feeding entry">
               <i class="fas fa-plus btn-icon mr-2"></i> ${t.milkAdd}
             </button>
           </form>
-          <ul id="milk-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
         </section>
-        <section class="bg-white p-6 rounded-xl shadow-glow">
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
+          <h4 class="text-lg font-semibold text-blue-600 mb-3">Feeding History</h4>
+          <ul id="milk-list" class="list-disc pl-5 space-y-2"></ul>
+        </section>
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
           <h3 class="text-xl font-semibold text-blue-600 mb-3">${t.diaperTitle}</h3>
           <form id="diaper-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
             <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
@@ -314,11 +384,14 @@
               <option value="dirty">${t.diaperDirty}</option>
               <option value="both">${t.diaperBoth}</option>
             </select>
-            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="Add diaper entry">
               <i class="fas fa-plus btn-icon mr-2"></i> ${t.diaperAdd}
             </button>
           </form>
-          <ul id="diaper-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
+        </section>
+        <section class="bg-white p-6 rounded-xl shadow-glow">
+          <h4 class="text-lg font-semibold text-blue-600 mb-3">Diaper History</h4>
+          <ul id="diaper-list" class="list-disc pl-5 space-y-2"></ul>
         </section>
       `;
       renderMilk();
@@ -329,19 +402,25 @@
       });
       document.getElementById('milk-form').addEventListener('submit', handleMilkSubmit);
       document.getElementById('diaper-form').addEventListener('submit', handleDiaperSubmit);
+      document.getElementById('feed-type').addEventListener('change', (e) => {
+        isBreastfeeding = e.target.checked;
+        document.getElementById('milk-value').placeholder = isBreastfeeding ? t.milkDuration : t.milkAmount;
+      });
     };
 
     const renderMilk = () => {
       const list = document.getElementById('milk-list');
       if (!list) return;
       list.innerHTML = '';
+      const t = translations[language];
       const child = appData.children.find(c => c.id === activeChildId);
       child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       child.milkIntake.forEach((intake, idx) => {
         const li = document.createElement('li');
         li.className = 'flex justify-between text-blue-600';
-        li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml
-          <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600">
+        const valueText = intake.type === 'breast' ? `${intake.duration} min` : `${intake.amount} ml`;
+        li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${t[intake.type + 'Feed']} - ${valueText}
+          <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
           </button>`;
         list.appendChild(li);
@@ -360,7 +439,7 @@
         li.className = 'flex justify-between text-blue-600';
         const type = t[`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
         li.innerHTML = `${new Date(change.timestamp).toLocaleString()} - ${type}
-          <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600">
+          <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
           </button>`;
         list.appendChild(li);
@@ -370,6 +449,7 @@
     // Event Handlers
     const selectChild = (id) => {
       activeChildId = id;
+是真的
       showDetails(id);
       toggleSidebar();
     };
@@ -399,30 +479,36 @@
     };
 
     document.getElementById('add-child').addEventListener('click', () => {
-      const name = prompt(translations[language].addChildPrompt);
-      if (name) {
-        const id = `child${appData.nextId++}`;
-        appData.children.push({ id, name, milkIntake: [], diaperChanges: [] });
-        saveData();
-        renderChildren();
-        renderDashboard();
-      }
+      const t = translations[language];
+      const name = prompt(t.addChildPrompt);
+      if (!name) return;
+      const gender = prompt(t.genderPrompt).toLowerCase();
+      if (gender !== 'boy' && gender !== 'girl') return alert("Please enter 'Boy' or 'Girl'.");
+      const birthdate = prompt(t.birthdatePrompt);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(birthdate)) return alert("Invalid date format. Use YYYY-MM-DD.");
+      const id = `child${appData.nextId++}`;
+      appData.children.push({ id, name, gender, birthdate, milkIntake: [], diaperChanges: [] });
+      saveData();
+      renderChildren();
+      renderDashboard();
     });
 
     const handleMilkSubmit = (e) => {
       e.preventDefault();
       if (!activeChildId) return alert(translations[language].selectChildAlert);
       const time = document.getElementById('milk-time').value;
-      const amount = document.getElementById('milk-amount').value;
-      if (!time || !amount || amount <= 0) return alert(translations[language].milkValidation);
+      const value = document.getElementById('milk-value').value;
+      if (!time || !value || value <= 0) return alert(translations[language].milkValidation);
       const child = appData.children.find(c => c.id === activeChildId);
-      child.milkIntake.push({ timestamp: new Date(time).toISOString(), amount: parseInt(amount) });
+      const entry = { timestamp: new Date(time).toISOString(), type: isBreastfeeding ? 'breast' : 'bottle' };
+      if (isBreastfeeding) entry.duration = parseInt(value); else entry.amount = parseInt(value);
+      child.milkIntake.push(entry);
       saveData();
       renderMilk();
       renderDashboard();
       scheduleReminder(child);
       document.getElementById('milk-time').value = '';
-      document.getElementById('milk-amount').value = '';
+      document.getElementById('milk-value').value = '';
     };
 
     const handleDiaperSubmit = (e) => {
@@ -441,10 +527,10 @@
     document.getElementById('export-data').addEventListener('click', () => {
       let md = "# Baby Caring Data\n\n";
       appData.children.forEach(c => {
-        md += `## ${c.name}\n\n### Milk Intake\n`;
-        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${m.amount} ml\n`);
+        md += `## ${c.name}\n- **Gender**: ${translations[language][c.gender]}\n- **Birthdate**: ${c.birthdate || 'N/A'}\n\n### Feeding\n`;
+        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${translations[language][m.type + 'Feed']} - ${m.type === 'breast' ? `${m.duration} min` : `${m.amount} ml`}\n`);
         md += "\n### Diaper Changes\n";
-        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${d.type}\n`);
+        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${translations[language][`diaper${d.type.charAt(0).toUpperCase() + d.type.slice(1)}`]}\n`);
         md += "\n";
       });
       const blob = new Blob([md], { type: 'text/markdown' });
@@ -489,10 +575,10 @@
     document.getElementById('share-data').addEventListener('click', () => {
       let md = "# Baby Caring Data\n\n";
       appData.children.forEach(c => {
-        md += `## ${c.name}\n\n### Milk Intake\n`;
-        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${m.amount} ml\n`);
+        md += `## ${c.name}\n- **Gender**: ${translations[language][c.gender]}\n- **Birthdate**: ${c.birthdate || 'N/A'}\n\n### Feeding\n`;
+        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${translations[language][m.type + 'Feed']} - ${m.type === 'breast' ? `${m.duration} min` : `${m.amount} ml`}\n`);
         md += "\n### Diaper Changes\n";
-        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${d.type}\n`);
+        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${translations[language][`diaper${d.type.charAt(0).toUpperCase() + d.type.slice(1)}`]}\n`);
         md += "\n";
       });
       if (navigator.share) {
@@ -521,14 +607,75 @@
       toggleMenu();
     });
 
-    // Navigation
-    const toggleSidebar = () => {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');
+    // Bluetooth Sync
+    document.getElementById('sync-bluetooth').addEventListener('click', async () => {
+      if (!navigator.bluetooth) {
+        alert(translations[language].bluetoothNotSupported);
+        return;
+      }
+      try {
+        // Request Bluetooth device
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['battery_service'] // Placeholder service; replace with custom service UUID if needed
+        });
+        const server = await device.gatt.connect();
+        document.getElementById('sync-status').textContent = `Sync: Connected to ${device.name}`;
+
+        // Send data to other device (simplified example using a hypothetical characteristic)
+        const dataToSend = JSON.stringify(appData);
+        // Note: Web Bluetooth requires a specific service and characteristic setup on both devices
+        // This is a simplified demo; actual implementation needs a custom Bluetooth profile
+        console.log("Sending data:", dataToSend);
+
+        // Receive data (simulated here; real implementation needs characteristic subscription)
+        const receivedData = prompt("Simulated Bluetooth receive: Paste JSON data from other device (or cancel to skip):");
+        if (receivedData) {
+          try {
+            const newData = JSON.parse(receivedData);
+            if (newData.nextId && Array.isArray(newData.children)) {
+              appData = mergeData(appData, newData);
+              saveData();
+              updateUI();
+              alert(translations[language].bluetoothSyncSuccess);
+            } else {
+              alert(translations[language].importFormat);
+            }
+          } catch (err) {
+            alert(translations[language].bluetoothSyncError + err.message);
+          }
+        }
+
+        server.disconnect();
+        document.getElementById('sync-status').textContent = "Sync: Offline";
+      } catch (err) {
+        alert(translations[language].bluetoothSyncError + err.message);
+        document.getElementById('sync-status').textContent = "Sync: Error";
+      }
+      toggleMenu();
+    });
+
+    const mergeData = (localData, remoteData) => {
+      // Simple merge: keep higher nextId, combine children arrays, deduplicate by id
+      const merged = { nextId: Math.max(localData.nextId, remoteData.nextId), children: [] };
+      const allChildren = [...localData.children, ...remoteData.children];
+      const uniqueIds = new Set(allChildren.map(c => c.id));
+      uniqueIds.forEach(id => {
+        const localChild = localData.children.find(c => c.id === id) || {};
+        const remoteChild = remoteData.children.find(c => c.id === id) || {};
+        merged.children.push({
+          ...localChild,
+          ...remoteChild,
+          milkIntake: [...(localChild.milkIntake || []), ...(remoteChild.milkIntake || [])],
+          diaperChanges: [...(localChild.diaperChanges || []), ...(remoteChild.diaperChanges || [])]
+        });
+      });
+      return merged;
     };
 
+    // Navigation
+    const toggleSidebar = () => document.getElementById('sidebar').classList.toggle('hidden');
     const toggleMenu = () => document.getElementById('menu').classList.toggle('hidden');
-
     const toggleSettings = () => {
       const settingsPanel = document.getElementById('settings');
       settingsPanel.classList.toggle('hidden');
@@ -579,8 +726,8 @@
       const delay = nextTime - new Date();
       if (delay > 0) {
         setTimeout(() => {
-          new Notification(`Milk Time for ${child.name}!`, {
-            body: `It's been ${settings.milkInterval} hours since the last milk intake.`,
+          new Notification(`Feeding Time for ${child.name}!`, {
+            body: `It's been ${settings.milkInterval} hours since the last feeding.`,
             icon: 'https://via.placeholder.com/32?text=🍼'
           });
           renderDashboard();
@@ -592,6 +739,16 @@
       if (settings.notifications && Notification.permission === "granted") {
         appData.children.forEach(scheduleReminder);
       }
+    };
+
+    // Random Tips
+    const showRandomTip = () => {
+      const tipBox = document.getElementById('tip-box');
+      if (!tipBox) return;
+      tipBox.classList.remove('hidden');
+      tipBox.textContent = tips[Math.floor(Math.random() * tips.length)];
+      setTimeout(() => tipBox.classList.add('hidden'), 5000);
+      setTimeout(showRandomTip, 30000);
     };
 
     // Initialization
