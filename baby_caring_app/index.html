@@ -42,7 +42,7 @@
     .sync-status { font-size: 0.9rem; }
     dialog { border: none; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); background: white; padding: 1.5rem; }
     dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-    .dashboard-grid { gap: 2rem; } /* Increased spacing */
+    .dashboard-grid { gap: 2rem; }
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -163,6 +163,30 @@
         <div class="flex space-x-4">
           <button type="submit" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Save</button>
           <button type="button" id="edit-diaper-cancel" class="w-full p-3 bg-gray-400 text-white rounded-full shadow-glow">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="edit-child-dialog">
+      <h3 class="text-xl font-semibold text-blue-600 mb-4">Edit Child</h3>
+      <form id="edit-child-form" class="space-y-4">
+        <div>
+          <label class="block text-blue-600">Name:</label>
+          <input type="text" id="edit-child-name" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+        </div>
+        <div>
+          <label class="block text-blue-600">Gender:</label>
+          <select id="edit-child-gender" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <option value="boy">Boy</option>
+            <option value="girl">Girl</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-blue-600">Birthdate:</label>
+          <input type="date" id="edit-child-birthdate" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+        </div>
+        <div class="flex space-x-4">
+          <button type="submit" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Save</button>
+          <button type="button" id="edit-child-cancel" class="w-full p-3 bg-gray-400 text-white rounded-full shadow-glow">Cancel</button>
         </div>
       </form>
     </dialog>
@@ -384,9 +408,14 @@
           <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
           <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
           <canvas id="chart-${child.id}" class="w-full h-32 mt-4"></canvas>
-          <button onclick="showDetails('${child.id}')" class="mt-4 p-2 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
-            <i class="fas fa-info-circle mr-2"></i> Details
-          </button>
+          <div class="flex space-x-4 mt-4">
+            <button onclick="showDetails('${child.id}')" class="p-2 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
+              <i class="fas fa-info-circle mr-2"></i> Details
+            </button>
+            <button onclick="showEditChildDialog('${child.id}')" class="p-2 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="Edit child">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </button>
+          </div>
         `;
         dashboard.appendChild(card);
         renderChart(child);
@@ -564,13 +593,33 @@
     };
 
     const editChild = (id) => {
+      showEditChildDialog(id);
+    };
+
+    const showEditChildDialog = (id) => {
       const child = appData.children.find(c => c.id === id);
-      const newName = prompt("Edit child's name:", child.name);
-      if (newName && newName.trim()) {
-        child.name = newName.trim();
-        saveData();
-        updateUI();
-      }
+      const dialog = document.getElementById('edit-child-dialog');
+      document.getElementById('edit-child-name').value = child.name;
+      document.getElementById('edit-child-gender').value = child.gender;
+      document.getElementById('edit-child-birthdate').value = child.birthdate || '';
+      document.getElementById('edit-child-form').onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById('edit-child-name').value.trim();
+        const gender = document.getElementById('edit-child-gender').value;
+        const birthdate = document.getElementById('edit-child-birthdate').value;
+        if (name && (gender === 'boy' || gender === 'girl') && /^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
+          child.name = name;
+          child.gender = gender;
+          child.birthdate = birthdate;
+          saveData();
+          updateUI();
+          dialog.close();
+        } else {
+          alert("Please enter a valid name, gender (Boy/Girl), and birthdate (YYYY-MM-DD).");
+        }
+      };
+      document.getElementById('edit-child-cancel').onclick = () => dialog.close();
+      dialog.showModal();
     };
 
     const deleteMilk = (idx) => {
