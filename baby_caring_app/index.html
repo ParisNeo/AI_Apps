@@ -9,6 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Comic Neue', cursive;
@@ -37,6 +38,7 @@
       font-size: 0.9rem; white-space: nowrap; z-index: 10;
     }
     .tip-box { animation: fadeIn 1s ease-in-out; }
+    .edit-input { width: 60px; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .sync-status { font-size: 0.9rem; }
     @media (max-width: 640px) {
@@ -127,7 +129,7 @@
         addChild: "Add Child",
         dashboard: "Dashboard",
         atHome: "At Home",
-        nextMilk: "Next Milk",
+        nextMilk: "Next Feeding",
         milkTitle: "Feeding",
         milkAmount: "Amount (ml)",
         milkDuration: "Duration (min)",
@@ -149,6 +151,7 @@
         birthdate: "Birthdate",
         boy: "Boy",
         girl: "Girl",
+        milkIntervals: "Feeding Intervals",
         addChildPrompt: "Enter child's name:",
         genderPrompt: "Select gender (Boy/Girl):",
         birthdatePrompt: "Enter birthdate (YYYY-MM-DD):",
@@ -171,7 +174,7 @@
         addChild: "Ajouter un enfant",
         dashboard: "Tableau de bord",
         atHome: "À la maison",
-        nextMilk: "Prochain lait",
+        nextMilk: "Prochain repas",
         milkTitle: "Alimentation",
         milkAmount: "Quantité (ml)",
         milkDuration: "Durée (min)",
@@ -193,6 +196,7 @@
         birthdate: "Date de naissance",
         boy: "Garçon",
         girl: "Fille",
+        milkIntervals: "Intervalles d'alimentation",
         addChildPrompt: "Entrez le nom de l'enfant :",
         genderPrompt: "Sélectionnez le genre (Garçon/Fille) :",
         birthdatePrompt: "Entrez la date de naissance (AAAA-MM-JJ) :",
@@ -232,7 +236,7 @@
       notifications: localStorage.getItem('notifications') === 'true'
     };
     let db;
-    let isBreastfeeding = false; // Toggle for feeding type
+    let isBreastfeeding = false;
 
     // IndexedDB Setup with Persistent Storage
     const dbName = "BabyCareDB";
@@ -325,7 +329,9 @@
         card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
         const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
         const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
-        const timeLeft = nextMilk ? Math.max(0, Math.floor((nextMilk - new Date()) / (1000 * 60))) : 'N/A';
+        const now = new Date();
+        const timeLeft = nextMilk && nextMilk > now ? Math.floor((nextMilk - now) / (1000 * 60)) : 0;
+        const timeLeftText = lastMilk ? (timeLeft > 0 ? `${timeLeft} min` : 'Now') : 'N/A';
         const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
         card.innerHTML = `
           <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
@@ -333,15 +339,45 @@
           <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
           <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
           <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
-          <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeft === 'N/A' ? 'N/A' : `${timeLeft} min`}</p>
+          <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
+          <canvas id="chart-${child.id}" class="w-full h-32 mt-4"></canvas>
           <button onclick="showDetails('${child.id}')" class="mt-4 p-2 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
             <i class="fas fa-info-circle mr-2"></i> Details
           </button>
         `;
         dashboard.appendChild(card);
+        renderChart(child);
       });
       document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
       showRandomTip();
+    };
+
+    const renderChart = (child) => {
+      const ctx = document.getElementById(`chart-${child.id}`).getContext('2d');
+      const timestamps = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b);
+      const intervals = [];
+      for (let i = 1; i < timestamps.length; i++) {
+        intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60)); // Hours
+      }
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: intervals.map((_, i) => `Feed ${i + 1}`),
+          datasets: [{
+            label: translations[language].milkIntervals,
+            data: intervals,
+            borderColor: '#60a5fa',
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Hours' } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
     };
 
     const showDetails = (id) => {
@@ -417,12 +453,19 @@
       child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       child.milkIntake.forEach((intake, idx) => {
         const li = document.createElement('li');
-        li.className = 'flex justify-between text-blue-600';
+        li.className = 'flex justify-between items-center text-blue-600';
         const valueText = intake.type === 'breast' ? `${intake.duration} min` : `${intake.amount} ml`;
-        li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${t[intake.type + 'Feed']} - ${valueText}
+        li.innerHTML = `
+          <span>
+            <input type="datetime-local" value="${intake.timestamp.slice(0, 16)}" onchange="editMilk(${idx}, 'timestamp', this.value)" class="edit-input border border-blue-200 rounded">
+            - ${t[intake.type + 'Feed']} - 
+            <input type="number" value="${intake.type === 'breast' ? intake.duration : intake.amount}" onchange="editMilk(${idx}, '${intake.type === 'breast' ? 'duration' : 'amount'}', this.value)" class="edit-input border border-blue-200 rounded">
+            ${intake.type === 'breast' ? 'min' : 'ml'}
+          </span>
           <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
-          </button>`;
+          </button>
+        `;
         list.appendChild(li);
       });
     };
@@ -436,12 +479,20 @@
       child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       child.diaperChanges.forEach((change, idx) => {
         const li = document.createElement('li');
-        li.className = 'flex justify-between text-blue-600';
-        const type = t[`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
-        li.innerHTML = `${new Date(change.timestamp).toLocaleString()} - ${type}
+        li.className = 'flex justify-between items-center text-blue-600';
+        li.innerHTML = `
+          <span>
+            <input type="datetime-local" value="${change.timestamp.slice(0, 16)}" onchange="editDiaper(${idx}, 'timestamp', this.value)" class="edit-input border border-blue-200 rounded">
+            - <select onchange="editDiaper(${idx}, 'type', this.value)" class="border border-blue-200 rounded">
+              <option value="wet" ${change.type === 'wet' ? 'selected' : ''}>${t.diaperWet}</option>
+              <option value="dirty" ${change.type === 'dirty' ? 'selected' : ''}>${t.diaperDirty}</option>
+              <option value="both" ${change.type === 'both' ? 'selected' : ''}>${t.diaperBoth}</option>
+            </select>
+          </span>
           <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
-          </button>`;
+          </button>
+        `;
         list.appendChild(li);
       });
     };
@@ -449,7 +500,6 @@
     // Event Handlers
     const selectChild = (id) => {
       activeChildId = id;
-是真的
       showDetails(id);
       toggleSidebar();
     };
@@ -474,6 +524,29 @@
     const deleteDiaper = (idx) => {
       const child = appData.children.find(c => c.id === activeChildId);
       child.diaperChanges.splice(idx, 1);
+      saveData();
+      renderDiapers();
+    };
+
+    const editMilk = (idx, field, value) => {
+      const child = appData.children.find(c => c.id === activeChildId);
+      if (field === 'timestamp') {
+        child.milkIntake[idx].timestamp = new Date(value).toISOString();
+      } else if (field === 'duration' || field === 'amount') {
+        child.milkIntake[idx][field] = parseInt(value);
+      }
+      saveData();
+      renderMilk();
+      renderDashboard();
+    };
+
+    const editDiaper = (idx, field, value) => {
+      const child = appData.children.find(c => c.id === activeChildId);
+      if (field === 'timestamp') {
+        child.diaperChanges[idx].timestamp = new Date(value).toISOString();
+      } else if (field === 'type') {
+        child.diaperChanges[idx].type = value;
+      }
       saveData();
       renderDiapers();
     };
@@ -614,21 +687,11 @@
         return;
       }
       try {
-        // Request Bluetooth device
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: ['battery_service'] // Placeholder service; replace with custom service UUID if needed
-        });
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         const server = await device.gatt.connect();
         document.getElementById('sync-status').textContent = `Sync: Connected to ${device.name}`;
-
-        // Send data to other device (simplified example using a hypothetical characteristic)
         const dataToSend = JSON.stringify(appData);
-        // Note: Web Bluetooth requires a specific service and characteristic setup on both devices
-        // This is a simplified demo; actual implementation needs a custom Bluetooth profile
         console.log("Sending data:", dataToSend);
-
-        // Receive data (simulated here; real implementation needs characteristic subscription)
         const receivedData = prompt("Simulated Bluetooth receive: Paste JSON data from other device (or cancel to skip):");
         if (receivedData) {
           try {
@@ -645,7 +708,6 @@
             alert(translations[language].bluetoothSyncError + err.message);
           }
         }
-
         server.disconnect();
         document.getElementById('sync-status').textContent = "Sync: Offline";
       } catch (err) {
@@ -656,7 +718,6 @@
     });
 
     const mergeData = (localData, remoteData) => {
-      // Simple merge: keep higher nextId, combine children arrays, deduplicate by id
       const merged = { nextId: Math.max(localData.nextId, remoteData.nextId), children: [] };
       const allChildren = [...localData.children, ...remoteData.children];
       const uniqueIds = new Set(allChildren.map(c => c.id));
