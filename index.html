@@ -2,113 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>WebCraftorApps Zoo</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* iPhone-like home button */
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.8) 100%);
+            border: 2px solid rgba(255,255,255,0.3);
+            z-index: 1000;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .home-button { display: block; }
+            body { padding-bottom: 80px; }
+        }
+        /* Disable text selection for better touch experience */
+        body { user-select: none; -webkit-user-select: none; }
+        /* Smooth scrolling for touch */
+        html { scroll-behavior: smooth; }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center py-8">
-    <h1 class="text-4xl md:text-5xl font-bold mb-8 text-cyan-400 animate-fade-in">
-        WebCraftorApps Zoo
+<body class="bg-gradient-to-b from-gray-900 to-black text-white min-h-screen flex flex-col items-center pt-12 pb-20 overflow-x-hidden">
+    <!-- Status Bar -->
+    <div class="fixed top-0 left-0 right-0 h-8 bg-black/80 backdrop-blur-sm flex justify-between px-4 items-center text-sm z-50">
+        <span id="browser-indicator">Safari</span>
+        <span id="time-indicator"></span>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-cyan-300 animate-bounce-slow">
+        WebCraftorApps
     </h1>
 
-    <div id="app-container" class="container mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
+    <div id="app-container" class="w-full px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 max-w-2xl md:max-w-4xl">
         <!-- Apps will be dynamically inserted here -->
     </div>
 
-    <button onclick="shuffleApps()" class="mt-8 px-6 py-3 bg-cyan-500 text-gray-900 rounded-lg hover:bg-cyan-600 transition-colors duration-300 font-semibold">
-        Shuffle Apps
-    </button>
+    <div class="home-button" onclick="scrollToTop()"></div>
 
     <script>
         const apps = [
-            {
-                name: "Chess Game",
-                path: "chess_game/index.html",
-                icon: "chess_game/icon.png",
-                description: "A classic strategy board game where two players compete to checkmate their opponent's king."
-            },
-            {
-                name: "Todo App Projects",
-                path: "todo_app/index.html",
-                icon: "todo_app/icon.png",
-                description: "A comprehensive task management system with project organization features."
-            },
-            {
-                name: "Simple Todo App",
-                path: "simple_todo_app/index.html",
-                icon: "simple_todo_app/icon.png",
-                description: "A minimalist todo list application for quick task tracking."
-            },
-            {
-                name: "Weight Tracking App",
-                path: "weight_tracking_app/index.html",
-                icon: "weight_tracking_app/icon.png",
-                description: "Monitor and track your weight progress with charts and statistics."
-            },
-            {
-                name: "Snake Game",
-                path: "snake_game/index.html",
-                icon: "snake_game/icon.png",
-                description: "The classic arcade game where you guide a growing snake to eat food."
-            },
-            {
-                name: "Tensorflow Video Segmentation",
-                path: "tensorflow_js_segmentation/index.html",
-                icon: "tensorflow_js_segmentation/icon.png",
-                description: "Advanced video processing using TensorFlow.js (local execution required).",
-                isDownload: true
-            },
-            {
-                name: "Baby Caring App",
-                path: "baby_caring_app/index.html",
-                icon: "baby_caring_app/icon.png",
-                description: "Track feeding, sleeping, and diaper changes for infant care."
-            },
-            {
-                name: "Level App",
-                path: "level_app/index.html",
-                icon: "level_app/icon.png",
-                description: "A mobile-only tool for measuring surface levels using device sensors."
-            },
-            {
-                name: "LoLLMS UI",
-                path: "lollms_chat/index.html",
-                icon: "lollms_chat/icon.png",
-                description: "User interface for interacting with Large Language Model systems."
-            },
-            {
-                name: "PillPal",
-                path: "PillPal/index.html",
-                icon: "PillPal/icon.png",
-                description: "Medication management app with reminders and dosage tracking."
-            },
-            {
-                name: "Weight Watcher App",
-                path: "Weight_Watcher_App/index.html",
-                icon: "Weight_Watcher_App/icon.png",
-                description: "A detailed weight management tool with diet and exercise tracking."
-            }
+            { name: "Chess", path: "chess_game/index.html", icon: "chess_game/icon.png", desc: "Classic strategy game" },
+            { name: "Projects", path: "todo_app/index.html", icon: "todo_app/icon.png", desc: "Task management" },
+            { name: "Todo", path: "simple_todo_app/index.html", icon: "simple_todo_app/icon.png", desc: "Simple tasks" },
+            { name: "Weight", path: "weight_tracking_app/index.html", icon: "weight_tracking_app/icon.png", desc: "Track weight" },
+            { name: "Snake", path: "snake_game/index.html", icon: "snake_game/icon.png", desc: "Retro arcade" },
+            { name: "TF Video", path: "tensorflow_js_segmentation/index.html", icon: "tensorflow_js_segmentation/icon.png", desc: "Video processing", isDownload: true },
+            { name: "Baby", path: "baby_caring_app/index.html", icon: "baby_caring_app/icon.png", desc: "Infant care" },
+            { name: "Level", path: "level_app/index.html", icon: "level_app/icon.png", desc: "Mobile leveling" },
+            { name: "LoLLMS", path: "lollms_chat/index.html", icon: "lollms_chat/icon.png", desc: "AI chat UI" },
+            { name: "PillPal", path: "PillPal/index.html", icon: "PillPal/icon.png", desc: "Meds tracker" },
+            { name: "Watcher", path: "Weight_Watcher_App/index.html", icon: "Weight_Watcher_App/icon.png", desc: "Weight & diet" }
         ];
 
         function createAppCard(app) {
             const card = document.createElement('div');
-            card.className = 'bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300';
-            
+            card.className = 'group flex flex-col items-center p-2 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-300 touch-action-manipulation';
             card.innerHTML = `
-                <div class="relative overflow-hidden">
-                    <img src="${app.icon}" alt="${app.name}" class="w-full h-48 object-cover transform hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-40 transition-opacity duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
-                        <p class="text-white text-sm text-center px-4">${app.description}</p>
+                <div class="relative w-20 h-20 md:w-24 md:h-24 mb-2">
+                    <img src="${app.icon}" alt="${app.name}" class="w-full h-full object-cover rounded-xl shadow-md group-hover:shadow-lg transition-shadow duration-300">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl">
+                        <span class="text-xs text-white text-center px-1">${app.desc}</span>
                     </div>
                 </div>
-                <div class="p-4 text-center">
-                    <a href="${app.isDownload ? 'javascript:void(0)' : app.path}" 
-                       onclick="${app.isDownload ? `downloadFile('${app.path}')` : ''}"
-                       class="text-cyan-400 hover:text-cyan-300 font-semibold text-lg">
-                        ${app.name}${app.isDownload ? ' (Local Only)' : ''}
-                    </a>
-                </div>
+                <a href="${app.isDownload ? 'javascript:void(0)' : app.path}" 
+                   onclick="${app.isDownload ? `downloadFile('${app.path}')` : ''}"
+                   class="text-cyan-300 text-sm md:text-base font-medium truncate w-full text-center group-hover:text-cyan-200 transition-colors duration-300">
+                    ${app.name}${app.isDownload ? '*' : ''}
+                </a>
             `;
+            card.addEventListener('touchstart', () => card.classList.add('scale-95'), { passive: true });
+            card.addEventListener('touchend', () => card.classList.remove('scale-95'), { passive: true });
             return card;
         }
 
@@ -116,14 +87,6 @@
             const container = document.getElementById('app-container');
             container.innerHTML = '';
             apps.forEach(app => container.appendChild(createAppCard(app)));
-        }
-
-        function shuffleApps() {
-            for (let i = apps.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [apps[i], apps[j]] = [apps[j], apps[i]];
-            }
-            renderApps();
         }
 
         function downloadFile(filePath) {
@@ -135,17 +98,44 @@
             document.body.removeChild(link);
         }
 
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Browser detection and adjustments
+        const userAgent = navigator.userAgent.toLowerCase();
+        const browserIndicator = document.getElementById('browser-indicator');
+        if (userAgent.includes('firefox')) {
+            browserIndicator.textContent = 'Firefox';
+            document.body.style.background = 'linear-gradient(to bottom, #1a1a1a, #000)';
+        } else if (userAgent.includes('chrome')) {
+            browserIndicator.textContent = 'Chrome';
+        } else if (userAgent.includes('safari')) {
+            browserIndicator.textContent = 'Safari';
+            document.body.classList.add('bg-gray-900');
+        }
+
+        // Time display
+        function updateTime() {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time-indicator').textContent = time;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
         // Initial render
         renderApps();
 
-        // Add fade-in animation via Tailwind
-        document.querySelectorAll('.animate-fade-in').forEach(el => {
-            el.classList.add('opacity-0');
-            setTimeout(() => {
-                el.classList.remove('opacity-0');
-                el.classList.add('opacity-100');
-            }, 100);
-        });
+        // Custom animations
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite'
+                    }
+                }
+            }
+        };
     </script>
 </body>
 </html>
