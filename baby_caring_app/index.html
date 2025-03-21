@@ -401,4 +401,16 @@
     // Sliding menu toggle
     function toggleMenu() {
       const menu = document.getElementById('sliding-menu');
- 
+      menu.classList.toggle('hidden');
+    }
+
+    document.getElementById('open-menu').addEventListener('click', toggleMenu);
+    document.getElementById('close-menu').addEventListener('click', toggleMenu);
+
+    // Initialize the app
+    loadData();
+    updateLanguage();
+    renderChildList();
+  </script>
+</body>
+</html>
