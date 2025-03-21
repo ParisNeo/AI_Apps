@@ -3,175 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebCraftorApps</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #1e1e1e;
-            color: #c7c7c7;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-            margin: 0;
-            overflow-y: auto;
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        h1 {
-            margin: 20px 0;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-        }
-        .card-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            padding: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
-        .card {
-            background-color: #2e2e2e;
-            border-radius: 10px;
-            overflow: hidden;
-            width: 300px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
-        }
-        .card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        .card:hover img {
-            transform: scale(1.1);
-        }
-        .card-content {
-            padding: 15px;
-            text-align: center;
-        }
-        .card-content a {
-            color: #61dafb;
-            text-decoration: none;
-            font-size: 18px;
-            transition: color 0.3s;
-        }
-        .card-content a:hover {
-            color: #4ca3d9;
-            text-decoration: underline;
-        }
-        @media (max-width: 768px) {
-            .card {
-                width: 90%;
-                max-width: 300px;
-            }
-            h1 {
-                font-size: 2em;
-            }
-        }
-        .refresh-button {
-            margin: 20px;
-            padding: 10px 20px;
-            background-color: #61dafb;
-            color: #1e1e1e;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        .refresh-button:hover {
-            background-color: #4ca3d9;
-        }
-    </style>
+    <title>WebCraftorApps Zoo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>WebCraftorApps</h1>
-    <div class="card-container">
-        <div class="card" onclick="window.location.href='chess_game/index.html'">
-            <img src="chess_game/icon.png" alt="Chess Game">
-            <div class="card-content">
-                <a href="chess_game/index.html">Chess Game</a>
-            </div>
-        </div>
-        <div class="card" onclick="window.location.href='todo_app/index.html'">
-            <img src="todo_app/icon.png" alt="Todo App">
-            <div class="card-content">
-                <a href="todo_app/index.html">Todo App projects</a>
-            </div>
-        </div>
-        <div class="card" onclick="window.location.href='simple_todo_app/index.html'">
-            <img src="simple_todo_app/icon.png" alt="Todo App">
-            <div class="card-content">
-                <a href="simple_todo_app/index.html">Todo App</a>
-            </div>
-        </div>
-        <div class="card" onclick="window.location.href='weight_tracking_app/index.html'">
-            <img src="weight_tracking_app/icon.png" alt="Weight Tracking App">
-            <div class="card-content">
-                <a href="weight_tracking_app/index.html">Weight Tracking App</a>
-            </div>
-        </div>
-        <div class="card" onclick="window.location.href='snake_game/index.html'">
-            <img src="snake_game/icon.png" alt="Snake game">
-            <div class="card-content">
-                <a href="snake_game/index.html">Snake game</a>
-            </div>
-        </div>
-        <div class="card" onclick="downloadFile('tensorflow_js_segmentation/index.html')">
-            <img src="tensorflow_js_segmentation/icon.png" alt="Tensorflow Video segmentation app">
-            <div class="card-content">
-                <a href="javascript:void(0);">Tensorflow Video segmentation app (only runs locally)</a>
-            </div>
-        </div>   
-        <div class="card" onclick="window.location.href='baby_caring_app/index.html'">
-            <img src="baby_caring_app/icon.png" alt="Baby caring app">
-            <div class="card-content">
-                <a href="baby_caring_app/index.html">Baby caring app</a>
-            </div>
-        </div>    
-        <div class="card" onclick="window.location.href='level_app/index.html'">
-            <img src="level_app/icon.png" alt="Level App">
-            <div class="card-content">
-                <a href="level_app/index.html">Level app (mobile only)</a>
-            </div>
-        </div>  
-        <div class="card" onclick="window.location.href='lollms_chat/index.html'">
-            <img src="lollms_chat/icon.png" alt="Level App">
-            <div class="card-content">
-                <a href="lollms_chat/index.html">LoLLMS ui</a>
-            </div>
-        </div>                
-        <div class="card" onclick="window.location.href='PillPal/index.html'">
-            <img src="PillPal/icon.png" alt="PillPal">
-            <div class="card-content">
-                <a href="PillPal/index.html">PillPal</a>
-            </div>
-        </div>                
-        <div class="card" onclick="window.location.href='Weight_Watcher_App/index.html'">
-            <img src="Weight_Watcher_App/icon.png" alt="Weight_Watcher_App">
-            <div class="card-content">
-                <a href="Weight_Watcher_App/index.html">Weight_Watcher_App</a>
-            </div>
-        </div>                
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center py-8">
+    <h1 class="text-4xl md:text-5xl font-bold mb-8 text-cyan-400 animate-fade-in">
+        WebCraftorApps Zoo
+    </h1>
+
+    <div id="app-container" class="container mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
+        <!-- Apps will be dynamically inserted here -->
     </div>
-    
-    <button class="refresh-button" onclick="forceRefresh()">Refresh Page</button>
+
+    <button onclick="shuffleApps()" class="mt-8 px-6 py-3 bg-cyan-500 text-gray-900 rounded-lg hover:bg-cyan-600 transition-colors duration-300 font-semibold">
+        Shuffle Apps
+    </button>
+
     <script>
+        const apps = [
+            {
+                name: "Chess Game",
+                path: "chess_game/index.html",
+                icon: "chess_game/icon.png",
+                description: "A classic strategy board game where two players compete to checkmate their opponent's king."
+            },
+            {
+                name: "Todo App Projects",
+                path: "todo_app/index.html",
+                icon: "todo_app/icon.png",
+                description: "A comprehensive task management system with project organization features."
+            },
+            {
+                name: "Simple Todo App",
+                path: "simple_todo_app/index.html",
+                icon: "simple_todo_app/icon.png",
+                description: "A minimalist todo list application for quick task tracking."
+            },
+            {
+                name: "Weight Tracking App",
+                path: "weight_tracking_app/index.html",
+                icon: "weight_tracking_app/icon.png",
+                description: "Monitor and track your weight progress with charts and statistics."
+            },
+            {
+                name: "Snake Game",
+                path: "snake_game/index.html",
+                icon: "snake_game/icon.png",
+                description: "The classic arcade game where you guide a growing snake to eat food."
+            },
+            {
+                name: "Tensorflow Video Segmentation",
+                path: "tensorflow_js_segmentation/index.html",
+                icon: "tensorflow_js_segmentation/icon.png",
+                description: "Advanced video processing using TensorFlow.js (local execution required).",
+                isDownload: true
+            },
+            {
+                name: "Baby Caring App",
+                path: "baby_caring_app/index.html",
+                icon: "baby_caring_app/icon.png",
+                description: "Track feeding, sleeping, and diaper changes for infant care."
+            },
+            {
+                name: "Level App",
+                path: "level_app/index.html",
+                icon: "level_app/icon.png",
+                description: "A mobile-only tool for measuring surface levels using device sensors."
+            },
+            {
+                name: "LoLLMS UI",
+                path: "lollms_chat/index.html",
+                icon: "lollms_chat/icon.png",
+                description: "User interface for interacting with Large Language Model systems."
+            },
+            {
+                name: "PillPal",
+                path: "PillPal/index.html",
+                icon: "PillPal/icon.png",
+                description: "Medication management app with reminders and dosage tracking."
+            },
+            {
+                name: "Weight Watcher App",
+                path: "Weight_Watcher_App/index.html",
+                icon: "Weight_Watcher_App/icon.png",
+                description: "A detailed weight management tool with diet and exercise tracking."
+            }
+        ];
+
+        function createAppCard(app) {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300';
+            
+            card.innerHTML = `
+                <div class="relative overflow-hidden">
+                    <img src="${app.icon}" alt="${app.name}" class="w-full h-48 object-cover transform hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-40 transition-opacity duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                        <p class="text-white text-sm text-center px-4">${app.description}</p>
+                    </div>
+                </div>
+                <div class="p-4 text-center">
+                    <a href="${app.isDownload ? 'javascript:void(0)' : app.path}" 
+                       onclick="${app.isDownload ? `downloadFile('${app.path}')` : ''}"
+                       class="text-cyan-400 hover:text-cyan-300 font-semibold text-lg">
+                        ${app.name}${app.isDownload ? ' (Local Only)' : ''}
+                    </a>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderApps() {
+            const container = document.getElementById('app-container');
+            container.innerHTML = '';
+            apps.forEach(app => container.appendChild(createAppCard(app)));
+        }
+
+        function shuffleApps() {
+            for (let i = apps.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [apps[i], apps[j]] = [apps[j], apps[i]];
+            }
+            renderApps();
+        }
+
         function downloadFile(filePath) {
             const link = document.createElement('a');
             link.href = filePath;
@@ -180,9 +134,18 @@
             link.click();
             document.body.removeChild(link);
         }
-        function forceRefresh() {
-            window.location.reload(true);
-        }
-    </script>    
+
+        // Initial render
+        renderApps();
+
+        // Add fade-in animation via Tailwind
+        document.querySelectorAll('.animate-fade-in').forEach(el => {
+            el.classList.add('opacity-0');
+            setTimeout(() => {
+                el.classList.remove('opacity-0');
+                el.classList.add('opacity-100');
+            }, 100);
+        });
+    </script>
 </body>
 </html>
