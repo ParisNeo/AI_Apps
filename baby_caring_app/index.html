@@ -8,6 +8,7 @@
   <title>Baby Caring</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     body {
       font-family: 'Comic Neue', cursive;
@@ -25,8 +26,14 @@
     .shadow-glow { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
     .rounded-xl { border-radius: 1.5rem; }
     .btn-gradient { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
+    .dashboard-card { transition: all 0.2s; }
+    .dashboard-card:hover { transform: translateY(-5px); }
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 641px) {
+      .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     }
   </style>
 </head>
@@ -38,41 +45,41 @@
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <div class="flex space-x-4">
           <button id="menu-toggle" class="text-gray-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            <i class="fas fa-bars w-8 h-8"></i>
           </button>
           <button id="sidebar-close" class="md:hidden text-gray-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
       </header>
       <h2 id="children-title" class="text-xl font-semibold text-blue-600 mb-4">Children</h2>
       <ul id="child-list" class="space-y-3 mb-6"></ul>
       <button id="add-child" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
-        <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        <i class="fas fa-plus btn-icon mr-2"></i> <span>Add Child</span>
       </button>
       <!-- Menu -->
       <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
           <button id="menu-close" class="text-gray-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
         <div class="space-y-4">
           <button id="export-data" class="w-full p-3 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
+            <i class="fas fa-download btn-icon mr-2"></i> <span>Export Data</span>
           </button>
           <input type="file" id="import-file" class="hidden" accept=".json">
           <button id="import-data" class="w-full p-3 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
+            <i class="fas fa-upload btn-icon mr-2"></i> <span>Import Data</span>
           </button>
           <button id="share-data" class="w-full p-3 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            <i class="fas fa-share-alt btn-icon mr-2"></i> <span>Share Data</span>
           </button>
           <button id="toggle-lang" class="w-full p-3 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
+            <i class="fas fa-language btn-icon mr-2"></i> <span>Switch Language</span>
           </button>
           <button id="settings-toggle" class="w-full p-3 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <i class="fas fa-cog btn-icon mr-2"></i> <span>Settings</span>
           </button>
         </div>
       </div>
@@ -80,7 +87,7 @@
       <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
           <button id="settings-close" class="text-gray-600">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
         <h3 class="text-xl font-semibold text-blue-600 mb-4">Settings</h3>
@@ -93,40 +100,15 @@
         </div>
       </div>
     </aside>
-    <!-- Main Content -->
+    <!-- Dashboard -->
     <main class="w-full md:w-3/4 p-6">
       <header class="flex justify-between items-center mb-6">
-        <h2 id="current-child" class="text-2xl font-bold text-blue-600">Select a child</h2>
+        <h2 class="text-2xl font-bold text-blue-600">Dashboard</h2>
         <button id="sidebar-open" class="md:hidden text-gray-600">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+          <i class="fas fa-bars w-8 h-8"></i>
         </button>
       </header>
-      <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
-        <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">Milk Intake</h3>
-        <form id="milk-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
-          <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <input type="number" id="milk-amount" placeholder="Amount (ml)" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-          </button>
-        </form>
-        <ul id="milk-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
-      </section>
-      <section class="bg-white p-6 rounded-xl shadow-glow">
-        <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">Diaper Changes</h3>
-        <form id="diaper-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
-          <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <select id="diaper-type" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-            <option value="wet">Wet</option>
-            <option value="dirty">Dirty</option>
-            <option value="both">Both</option>
-          </select>
-          <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
-            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-          </button>
-        </form>
-        <ul id="diaper-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
-      </section>
+      <div id="dashboard" class="dashboard-grid gap-6"></div>
     </main>
   </div>
 
@@ -137,7 +119,9 @@
         appTitle: "Baby Caring",
         childrenTitle: "Children",
         addChild: "Add Child",
-        selectChild: "Select a child",
+        dashboard: "Dashboard",
+        atHome: "At Home",
+        nextMilk: "Next Milk",
         milkTitle: "Milk Intake",
         milkAmount: "Amount (ml)",
         milkAdd: "Add",
@@ -150,6 +134,7 @@
         importData: "Import Data",
         shareData: "Share Data",
         toggleLang: "Switch to French",
+        settings: "Settings",
         addChildPrompt: "Enter child's name:",
         selectChildAlert: "Please select a child first.",
         milkValidation: "Please fill in valid time and amount.",
@@ -165,7 +150,9 @@
         appTitle: "Soins Bébé",
         childrenTitle: "Enfants",
         addChild: "Ajouter un enfant",
-        selectChild: "Sélectionner un enfant",
+        dashboard: "Tableau de bord",
+        atHome: "À la maison",
+        nextMilk: "Prochain lait",
         milkTitle: "Prise de lait",
         milkAmount: "Quantité (ml)",
         milkAdd: "Ajouter",
@@ -178,6 +165,7 @@
         importData: "Importer les données",
         shareData: "Partager les données",
         toggleLang: "Passer à l'anglais",
+        settings: "Paramètres",
         addChildPrompt: "Entrez le nom de l'enfant :",
         selectChildAlert: "Veuillez d'abord sélectionner un enfant.",
         milkValidation: "Veuillez remplir une heure et une quantité valides.",
@@ -201,12 +189,25 @@
     };
     let db;
 
-    // IndexedDB Setup
+    // IndexedDB Setup with Persistent Storage
     const dbName = "BabyCareDB";
     const initDB = () => new Promise((resolve, reject) => {
       const request = indexedDB.open(dbName, 1);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => { db = request.result; resolve(); };
+      request.onsuccess = () => { 
+        db = request.result; 
+        // Request persistent storage
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persist().then(granted => {
+            if (granted) {
+              console.log("Persistent storage granted");
+            } else {
+              console.warn("Persistent storage not granted");
+            }
+          });
+        }
+        resolve(); 
+      };
       request.onupgradeneeded = (e) => {
         e.target.result.createObjectStore("data", { keyPath: "id" });
       };
@@ -234,24 +235,15 @@
       const t = translations[language];
       document.getElementById('app-title').textContent = t.appTitle;
       document.getElementById('children-title').textContent = t.childrenTitle;
-      document.getElementById('add-child').title = t.addChild;
-      document.getElementById('current-child').textContent = activeChildId ? appData.children.find(c => c.id === activeChildId).name : t.selectChild;
-      document.getElementById('milk-title').textContent = t.milkTitle;
-      document.getElementById('milk-amount').placeholder = t.milkAmount;
-      document.getElementById('milk-form').querySelector('button').title = t.milkAdd;
-      document.getElementById('diaper-title').textContent = t.diaperTitle;
-      const diaperType = document.getElementById('diaper-type');
-      diaperType.options[0].text = t.diaperWet;
-      diaperType.options[1].text = t.diaperDirty;
-      diaperType.options[2].text = t.diaperBoth;
-      document.getElementById('diaper-form').querySelector('button').title = t.diaperAdd;
-      document.getElementById('export-data').title = t.exportData;
-      document.getElementById('import-data').title = t.importData;
-      document.getElementById('share-data').title = t.shareData;
-      document.getElementById('toggle-lang').title = t.toggleLang;
+      document.getElementById('add-child').querySelector('span').textContent = t.addChild;
+      document.querySelector('main header h2').textContent = t.dashboard;
+      document.getElementById('export-data').querySelector('span').textContent = t.exportData;
+      document.getElementById('import-data').querySelector('span').textContent = t.importData;
+      document.getElementById('share-data').querySelector('span').textContent = t.shareData;
+      document.getElementById('toggle-lang').querySelector('span').textContent = t.toggleLang;
+      document.getElementById('settings-toggle').querySelector('span').textContent = t.settings;
       renderChildren();
-      renderMilk();
-      renderDiapers();
+      renderDashboard();
     };
 
     // Render Functions
@@ -264,54 +256,125 @@
         li.innerHTML = `
           <span onclick="selectChild('${child.id}')">${child.name}</span>
           <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600">
-            <svg class="w-5 h-5 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <i class="fas fa-trash btn-icon"></i>
           </button>
         `;
         list.appendChild(li);
       });
     };
 
+    const renderDashboard = () => {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = '';
+      const t = translations[language];
+      appData.children.forEach(child => {
+        const card = document.createElement('div');
+        card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
+        const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
+        const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
+        const timeLeft = nextMilk ? Math.max(0, Math.floor((nextMilk - new Date()) / (1000 * 60))) : 'N/A';
+        card.innerHTML = `
+          <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
+          <h3 class="text-xl font-bold text-blue-600">${child.name}</h3>
+          <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
+          <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeft === 'N/A' ? 'N/A' : `${timeLeft} min`}</p>
+          <button onclick="showDetails('${child.id}')" class="mt-4 p-2 btn-gradient text-white rounded-full flex items-center">
+            <i class="fas fa-info-circle mr-2"></i> Details
+          </button>
+        `;
+        dashboard.appendChild(card);
+      });
+    };
+
+    const showDetails = (id) => {
+      activeChildId = id;
+      const child = appData.children.find(c => c.id === id);
+      const t = translations[language];
+      const main = document.querySelector('main');
+      main.innerHTML = `
+        <header class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-blue-600">${child.name}</h2>
+          <button id="back-to-dashboard" class="text-gray-600">
+            <i class="fas fa-arrow-left w-8 h-8"></i>
+          </button>
+        </header>
+        <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
+          <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">${t.milkTitle}</h3>
+          <form id="milk-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
+            <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <input type="number" id="milk-amount" placeholder="${t.milkAmount}" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+              <i class="fas fa-plus btn-icon mr-2"></i> ${t.milkAdd}
+            </button>
+          </form>
+          <ul id="milk-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
+        </section>
+        <section class="bg-white p-6 rounded-xl shadow-glow">
+          <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">${t.diaperTitle}</h3>
+          <form id="diaper-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
+            <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <select id="diaper-type" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
+              <option value="wet">${t.diaperWet}</option>
+              <option value="dirty">${t.diaperDirty}</option>
+              <option value="both">${t.diaperBoth}</option>
+            </select>
+            <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+              <i class="fas fa-plus btn-icon mr-2"></i> ${t.diaperAdd}
+            </button>
+          </form>
+          <ul id="diaper-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
+        </section>
+      `;
+      renderMilk();
+      renderDiapers();
+      document.getElementById('back-to-dashboard').addEventListener('click', () => {
+        activeChildId = null;
+        updateUI();
+      });
+      document.getElementById('milk-form').addEventListener('submit', handleMilkSubmit);
+      document.getElementById('diaper-form').addEventListener('submit', handleDiaperSubmit);
+    };
+
     const renderMilk = () => {
       const list = document.getElementById('milk-list');
+      if (!list) return;
       list.innerHTML = '';
-      if (activeChildId) {
-        const child = appData.children.find(c => c.id === activeChildId);
-        child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        child.milkIntake.forEach((intake, idx) => {
-          const li = document.createElement('li');
-          li.className = 'flex justify-between text-blue-600';
-          li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml
-            <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600">
-              <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>`;
-          list.appendChild(li);
-        });
-      }
+      const child = appData.children.find(c => c.id === activeChildId);
+      child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      child.milkIntake.forEach((intake, idx) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between text-blue-600';
+        li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml
+          <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600">
+            <i class="fas fa-trash btn-icon"></i>
+          </button>`;
+        list.appendChild(li);
+      });
     };
 
     const renderDiapers = () => {
       const list = document.getElementById('diaper-list');
+      if (!list) return;
       list.innerHTML = '';
-      if (activeChildId) {
-        const child = appData.children.find(c => c.id === activeChildId);
-        child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        child.diaperChanges.forEach((change, idx) => {
-          const li = document.createElement('li');
-          li.className = 'flex justify-between text-blue-600';
-          const type = translations[language][`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
-          li.innerHTML = `${new Date(change.timestamp).toLocaleString()} - ${type}
-            <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600">
-              <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>`;
-          list.appendChild(li);
-        });
-      }
+      const t = translations[language];
+      const child = appData.children.find(c => c.id === activeChildId);
+      child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      child.diaperChanges.forEach((change, idx) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between text-blue-600';
+        const type = t[`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
+        li.innerHTML = `${new Date(change.timestamp).toLocaleString()} - ${type}
+          <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600">
+            <i class="fas fa-trash btn-icon"></i>
+          </button>`;
+        list.appendChild(li);
+      });
     };
 
     // Event Handlers
     const selectChild = (id) => {
       activeChildId = id;
-      updateUI();
+      showDetails(id);
       toggleSidebar();
     };
 
@@ -329,6 +392,7 @@
       child.milkIntake.splice(idx, 1);
       saveData();
       renderMilk();
+      renderDashboard();
     };
 
     const deleteDiaper = (idx) => {
@@ -345,10 +409,11 @@
         appData.children.push({ id, name, milkIntake: [], diaperChanges: [] });
         saveData();
         renderChildren();
+        renderDashboard();
       }
     });
 
-    document.getElementById('milk-form').addEventListener('submit', (e) => {
+    const handleMilkSubmit = (e) => {
       e.preventDefault();
       if (!activeChildId) return alert(translations[language].selectChildAlert);
       const time = document.getElementById('milk-time').value;
@@ -358,12 +423,13 @@
       child.milkIntake.push({ timestamp: new Date(time).toISOString(), amount: parseInt(amount) });
       saveData();
       renderMilk();
+      renderDashboard();
       scheduleReminder(child);
       document.getElementById('milk-time').value = '';
       document.getElementById('milk-amount').value = '';
-    });
+    };
 
-    document.getElementById('diaper-form').addEventListener('submit', (e) => {
+    const handleDiaperSubmit = (e) => {
       e.preventDefault();
       if (!activeChildId) return alert(translations[language].selectChildAlert);
       const time = document.getElementById('diaper-time').value;
@@ -374,7 +440,7 @@
       saveData();
       renderDiapers();
       document.getElementById('diaper-time').value = '';
-    });
+    };
 
     document.getElementById('export-data').addEventListener('click', () => {
       let md = "# Baby Caring Data\n\n";
