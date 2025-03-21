@@ -10,8 +10,8 @@
     body { font-family: 'Comic Neue', cursive; }
     .slide-in { transition: transform 0.3s ease-in-out; }
     .slide-in.hidden { transform: translateX(-100%); }
-    .fade-in { transition: opacity 0.3s ease-in-out; }
-    .fade-in.hidden { opacity: 0; }
+    .slide-menu { transition: transform 0.3s ease-in-out; }
+    .slide-menu.hidden { transform: translateX(100%); }
     .btn-svg { transition: transform 0.2s; }
     .btn-svg:hover { transform: scale(1.1); }
     .shadow-soft { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
@@ -23,27 +23,40 @@
     <div id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-soft slide-in md:slide-in fixed md:static h-full z-10 rounded-r-2xl">
       <div class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
-        <button id="close-sidebar" class="md:hidden text-gray-600 focus:outline-none">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
+        <div class="flex space-x-4">
+          <button id="open-menu" class="text-gray-600 focus:outline-none">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+          </button>
+          <button id="close-sidebar" class="md:hidden text-gray-600 focus:outline-none">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
       </div>
-      <div class="space-y-3">
-        <button id="export-btn" class="w-full flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500" title="Export Data">
-          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
-        </button>
-        <input type="file" id="import-input" class="hidden" accept=".json">
-        <button id="import-btn" class="w-full flex justify-center items-center p-3 bg-green-400 rounded-full hover:bg-green-500" title="Import Data">
-          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
-        </button>
-        <button id="toggle-lang-btn" class="w-full flex justify-center items-center p-3 bg-gray-400 rounded-full hover:bg-gray-500" title="Switch to French">
-          <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
-        </button>
-      </div>
-      <h2 id="children-title" class="text-xl font-semibold text-blue-600 mt-6 mb-3">Children</h2>
+      <h2 id="children-title" class="text-xl font-semibold text-blue-600 mb-3">Children</h2>
       <ul id="child-list" class="mb-6 space-y-3"></ul>
       <button id="add-child-btn" class="w-full flex justify-center items-center p-3 bg-purple-400 rounded-full hover:bg-purple-500" title="Add Child">
         <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
       </button>
+      <!-- Sliding Menu -->
+      <div id="sliding-menu" class="slide-menu hidden fixed top-0 right-0 w-1/2 md:w-1/4 h-full bg-white p-6 shadow-soft z-20 rounded-l-2xl">
+        <div class="flex justify-end mb-6">
+          <button id="close-menu" class="text-gray-600 focus:outline-none">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <button id="export-btn" class="w-full flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500" title="Export Data">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
+          </button>
+          <input type="file" id="import-input" class="hidden" accept=".json">
+          <button id="import-btn" class="w-full flex justify-center items-center p-3 bg-green-400 rounded-full hover:bg-green-500" title="Import Data">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
+          </button>
+          <button id="toggle-lang-btn" class="w-full flex justify-center items-center p-3 bg-gray-400 rounded-full hover:bg-gray-500" title="Switch to French">
+            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
+          </button>
+        </div>
+      </div>
     </div>
     <!-- Main Area -->
     <div class="w-full md:w-3/4 p-6 md:ml-0">
@@ -220,7 +233,7 @@
         saveData();
         updateLanguage();
         renderChildList();
-        renderMilkIntake();
+        renderMilksensor();
         renderDiaperChanges();
       }
     }
@@ -334,6 +347,7 @@
       a.download = 'baby_caring_data.json';
       a.click();
       URL.revokeObjectURL(url);
+      toggleMenu();
     });
 
     // Trigger file input for import
@@ -364,6 +378,7 @@
           } catch (error) {
             alert(translations[currentLang].importErrorAlert + error.message);
           }
+          toggleMenu();
         };
         reader.readAsText(file);
       }
@@ -378,10 +393,15 @@
     document.getElementById('open-sidebar').addEventListener('click', toggleSidebar);
     document.getElementById('close-sidebar').addEventListener('click', toggleSidebar);
 
+    // Sliding menu toggle
+    function toggleMenu() {
+      const menu = document.getElementById('sliding-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    document.getElementById('open-menu').addEventListener('click', toggleMenu);
+    document.getElementById('close-menu').addEventListener('click', toggleMenu);
+
     // Initialize the app
     loadData();
-    updateLanguage();
-    renderChildList();
-  </script>
-</body>
-</html>
+    u
