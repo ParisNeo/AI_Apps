@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Baby Caring App</title>
+  <title>Baby Caring</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -15,324 +15,525 @@
       user-select: none;
       overscroll-behavior: none;
       background: linear-gradient(135deg, #e0f7fa, #fce4ec, #fff9c4);
+      min-height: 100vh;
     }
-    .slide-in { transition: transform 0.3s ease-in-out; }
-    .slide-in.hidden { transform: translateX(-100%); }
-    .slide-menu { transition: transform 0.3s ease-in-out; }
-    .slide-menu.hidden { transform: translateX(100%); }
-    .btn-svg { transition: transform 0.2s; }
-    .btn-svg:hover { transform: scale(1.1); }
-    .shadow-soft { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-    .rounded-3xl { border-radius: 1.5rem; }
-    .btn-primary { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
+    .slide { transition: transform 0.3s ease-in-out; }
+    .slide.hidden { transform: translateX(100%); }
+    .slide-left.hidden { transform: translateX(-100%); }
+    .btn-icon { transition: transform 0.2s; }
+    .btn-icon:hover { transform: scale(1.1); }
+    .shadow-glow { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+    .rounded-xl { border-radius: 1.5rem; }
+    .btn-gradient { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     }
   </style>
 </head>
-<body class="min-h-screen safe-area">
+<body class="safe-area">
   <div class="flex flex-col md:flex-row">
     <!-- Sidebar -->
-    <div id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-soft slide-in md:slide-in fixed md:static h-full z-10 rounded-r-3xl">
-      <div class="flex justify-between items-center mb-6">
+    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left md:slide-left fixed md:static h-full z-10 rounded-r-xl">
+      <header class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <div class="flex space-x-4">
-          <button id="open-menu" class="text-gray-600 focus:outline-none">
+          <button id="menu-toggle" class="text-gray-600">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
           </button>
-          <button id="close-sidebar" class="md:hidden text-gray-600 focus:outline-none">
+          <button id="sidebar-close" class="md:hidden text-gray-600">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
-      </div>
-      <h2 id="children-title" class="text-xl font-semibold text-blue-600 mb-3">Children</h2>
-      <ul id="child-list" class="mb-6 space-y-3"></ul>
-      <button id="add-child-btn" class="w-full flex justify-center items-center p-3 btn-primary text-white rounded-full shadow-soft" title="Add Child">
-        <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+      </header>
+      <h2 id="children-title" class="text-xl font-semibold text-blue-600 mb-4">Children</h2>
+      <ul id="child-list" class="space-y-3 mb-6"></ul>
+      <button id="add-child" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+        <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
       </button>
-      <!-- Sliding Menu -->
-      <div id="sliding-menu" class="slide-menu hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-soft z-20 rounded-l-3xl">
+      <!-- Menu -->
+      <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="close-menu" class="text-gray-600 focus:outline-none">
+          <button id="menu-close" class="text-gray-600">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
         <div class="space-y-4">
-          <button id="export-btn" class="w-full flex justify-center items-center p-3 bg-blue-400 rounded-full hover:bg-blue-500 text-white" title="Export Data">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
+          <button id="export-data" class="w-full p-3 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4m4-4l-4 4"></path></svg>
           </button>
-          <input type="file" id="import-input" class="hidden" accept=".json">
-          <button id="import-btn" class="w-full flex justify-center items-center p-3 bg-green-400 rounded-full hover:bg-green-500 text-white" title="Import Data">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
+          <input type="file" id="import-file" class="hidden" accept=".json">
+          <button id="import-data" class="w-full p-3 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V6a2 2 0 012-2h12a2 2 0 012 2v2m-8 12V8m4 4l-4-4m-4 4l4-4"></path></svg>
           </button>
-          <button id="share-btn" class="w-full flex justify-center items-center p-3 bg-yellow-400 rounded-full hover:bg-yellow-500 text-white" title="Share Data">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+          <button id="share-data" class="w-full p-3 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
           </button>
-          <button id="toggle-lang-btn" class="w-full flex justify-center items-center p-3 bg-gray-400 rounded-full hover:bg-gray-500 text-white" title="Switch to French">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
+          <button id="toggle-lang" class="w-full p-3 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 19h18M12 5v14m-7-7h14"></path></svg>
           </button>
-          <button id="settings-btn" class="w-full flex justify-center items-center p-3 bg-purple-400 rounded-full hover:bg-purple-500 text-white" title="Settings">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <button id="settings-toggle" class="w-full p-3 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           </button>
         </div>
       </div>
-      <!-- Settings Menu (unchanged) -->
-      <div id="settings-menu" class="slide-menu hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-soft z-20 rounded-l-3xl">
+      <!-- Settings -->
+      <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="close-settings" class="text-gray-600 focus:outline-none">
+          <button id="settings-close" class="text-gray-600">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
         <h3 class="text-xl font-semibold text-blue-600 mb-4">Settings</h3>
         <div class="space-y-4">
           <label class="block text-blue-600">Milk Reminder Interval (hours):</label>
-          <input type="number" id="milk-interval" min="1" max="24" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50" value="3">
+          <input type="number" id="milk-interval" min="1" max="24" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
           <label class="block text-blue-600">Enable Notifications:</label>
-          <input type="checkbox" id="notifications-enabled" class="h-5 w-5 text-blue-600">
-          <button id="save-settings" class="w-full p-3 btn-primary text-white rounded-full shadow-soft">Save</button>
+          <input type="checkbox" id="notify-enable" class="h-5 w-5 text-blue-600">
+          <button id="save-settings" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Save</button>
         </div>
       </div>
-    </div>
-    <!-- Main Area (unchanged) -->
-    <div class="w-full md:w-3/4 p-6 md:ml-0">
-      <div class="flex justify-between items-center mb-6">
-        <h2 id="current-child-name" class="text-2xl font-bold text-blue-600">Select a child</h2>
-        <button id="open-sidebar" class="md:hidden text-gray-600 focus:outline-none">
+    </aside>
+    <!-- Main Content -->
+    <main class="w-full md:w-3/4 p-6">
+      <header class="flex justify-between items-center mb-6">
+        <h2 id="current-child" class="text-2xl font-bold text-blue-600">Select a child</h2>
+        <button id="sidebar-open" class="md:hidden text-gray-600">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
-      </div>
-      <div class="mb-8 bg-white p-6 rounded-3xl shadow-soft">
+      </header>
+      <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
         <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">Milk Intake</h3>
-        <form id="milk-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
+        <form id="milk-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
           <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
           <input type="number" id="milk-amount" placeholder="Amount (ml)" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <button type="submit" id="milk-add-btn" class="w-full md:w-auto flex justify-center items-center p-3 btn-primary text-white rounded-full shadow-soft" title="Add">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </form>
-        <ul id="milk-list" class="list-disc pl-5 space-y-2"></ul>
-      </div>
-      <div class="bg-white p-6 rounded-3xl shadow-soft">
+        <ul id="milk-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
+      </section>
+      <section class="bg-white p-6 rounded-xl shadow-glow">
         <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">Diaper Changes</h3>
-        <form id="diaper-form" class="mb-4 space-y-3 md:space-y-0 md:flex md:space-x-3">
+        <form id="diaper-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
           <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
           <select id="diaper-type" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
             <option value="wet">Wet</option>
             <option value="dirty">Dirty</option>
             <option value="both">Both</option>
           </select>
-          <button type="submit" id="diaper-add-btn" class="w-full md:w-auto flex justify-center items-center p-3 btn-primary text-white rounded-full shadow-soft" title="Add">
-            <svg class="w-6 h-6 btn-svg" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <button type="submit" class="w-full md:w-auto p-3 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center">
+            <svg class="w-6 h-6 btn-icon" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </form>
-        <ul id="diaper-list" class="list-disc pl-5 space-y-2"></ul>
-      </div>
-    </div>
+        <ul id="diaper-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
+      </section>
+    </main>
   </div>
 
   <script>
-    // Localization dictionary (unchanged for brevity)
+    // Translations
     const translations = {
       en: {
         appTitle: "Baby Caring",
-        exportBtn: "Export Data",
-        importBtn: "Import Data",
-        shareBtn: "Share Data",
-        toggleLangBtn: "Switch to French",
         childrenTitle: "Children",
-        addChildBtn: "Add Child",
+        addChild: "Add Child",
         selectChild: "Select a child",
         milkTitle: "Milk Intake",
-        milkAmountPlaceholder: "Amount (ml)",
-        milkAddBtn: "Add",
+        milkAmount: "Amount (ml)",
+        milkAdd: "Add",
         diaperTitle: "Diaper Changes",
         diaperWet: "Wet",
         diaperDirty: "Dirty",
         diaperBoth: "Both",
-        diaperAddBtn: "Add",
+        diaperAdd: "Add",
+        exportData: "Export Data",
+        importData: "Import Data",
+        shareData: "Share Data",
+        toggleLang: "Switch to French",
         addChildPrompt: "Enter child's name:",
         selectChildAlert: "Please select a child first.",
-        milkValidationAlert: "Please fill in valid time and amount.",
-        diaperValidationAlert: "Please fill in a valid time.",
-        importSuccessAlert: "Data imported successfully.",
-        importFormatAlert: "Invalid data format.",
-        importErrorAlert: "Error parsing JSON: ",
-        deleteChildConfirm: "Are you sure you want to delete this child?",
+        milkValidation: "Please fill in valid time and amount.",
+        diaperValidation: "Please fill in a valid time.",
+        importSuccess: "Data imported successfully.",
+        importFormat: "Invalid data format.",
+        importError: "Error parsing JSON: ",
+        deleteConfirm: "Are you sure you want to delete this child?",
         shareSuccess: "Data copied to clipboard! Paste it anywhere or use the email link.",
         shareError: "Sharing not supported. Data copied to clipboard instead."
       },
-      fr: { /* ... */ }
+      fr: {
+        appTitle: "Soins Bébé",
+        childrenTitle: "Enfants",
+        addChild: "Ajouter un enfant",
+        selectChild: "Sélectionner un enfant",
+        milkTitle: "Prise de lait",
+        milkAmount: "Quantité (ml)",
+        milkAdd: "Ajouter",
+        diaperTitle: "Changements de couche",
+        diaperWet: "Mouillée",
+        diaperDirty: "Sale",
+        diaperBoth: "Les deux",
+        diaperAdd: "Ajouter",
+        exportData: "Exporter les données",
+        importData: "Importer les données",
+        shareData: "Partager les données",
+        toggleLang: "Passer à l'anglais",
+        addChildPrompt: "Entrez le nom de l'enfant :",
+        selectChildAlert: "Veuillez d'abord sélectionner un enfant.",
+        milkValidation: "Veuillez remplir une heure et une quantité valides.",
+        diaperValidation: "Veuillez remplir une heure valide.",
+        importSuccess: "Données importées avec succès.",
+        importFormat: "Format de données invalide.",
+        importError: "Erreur lors de l'analyse JSON : ",
+        deleteConfirm: "Êtes-vous sûr de vouloir supprimer cet enfant ?",
+        shareSuccess: "Données copiées dans le presse-papiers ! Collez-les n'importe où ou utilisez le lien email.",
+        shareError: "Partage non supporté. Données copiées dans le presse-papiers à la place."
+      }
     };
 
-    // Initialize data and settings
-    let data = { nextId: 1, children: [] };
-    let currentChildId = null;
-    let currentLang = localStorage.getItem('babyCaringLang') || 'en';
+    // State
+    let appData = { nextId: 1, children: [] };
+    let activeChildId = null;
+    let language = localStorage.getItem('language') || 'en';
     let settings = {
       milkInterval: parseInt(localStorage.getItem('milkInterval')) || 3,
-      notificationsEnabled: localStorage.getItem('notificationsEnabled') === 'true' || false
+      notifications: localStorage.getItem('notifications') === 'true'
     };
-
-    // IndexedDB setup
-    const dbName = "BabyCaringDB";
-    const dbVersion = 1;
     let db;
 
-    function initDB() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName, dbVersion);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          db = request.result;
-          resolve();
-        };
-        request.onupgradeneeded = (event) => {
-          const db = event.target.result;
-          db.createObjectStore("data", { keyPath: "id" });
-        };
-      });
-    }
+    // IndexedDB Setup
+    const dbName = "BabyCareDB";
+    const initDB = () => new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { db = request.result; resolve(); };
+      request.onupgradeneeded = (e) => {
+        e.target.result.createObjectStore("data", { keyPath: "id" });
+      };
+    });
 
-    function loadData() {
-      return new Promise((resolve) => {
-        const transaction = db.transaction(["data"], "readonly");
-        const store = transaction.objectStore("data");
-        const request = store.get("babyData");
-        request.onsuccess = () => {
-          if (request.result) data = request.result.value;
-          resolve();
-        };
-        request.onerror = () => resolve(); // Fallback to default data if none exists
-      });
-    }
+    const loadData = () => new Promise((resolve) => {
+      const tx = db.transaction("data", "readonly");
+      const store = tx.objectStore("data");
+      const req = store.get("appData");
+      req.onsuccess = () => {
+        if (req.result) appData = req.result.value;
+        resolve();
+      };
+      req.onerror = () => resolve();
+    });
 
-    function saveData() {
-      const transaction = db.transaction(["data"], "readwrite");
-      const store = transaction.objectStore("data");
-      store.put({ id: "babyData", value: data });
-    }
+    const saveData = () => {
+      const tx = db.transaction("data", "readwrite");
+      const store = tx.objectStore("data");
+      store.put({ id: "appData", value: appData });
+    };
 
-    // Update UI with current language
-    function updateLanguage() {
-      const t = translations[currentLang];
+    // UI Updates
+    const updateUI = () => {
+      const t = translations[language];
       document.getElementById('app-title').textContent = t.appTitle;
-      document.getElementById('export-btn').title = t.exportBtn;
-      document.getElementById('import-btn').title = t.importBtn;
-      document.getElementById('share-btn').title = t.shareBtn;
-      document.getElementById('toggle-lang-btn').title = t.toggleLangBtn;
       document.getElementById('children-title').textContent = t.childrenTitle;
-      document.getElementById('add-child-btn').title = t.addChildBtn;
-      document.getElementById('current-child-name').textContent = currentChildId ? data.children.find(c => c.id === currentChildId).name : t.selectChild;
+      document.getElementById('add-child').title = t.addChild;
+      document.getElementById('current-child').textContent = activeChildId ? appData.children.find(c => c.id === activeChildId).name : t.selectChild;
       document.getElementById('milk-title').textContent = t.milkTitle;
-      document.getElementById('milk-amount').placeholder = t.milkAmountPlaceholder;
-      document.getElementById('milk-add-btn').title = t.milkAddBtn;
+      document.getElementById('milk-amount').placeholder = t.milkAmount;
+      document.getElementById('milk-form').querySelector('button').title = t.milkAdd;
       document.getElementById('diaper-title').textContent = t.diaperTitle;
       const diaperType = document.getElementById('diaper-type');
       diaperType.options[0].text = t.diaperWet;
       diaperType.options[1].text = t.diaperDirty;
       diaperType.options[2].text = t.diaperBoth;
-      document.getElementById('diaper-add-btn').title = t.diaperAddBtn;
-      renderChildList();
-      renderMilkIntake();
-      renderDiaperChanges();
-    }
+      document.getElementById('diaper-form').querySelector('button').title = t.diaperAdd;
+      document.getElementById('export-data').title = t.exportData;
+      document.getElementById('import-data').title = t.importData;
+      document.getElementById('share-data').title = t.shareData;
+      document.getElementById('toggle-lang').title = t.toggleLang;
+      renderChildren();
+      renderMilk();
+      renderDiapers();
+    };
 
-    // Toggle language (unchanged)
-    document.getElementById('toggle-lang-btn').addEventListener('click', () => {
-      currentLang = currentLang === 'en' ? 'fr' : 'en';
-      localStorage.setItem('babyCaringLang', currentLang);
-      updateLanguage();
-      toggleMenu();
-    });
+    // Render Functions
+    const renderChildren = () => {
+      const list = document.getElementById('child-list');
+      list.innerHTML = '';
+      appData.children.forEach(child => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200';
+        li.innerHTML = `
+          <span onclick="selectChild('${child.id}')">${child.name}</span>
+          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600">
+            <svg class="w-5 h-5 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        `;
+        list.appendChild(li);
+      });
+    };
 
-    // Render functions (unchanged for brevity)
-    function renderChildList() { /* ... */ }
-    function selectChild(id) { /* ... */ }
-    function deleteChild(id) { /* ... */ }
-    function renderMilkIntake() { /* ... */ }
-    function deleteMilkIntake(index) { /* ... */ }
-    function renderDiaperChanges() { /* ... */ }
-    function deleteDiaperChange(index) { /* ... */ }
+    const renderMilk = () => {
+      const list = document.getElementById('milk-list');
+      list.innerHTML = '';
+      if (activeChildId) {
+        const child = appData.children.find(c => c.id === activeChildId);
+        child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.milkIntake.forEach((intake, idx) => {
+          const li = document.createElement('li');
+          li.className = 'flex justify-between text-blue-600';
+          li.innerHTML = `${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml
+            <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600">
+              <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>`;
+          list.appendChild(li);
+        });
+      }
+    };
 
-    // Add a new child
-    document.getElementById('add-child-btn').addEventListener('click', () => {
-      const name = prompt(translations[currentLang].addChildPrompt);
-      if (name) {
-        const id = 'child' + data.nextId++;
-        data.children.push({ id, name, milkIntake: [], diaperChanges: [] });
+    const renderDiapers = () => {
+      const list = document.getElementById('diaper-list');
+      list.innerHTML = '';
+      if (activeChildId) {
+        const child = appData.children.find(c => c.id === activeChildId);
+        child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.diaperChanges.forEach((change, idx) => {
+          const li = document.createElement('li');
+          li.className = 'flex justify-between text-blue-600';
+          const type = translations[language][`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
+          li.innerHTML = `${new Date(change.timestamp).toLocaleString()} - ${type}
+            <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600">
+              <svg class="w-4 h-4 btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>`;
+          list.appendChild(li);
+        });
+      }
+    };
+
+    // Event Handlers
+    const selectChild = (id) => {
+      activeChildId = id;
+      updateUI();
+      toggleSidebar();
+    };
+
+    const deleteChild = (id) => {
+      if (confirm(translations[language].deleteConfirm)) {
+        appData.children = appData.children.filter(c => c.id !== id);
+        if (activeChildId === id) activeChildId = null;
         saveData();
-        renderChildList();
+        updateUI();
+      }
+    };
+
+    const deleteMilk = (idx) => {
+      const child = appData.children.find(c => c.id === activeChildId);
+      child.milkIntake.splice(idx, 1);
+      saveData();
+      renderMilk();
+    };
+
+    const deleteDiaper = (idx) => {
+      const child = appData.children.find(c => c.id === activeChildId);
+      child.diaperChanges.splice(idx, 1);
+      saveData();
+      renderDiapers();
+    };
+
+    document.getElementById('add-child').addEventListener('click', () => {
+      const name = prompt(translations[language].addChildPrompt);
+      if (name) {
+        const id = `child${appData.nextId++}`;
+        appData.children.push({ id, name, milkIntake: [], diaperChanges: [] });
+        saveData();
+        renderChildren();
       }
     });
 
-    // Handle milk intake form submission
     document.getElementById('milk-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      if (!currentChildId) return alert(translations[currentLang].selectChildAlert);
+      if (!activeChildId) return alert(translations[language].selectChildAlert);
       const time = document.getElementById('milk-time').value;
       const amount = document.getElementById('milk-amount').value;
-      if (!time || !amount || amount <= 0) return alert(translations[currentLang].milkValidationAlert);
-      const child = data.children.find(c => c.id === currentChildId);
+      if (!time || !amount || amount <= 0) return alert(translations[language].milkValidation);
+      const child = appData.children.find(c => c.id === activeChildId);
       child.milkIntake.push({ timestamp: new Date(time).toISOString(), amount: parseInt(amount) });
       saveData();
-      renderMilkIntake();
-      scheduleMilkReminder(child);
+      renderMilk();
+      scheduleReminder(child);
       document.getElementById('milk-time').value = '';
       document.getElementById('milk-amount').value = '';
     });
 
-    // Handle diaper change form submission (unchanged)
-    document.getElementById('diaper-form').addEventListener('submit', (e) => { /* ... */ });
-
-    // Export data as Markdown
-    document.getElementById('export-btn').addEventListener('click', (e) => {
+    document.getElementById('diaper-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      let markdown = "# Baby Caring Data\n\n";
-      data.children.forEach(child => {
-        markdown += `## ${child.name}\n\n`;
-        markdown += "### Milk Intake\n";
-        child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        child.milkIntake.forEach(intake => {
-          markdown += `- ${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml\n`;
-        });
-        markdown += "\n### Diaper Changes\n";
-        child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        child.diaperChanges.forEach(change => {
-          markdown += `- ${new Date(change.timestamp).toLocaleString()} - ${change.type}\n`;
-        });
-        markdown += "\n";
+      if (!activeChildId) return alert(translations[language].selectChildAlert);
+      const time = document.getElementById('diaper-time').value;
+      const type = document.getElementById('diaper-type').value;
+      if (!time) return alert(translations[language].diaperValidation);
+      const child = appData.children.find(c => c.id === activeChildId);
+      child.diaperChanges.push({ timestamp: new Date(time).toISOString(), type });
+      saveData();
+      renderDiapers();
+      document.getElementById('diaper-time').value = '';
+    });
+
+    document.getElementById('export-data').addEventListener('click', () => {
+      let md = "# Baby Caring Data\n\n";
+      appData.children.forEach(c => {
+        md += `## ${c.name}\n\n### Milk Intake\n`;
+        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${m.amount} ml\n`);
+        md += "\n### Diaper Changes\n";
+        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${d.type}\n`);
+        md += "\n";
       });
-      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const blob = new Blob([md], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'baby_caring_data.md';
+      a.download = 'baby_caring.md';
       a.click();
       URL.revokeObjectURL(url);
       toggleMenu();
     });
 
-    // Share data
-    document.getElementById('share-btn').addEventListener('click', (e) => {
-      e.preventDefault();
-      let markdown = "# Baby Caring Data\n\n";
-      data.children.forEach(child => {
-        markdown += `## ${child.name}\n\n### Milk Intake\n`;
-        child.milkIntake.forEach(intake => {
-          markdown += `- ${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml\n`;
-        });
-        markdown += "\n### Diaper Changes\n";
-        child.diaperChanges.forEach(change => {
-          markdown += `- ${new Date(change.timestamp).toLocaleString()} - ${change.type}\n`;
-        });
-        markdown += "\n";
+    document.getElementById('import-data').addEventListener('click', () => {
+      document.getElementById('import-file').click();
+    });
+
+    document.getElementById('import-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (imported.nextId && Array.isArray(imported.children)) {
+              appData = imported;
+              saveData();
+              activeChildId = null;
+              updateUI();
+              alert(translations[language].importSuccess);
+            } else {
+              alert(translations[language].importFormat);
+            }
+          } catch (err) {
+            alert(translations[language].importError + err.message);
+          }
+          toggleMenu();
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById('share-data').addEventListener('click', () => {
+      let md = "# Baby Caring Data\n\n";
+      appData.children.forEach(c => {
+        md += `## ${c.name}\n\n### Milk Intake\n`;
+        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${m.amount} ml\n`);
+        md += "\n### Diaper Changes\n";
+        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${d.type}\n`);
+        md += "\n";
       });
-      
       if (navigator.share) {
-        navigator.share({
-          title: 'Baby Caring Data',
-          text: markdown,
-        }).then(() => console.log('Shared successfully'))
-          .catch((error) => {
-            console.error('Error sharing:', error);
-            fallback
+        navigator.share({ title: 'Baby Caring Data', text: md })
+          .catch(() => fallbackShare(md));
+      } else {
+        fallbackShare(md);
+      }
+      toggleMenu();
+    });
+
+    const fallbackShare = (text) => {
+      navigator.clipboard.writeText(text).then(() => {
+        const email = `mailto:?subject=Baby Caring Data&body=${encodeURIComponent(text)}`;
+        const a = document.createElement('a');
+        a.href = email;
+        a.click();
+        alert(translations[language].shareSuccess);
+      }).catch(() => alert(translations[language].shareError));
+    };
+
+    document.getElementById('toggle-lang').addEventListener('click', () => {
+      language = language === 'en' ? 'fr' : 'en';
+      localStorage.setItem('language', language);
+      updateUI();
+      toggleMenu();
+    });
+
+    // Navigation
+    const toggleSidebar = () => document.getElementById('sidebar').classList.toggle('hidden');
+    const toggleMenu = () => document.getElementById('menu').classList.toggle('hidden');
+    const toggleSettings = () => {
+      const settingsPanel = document.getElementById('settings');
+      settingsPanel.classList.toggle('hidden');
+      if (!settingsPanel.classList.contains('hidden')) {
+        document.getElementById('milk-interval').value = settings.milkInterval;
+        document.getElementById('notify-enable').checked = settings.notifications;
+      }
+    };
+
+    document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebar-close').addEventListener('click', toggleSidebar);
+    document.getElementById('menu-toggle').addEventListener('click', toggleMenu);
+    document.getElementById('menu-close').addEventListener('click', toggleMenu);
+    document.getElementById('settings-toggle').addEventListener('click', () => { toggleSettings(); toggleMenu(); });
+    document.getElementById('settings-close').addEventListener('click', toggleSettings);
+
+    document.getElementById('save-settings').addEventListener('click', () => {
+      settings.milkInterval = parseInt(document.getElementById('milk-interval').value) || 3;
+      settings.notifications = document.getElementById('notify-enable').checked;
+      localStorage.setItem('milkInterval', settings.milkInterval);
+      localStorage.setItem('notifications', settings.notifications);
+      if (settings.notifications) requestNotifications();
+      toggleSettings();
+      scheduleAllReminders();
+    });
+
+    // Notifications
+    const requestNotifications = () => {
+      if (!("Notification" in window)) {
+        alert("Notifications not supported.");
+        settings.notifications = false;
+        localStorage.setItem('notifications', false);
+      } else if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission().then(perm => {
+          if (perm !== "granted") {
+            settings.notifications = false;
+            localStorage.setItem('notifications', false);
+          }
+        });
+      }
+    };
+
+    const scheduleReminder = (child) => {
+      if (!settings.notifications || Notification.permission !== "granted") return;
+      const last = child.milkIntake[child.milkIntake.length - 1];
+      if (!last) return;
+      const nextTime = new Date(new Date(last.timestamp).getTime() + settings.milkInterval * 60 * 60 * 1000);
+      const delay = nextTime - new Date();
+      if (delay > 0) {
+        setTimeout(() => {
+          new Notification(`Milk Time for ${child.name}!`, {
+            body: `It's been ${settings.milkInterval} hours since the last milk intake.`,
+            icon: 'https://via.placeholder.com/32?text=🍼'
+          });
+        }, delay);
+      }
+    };
+
+    const scheduleAllReminders = () => {
+      if (settings.notifications && Notification.permission === "granted") {
+        appData.children.forEach(scheduleReminder);
+      }
+    };
+
+    // Initialization
+    initDB().then(() => {
+      loadData().then(() => {
+        updateUI();
+        if (settings.notifications) requestNotifications();
+        scheduleAllReminders();
+      });
+    }).catch(err => console.error("DB Error:", err));
+  </script>
+</body>
+</html>
