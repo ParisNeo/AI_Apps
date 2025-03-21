@@ -38,9 +38,11 @@
       font-size: 0.9rem; white-space: nowrap; z-index: 10;
     }
     .tip-box { animation: fadeIn 1s ease-in-out; }
-    .edit-input { width: 60px; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .sync-status { font-size: 0.9rem; }
+    dialog { border: none; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); background: white; padding: 1.5rem; }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+    .dashboard-grid { gap: 2rem; } /* Increased spacing */
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -118,6 +120,52 @@
     </aside>
     <!-- Main Content -->
     <main id="main-content" class="w-full md:w-3/4 p-6 relative"></main>
+    <!-- Edit Dialogs -->
+    <dialog id="edit-milk-dialog">
+      <h3 class="text-xl font-semibold text-blue-600 mb-4">Edit Feeding</h3>
+      <form id="edit-milk-form" class="space-y-4">
+        <div>
+          <label class="block text-blue-600">Time:</label>
+          <input type="datetime-local" id="edit-milk-time" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+        </div>
+        <div>
+          <label class="block text-blue-600">Type:</label>
+          <select id="edit-milk-type" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <option value="breast">Breastfeed</option>
+            <option value="bottle">Bottle Feed</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-blue-600" id="edit-milk-value-label"></label>
+          <input type="number" id="edit-milk-value" min="0" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+        </div>
+        <div class="flex space-x-4">
+          <button type="submit" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Save</button>
+          <button type="button" id="edit-milk-cancel" class="w-full p-3 bg-gray-400 text-white rounded-full shadow-glow">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="edit-diaper-dialog">
+      <h3 class="text-xl font-semibold text-blue-600 mb-4">Edit Diaper Change</h3>
+      <form id="edit-diaper-form" class="space-y-4">
+        <div>
+          <label class="block text-blue-600">Time:</label>
+          <input type="datetime-local" id="edit-diaper-time" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+        </div>
+        <div>
+          <label class="block text-blue-600">Type:</label>
+          <select id="edit-diaper-type" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <option value="wet">Wet</option>
+            <option value="dirty">Dirty</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="flex space-x-4">
+          <button type="submit" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Save</button>
+          <button type="button" id="edit-diaper-cancel" class="w-full p-3 bg-gray-400 text-white rounded-full shadow-glow">Cancel</button>
+        </div>
+      </form>
+    </dialog>
   </div>
 
   <script>
@@ -238,20 +286,12 @@
     let db;
     let isBreastfeeding = false;
 
-    // IndexedDB Setup with Persistent Storage
+    // IndexedDB Setup
     const dbName = "BabyCareDB";
     const initDB = () => new Promise((resolve, reject) => {
       const request = indexedDB.open(dbName, 1);
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => { 
-        db = request.result; 
-        if (navigator.storage && navigator.storage.persist) {
-          navigator.storage.persist().then(granted => {
-            console.log(granted ? "Persistent storage granted" : "Persistent storage not granted");
-          });
-        }
-        resolve(); 
-      };
+      request.onsuccess = () => { db = request.result; resolve(); };
       request.onupgradeneeded = (e) => {
         e.target.result.createObjectStore("data", { keyPath: "id" });
       };
@@ -296,9 +336,12 @@
       list.innerHTML = '';
       appData.children.forEach(child => {
         const li = document.createElement('li');
-        li.className = 'flex justify-between items-center p-3 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200';
+        li.className = 'flex justify-between items-center p-3 bg-blue-100 rounded-lg hover:bg-blue-200';
         li.innerHTML = `
-          <span onclick="selectChild('${child.id}')">${child.name}</span>
+          <span onclick="selectChild('${child.id}')" class="cursor-pointer flex-1">${child.name}</span>
+          <button onclick="editChild('${child.id}')" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="Edit">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </button>
           <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
             <i class="fas fa-trash btn-icon"></i>
           </button>
@@ -320,7 +363,7 @@
             </button>
           </div>
         </header>
-        <div id="dashboard" class="dashboard-grid gap-6"></div>
+        <div id="dashboard" class="dashboard-grid"></div>
         <div id="tip-box" class="absolute bottom-4 right-4 bg-yellow-100 p-4 rounded-xl shadow-glow text-blue-600 hidden tip-box"></div>
       `;
       const dashboard = document.getElementById('dashboard');
@@ -357,7 +400,7 @@
       const timestamps = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b);
       const intervals = [];
       for (let i = 1; i < timestamps.length; i++) {
-        intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60)); // Hours
+        intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60));
       }
       new Chart(ctx, {
         type: 'line',
@@ -372,9 +415,7 @@
           }]
         },
         options: {
-          scales: {
-            y: { beginAtZero: true, title: { display: true, text: 'Hours' } }
-          },
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
           plugins: { legend: { display: false } }
         }
       });
@@ -408,7 +449,12 @@
           </form>
         </section>
         <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
-          <h4 class="text-lg font-semibold text-blue-600 mb-3">Feeding History</h4>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-lg font-semibold text-blue-600">Feeding History</h4>
+            <button onclick="document.getElementById('milk-form').scrollIntoView({behavior: 'smooth'})" class="text-blue-600 tooltip" data-tooltip="Add new feeding">
+              <i class="fas fa-plus w-6 h-6"></i>
+            </button>
+          </div>
           <ul id="milk-list" class="list-disc pl-5 space-y-2"></ul>
         </section>
         <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
@@ -426,7 +472,12 @@
           </form>
         </section>
         <section class="bg-white p-6 rounded-xl shadow-glow">
-          <h4 class="text-lg font-semibold text-blue-600 mb-3">Diaper History</h4>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-lg font-semibold text-blue-600">Diaper History</h4>
+            <button onclick="document.getElementById('diaper-form').scrollIntoView({behavior: 'smooth'})" class="text-blue-600 tooltip" data-tooltip="Add new diaper change">
+              <i class="fas fa-plus w-6 h-6"></i>
+            </button>
+          </div>
           <ul id="diaper-list" class="list-disc pl-5 space-y-2"></ul>
         </section>
       `;
@@ -456,15 +507,15 @@
         li.className = 'flex justify-between items-center text-blue-600';
         const valueText = intake.type === 'breast' ? `${intake.duration} min` : `${intake.amount} ml`;
         li.innerHTML = `
-          <span>
-            <input type="datetime-local" value="${intake.timestamp.slice(0, 16)}" onchange="editMilk(${idx}, 'timestamp', this.value)" class="edit-input border border-blue-200 rounded">
-            - ${t[intake.type + 'Feed']} - 
-            <input type="number" value="${intake.type === 'breast' ? intake.duration : intake.amount}" onchange="editMilk(${idx}, '${intake.type === 'breast' ? 'duration' : 'amount'}', this.value)" class="edit-input border border-blue-200 rounded">
-            ${intake.type === 'breast' ? 'min' : 'ml'}
-          </span>
-          <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
-            <i class="fas fa-trash btn-icon"></i>
-          </button>
+          ${new Date(intake.timestamp).toLocaleString()} - ${t[intake.type + 'Feed']} - ${valueText}
+          <div class="flex space-x-2">
+            <button onclick="showEditMilkDialog(${idx})" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="Edit">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </button>
+            <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
+              <i class="fas fa-trash btn-icon"></i>
+            </button>
+          </div>
         `;
         list.appendChild(li);
       });
@@ -480,18 +531,17 @@
       child.diaperChanges.forEach((change, idx) => {
         const li = document.createElement('li');
         li.className = 'flex justify-between items-center text-blue-600';
+        const type = t[`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
         li.innerHTML = `
-          <span>
-            <input type="datetime-local" value="${change.timestamp.slice(0, 16)}" onchange="editDiaper(${idx}, 'timestamp', this.value)" class="edit-input border border-blue-200 rounded">
-            - <select onchange="editDiaper(${idx}, 'type', this.value)" class="border border-blue-200 rounded">
-              <option value="wet" ${change.type === 'wet' ? 'selected' : ''}>${t.diaperWet}</option>
-              <option value="dirty" ${change.type === 'dirty' ? 'selected' : ''}>${t.diaperDirty}</option>
-              <option value="both" ${change.type === 'both' ? 'selected' : ''}>${t.diaperBoth}</option>
-            </select>
-          </span>
-          <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
-            <i class="fas fa-trash btn-icon"></i>
-          </button>
+          ${new Date(change.timestamp).toLocaleString()} - ${type}
+          <div class="flex space-x-2">
+            <button onclick="showEditDiaperDialog(${idx})" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="Edit">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            </button>
+            <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="Delete">
+              <i class="fas fa-trash btn-icon"></i>
+            </button>
+          </div>
         `;
         list.appendChild(li);
       });
@@ -513,6 +563,16 @@
       }
     };
 
+    const editChild = (id) => {
+      const child = appData.children.find(c => c.id === id);
+      const newName = prompt("Edit child's name:", child.name);
+      if (newName && newName.trim()) {
+        child.name = newName.trim();
+        saveData();
+        updateUI();
+      }
+    };
+
     const deleteMilk = (idx) => {
       const child = appData.children.find(c => c.id === activeChildId);
       child.milkIntake.splice(idx, 1);
@@ -528,27 +588,54 @@
       renderDiapers();
     };
 
-    const editMilk = (idx, field, value) => {
+    const showEditMilkDialog = (idx) => {
       const child = appData.children.find(c => c.id === activeChildId);
-      if (field === 'timestamp') {
-        child.milkIntake[idx].timestamp = new Date(value).toISOString();
-      } else if (field === 'duration' || field === 'amount') {
-        child.milkIntake[idx][field] = parseInt(value);
-      }
-      saveData();
-      renderMilk();
-      renderDashboard();
+      const intake = child.milkIntake[idx];
+      const dialog = document.getElementById('edit-milk-dialog');
+      const t = translations[language];
+      document.getElementById('edit-milk-time').value = intake.timestamp.slice(0, 16);
+      document.getElementById('edit-milk-type').value = intake.type;
+      document.getElementById('edit-milk-value-label').textContent = intake.type === 'breast' ? t.milkDuration : t.milkAmount;
+      document.getElementById('edit-milk-value').value = intake.type === 'breast' ? intake.duration : intake.amount;
+      document.getElementById('edit-milk-type').onchange = (e) => {
+        document.getElementById('edit-milk-value-label').textContent = e.target.value === 'breast' ? t.milkDuration : t.milkAmount;
+      };
+      document.getElementById('edit-milk-form').onsubmit = (e) => {
+        e.preventDefault();
+        intake.timestamp = new Date(document.getElementById('edit-milk-time').value).toISOString();
+        intake.type = document.getElementById('edit-milk-type').value;
+        if (intake.type === 'breast') {
+          intake.duration = parseInt(document.getElementById('edit-milk-value').value);
+          delete intake.amount;
+        } else {
+          intake.amount = parseInt(document.getElementById('edit-milk-value').value);
+          delete intake.duration;
+        }
+        saveData();
+        renderMilk();
+        renderDashboard();
+        dialog.close();
+      };
+      document.getElementById('edit-milk-cancel').onclick = () => dialog.close();
+      dialog.showModal();
     };
 
-    const editDiaper = (idx, field, value) => {
+    const showEditDiaperDialog = (idx) => {
       const child = appData.children.find(c => c.id === activeChildId);
-      if (field === 'timestamp') {
-        child.diaperChanges[idx].timestamp = new Date(value).toISOString();
-      } else if (field === 'type') {
-        child.diaperChanges[idx].type = value;
-      }
-      saveData();
-      renderDiapers();
+      const change = child.diaperChanges[idx];
+      const dialog = document.getElementById('edit-diaper-dialog');
+      document.getElementById('edit-diaper-time').value = change.timestamp.slice(0, 16);
+      document.getElementById('edit-diaper-type').value = change.type;
+      document.getElementById('edit-diaper-form').onsubmit = (e) => {
+        e.preventDefault();
+        change.timestamp = new Date(document.getElementById('edit-diaper-time').value).toISOString();
+        change.type = document.getElementById('edit-diaper-type').value;
+        saveData();
+        renderDiapers();
+        dialog.close();
+      };
+      document.getElementById('edit-diaper-cancel').onclick = () => dialog.close();
+      dialog.showModal();
     };
 
     document.getElementById('add-child').addEventListener('click', () => {
@@ -680,7 +767,6 @@
       toggleMenu();
     });
 
-    // Bluetooth Sync
     document.getElementById('sync-bluetooth').addEventListener('click', async () => {
       if (!navigator.bluetooth) {
         alert(translations[language].bluetoothNotSupported);
