@@ -42,10 +42,28 @@
     .sync-status { font-size: 0.9rem; }
     dialog { border: none; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); background: white; padding: 1.5rem; }
     dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-    .dashboard-grid { gap: 2rem; }
+    .dashboard-grid { gap: 3rem; }
+    /* Custom Switch */
+    .slider {
+      background-color: #a78bfa; /* Default to bottle feed color */
+    }
+    #add-feed-type:checked + .slider {
+      background-color: #60a5fa; /* Breastfeed color */
+    }
+    #add-feed-type:checked + .slider:before {
+      transform: translateX(2rem);
+    }
+    /* Touch-friendly adjustments */
+    .dashboard-card { padding: 2rem; }
+    .dashboard-card h3 { font-size: 1.75rem; }
+    .dashboard-card p { font-size: 1.25rem; }
+    button, input, select { font-size: 1.125rem; padding: 0.75rem; }
+    .btn-icon { width: 2rem; height: 2rem; }
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       .dashboard-grid { grid-template-columns: 1fr; }
+      .dashboard-card { padding: 1.5rem; }
+      button, input, select { font-size: 1rem; padding: 0.5rem; }
     }
     @media (min-width: 641px) {
       .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
@@ -193,23 +211,26 @@
     <!-- Add Modals -->
     <dialog id="add-milk-dialog">
       <h3 class="text-xl font-semibold text-blue-600 mb-4">Add Feeding</h3>
-      <form id="add-milk-form" class="space-y-4">
-        <div class="flex items-center">
-          <label class="mr-4 text-blue-600">Breastfeed</label>
-          <input type="checkbox" id="add-feed-type" class="h-5 w-5 text-blue-600">
-          <label class="ml-2 text-blue-600">Bottle Feed</label>
+      <form id="add-milk-form" class="space-y-6">
+        <div class="flex items-center justify-center">
+          <label class="text-blue-600 mr-4">Bottle Feed</label>
+          <div class="relative inline-block w-16 h-8">
+            <input type="checkbox" id="add-feed-type" class="opacity-0 w-0 h-0">
+            <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition-all duration-300 before:absolute before:h-6 before:w-6 before:left-1 before:top-1 before:bg-white before:rounded-full before:transition-all before:duration-300"></span>
+          </div>
+          <label class="text-blue-600 ml-4">Breastfeed</label>
         </div>
         <div>
-          <label class="block text-blue-600">Time:</label>
-          <input type="datetime-local" id="add-milk-time" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+          <label class="block text-blue-600 text-lg">Time:</label>
+          <input type="datetime-local" id="add-milk-time" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div>
-          <label class="block text-blue-600" id="add-milk-value-label">Amount (ml)</label>
-          <input type="number" id="add-milk-value" min="0" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
+          <label class="block text-blue-600 text-lg" id="add-milk-value-label">Amount (ml)</label>
+          <input type="number" id="add-milk-value" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-3 btn-gradient text-white rounded-full shadow-glow">Add</button>
-          <button type="button" id="add-milk-cancel" class="w-full p-3 bg-gray-400 text-white rounded-full shadow-glow">Cancel</button>
+          <button type="submit" class="w-full p-4 btn-gradient text-white text-lg rounded-full shadow-glow">Add</button>
+          <button type="button" id="add-milk-cancel" class="w-full p-4 bg-gray-400 text-white text-lg rounded-full shadow-glow">Cancel</button>
         </div>
       </form>
     </dialog>
@@ -443,6 +464,9 @@
         const now = new Date();
         const timeLeft = nextMilk && nextMilk > now ? Math.floor((nextMilk - now) / (1000 * 60)) : 0;
         const timeLeftText = lastMilk ? (timeLeft > 0 ? `${timeLeft} min` : 'Now') : 'N/A';
+        const percentageLeft = lastMilk && nextMilk > now ? (timeLeft / (settings.milkInterval * 60)) : 0;
+        const redValue = Math.floor(255 * (1 - percentageLeft));
+        const color = timeLeft > 0 ? `rgb(${redValue}, 100, 100)` : '#ff0000';
         const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
         card.innerHTML = `
           <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
@@ -450,19 +474,20 @@
           <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
           <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
           <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
-          <p class="text-gray-600"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
+          <p class="text-gray-600" style="color: ${color};"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
           <canvas id="chart-${child.id}" class="w-full h-32 mt-4"></canvas>
           <div class="flex space-x-4 mt-4">
-            <button onclick="showDetails('${child.id}')" class="p-2 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
+            <button onclick="showDetails('${child.id}')" class="p-3 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
               <i class="fas fa-info-circle mr-2"></i> Details
             </button>
-            <button onclick="showEditChildDialog('${child.id}')" class="p-2 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="Edit child">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="Edit child">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
             </button>
           </div>
         `;
         dashboard.appendChild(card);
         renderChart(child);
+        if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
       });
       document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
       showRandomTip();
@@ -699,11 +724,12 @@
     const showAddMilkDialog = () => {
       const dialog = document.getElementById('add-milk-dialog');
       const t = translations[language];
-      document.getElementById('add-feed-type').checked = isBreastfeeding;
+      const feedType = document.getElementById('add-feed-type');
+      feedType.checked = isBreastfeeding;
       document.getElementById('add-milk-time').value = '';
       document.getElementById('add-milk-value').value = '';
       document.getElementById('add-milk-value-label').textContent = isBreastfeeding ? t.milkDuration : t.milkAmount;
-      document.getElementById('add-feed-type').onchange = (e) => {
+      feedType.onchange = (e) => {
         isBreastfeeding = e.target.checked;
         document.getElementById('add-milk-value-label').textContent = isBreastfeeding ? t.milkDuration : t.milkAmount;
       };
@@ -944,6 +970,15 @@
       }
     };
 
+    const notifyFeedingTime = (child) => {
+      if (settings.notifications && Notification.permission === "granted") {
+        new Notification(`Feeding Time for ${child.name}!`, {
+          body: `It's time for ${child.name}'s next feeding!`,
+          icon: 'https://via.placeholder.com/32?text=🍼'
+        });
+      }
+    };
+
     const scheduleReminder = (child) => {
       if (!settings.notifications || Notification.permission !== "granted") return;
       const last = child.milkIntake[child.milkIntake.length - 1];
@@ -952,10 +987,7 @@
       const delay = nextTime - new Date();
       if (delay > 0) {
         setTimeout(() => {
-          new Notification(`Feeding Time for ${child.name}!`, {
-            body: `It's been ${settings.milkInterval} hours since the last feeding.`,
-            icon: 'https://via.placeholder.com/32?text=🍼'
-          });
+          notifyFeedingTime(child);
           renderDashboard();
         }, delay);
       }
