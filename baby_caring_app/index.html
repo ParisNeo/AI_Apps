@@ -197,6 +197,7 @@
       currentLang = currentLang === 'en' ? 'fr' : 'en';
       localStorage.setItem('babyCaringLang', currentLang);
       updateLanguage();
+      toggleMenu();
     });
 
     // Render the list of children
@@ -233,7 +234,7 @@
         saveData();
         updateLanguage();
         renderChildList();
-        renderMilksensor();
+        renderMilkIntake();
         renderDiaperChanges();
       }
     }
@@ -338,7 +339,8 @@
     });
 
     // Export data to JSON file
-    document.getElementById('export-btn').addEventListener('click', () => {
+    document.getElementById('export-btn').addEventListener('click', (e) => {
+      e.preventDefault();
       const json = JSON.stringify(data, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -351,7 +353,8 @@
     });
 
     // Trigger file input for import
-    document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-btn').addEventListener('click', (e) => {
+      e.preventDefault();
       document.getElementById('import-input').click();
     });
 
@@ -387,7 +390,9 @@
     // Sidebar toggle for mobile
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
+      const menu = document.getElementById('sliding-menu');
       sidebar.classList.toggle('hidden');
+      if (!sidebar.classList.contains('hidden')) menu.classList.add('hidden'); // Ensure menu closes when sidebar opens
     }
 
     document.getElementById('open-sidebar').addEventListener('click', toggleSidebar);
@@ -396,12 +401,4 @@
     // Sliding menu toggle
     function toggleMenu() {
       const menu = document.getElementById('sliding-menu');
-      menu.classList.toggle('hidden');
-    }
-
-    document.getElementById('open-menu').addEventListener('click', toggleMenu);
-    document.getElementById('close-menu').addEventListener('click', toggleMenu);
-
-    // Initialize the app
-    loadData();
-    u
+ 
