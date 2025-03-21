@@ -40,7 +40,7 @@
 <body class="safe-area">
   <div class="flex flex-col md:flex-row">
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left md:slide-left fixed md:static h-full z-10 rounded-r-xl">
+    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left md:slide-left fixed md:static h-full z-10 rounded-r-xl hidden md:block">
       <header class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <div class="flex space-x-4">
@@ -100,16 +100,8 @@
         </div>
       </div>
     </aside>
-    <!-- Dashboard -->
-    <main class="w-full md:w-3/4 p-6">
-      <header class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-blue-600">Dashboard</h2>
-        <button id="sidebar-open" class="md:hidden text-gray-600">
-          <i class="fas fa-bars w-8 h-8"></i>
-        </button>
-      </header>
-      <div id="dashboard" class="dashboard-grid gap-6"></div>
-    </main>
+    <!-- Main Content -->
+    <main id="main-content" class="w-full md:w-3/4 p-6"></main>
   </div>
 
   <script>
@@ -196,14 +188,9 @@
       request.onerror = () => reject(request.error);
       request.onsuccess = () => { 
         db = request.result; 
-        // Request persistent storage
         if (navigator.storage && navigator.storage.persist) {
           navigator.storage.persist().then(granted => {
-            if (granted) {
-              console.log("Persistent storage granted");
-            } else {
-              console.warn("Persistent storage not granted");
-            }
+            console.log(granted ? "Persistent storage granted" : "Persistent storage not granted");
           });
         }
         resolve(); 
@@ -236,7 +223,6 @@
       document.getElementById('app-title').textContent = t.appTitle;
       document.getElementById('children-title').textContent = t.childrenTitle;
       document.getElementById('add-child').querySelector('span').textContent = t.addChild;
-      document.querySelector('main header h2').textContent = t.dashboard;
       document.getElementById('export-data').querySelector('span').textContent = t.exportData;
       document.getElementById('import-data').querySelector('span').textContent = t.importData;
       document.getElementById('share-data').querySelector('span').textContent = t.shareData;
@@ -264,9 +250,18 @@
     };
 
     const renderDashboard = () => {
-      const dashboard = document.getElementById('dashboard');
-      dashboard.innerHTML = '';
+      const main = document.getElementById('main-content');
       const t = translations[language];
+      main.innerHTML = `
+        <header class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-blue-600">${t.dashboard}</h2>
+          <button id="sidebar-open" class="md:hidden text-gray-600">
+            <i class="fas fa-bars w-8 h-8"></i>
+          </button>
+        </header>
+        <div id="dashboard" class="dashboard-grid gap-6"></div>
+      `;
+      const dashboard = document.getElementById('dashboard');
       appData.children.forEach(child => {
         const card = document.createElement('div');
         card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
@@ -284,13 +279,14 @@
         `;
         dashboard.appendChild(card);
       });
+      document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
     };
 
     const showDetails = (id) => {
       activeChildId = id;
       const child = appData.children.find(c => c.id === id);
       const t = translations[language];
-      const main = document.querySelector('main');
+      const main = document.getElementById('main-content');
       main.innerHTML = `
         <header class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-blue-600">${child.name}</h2>
@@ -299,7 +295,7 @@
           </button>
         </header>
         <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
-          <h3 id="milk-title" class="text-xl font-semibold text-blue-600 mb-3">${t.milkTitle}</h3>
+          <h3 class="text-xl font-semibold text-blue-600 mb-3">${t.milkTitle}</h3>
           <form id="milk-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
             <input type="datetime-local" id="milk-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
             <input type="number" id="milk-amount" placeholder="${t.milkAmount}" min="0" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
@@ -310,7 +306,7 @@
           <ul id="milk-list" class="list-disc pl-5 space-y-2 mt-4"></ul>
         </section>
         <section class="bg-white p-6 rounded-xl shadow-glow">
-          <h3 id="diaper-title" class="text-xl font-semibold text-blue-600 mb-3">${t.diaperTitle}</h3>
+          <h3 class="text-xl font-semibold text-blue-600 mb-3">${t.diaperTitle}</h3>
           <form id="diaper-form" class="space-y-3 md:flex md:space-x-3 md:space-y-0">
             <input type="datetime-local" id="diaper-time" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
             <select id="diaper-type" class="w-full md:w-auto p-3 border border-blue-200 rounded-lg bg-blue-50">
@@ -329,7 +325,7 @@
       renderDiapers();
       document.getElementById('back-to-dashboard').addEventListener('click', () => {
         activeChildId = null;
-        updateUI();
+        renderDashboard();
       });
       document.getElementById('milk-form').addEventListener('submit', handleMilkSubmit);
       document.getElementById('diaper-form').addEventListener('submit', handleDiaperSubmit);
@@ -526,8 +522,13 @@
     });
 
     // Navigation
-    const toggleSidebar = () => document.getElementById('sidebar').classList.toggle('hidden');
+    const toggleSidebar = () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('hidden');
+    };
+
     const toggleMenu = () => document.getElementById('menu').classList.toggle('hidden');
+
     const toggleSettings = () => {
       const settingsPanel = document.getElementById('settings');
       settingsPanel.classList.toggle('hidden');
@@ -537,7 +538,6 @@
       }
     };
 
-    document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
     document.getElementById('sidebar-close').addEventListener('click', toggleSidebar);
     document.getElementById('menu-toggle').addEventListener('click', toggleMenu);
     document.getElementById('menu-close').addEventListener('click', toggleMenu);
@@ -552,6 +552,7 @@
       if (settings.notifications) requestNotifications();
       toggleSettings();
       scheduleAllReminders();
+      renderDashboard();
     });
 
     // Notifications
@@ -582,6 +583,7 @@
             body: `It's been ${settings.milkInterval} hours since the last milk intake.`,
             icon: 'https://via.placeholder.com/32?text=🍼'
           });
+          renderDashboard();
         }, delay);
       }
     };
