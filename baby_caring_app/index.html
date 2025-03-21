@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Caring App</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-1/4 bg-white p-4 shadow">
+      <h1 class="text-2xl font-bold mb-4">Baby Caring App</h1>
+      <button id="export-btn" class="mb-2 px-4 py-2 bg-blue-500 text-white rounded">Export Data</button>
+      <input type="file" id="import-input" class="hidden" accept=".json">
+      <button id="import-btn" class="mb-4 px-4 py-2 bg-green-500 text-white rounded">Import Data</button>
+      <h2 class="text-xl font-semibold mb-2">Children</h2>
+      <ul id="child-list" class="mb-4"></ul>
+      <button id="add-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded">Add Child</button>
+    </div>
+    <!-- Main Area -->
+    <div class="w-3/4 p-4">
+      <h2 id="current-child-name" class="text-2xl font-bold mb-4">Select a child</h2>
+      <!-- Milk Intake Section -->
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-2">Milk Intake</h3>
+        <form id="milk-form" class="mb-4">
+          <input type="datetime-local" id="milk-time" class="mr-2 p-2 border rounded">
+          <input type="number" id="milk-amount" placeholder="Amount (ml)" class="mr-2 p-2 border rounded">
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Add</button>
+        </form>
+        <ul id="milk-list" class="list-disc pl-5"></ul>
+      </div>
+      <!-- Diaper Change Section -->
+      <div>
+        <h3 class="text-xl font-semibold mb-2">Diaper Changes</h3>
+        <form id="diaper-form" class="mb-4">
+          <input type="datetime-local" id="diaper-time" class="mr-2 p-2 border rounded">
+          <select id="diaper-type" class="mr-2 p-2 border rounded">
+            <option value="wet">Wet</option>
+            <option value="dirty">Dirty</option>
+            <option value="both">Both</option>
+          </select>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Add</button>
+        </form>
+        <ul id="diaper-list" class="list-disc pl-5"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize data structure and current child selection
+    let data = {
+      nextId: 1,
+      children: []
+    };
+    let currentChildId = null;
+
+    // Load data from local storage
+    function loadData() {
+      const savedData = localStorage.getItem('babyCaringData');
+      if (savedData) {
+        data = JSON.parse(savedData);
+      }
+    }
+
+    // Save data to local storage
+    function saveData() {
+      localStorage.setItem('babyCaringData', JSON.stringify(data));
+    }
+
+    // Render the list of children in the sidebar
+    function renderChildList() {
+      const childList = document.getElementById('child-list');
+      childList.innerHTML = '';
+      data.children.forEach(child => {
+        const li = document.createElement('li');
+        li.textContent = child.name;
+        li.classList.add('cursor-pointer', 'p-2', 'hover:bg-gray-200');
+        li.addEventListener('click', () => {
+          selectChild(child.id);
+        });
+        childList.appendChild(li);
+      });
+    }
+
+    // Select a child and update the main area
+    function selectChild(id) {
+      currentChildId = id;
+      const child = data.children.find(c => c.id === id);
+      document.getElementById('current-child-name').textContent = child.name;
+      renderMilkIntake();
+      renderDiaperChanges();
+    }
+
+    // Render milk intake history
+    function renderMilkIntake() {
+      const milkList = document.getElementById('milk-list');
+      milkList.innerHTML = '';
+      if (currentChildId) {
+        const child = data.children.find(c => c.id === currentChildId);
+        child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.milkIntake.forEach(intake => {
+          const li = document.createElement('li');
+          li.textContent = `${new Date(intake.timestamp).toLocaleString()} - ${intake.amount} ml`;
+          milkList.appendChild(li);
+        });
+      }
+    }
+
+    // Render diaper change history
+    function renderDiaperChanges() {
+      const diaperList = document.getElementById('diaper-list');
+      diaperList.innerHTML = '';
+      if (currentChildId) {
+        const child = data.children.find(c => c.id === currentChildId);
+        child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        child.diaperChanges.forEach(change => {
+          const li = document.createElement('li');
+          li.textContent = `${new Date(change.timestamp).toLocaleString()} - ${change.type}`;
+          diaperList.appendChild(li);
+        });
+      }
+    }
+
+    // Add a new child
+    document.getElementById('add-child-btn').addEventListener('click', () => {
+      const name = prompt('Enter child\'s name:');
+      if (name) {
+        const id = 'child' + data.nextId;
+        data.nextId++;
+        data.children.push({
+          id: id,
+          name: name,
+          milkIntake: [],
+          diaperChanges: []
+        });
+        saveData();
+        renderChildList();
+      }
+    });
+
+    // Handle milk intake form submission
+    document.getElementById('milk-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!currentChildId) {
+        alert('Please select a child first.');
+        return;
+      }
+      const time = document.getElementById('milk-time').value;
+      const amount = document.getElementById('milk-amount').value;
+      if (time && amount) {
+        const child = data.children.find(c => c.id === currentChildId);
+        child.milkIntake.push({
+          timestamp: new Date(time).toISOString(),
+          amount: parseInt(amount)
+        });
+        saveData();
+        renderMilkIntake();
+        document.getElementById('milk-time').value = '';
+        document.getElementById('milk-amount').value = '';
+      }
+    });
+
+    // Handle diaper change form submission
+    document.getElementById('diaper-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!currentChildId) {
+        alert('Please select a child first.');
+        return;
+      }
+      const time = document.getElementById('diaper-time').value;
+      const type = document.getElementById('diaper-type').value;
+      if (time && type) {
+        const child = data.children.find(c => c.id === currentChildId);
+        child.diaperChanges.push({
+          timestamp: new Date(time).toISOString(),
+          type: type
+        });
+        saveData();
+        renderDiaperChanges();
+        document.getElementById('diaper-time').value = '';
+      }
+    });
+
+    // Export data to JSON file
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'baby_caring_data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Trigger file input for import
+    document.getElementById('import-btn').addEventListener('click', () => {
+      document.getElementById('import-input').click();
+    });
+
+    // Handle data import from JSON file
+    document.getElementById('import-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const importedData = JSON.parse(event.target.result);
+            if (importedData.nextId && Array.isArray(importedData.children)) {
+              data = importedData;
+              saveData();
+              renderChildList();
+              currentChildId = null;
+              document.getElementById('current-child-name').textContent = 'Select a child';
+              renderMilkIntake();
+              renderDiaperChanges();
+              alert('Data imported successfully.');
+            } else {
+              alert('Invalid data format.');
+            }
+          } catch (error) {
+            alert('Error parsing JSON: ' + error.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Initialize the app
+    loadData();
+    renderChildList();
+  </script>
+</body>
+</html>
