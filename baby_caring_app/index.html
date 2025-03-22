@@ -76,58 +76,58 @@
       <header class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-4xl font-bold text-blue-600"></h1>
         <div class="flex space-x-4">
-          <button id="menu-toggle" class="text-gray-600 tooltip" data-tooltip="Menu">
+          <button id="menu-toggle" class="text-gray-600 tooltip" data-tooltip="">
             <i class="fas fa-bars w-8 h-8"></i>
           </button>
-          <button id="sidebar-close" class="md:hidden text-gray-600 tooltip" data-tooltip="Close">
+          <button id="sidebar-close" class="md:hidden text-gray-600 tooltip" data-tooltip="">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
       </header>
       <h2 id="children-title" class="text-2xl font-semibold text-blue-600 mb-4"></h2>
       <ul id="child-list" class="space-y-4 mb-6"></ul>
-      <button id="add-child" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="Add a new child">
+      <button id="add-child" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="">
         <i class="fas fa-plus btn-icon mr-2"></i> <span></span>
       </button>
       <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="menu-close" class="text-gray-600 tooltip" data-tooltip="Close">
+          <button id="menu-close" class="text-gray-600 tooltip" data-tooltip="">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
         <div class="space-y-4">
-          <button id="export-data" class="w-full p-4 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500 tooltip" data-tooltip="Download data as Markdown">
+          <button id="export-data" class="w-full p-4 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500 tooltip" data-tooltip="">
             <i class="fas fa-download btn-icon mr-2"></i> <span></span>
           </button>
           <input type="file" id="import-file" class="hidden" accept=".json">
-          <button id="import-data" class="w-full p-4 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500 tooltip" data-tooltip="Upload saved data">
+          <button id="import-data" class="w-full p-4 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500 tooltip" data-tooltip="">
             <i class="fas fa-upload btn-icon mr-2"></i> <span></span>
           </button>
-          <button id="share-data" class="w-full p-4 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500 tooltip" data-tooltip="Share via email or clipboard">
+          <button id="share-data" class="w-full p-4 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500 tooltip" data-tooltip="">
             <i class="fas fa-share-alt btn-icon mr-2"></i> <span></span>
           </button>
-          <button id="toggle-lang" class="w-full p-4 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500 tooltip" data-tooltip="Switch language">
+          <button id="toggle-lang" class="w-full p-4 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500 tooltip" data-tooltip="">
             <i class="fas fa-language btn-icon mr-2"></i> <span></span>
           </button>
-          <button id="sync-bluetooth" class="w-full p-4 bg-indigo-400 text-white rounded-full flex justify-center items-center hover:bg-indigo-500 tooltip" data-tooltip="Sync with another device">
+          <button id="sync-bluetooth" class="w-full p-4 bg-indigo-400 text-white rounded-full flex justify-center items-center hover:bg-indigo-500 tooltip" data-tooltip="">
             <i class="fas fa-bluetooth btn-icon mr-2"></i> <span></span>
           </button>
-          <button id="settings-toggle" class="w-full p-4 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500 tooltip" data-tooltip="Adjust settings">
+          <button id="settings-toggle" class="w-full p-4 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500 tooltip" data-tooltip="">
             <i class="fas fa-cog btn-icon mr-2"></i> <span></span>
           </button>
         </div>
       </div>
       <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
         <div class="flex justify-end mb-6">
-          <button id="settings-close" class="text-gray-600 tooltip" data-tooltip="Close">
+          <button id="settings-close" class="text-gray-600 tooltip" data-tooltip="">
             <i class="fas fa-times w-8 h-8"></i>
           </button>
         </div>
-        <h3 class="text-2xl font-semibold text-blue-600 mb-4"></h3>
+        <h3 id="settings-title" class="text-2xl font-semibold text-blue-600 mb-4"></h3>
         <div class="space-y-6">
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="milk-interval-label" class="block text-blue-600 text-lg"></label>
           <input type="number" id="milk-interval" min="1" max="24" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="notify-enable-label" class="block text-blue-600 text-lg"></label>
           <input type="checkbox" id="notify-enable" class="h-6 w-6 text-blue-600">
           <button id="save-settings" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
         </div>
@@ -137,14 +137,14 @@
     <main id="main-content" class="w-full md:w-3/4 p-8 relative"></main>
     <!-- Edit Dialogs -->
     <dialog id="edit-milk-dialog">
-      <h3 class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+      <h3 id="edit-milk-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
       <form id="edit-milk-form" class="space-y-6">
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-milk-time-label" class="block text-blue-600 text-lg"></label>
           <input type="datetime-local" id="edit-milk-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-milk-type-label" class="block text-blue-600 text-lg"></label>
           <select id="edit-milk-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
             <option value="breast"></option>
             <option value="bottle"></option>
@@ -152,28 +152,28 @@
           </select>
         </div>
         <div id="edit-milk-breast" class="hidden">
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-milk-duration-label" class="block text-blue-600 text-lg"></label>
           <input type="number" id="edit-milk-duration" min="0" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div id="edit-milk-bottle" class="hidden">
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-milk-amount-label" class="block text-blue-600 text-lg"></label>
           <input type="number" id="edit-milk-amount" min="0" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
+          <button type="submit" id="edit-milk-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
           <button type="button" id="edit-milk-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
         </div>
       </form>
     </dialog>
     <dialog id="edit-diaper-dialog">
-      <h3 class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+      <h3 id="edit-diaper-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
       <form id="edit-diaper-form" class="space-y-6">
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-diaper-time-label" class="block text-blue-600 text-lg"></label>
           <input type="datetime-local" id="edit-diaper-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-diaper-type-label" class="block text-blue-600 text-lg"></label>
           <select id="edit-diaper-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
             <option value="wet"></option>
             <option value="dirty"></option>
@@ -181,74 +181,74 @@
           </select>
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
+          <button type="submit" id="edit-diaper-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
           <button type="button" id="edit-diaper-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
         </div>
       </form>
     </dialog>
     <dialog id="edit-child-dialog">
-      <h3 class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+      <h3 id="edit-child-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
       <form id="edit-child-form" class="space-y-6">
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-child-name-label" class="block text-blue-600 text-lg"></label>
           <input type="text" id="edit-child-name" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-child-gender-label" class="block text-blue-600 text-lg"></label>
           <select id="edit-child-gender" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
             <option value="boy"></option>
             <option value="girl"></option>
           </select>
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="edit-child-birthdate-label" class="block text-blue-600 text-lg"></label>
           <input type="date" id="edit-child-birthdate" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
+          <button type="submit" id="edit-child-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
           <button type="button" id="edit-child-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
         </div>
       </form>
     </dialog>
     <!-- Add Modals -->
     <dialog id="add-milk-dialog">
-      <h3 class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+      <h3 id="add-milk-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
       <form id="add-milk-form" class="space-y-6">
         <div class="flex items-center justify-center space-x-4">
-          <label class="text-blue-600 text-lg"></label>
+          <label id="add-milk-bottle-label" class="text-blue-600 text-lg"></label>
           <div class="relative inline-block w-16 h-8">
             <input type="checkbox" id="add-feed-type-hybrid" class="opacity-0 w-0 h-0">
             <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition-all duration-300 before:absolute before:h-6 before:w-6 before:left-1 before:top-1 before:bg-white before:rounded-full before:transition-all before:duration-300"></span>
           </div>
-          <label class="text-blue-600 text-lg"></label>
+          <label id="add-milk-hybrid-label" class="text-blue-600 text-lg"></label>
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="add-milk-time-label" class="block text-blue-600 text-lg"></label>
           <input type="datetime-local" id="add-milk-time" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div id="add-milk-breast" class="hidden">
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="add-milk-duration-label" class="block text-blue-600 text-lg"></label>
           <input type="number" id="add-milk-duration" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
         </div>
-        <div id="add-milk-bottle" class="hidden">
-          <label class="block text-blue-600 text-lg"></label>
+        <div id="add-milk-bottle">
+          <label id="add-milk-amount-label" class="block text-blue-600 text-lg"></label>
           <input type="number" id="add-milk-amount" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-4 btn-gradient text-white text-lg rounded-full shadow-glow"></button>
+          <button type="submit" id="add-milk-save" class="w-full p-4 btn-gradient text-white text-lg rounded-full shadow-glow"></button>
           <button type="button" id="add-milk-cancel" class="w-full p-4 bg-gray-400 text-white text-lg rounded-full shadow-glow"></button>
         </div>
       </form>
     </dialog>
     <dialog id="add-diaper-dialog">
-      <h3 class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+      <h3 id="add-diaper-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
       <form id="add-diaper-form" class="space-y-6">
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="add-diaper-time-label" class="block text-blue-600 text-lg"></label>
           <input type="datetime-local" id="add-diaper-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
         </div>
         <div>
-          <label class="block text-blue-600 text-lg"></label>
+          <label id="add-diaper-type-label" class="block text-blue-600 text-lg"></label>
           <select id="add-diaper-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
             <option value="wet"></option>
             <option value="dirty"></option>
@@ -256,7 +256,7 @@
           </select>
         </div>
         <div class="flex space-x-4">
-          <button type="submit" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
+          <button type="submit" id="add-diaper-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
           <button type="button" id="add-diaper-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
         </div>
       </form>
@@ -264,13 +264,6 @@
   </div>
 
   <script>
-    // Service Worker Registration (save this as 'service-worker.js' in the same directory)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('Service Worker registered', reg))
-        .catch(err => console.error('Service Worker registration failed', err));
-    }
-
     // Translations
     const translations = {
       en: {
@@ -283,7 +276,7 @@
         milkTitle: "Feeding",
         milkAmount: "Amount (ml)",
         milkDuration: "Duration (min)",
-        milkAdd: "Add",
+        milkAdd: "Add Feeding",
         breastFeed: "Breastfeed",
         bottleFeed: "Bottle Feed",
         hybridFeed: "Hybrid Feed",
@@ -291,7 +284,7 @@
         diaperWet: "Wet",
         diaperDirty: "Dirty",
         diaperBoth: "Both",
-        diaperAdd: "Add",
+        diaperAdd: "Add Diaper Change",
         exportData: "Export Data",
         importData: "Import Data",
         shareData: "Share Data",
@@ -318,6 +311,13 @@
         avgInterval: "Avg. Interval (hrs)",
         warnings: "Warnings",
         irregularFeeding: "Irregular feeding detected! Last interval too long/short.",
+        noChildren: "No children added yet. Click the '+' button to begin.",
+        back: "Back",
+        details: "Details",
+        edit: "Edit",
+        delete: "Delete",
+        menu: "Menu",
+        close: "Close",
         addChildPrompt: "Enter child's name:",
         genderPrompt: "Select gender (Boy/Girl):",
         birthdatePrompt: "Enter birthdate (YYYY-MM-DD):",
@@ -332,7 +332,10 @@
         shareError: "Sharing not supported. Data copied to clipboard instead.",
         bluetoothNotSupported: "Bluetooth not supported on this device.",
         bluetoothSyncSuccess: "Data synced successfully!",
-        bluetoothSyncError: "Error during Bluetooth sync."
+        bluetoothSyncError: "Error during Bluetooth sync.",
+        invalidInput: "Please enter valid name, gender (Boy/Girl), and birthdate (YYYY-MM-DD).",
+        invalidGender: "Please enter 'Boy' or 'Girl'.",
+        invalidDate: "Invalid date format. Use YYYY-MM-DD."
       },
       fr: {
         appTitle: "Soins Bébé",
@@ -344,7 +347,7 @@
         milkTitle: "Alimentation",
         milkAmount: "Quantité (ml)",
         milkDuration: "Durée (min)",
-        milkAdd: "Ajouter",
+        milkAdd: "Ajouter une alimentation",
         breastFeed: "Allaitement",
         bottleFeed: "Biberon",
         hybridFeed: "Alimentation Mixte",
@@ -352,7 +355,7 @@
         diaperWet: "Mouillée",
         diaperDirty: "Sale",
         diaperBoth: "Les deux",
-        diaperAdd: "Ajouter",
+        diaperAdd: "Ajouter un changement de couche",
         exportData: "Exporter les données",
         importData: "Importer les données",
         shareData: "Partager les données",
@@ -379,6 +382,13 @@
         avgInterval: "Intervalle moyen (h)",
         warnings: "Avertissements",
         irregularFeeding: "Alimentation irrégulière détectée ! Dernier intervalle trop long/court.",
+        noChildren: "Aucun enfant ajouté pour l'instant. Cliquez sur le bouton '+' pour commencer.",
+        back: "Retour",
+        details: "Détails",
+        edit: "Modifier",
+        delete: "Supprimer",
+        menu: "Menu",
+        close: "Fermer",
         addChildPrompt: "Entrez le nom de l'enfant :",
         genderPrompt: "Sélectionnez le genre (Garçon/Fille) :",
         birthdatePrompt: "Entrez la date de naissance (AAAA-MM-JJ) :",
@@ -393,7 +403,10 @@
         shareError: "Partage non supporté. Données copiées dans le presse-papiers à la place.",
         bluetoothNotSupported: "Bluetooth non supporté sur cet appareil.",
         bluetoothSyncSuccess: "Données synchronisées avec succès !",
-        bluetoothSyncError: "Erreur lors de la synchronisation Bluetooth."
+        bluetoothSyncError: "Erreur lors de la synchronisation Bluetooth.",
+        invalidInput: "Veuillez entrer un nom valide, un genre (Garçon/Fille) et une date de naissance (AAAA-MM-JJ).",
+        invalidGender: "Veuillez entrer 'Garçon' ou 'Fille'.",
+        invalidDate: "Format de date invalide. Utilisez AAAA-MM-JJ."
       }
     };
 
@@ -465,16 +478,69 @@
       document.getElementById('app-title').textContent = t.appTitle;
       document.getElementById('children-title').textContent = t.childrenTitle;
       document.getElementById('add-child').querySelector('span').textContent = t.addChild;
+      document.getElementById('add-child').dataset.tooltip = t.addChild;
+      document.getElementById('menu-toggle').dataset.tooltip = t.menu;
+      document.getElementById('sidebar-close').dataset.tooltip = t.close;
       document.getElementById('export-data').querySelector('span').textContent = t.exportData;
+      document.getElementById('export-data').dataset.tooltip = t.exportData;
       document.getElementById('import-data').querySelector('span').textContent = t.importData;
+      document.getElementById('import-data').dataset.tooltip = t.importData;
       document.getElementById('share-data').querySelector('span').textContent = t.shareData;
+      document.getElementById('share-data').dataset.tooltip = t.shareData;
       document.getElementById('toggle-lang').querySelector('span').textContent = t.toggleLang;
+      document.getElementById('toggle-lang').dataset.tooltip = t.toggleLang;
       document.getElementById('sync-bluetooth').querySelector('span').textContent = t.syncBluetooth;
+      document.getElementById('sync-bluetooth').dataset.tooltip = t.syncBluetooth;
       document.getElementById('settings-toggle').querySelector('span').textContent = t.settings;
-      document.getElementById('settings').querySelector('h3').textContent = t.settings;
-      document.getElementById('settings').querySelectorAll('label')[0].textContent = t.milkReminder;
-      document.getElementById('settings').querySelectorAll('label')[1].textContent = t.enableNotifications;
+      document.getElementById('settings-toggle').dataset.tooltip = t.settings;
+      document.getElementById('menu-close').dataset.tooltip = t.close;
+      document.getElementById('settings-title').textContent = t.settings;
+      document.getElementById('settings-close').dataset.tooltip = t.close;
+      document.getElementById('milk-interval-label').textContent = t.milkReminder;
+      document.getElementById('notify-enable-label').textContent = t.enableNotifications;
       document.getElementById('save-settings').textContent = t.save;
+      document.getElementById('edit-milk-title').textContent = t.editFeeding;
+      document.getElementById('edit-milk-time-label').textContent = t.time;
+      document.getElementById('edit-milk-type-label').textContent = t.type;
+      document.getElementById('edit-milk-type').options[0].textContent = t.breastFeed;
+      document.getElementById('edit-milk-type').options[1].textContent = t.bottleFeed;
+      document.getElementById('edit-milk-type').options[2].textContent = t.hybridFeed;
+      document.getElementById('edit-milk-duration-label').textContent = t.milkDuration;
+      document.getElementById('edit-milk-amount-label').textContent = t.milkAmount;
+      document.getElementById('edit-milk-save').textContent = t.save;
+      document.getElementById('edit-milk-cancel').textContent = t.cancel;
+      document.getElementById('edit-diaper-title').textContent = t.editDiaper;
+      document.getElementById('edit-diaper-time-label').textContent = t.time;
+      document.getElementById('edit-diaper-type-label').textContent = t.type;
+      document.getElementById('edit-diaper-type').options[0].textContent = t.diaperWet;
+      document.getElementById('edit-diaper-type').options[1].textContent = t.diaperDirty;
+      document.getElementById('edit-diaper-type').options[2].textContent = t.diaperBoth;
+      document.getElementById('edit-diaper-save').textContent = t.save;
+      document.getElementById('edit-diaper-cancel').textContent = t.cancel;
+      document.getElementById('edit-child-title').textContent = t.editChild;
+      document.getElementById('edit-child-name-label').textContent = t.name;
+      document.getElementById('edit-child-gender-label').textContent = t.gender;
+      document.getElementById('edit-child-gender').options[0].textContent = t.boy;
+      document.getElementById('edit-child-gender').options[1].textContent = t.girl;
+      document.getElementById('edit-child-birthdate-label').textContent = t.birthdate;
+      document.getElementById('edit-child-save').textContent = t.save;
+      document.getElementById('edit-child-cancel').textContent = t.cancel;
+      document.getElementById('add-milk-title').textContent = t.milkAdd;
+      document.getElementById('add-milk-bottle-label').textContent = t.bottleFeed;
+      document.getElementById('add-milk-hybrid-label').textContent = t.hybridFeed;
+      document.getElementById('add-milk-time-label').textContent = t.time;
+      document.getElementById('add-milk-duration-label').textContent = t.milkDuration;
+      document.getElementById('add-milk-amount-label').textContent = t.milkAmount;
+      document.getElementById('add-milk-save').textContent = t.save;
+      document.getElementById('add-milk-cancel').textContent = t.cancel;
+      document.getElementById('add-diaper-title').textContent = t.diaperAdd;
+      document.getElementById('add-diaper-time-label').textContent = t.time;
+      document.getElementById('add-diaper-type-label').textContent = t.type;
+      document.getElementById('add-diaper-type').options[0].textContent = t.diaperWet;
+      document.getElementById('add-diaper-type').options[1].textContent = t.diaperDirty;
+      document.getElementById('add-diaper-type').options[2].textContent = t.diaperBoth;
+      document.getElementById('add-diaper-save').textContent = t.save;
+      document.getElementById('add-diaper-cancel').textContent = t.cancel;
       renderChildren();
       renderDashboard();
     };
@@ -488,10 +554,10 @@
         li.className = 'flex justify-between items-center p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition-all';
         li.innerHTML = `
           <span onclick="selectChild('${child.id}')" class="cursor-pointer flex-1 text-lg">${child.name}</span>
-          <button onclick="editChild('${child.id}')" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="${translations[language].editChild}">
+          <button onclick="editChild('${child.id}')" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="${translations[language].edit}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
           </button>
-          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="${translations[language].deleteConfirm}">
+          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="${translations[language].delete}">
             <i class="fas fa-trash btn-icon"></i>
           </button>
         `;
@@ -557,14 +623,14 @@
               <button onclick="showDetails('${child.id}')" class="p-3 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="${t.details}">
                 <i class="fas fa-info-circle mr-2"></i> ${t.details}
               </button>
-              <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="${t.editChild}">
+              <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="${t.edit}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
               </button>
             </div>
           `;
           dashboard.appendChild(card);
           renderChart(child);
-          if (timeLeft === 0 && lastMilk) scheduleNotification(child);
+          if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
         });
       }
 
@@ -632,7 +698,7 @@
         </header>
         <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="text-xl font-semibold text-blue-600">${t.milkTitle} History</h4>
+            <h4 class="text-xl font-semibold text-blue-600">${t.milkTitle}</h4>
             <button onclick="showAddMilkDialog()" class="text-blue-600 tooltip" data-tooltip="${t.milkAdd}">
               <i class="fas fa-plus w-6 h-6"></i>
             </button>
@@ -641,7 +707,7 @@
         </section>
         <section class="bg-white p-6 rounded-xl shadow-glow">
           <div class="flex justify-between items-center mb-4">
-            <h4 class="text-xl font-semibold text-blue-600">${t.diaperTitle} History</h4>
+            <h4 class="text-xl font-semibold text-blue-600">${t.diaperTitle}</h4>
             <button onclick="showAddDiaperDialog()" class="text-blue-600 tooltip" data-tooltip="${t.diaperAdd}">
               <i class="fas fa-plus w-6 h-6"></i>
             </button>
@@ -732,11 +798,6 @@
     const showEditChildDialog = (id) => {
       const child = appData.children.find(c => c.id === id);
       const dialog = document.getElementById('edit-child-dialog');
-      const t = translations[language];
-      dialog.querySelector('h3').textContent = t.editChild;
-      dialog.querySelectorAll('label')[0].textContent = t.name;
-      dialog.querySelectorAll('label')[1].textContent = t.gender;
-      dialog.querySelectorAll('label')[2].textContent = t.birthdate;
       document.getElementById('edit-child-name').value = child.name;
       document.getElementById('edit-child-gender').value = child.gender;
       document.getElementById('edit-child-birthdate').value = child.birthdate || '';
@@ -753,10 +814,9 @@
           updateUI();
           dialog.close();
         } else {
-          alert(t.invalidInput);
+          alert(translations[language].invalidInput);
         }
       };
-      document.getElementById('edit-child-cancel').textContent = t.cancel;
       document.getElementById('edit-child-cancel').onclick = () => dialog.close();
       dialog.showModal();
     };
@@ -780,12 +840,6 @@
       const child = appData.children.find(c => c.id === activeChildId);
       const intake = child.milkIntake[idx];
       const dialog = document.getElementById('edit-milk-dialog');
-      const t = translations[language];
-      dialog.querySelector('h3').textContent = t.editFeeding;
-      dialog.querySelectorAll('label')[0].textContent = t.time;
-      dialog.querySelectorAll('label')[1].textContent = t.type;
-      dialog.querySelectorAll('label')[2].textContent = t.milkDuration;
-      dialog.querySelectorAll('label')[3].textContent = t.milkAmount;
       document.getElementById('edit-milk-time').value = intake.timestamp.slice(0, 16);
       document.getElementById('edit-milk-type').value = intake.type;
       document.getElementById('edit-milk-duration').value = intake.duration || '';
@@ -817,7 +871,6 @@
         renderDashboard();
         dialog.close();
       };
-      document.getElementById('edit-milk-cancel').textContent = t.cancel;
       document.getElementById('edit-milk-cancel').onclick = () => dialog.close();
       dialog.showModal();
     };
@@ -826,10 +879,6 @@
       const child = appData.children.find(c => c.id === activeChildId);
       const change = child.diaperChanges[idx];
       const dialog = document.getElementById('edit-diaper-dialog');
-      const t = translations[language];
-      dialog.querySelector('h3').textContent = t.editDiaper;
-      dialog.querySelectorAll('label')[0].textContent = t.time;
-      dialog.querySelectorAll('label')[1].textContent = t.type;
       document.getElementById('edit-diaper-time').value = change.timestamp.slice(0, 16);
       document.getElementById('edit-diaper-type').value = change.type;
       document.getElementById('edit-diaper-form').onsubmit = (e) => {
@@ -840,20 +889,12 @@
         renderDiapers();
         dialog.close();
       };
-      document.getElementById('edit-diaper-cancel').textContent = t.cancel;
       document.getElementById('edit-diaper-cancel').onclick = () => dialog.close();
       dialog.showModal();
     };
 
     const showAddMilkDialog = () => {
       const dialog = document.getElementById('add-milk-dialog');
-      const t = translations[language];
-      dialog.querySelector('h3').textContent = t.milkAdd;
-      dialog.querySelectorAll('label')[0].textContent = t.bottleFeed;
-      dialog.querySelectorAll('label')[1].textContent = t.hybridFeed;
-      dialog.querySelectorAll('label')[2].textContent = t.time;
-      dialog.querySelectorAll('label')[3].textContent = t.milkDuration;
-      dialog.querySelectorAll('label')[4].textContent = t.milkAmount;
       const feedType = document.getElementById('add-feed-type-hybrid');
       feedType.checked = false;
       document.getElementById('add-milk-time').value = '';
@@ -869,11 +910,11 @@
       };
       document.getElementById('add-milk-form').onsubmit = (e) => {
         e.preventDefault();
-        if (!activeChildId) return alert(t.selectChildAlert);
+        if (!activeChildId) return alert(translations[language].selectChildAlert);
         const time = document.getElementById('add-milk-time').value;
         const duration = parseInt(document.getElementById('add-milk-duration').value) || 0;
         const amount = parseInt(document.getElementById('add-milk-amount').value) || 0;
-        if (!time || (!duration && !amount)) return alert(t.milkValidation);
+        if (!time || (!duration && !amount)) return alert(translations[language].milkValidation);
         const child = appData.children.find(c => c.id === activeChildId);
         const entry = { timestamp: new Date(time).toISOString(), type: feedType.checked ? 'hybrid' : 'bottle' };
         if (feedType.checked) {
@@ -886,35 +927,29 @@
         saveData();
         renderMilk();
         renderDashboard();
-        scheduleNotification(child);
+        scheduleReminder(child);
         dialog.close();
       };
-      document.getElementById('add-milk-cancel').textContent = t.cancel;
       document.getElementById('add-milk-cancel').onclick = () => dialog.close();
       dialog.showModal();
     };
 
     const showAddDiaperDialog = () => {
       const dialog = document.getElementById('add-diaper-dialog');
-      const t = translations[language];
-      dialog.querySelector('h3').textContent = t.diaperAdd;
-      dialog.querySelectorAll('label')[0].textContent = t.time;
-      dialog.querySelectorAll('label')[1].textContent = t.type;
       document.getElementById('add-diaper-time').value = '';
       document.getElementById('add-diaper-type').value = 'wet';
       document.getElementById('add-diaper-form').onsubmit = (e) => {
         e.preventDefault();
-        if (!activeChildId) return alert(t.selectChildAlert);
+        if (!activeChildId) return alert(translations[language].selectChildAlert);
         const time = document.getElementById('add-diaper-time').value;
         const type = document.getElementById('add-diaper-type').value;
-        if (!time) return alert(t.diaperValidation);
+        if (!time) return alert(translations[language].diaperValidation);
         const child = appData.children.find(c => c.id === activeChildId);
         child.diaperChanges.push({ timestamp: new Date(time).toISOString(), type });
         saveData();
         renderDiapers();
         dialog.close();
       };
-      document.getElementById('add-diaper-cancel').textContent = t.cancel;
       document.getElementById('add-diaper-cancel').onclick = () => dialog.close();
       dialog.showModal();
     };
@@ -1130,13 +1165,13 @@
       localStorage.setItem('notifications', settings.notifications);
       if (settings.notifications) requestNotifications();
       toggleSettings();
-      scheduleAllNotifications();
+      scheduleAllReminders();
       renderDashboard();
     });
 
     // Notifications
     const requestNotifications = () => {
-      if (!("Notification" in window) || !navigator.serviceWorker) {
+      if (!("Notification" in window)) {
         alert("Notifications not supported.");
         settings.notifications = false;
         localStorage.setItem('notifications', false);
@@ -1150,27 +1185,32 @@
       }
     };
 
-    const scheduleNotification = (child) => {
-      if (!settings.notifications || Notification.permission !== "granted" || !navigator.serviceWorker) return;
+    const notifyFeedingTime = (child) => {
+      if (settings.notifications && Notification.permission === "granted") {
+        new Notification(`Feeding Time for ${child.name}!`, {
+          body: `It's time for ${child.name}'s next feeding!`,
+          icon: 'https://via.placeholder.com/32?text=🍼'
+        });
+      }
+    };
+
+    const scheduleReminder = (child) => {
+      if (!settings.notifications || Notification.permission !== "granted") return;
       const last = child.milkIntake[child.milkIntake.length - 1];
       if (!last) return;
       const nextTime = new Date(new Date(last.timestamp).getTime() + settings.milkInterval * 60 * 60 * 1000);
       const delay = nextTime - new Date();
       if (delay > 0) {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.showNotification(`Feeding Time for ${child.name}!`, {
-            body: `It's time for ${child.name}'s next feeding!`,
-            icon: 'https://via.placeholder.com/32?text=🍼',
-            tag: `feed-${child.id}-${last.timestamp}`,
-            timestamp: nextTime.getTime()
-          });
-        });
+        setTimeout(() => {
+          notifyFeedingTime(child);
+          renderDashboard();
+        }, delay);
       }
     };
 
-    const scheduleAllNotifications = () => {
+    const scheduleAllReminders = () => {
       if (settings.notifications && Notification.permission === "granted") {
-        appData.children.forEach(scheduleNotification);
+        appData.children.forEach(scheduleReminder);
       }
     };
 
@@ -1189,7 +1229,7 @@
       loadData().then(() => {
         updateUI();
         if (settings.notifications) requestNotifications();
-        scheduleAllNotifications();
+        scheduleAllReminders();
       });
     }).catch(err => console.error("DB Error:", err));
   </script>
