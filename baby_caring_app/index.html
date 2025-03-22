@@ -838,7 +838,7 @@
 
   const renderChart = (child) => {
     try {
-      const canvas = documentERICA.getElementById(`chart-${child.id}`);
+      const canvas = document.getElementById(`chart-${child.id}`);
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const timestamps = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b);
