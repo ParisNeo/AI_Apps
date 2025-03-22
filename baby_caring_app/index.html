@@ -453,74 +453,112 @@
       
       const dashboard = document.getElementById('dashboard');
       dashboard.innerHTML = '';
-      
+      console.log('Rendering dashboard with children:', appData.children);
+
       if (appData.children.length === 0) {
         dashboard.innerHTML = '<p class="text-gray-600 text-center">No children added yet. Click the "+" button to begin.</p>';
       } else {
-        appData.children.forEach(child => {
-          const card = document.createElement('div');
-          card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
-          const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
-          const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
-          const now = new Date();
-          const timeLeft = nextMilk && nextMilk > now ? Math.floor((nextMilk - now) / (1000 * 60)) : 0;
-          const timeLeftText = lastMilk ? (timeLeft > 0 ? `${timeLeft} min` : 'Now') : 'N/A';
-          const percentageLeft = lastMilk && nextMilk > now ? (timeLeft / (settings.milkInterval * 60)) : 0;
-          const redValue = Math.floor(255 * (1 - percentageLeft));
-          const color = timeLeft > 0 ? `rgb(${redValue}, 100, 100)` : '#ff0000';
-          const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
-          card.innerHTML = `
-            <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
-            <h3 class="text-xl font-bold text-blue-600">${child.name}</h3>
-            <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
-            <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
-            <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
-            <p class="text-gray-600" style="color: ${color};"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
-            <canvas id="chart-${child.id}" class="w-full h-32 mt-4"></canvas>
-            <div class="flex space-x-4 mt-4">
-              <button onclick="showDetails('${child.id}')" class="p-3 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
-                <i class="fas fa-info-circle mr-2"></i> Details
-              </button>
-              <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="Edit child">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-              </button>
-            </div>
-          `;
-          dashboard.appendChild(card);
-          renderChart(child);
-          if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
+        appData.children.forEach((child, index) => {
+          try {
+            console.log(`Rendering child ${index + 1}: ${child.name}, ID: ${child.id}`);
+            const card = document.createElement('div');
+            card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
+            
+            const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
+            const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
+            const now = new Date();
+            const timeLeft = nextMilk && nextMilk > now ? Math.floor((nextMilk - now) / (1000 * 60)) : 0;
+            const timeLeftText = lastMilk ? (timeLeft > 0 ? `${timeLeft} min` : 'Now') : 'N/A';
+            const percentageLeft = lastMilk && nextMilk > now ? (timeLeft / (settings.milkInterval * 60)) : 0;
+            const redValue = Math.floor(255 * (1 - percentageLeft));
+            const color = timeLeft > 0 ? `rgb(${redValue}, 100, 100)` : '#ff0000';
+            const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
+
+            card.innerHTML = `
+              <i class="fas fa-baby text-4xl text-blue-600 mb-4"></i>
+              <h3 class="text-xl font-bold text-blue-600">${child.name}</h3>
+              <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
+              <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
+              <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
+              <p class="text-gray-600" style="color: ${color};"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
+              <canvas id="chart-${child.id}" class="w-full h-32 mt-4"></canvas>
+              <div class="flex space-x-4 mt-4">
+                <button onclick="showDetails('${child.id}')" class="p-3 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="View details">
+                  <i class="fas fa-info-circle mr-2"></i> Details
+                </button>
+                <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="Edit child">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+              </div>
+            `;
+            
+            dashboard.appendChild(card);
+            console.log(`Card appended for ${child.name}`);
+            
+            renderChart(child);
+            if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
+          } catch (error) {
+            console.error(`Error rendering child ${child.name} (ID: ${child.id}):`, error);
+          }
         });
       }
-      
+
       addTouchAndClick(document.getElementById('sidebar-open'), toggleSidebar);
       addTouchAndClick(document.getElementById('dashboard-add-child'), addChildFromDashboard);
       showRandomTip();
     };
 
     const renderChart = (child) => {
-      const ctx = document.getElementById(`chart-${child.id}`).getContext('2d');
-      const timestamps = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b);
-      const intervals = [];
-      for (let i = 1; i < timestamps.length; i++) {
-        intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60));
-      }
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: intervals.map((_, i) => `Feed ${i + 1}`),
-          datasets: [{
-            label: translations[language].milkIntervals,
-            data: intervals,
-            borderColor: '#60a5fa',
-            fill: false,
-            tension: 0.1
-          }]
-        },
-        options: {
-          scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
-          plugins: { legend: { display: false } }
+      try {
+        const canvas = document.getElementById(`chart-${child.id}`);
+        if (!canvas) {
+          console.error(`Canvas not found for child ${child.id}`);
+          return;
         }
-      });
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error(`Failed to get 2D context for chart-${child.id}`);
+          return;
+        }
+        
+        const timestamps = child.milkIntake.map(m => {
+          const date = new Date(m.timestamp);
+          if (isNaN(date.getTime())) {
+            console.warn(`Invalid timestamp in milkIntake for ${child.name}: ${m.timestamp}`);
+            return null;
+          }
+          return date;
+        }).filter(t => t !== null).sort((a, b) => a - b);
+
+        const intervals = [];
+        for (let i = 1; i < timestamps.length; i++) {
+          intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60));
+        }
+
+        console.log(`Chart data for ${child.name}:`, intervals);
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: intervals.map((_, i) => `Feed ${i + 1}`),
+            datasets: [{
+              label: translations[language].milkIntervals,
+              data: intervals,
+              borderColor: '#60a5fa',
+              fill: false,
+              tension: 0.1
+            }]
+          },
+          options: {
+            scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
+            plugins: { legend: { display: false } }
+          }
+        });
+        console.log(`Chart rendered for ${child.name}`);
+      } catch (error) {
+        console.error(`Error in renderChart for ${child.name} (ID: ${child.id}):`, error);
+      }
     };
 
     const showDetails = (id) => {
@@ -952,11 +990,13 @@
     const toggleMenu = () => {
       const menu = document.getElementById('menu');
       const settings = document.getElementById('settings');
-      menu.classList.toggle('hidden');
-      if (!menu.classList.contains('hidden')) {
+      console.log('Toggling menu');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
         menu.style.transform = 'translateX(0)';
         settings.classList.add('hidden');
       } else {
+        menu.classList.add('hidden');
         menu.style.transform = 'translateX(100%)';
       }
     };
