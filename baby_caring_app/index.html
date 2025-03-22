@@ -1292,14 +1292,29 @@ const showAddMilkDialog = () => {
     if (!dialog) return;
     const t = translations[language];
     
-    document.getElementById('add-milk-time').value = new Date().toISOString().slice(0,16);
+    // Set all text content including select options
+    document.getElementById('add-milk-title').textContent = t.milkAdd;
+    document.getElementById('add-milk-time-label').textContent = t.time;
+    document.getElementById('add-milk-type-label').textContent = t.addMilkType;
+    const typeSelect = document.getElementById('add-milk-type');
+    typeSelect.options[0].textContent = t.breastFeed;  // Set breast option text
+    typeSelect.options[1].textContent = t.bottleFeed;  // Set bottle option text
+    typeSelect.options[2].textContent = t.hybridFeed;  // Set hybrid option text
+    document.getElementById('add-milk-duration-label').textContent = t.milkDuration;
+    document.getElementById('add-milk-amount-label').textContent = t.milkAmount;
+    document.getElementById('add-milk-save').textContent = t.save;
+    document.getElementById('add-milk-cancel').textContent = t.cancel;
+
+    // Initialize form values
+    document.getElementById('add-milk-time').value = new Date().toISOString().slice(0, 16);
     document.getElementById('add-milk-duration').value = '';
     document.getElementById('add-milk-amount').value = '';
     
     const breastDiv = document.getElementById('add-milk-breast');
     const bottleDiv = document.getElementById('add-milk-bottle');
-    const typeSelect = document.getElementById('add-milk-type');
     
+    // Reset visibility based on initial selection
+    typeSelect.value = 'bottle';  // Set default value
     breastDiv.classList.add('hidden');
     bottleDiv.classList.remove('hidden');
 
