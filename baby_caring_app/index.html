@@ -264,6 +264,62 @@
         </div>
       </form>
     </dialog>
+<!-- Replace the existing addChildFromDashboard function and related dialog with this -->
+<dialog id="add-child-dialog">
+  <h3 id="add-child-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+  <form id="add-child-form" class="space-y-6">
+    <div>
+      <label id="add-child-name-label" class="block text-blue-600 text-lg"></label>
+      <input type="text" id="add-child-name" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
+    </div>
+    <div>
+      <label id="add-child-gender-label" class="block text-blue-600 text-lg"></label>
+      <select id="add-child-gender" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
+        <option value="boy"></option>
+        <option value="girl"></option>
+      </select>
+    </div>
+    <div>
+      <label id="add-child-birthdate-label" class="block text-blue-600 text-lg"></label>
+      <input type="date" id="add-child-birthdate" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
+    </div>
+    <div class="flex space-x-4">
+      <button type="submit" id="add-child-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
+      <button type="button" id="add-child-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Replace the existing add-milk-dialog with this -->
+<dialog id="add-milk-dialog">
+  <h3 id="add-milk-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
+  <form id="add-milk-form" class="space-y-6">
+    <div>
+      <label id="add-milk-time-label" class="block text-blue-600 text-lg"></label>
+      <input type="datetime-local" id="add-milk-time" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50" required>
+    </div>
+    <div>
+      <label id="add-milk-type-label" class="block text-blue-600 text-lg"></label>
+      <select id="add-milk-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
+        <option value="breast"></option>
+        <option value="bottle"></option>
+        <option value="hybrid"></option>
+      </select>
+    </div>
+    <div id="add-milk-breast" class="hidden">
+      <label id="add-milk-duration-label" class="block text-blue-600 text-lg"></label>
+      <input type="number" id="add-milk-duration" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
+    </div>
+    <div id="add-milk-bottle" class="hidden">
+      <label id="add-milk-amount-label" class="block text-blue-600 text-lg"></label>
+      <input type="number" id="add-milk-amount" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
+    </div>
+    <div class="flex space-x-4">
+      <button type="submit" id="add-milk-save" class="w-full p-4 btn-gradient text-white text-lg rounded-full shadow-glow"></button>
+      <button type="button" id="add-milk-cancel" class="w-full p-4 bg-gray-400 text-white text-lg rounded-full shadow-glow"></button>
+    </div>
+  </form>
+</dialog>    
     <div id="toast-container"></div>
   </div>
 
@@ -1256,23 +1312,126 @@
   };
 
   // Additional Event Handlers
-  const addChildFromDashboard = () => {
-    try {
-      const t = translations[language];
-      const name = prompt(t.addChildPrompt);
-      if (!name) return;
-      const gender = prompt(t.genderPrompt).toLowerCase();
-      if (gender !== 'boy' && gender !== 'girl') return alert(t.invalidGender);
-      const birthdate = prompt(t.birthdatePrompt);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(birthdate)) return alert(t.invalidDate);
-      const id = `child${appData.nextId++}`;
-      appData.children.push({ id, name, gender, birthdate, milkIntake: [], diaperChanges: [] });
-      saveData();
-      updateUI();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+const showAddChildDialog = () => {
+  try {
+    const dialog = document.getElementById('add-child-dialog');
+    if (!dialog) return;
+    const t = translations[language];
+    
+    document.getElementById('add-child-title').textContent = t.addChild;
+    document.getElementById('add-child-name-label').textContent = t.name;
+    document.getElementById('add-child-gender-label').textContent = t.gender;
+    document.getElementById('add-child-gender').options[0].textContent = t.boy;
+    document.getElementById('add-child-gender').options[1].textContent = t.girl;
+    document.getElementById('add-child-birthdate-label').textContent = t.birthdate;
+    document.getElementById('add-child-save').textContent = t.save;
+    document.getElementById('add-child-cancel').textContent = t.cancel;
+
+    document.getElementById('add-child-name').value = '';
+    document.getElementById('add-child-gender').value = 'boy';
+    document.getElementById('add-child-birthdate').value = '';
+
+    document.getElementById('add-child-form').onsubmit = (e) => {
+      try {
+        e.preventDefault();
+        const name = document.getElementById('add-child-name').value.trim();
+        const gender = document.getElementById('add-child-gender').value;
+        const birthdate = document.getElementById('add-child-birthdate').value;
+        if (name && (gender === 'boy' || gender === 'girl') && /^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
+          const id = `child${appData.nextId++}`;
+          appData.children.push({ id, name, gender, birthdate, milkIntake: [], diaperChanges: [] });
+          saveData();
+          updateUI();
+          dialog.close();
+        } else {
+          alert(t.invalidInput);
+        }
+      } catch (err) {
+        showToast(t.errorOccurred + err.message);
+      }
+    };
+    
+    document.getElementById('add-child-cancel').onclick = () => dialog.close();
+    dialog.showModal();
+  } catch (err) {
+    showToast(translations[language].errorOccurred + err.message);
+  }
+};
+
+const addChildFromDashboard = () => {
+  showAddChildDialog();
+};
+
+const showAddMilkDialog = () => {
+  try {
+    const dialog = document.getElementById('add-milk-dialog');
+    if (!dialog) return;
+    const t = translations[language];
+    
+    document.getElementById('add-milk-time').value = new Date().toISOString().slice(0,16);
+    document.getElementById('add-milk-duration').value = '';
+    document.getElementById('add-milk-amount').value = '';
+    
+    const breastDiv = document.getElementById('add-milk-breast');
+    const bottleDiv = document.getElementById('add-milk-bottle');
+    const typeSelect = document.getElementById('add-milk-type');
+    
+    breastDiv.classList.add('hidden');
+    bottleDiv.classList.remove('hidden');
+
+    typeSelect.onchange = (e) => {
+      breastDiv.classList.toggle('hidden', e.target.value === 'bottle');
+      bottleDiv.classList.toggle('hidden', e.target.value === 'breast');
+    };
+
+    document.getElementById('add-milk-form').onsubmit = (e) => {
+      try {
+        e.preventDefault();
+        if (!activeChildId) return alert(t.selectChildAlert);
+        const time = document.getElementById('add-milk-time').value;
+        const type = document.getElementById('add-milk-type').value;
+        const duration = parseInt(document.getElementById('add-milk-duration').value) || 0;
+        const amount = parseInt(document.getElementById('add-milk-amount').value) || 0;
+        
+        if (!time || (type === 'breast' && !duration) || (type === 'bottle' && !amount) || (type === 'hybrid' && (!duration || !amount))) {
+          return alert(t.milkValidation);
+        }
+        
+        const child = appData.children.find(c => c.id === activeChildId);
+        if (!child) return;
+        
+        const entry = { 
+          timestamp: new Date(time).toISOString(), 
+          type 
+        };
+        
+        if (type === 'breast') {
+          entry.duration = duration;
+        } else if (type === 'bottle') {
+          entry.amount = amount;
+        } else { // hybrid
+          entry.duration = duration;
+          entry.amount = amount;
+        }
+        
+        child.milkIntake.push(entry);
+        saveData();
+        renderMilk();
+        renderDashboard();
+        scheduleReminder(child);
+        dialog.close();
+      } catch (err) {
+        showToast(t.errorOccurred + err.message);
+      }
+    };
+    
+    document.getElementById('add-milk-cancel').onclick = () => dialog.close();
+    dialog.showModal();
+  } catch (err) {
+    showToast(translations[language].errorOccurred + err.message);
+  }
+};
+
 
   const exportDataHandler = () => {
     try {
@@ -1454,7 +1613,9 @@
   };
 
   // Event Listeners
-  addTouchAndClick(document.getElementById('add-child'), addChildFromDashboard);
+  addTouchAndClick(document.getElementById('add-child'), showAddChildDialog);
+  addTouchAndClick(document.getElementById('dashboard-add-child'), showAddChildDialog);
+
   addTouchAndClick(document.getElementById('export-data'), exportDataHandler);
   addTouchAndClick(document.getElementById('import-data'), importDataHandler);
   addTouchAndClick(document.getElementById('share-data'), shareDataHandler);
