@@ -18,6 +18,8 @@
       overscroll-behavior: none;
       background: linear-gradient(135deg, #e0f7fa, #fce4ec, #fff9c4);
       min-height: 100vh;
+      margin: 0;
+      padding: 0;
     }
     .slide { transition: transform 0.3s ease-in-out; }
     .slide.hidden { transform: translateX(100%); }
@@ -38,27 +40,25 @@
       font-size: 0.9rem; white-space: nowrap; z-index: 10;
     }
     .tip-box { animation: fadeIn 1s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; }}
+
     .sync-status { font-size: 0.9rem; }
     dialog { border: none; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); background: white; padding: 1.5rem; }
     dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
-    .dashboard-grid { gap: 3rem; }
+    .dashboard-grid { display: grid; gap: 3rem; }
+
     /* Custom Switch */
-    .slider {
-      background-color: #a78bfa; /* Default to bottle feed color */
-    }
-    #add-feed-type:checked + .slider {
-      background-color: #60a5fa; /* Breastfeed color */
-    }
-    #add-feed-type:checked + .slider:before {
-      transform: translateX(2rem);
-    }
+    .slider { background-color: #a78bfa; }
+    #add-feed-type:checked + .slider { background-color: #60a5fa; }
+    #add-feed-type:checked + .slider:before { transform: translateX(2rem); }
+
     /* Touch-friendly adjustments */
     .dashboard-card { padding: 2rem; }
     .dashboard-card h3 { font-size: 1.75rem; }
     .dashboard-card p { font-size: 1.25rem; }
     button, input, select { font-size: 1.125rem; padding: 0.75rem; }
     .btn-icon { width: 2rem; height: 2rem; }
+
     @media (max-width: 640px) {
       .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -71,9 +71,9 @@
   </style>
 </head>
 <body class="safe-area">
-  <div class="flex flex-col md:flex-row">
+  <div class="flex flex-col md:flex-row h-full">
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left fixed md:static h-full z-10 rounded-r-xl hidden md:block">
+    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left fixed md:static h-full z-20 rounded-r-xl hidden md:block">
       <header class="flex justify-between items-center mb-6">
         <h1 id="app-title" class="text-3xl font-bold text-blue-600">Baby Caring</h1>
         <div class="flex space-x-4">
@@ -91,7 +91,7 @@
         <i class="fas fa-plus btn-icon mr-2"></i> <span>Add Child</span>
       </button>
       <!-- Menu -->
-      <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
+      <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
         <div class="flex justify-end mb-6">
           <button id="menu-close" class="text-gray-600 tooltip" data-tooltip="Close">
             <i class="fas fa-times w-8 h-8"></i>
@@ -120,7 +120,7 @@
         </div>
       </div>
       <!-- Settings -->
-      <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-20 rounded-l-xl">
+      <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
         <div class="flex justify-end mb-6">
           <button id="settings-close" class="text-gray-600 tooltip" data-tooltip="Close">
             <i class="fas fa-times w-8 h-8"></i>
@@ -442,8 +442,7 @@
     const renderDashboard = () => {
       const main = document.getElementById('main-content');
       const t = translations[language];
-      main.innerHTML = ''; // Clear previous content
-      const dashboardHTML = `
+      main.innerHTML = `
         <header class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-blue-600">${t.dashboard}</h2>
           <div class="flex space-x-4">
@@ -456,9 +455,8 @@
         <div id="dashboard" class="dashboard-grid"></div>
         <div id="tip-box" class="absolute bottom-4 right-4 bg-yellow-100 p-4 rounded-xl shadow-glow text-blue-600 hidden tip-box"></div>
       `;
-      main.innerHTML = dashboardHTML;
       const dashboard = document.getElementById('dashboard');
-      dashboard.innerHTML = ''; // Ensure it's empty before appending
+      dashboard.innerHTML = ''; // Clear previous cards
       appData.children.forEach(child => {
         const card = document.createElement('div');
         card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
@@ -493,6 +491,7 @@
         if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
       });
       document.getElementById('sidebar-open').addEventListener('click', toggleSidebar);
+      document.getElementById('sidebar-open').addEventListener('touchstart', toggleSidebar);
       showRandomTip();
     };
 
@@ -556,6 +555,10 @@
       renderMilk();
       renderDiapers();
       document.getElementById('back-to-dashboard').addEventListener('click', () => {
+        activeChildId = null;
+        renderDashboard();
+      });
+      document.getElementById('back-to-dashboard').addEventListener('touchstart', () => {
         activeChildId = null;
         renderDashboard();
       });
@@ -777,7 +780,16 @@
       dialog.showModal();
     };
 
-    document.getElementById('add-child').addEventListener('click', () => {
+    // Event Listeners
+    const addTouchAndClick = (element, handler) => {
+      element.addEventListener('click', handler);
+      element.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handler(e);
+      });
+    };
+
+    addTouchAndClick(document.getElementById('add-child'), () => {
       const t = translations[language];
       const name = prompt(t.addChildPrompt);
       if (!name) return;
@@ -788,11 +800,10 @@
       const id = `child${appData.nextId++}`;
       appData.children.push({ id, name, gender, birthdate, milkIntake: [], diaperChanges: [] });
       saveData();
-      renderChildren();
-      renderDashboard();
+      updateUI();
     });
 
-    document.getElementById('export-data').addEventListener('click', () => {
+    addTouchAndClick(document.getElementById('export-data'), () => {
       let md = "# Baby Caring Data\n\n";
       appData.children.forEach(c => {
         md += `## ${c.name}\n- **Gender**: ${translations[language][c.gender]}\n- **Birthdate**: ${c.birthdate || 'N/A'}\n\n### Feeding\n`;
@@ -811,7 +822,7 @@
       toggleMenu();
     });
 
-    document.getElementById('import-data').addEventListener('click', () => {
+    addTouchAndClick(document.getElementById('import-data'), () => {
       document.getElementById('import-file').click();
     });
 
@@ -840,7 +851,7 @@
       }
     });
 
-    document.getElementById('share-data').addEventListener('click', () => {
+    addTouchAndClick(document.getElementById('share-data'), () => {
       let md = "# Baby Caring Data\n\n";
       appData.children.forEach(c => {
         md += `## ${c.name}\n- **Gender**: ${translations[language][c.gender]}\n- **Birthdate**: ${c.birthdate || 'N/A'}\n\n### Feeding\n`;
@@ -868,14 +879,14 @@
       }).catch(() => alert(translations[language].shareError));
     };
 
-    document.getElementById('toggle-lang').addEventListener('click', () => {
+    addTouchAndClick(document.getElementById('toggle-lang'), () => {
       language = language === 'en' ? 'fr' : 'en';
       localStorage.setItem('language', language);
       updateUI();
       toggleMenu();
     });
 
-    document.getElementById('sync-bluetooth').addEventListener('click', async () => {
+    addTouchAndClick(document.getElementById('sync-bluetooth'), async () => {
       if (!navigator.bluetooth) {
         alert(translations[language].bluetoothNotSupported);
         return;
@@ -936,31 +947,29 @@
 
     const toggleMenu = () => {
       const menu = document.getElementById('menu');
+      const settings = document.getElementById('settings');
       menu.classList.toggle('hidden');
+      if (!menu.classList.contains('hidden')) settings.classList.add('hidden');
     };
 
     const toggleSettings = () => {
-      const settingsPanel = document.getElementById('settings');
-      settingsPanel.classList.toggle('hidden');
-      if (!settingsPanel.classList.contains('hidden')) {
+      const settings = document.getElementById('settings');
+      const menu = document.getElementById('menu');
+      settings.classList.toggle('hidden');
+      if (!settings.classList.contains('hidden')) {
         document.getElementById('milk-interval').value = settings.milkInterval;
         document.getElementById('notify-enable').checked = settings.notifications;
+        menu.classList.add('hidden');
       }
     };
 
-    document.getElementById('sidebar-close').addEventListener('click', toggleSidebar);
-    document.getElementById('menu-toggle').addEventListener('click', () => {
-      toggleMenu();
-      document.getElementById('settings').classList.add('hidden'); // Ensure settings is hidden when menu opens
-    });
-    document.getElementById('menu-close').addEventListener('click', toggleMenu);
-    document.getElementById('settings-toggle').addEventListener('click', () => {
-      toggleSettings();
-      document.getElementById('menu').classList.add('hidden'); // Ensure menu is hidden when settings opens
-    });
-    document.getElementById('settings-close').addEventListener('click', toggleSettings);
+    addTouchAndClick(document.getElementById('sidebar-close'), toggleSidebar);
+    addTouchAndClick(document.getElementById('menu-toggle'), toggleMenu);
+    addTouchAndClick(document.getElementById('menu-close'), toggleMenu);
+    addTouchAndClick(document.getElementById('settings-toggle'), toggleSettings);
+    addTouchAndClick(document.getElementById('settings-close'), toggleSettings);
 
-    document.getElementById('save-settings').addEventListener('click', () => {
+    addTouchAndClick(document.getElementById('save-settings'), () => {
       settings.milkInterval = parseInt(document.getElementById('milk-interval').value) || 3;
       settings.notifications = document.getElementById('notify-enable').checked;
       localStorage.setItem('milkInterval', settings.milkInterval);
