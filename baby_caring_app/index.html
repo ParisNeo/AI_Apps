@@ -453,6 +453,7 @@
   // Utility Functions (Defined First)
   const showToast = (message) => {
     try {
+      consoel.error(`Toast message: ${message}`)
       const toast = document.createElement('div');
       toast.className = 'toast';
       toast.textContent = message;
