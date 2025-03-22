@@ -1199,58 +1199,7 @@
       showToast(translations[language].errorOccurred + err.message);
     }
   };
-
-  const showAddMilkDialog = () => {
-    try {
-      const dialog = document.getElementById('add-milk-dialog');
-      if (!dialog) return;
-      const feedType = document.getElementById('add-feed-type-hybrid');
-      feedType.checked = false;
-      document.getElementById('add-milk-time').value = '';
-      document.getElementById('add-milk-duration').value = '';
-      document.getElementById('add-milk-amount').value = '';
-      const breastDiv = document.getElementById('add-milk-breast');
-      const bottleDiv = document.getElementById('add-milk-bottle');
-      breastDiv.classList.add('hidden');
-      bottleDiv.classList.remove('hidden');
-      feedType.onchange = (e) => {
-        breastDiv.classList.toggle('hidden', !e.target.checked);
-        bottleDiv.classList.toggle('hidden', false);
-      };
-      document.getElementById('add-milk-form').onsubmit = (e) => {
-        try {
-          e.preventDefault();
-          if (!activeChildId) return alert(translations[language].selectChildAlert);
-          const time = document.getElementById('add-milk-time').value;
-          const duration = parseInt(document.getElementById('add-milk-duration').value) || 0;
-          const amount = parseInt(document.getElementById('add-milk-amount').value) || 0;
-          if (!time || (!duration && !amount)) return alert(translations[language].milkValidation);
-          const child = appData.children.find(c => c.id === activeChildId);
-          if (!child) return;
-          const entry = { timestamp: new Date(time).toISOString(), type: feedType.checked ? 'hybrid' : 'bottle' };
-          if (feedType.checked) {
-            entry.duration = duration;
-            entry.amount = amount;
-          } else {
-            entry.amount = amount;
-          }
-          child.milkIntake.push(entry);
-          saveData();
-          renderMilk();
-          renderDashboard();
-          scheduleReminder(child);
-          dialog.close();
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      document.getElementById('add-milk-cancel').onclick = () => dialog.close();
-      dialog.showModal();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
+  
   const showAddDiaperDialog = () => {
     try {
       const dialog = document.getElementById('add-diaper-dialog');
