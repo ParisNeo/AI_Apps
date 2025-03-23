@@ -15,7 +15,19 @@
             0%, 100% { d: path("M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
             50% { d: path("M30 220 Q40 225 50 220 Q60 215 70 220 Q80 225 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
         }
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; animation: fadeIn 0.3s; max-width: 400px; word-wrap: break-word; }
+        .toast { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            color: white; 
+            animation: fadeIn 0.3s; 
+            max-width: 400px; 
+            max-height: 300px; 
+            overflow-y: auto; 
+            word-wrap: break-word; 
+        }
         .toast-success { background: #34D399; }
         .toast-error { background: #F87171; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -82,11 +94,11 @@
         </div>
         <div v-if="toast" class="toast" :class="toast.type">
             <div>{{ toast.message }}</div>
-            <div v-if="debugMode && toast.type === 'toast-error'" class="mt-2">
-                <button @click="copyErrorToClipboard" class="bg-white text-black px-2 py-1 rounded mr-2">Copy to Clipboard</button>
-                <button @click="closeToast" class="bg-white text-black px-2 py-1 rounded">Close</button>
+            <div v-if="debugMode && toast.type === 'toast-error'" class="mt-2 flex space-x-2">
+                <button @click="copyErrorToClipboard" class="bg-white text-black p-1 rounded"><i data-feather="copy"></i></button>
+                <button @click="closeToast" class="bg-white text-black p-1 rounded"><i data-feather="x"></i></button>
             </div>
-            <button v-else @click="closeToast" class="bg-white text-black px-2 py-1 rounded mt-2">Close</button>
+            <button v-else @click="closeToast" class="bg-white text-black p-1 rounded mt-2"><i data-feather="x"></i></button>
         </div>
     </div>
     <script>
@@ -294,6 +306,7 @@
                         if (type !== 'error' || !this.debugMode) {
                             setTimeout(() => this.toast = null, 2000);
                         }
+                        feather.replace(); // Ensure icons render in toast
                     } catch (error) {
                         console.error('Error in showToast:', error);
                     }
@@ -303,6 +316,7 @@
                     console.error(fullMessage);
                     if (this.debugMode) {
                         this.toast = { type: 'toast-error', message: fullMessage };
+                        feather.replace(); // Ensure icons render in error toast
                     } else {
                         this.showToast('error', message);
                     }
