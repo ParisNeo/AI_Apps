@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Quest</title>
+    <title>Water Balance</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
-        #water-level { transition: y 0.5s ease, height 0.5s ease; }
+        #water-level { transition: height 0.5s ease; }
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; }
         .toast-success { background: #34D399; }
         .toast-error { background: #F87171; }
@@ -19,13 +19,13 @@
     <div id="app">
         <div class="container mx-auto p-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold">Water Quest</h1>
+                <h1 class="text-2xl font-bold">Water Balance</h1>
                 <button @click="openSettings"><i data-feather="settings"></i></button>
             </div>
             <div class="mt-4 flex justify-center">
-                <svg width="100" height="200" viewBox="0 0 100 200">
-                    <path d="M30 20 Q35 10 50 10 Q65 10 70 20 L70 180 Q65 190 50 190 Q35 190 30 180 Z" fill="none" stroke="#000" stroke-width="2"/>
-                    <rect id="water-level" x="30" :y="200 - progress * 1.8" width="40" :height="progress * 1.8" fill="#60A5FA"/>
+                <svg width="120" height="250" viewBox="0 0 120 250">
+                    <path d="M40 20 Q50 10 60 10 Q70 10 80 20 L90 50 Q95 60 95 100 L95 220 Q90 240 60 240 Q30 240 25 220 L25 100 Q25 60 30 50 Z" fill="none" stroke="#000" stroke-width="2"/>
+                    <rect id="water-level" x="30" y="50" width="60" :height="waterHeight" fill="#60A5FA"/>
                 </svg>
             </div>
             <p class="text-center mt-2">{{ currentIntake }} / {{ goal }} ml</p>
@@ -33,11 +33,9 @@
             <div class="mt-4 flex justify-center space-x-2 flex-wrap">
                 <button @click="logDrink(100)" class="bg-blue-500 text-white px-3 py-1 rounded">+100ml</button>
                 <button @click="logDrink(250)" class="bg-blue-500 text-white px-3 py-1 rounded">+250ml</button>
-                <button @click="startChallenge(500, 3600)" class="bg-purple-500 text-white px-3 py-1 rounded">Challenge: 500ml</button>
+                <button @click="logDrink(500)" class="bg-blue-500 text-white px-3 py-1 rounded">+500ml</button>
             </div>
-            <div v-if="activeChallenge" class="mt-2 text-center">
-                <p>Challenge: Drink {{ activeChallenge.amount }}ml in {{ challengeTimeLeft }}s</p>
-            </div>
+            <canvas id="intakeChart" class="mt-4 w-full max-w-md mx-auto"></canvas>
         </div>
         <div v-if="showSettings" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
             <div class="bg-white p-4 rounded w-3/4 max-w-md">
@@ -62,75 +60,42 @@
                 tokens: 0,
                 currentDate: new Date().toISOString().split('T')[0],
                 showSettings: false,
-                activeChallenge: null,
-                challengeTimeLeft: 0,
-                toast: null
+                toast: null,
+                chart: null
             },
             computed: {
                 currentIntake() {
                     return this.history[this.currentDate] || 0;
                 },
-                progress() {
-                    return Math.min((this.currentIntake / this.goal) * 100, 100);
+                waterHeight() {
+                    const maxHeight = 170; // From y=50 to bottom at y=220
+                    return Math.min((this.currentIntake / this.goal) * maxHeight, maxHeight);
                 }
             },
             methods: {
                 logDrink(amount) {
                     try {
                         if (!this.history[this.currentDate]) this.history[this.currentDate] = 0;
-                        const prevIntake = this.history[this.currentDate];
                         this.history[this.currentDate] += amount;
-                        this.tokens += Math.floor(amount / 100); // 1 token per 100ml
-                        if (prevIntake < this.goal && this.history[this.currentDate] >= this.goal) {
-                            confetti();
-                            this.showToast('success', 'Goal reached! +5 bonus tokens!');
-                            this.tokens += 5;
-                        }
+                        this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
+                        this.updateChart();
                     } catch (e) {
                         this.showToast('error', 'Error logging drink');
                         console.error(e);
                     }
                 },
-                startChallenge(amount, time) {
+                updateTokens() {
                     try {
-                        if (this.tokens < 5) {
-                            this.showToast('error', 'Need 5 tokens to start!');
-                            return;
+                        const intake = this.currentIntake;
+                        if (intake >= this.goal * 0.8 && intake <= this.goal * 1.2) {
+                            this.tokens += 1; // 1 token for staying in green zone
+                            this.showToast('success', 'Perfect hydration! +1 token');
+                        } else if (intake > this.goal * 1.2) {
+                            this.showToast('error', 'Overhydration warning');
                         }
-                        this.tokens -= 5;
-                        this.activeChallenge = { amount, timeLeft: time, initialIntake: this.currentIntake };
-                        this.challengeTimeLeft = time;
-                        const interval = setInterval(() => {
-                            this.challengeTimeLeft--;
-                            if (this.challengeTimeLeft <= 0) {
-                                clearInterval(interval);
-                                this.endChallenge(false);
-                            } else if (this.currentIntake >= this.activeChallenge.initialIntake + amount) {
-                                clearInterval(interval);
-                                this.endChallenge(true);
-                            }
-                        }, 1000);
-                        this.saveData();
                     } catch (e) {
-                        this.showToast('error', 'Error starting challenge');
-                        console.error(e);
-                    }
-                },
-                endChallenge(success) {
-                    try {
-                        if (success) {
-                            this.tokens += 10;
-                            confetti();
-                            this.showToast('success', 'Challenge completed! +10 tokens!');
-                        } else {
-                            this.showToast('error', 'Challenge failed');
-                        }
-                        this.activeChallenge = null;
-                        this.saveData();
-                    } catch (e) {
-                        this.showToast('error', 'Error ending challenge');
                         console.error(e);
                     }
                 },
@@ -144,6 +109,7 @@
                 closeSettings() {
                     this.showSettings = false;
                     this.saveData();
+                    this.updateChart();
                 },
                 saveData() {
                     try {
@@ -171,13 +137,58 @@
                         console.error(e);
                     }
                 },
+                updateChart() {
+                    try {
+                        const ctx = document.getElementById('intakeChart').getContext('2d');
+                        const dates = Object.keys(this.history).sort().slice(-7); // Last 7 days
+                        const intakes = dates.map(date => this.history[date]);
+                        if (this.chart) this.chart.destroy();
+                        this.chart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: dates,
+                                datasets: [{
+                                    label: 'Daily Intake (ml)',
+                                    data: intakes,
+                                    backgroundColor: intakes.map(intake => 
+                                        intake < this.goal * 0.8 ? '#F87171' : // Red: underhydration
+                                        intake > this.goal * 1.2 ? '#F87171' : // Red: overhydration
+                                        intake >= this.goal * 0.8 && intake <= this.goal * 1.2 ? '#34D399' : '#FBBF24' // Green: optimal, Yellow: near-optimal
+                                    )
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        suggestedMax: this.goal * 1.5,
+                                        grid: {
+                                            color: ctx => {
+                                                const y = ctx.tick.value;
+                                                return y >= this.goal * 0.8 && y <= this.goal * 1.2 ? '#34D399' : 'rgba(0,0,0,0.1)';
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { display: false }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        this.showToast('error', 'Error updating chart');
+                        console.error(e);
+                    }
+                },
                 scheduleNotifications() {
                     try {
                         if (!("Notification" in window)) return;
                         Notification.requestPermission().then(permission => {
                             if (permission === "granted") {
                                 setInterval(() => {
-                                    new Notification("Time to hydrate!", { body: "Earn tokens by drinking now!" });
+                                    if (this.currentIntake < this.goal) {
+                                        new Notification("Stay Balanced!", { body: "Drink some water to hit your goal!" });
+                                    }
                                 }, 3600 * 1000); // Every hour
                             }
                         });
@@ -189,6 +200,7 @@
             },
             mounted() {
                 this.loadData();
+                this.updateChart();
                 this.scheduleNotifications();
                 feather.replace();
             }
