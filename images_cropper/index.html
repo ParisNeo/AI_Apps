@@ -11,7 +11,7 @@
             max-width: 800px;
             margin: 0 auto;
             touch-action: none;
-            user-select: none; /* Prevent text selection during drag */
+            user-select: none;
         }
         #crop-box {
             position: absolute;
@@ -27,7 +27,7 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-            touch-action: manipulation; /* Better touch handling */
+            touch-action: manipulation;
         }
     </style>
 </head>
@@ -48,13 +48,32 @@
             </div>
         </div>
 
-        <div id="controls" class="mt-4 hidden">
-            <button id="cropButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">
-                Crop & Download
-            </button>
-            <button id="resetButton" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                Reset
-            </button>
+        <div id="controls" class="mt-4 hidden flex flex-col space-y-4">
+            <div class="flex space-x-2">
+                <button id="cropButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    Crop
+                </button>
+                <button id="shareButton" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded hidden">
+                    Share
+                </button>
+                <button id="resetButton" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                    Reset
+                </button>
+            </div>
+            <div class="flex flex-col space-y-2">
+                <label class="font-semibold">Prepare for:</label>
+                <button id="instagramBtn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Instagram (4:5)</button>
+                <button id="xBtn" class="bg-blue-400 hover:bg-blue-500 text-white py-2 px-4 rounded">X (16:9)</button>
+                <button id="facebookBtn" class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded">Facebook (1.91:1)</button>
+            </div>
+            <div id="instructions" class="text-sm text-gray-600 hidden">
+                <p>Download completed! To post:</p>
+                <ul class="list-disc pl-5">
+                    <li>For Instagram: Open the app, tap +, select the downloaded image, and share.</li>
+                    <li>For X: Open the app, tap the compose button, attach the image, and post.</li>
+                    <li>For Facebook: Open the app, tap "What's on your mind?", attach the image, and post.</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -66,14 +85,17 @@
         const topLeft = document.getElementById('top-left');
         const bottomRight = document.getElementById('bottom-right');
         const cropButton = document.getElementById('cropButton');
+        const shareButton = document.getElementById('shareButton');
         const resetButton = document.getElementById('resetButton');
         const controls = document.getElementById('controls');
+        const instagramBtn = document.getElementById('instagramBtn');
+        const xBtn = document.getElementById('xBtn');
+        const facebookBtn = document.getElementById('facebookBtn');
+        const instructions = document.getElementById('instructions');
 
-        let isDragging = false;
-        let isResizing = false;
-        let activeHandle = null;
+        let isDragging = false, isResizing = false, activeHandle = null;
         let startX, startY, cropX, cropY, cropWidth, cropHeight;
-        let imageRect, scaleX, scaleY;
+        let imageRect, scaleX, scaleY, croppedCanvas;
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -100,6 +122,7 @@
             cropWidth = 200;
             cropHeight = 200;
             updateCropBox();
+            shareButton.classList.add('hidden');
         }
 
         function updateCropBox() {
@@ -117,10 +140,7 @@
         function getEventPosition(e) {
             const pos = e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : 
                                   { x: e.clientX, y: e.clientY };
-            return {
-                x: pos.x - imageRect.left,
-                y: pos.y - imageRect.top
-            };
+            return { x: pos.x - imageRect.left, y: pos.y - imageRect.top };
         }
 
         function startDragging(e) {
@@ -150,7 +170,6 @@
             const moveHandler = (e) => {
                 e.preventDefault();
                 const pos = getEventPosition(e);
-
                 if (isDragging) {
                     cropX = Math.max(0, Math.min(pos.x - startX, image.width - cropWidth));
                     cropY = Math.max(0, Math.min(pos.y - startY, image.height - cropHeight));
@@ -167,7 +186,6 @@
                         cropWidth = Math.max(50, pos.x - cropX);
                         cropHeight = Math.max(50, pos.y - cropY);
                     }
-
                     cropX = Math.max(0, cropX);
                     cropY = Math.max(0, cropY);
                     cropWidth = Math.min(cropWidth, image.width - cropX);
@@ -196,24 +214,77 @@
         addEventListeners(topLeft, startResizing('top-left'));
         addEventListeners(bottomRight, startResizing('bottom-right'));
 
-        cropButton.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            // Use natural dimensions for full resolution
-            canvas.width = Math.round(cropWidth * scaleX);
-            canvas.height = Math.round(cropHeight * scaleY);
-            const ctx = canvas.getContext('2d');
-            
+        function cropImage() {
+            croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = Math.round(cropWidth * scaleX);
+            croppedCanvas.height = Math.round(cropHeight * scaleY);
+            const ctx = croppedCanvas.getContext('2d');
             ctx.drawImage(
                 image,
                 cropX * scaleX, cropY * scaleY, cropWidth * scaleX, cropHeight * scaleY,
-                0, 0, canvas.width, canvas.height
+                0, 0, croppedCanvas.width, croppedCanvas.height
             );
+            shareButton.classList.remove('hidden');
+        }
+
+        cropButton.addEventListener('click', cropImage);
+
+        shareButton.addEventListener('click', async () => {
+            if (!croppedCanvas) return;
+            if (navigator.share && navigator.canShare) {
+                try {
+                    const blob = await new Promise(resolve => croppedCanvas.toBlob(resolve, 'image/png'));
+                    const file = new File([blob], 'cropped-image.png', { type: 'image/png' });
+                    await navigator.share({
+                        files: [file],
+                        title: 'Cropped Image',
+                        text: 'Check out my cropped image!'
+                    });
+                } catch (err) {
+                    console.error('Share failed:', err);
+                    alert('Sharing not supported or failed. Try downloading instead.');
+                }
+            } else {
+                alert('Share feature not supported on this browser. Use the platform buttons to download.');
+            }
+        });
+
+        function prepareForPlatform(width, height, platform) {
+            if (!croppedCanvas) {
+                alert('Please crop the image first!');
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            const aspectRatio = width / height;
+            let newWidth, newHeight;
+
+            if (cropWidth / cropHeight > aspectRatio) {
+                newWidth = Math.round(cropHeight * scaleY * aspectRatio);
+                newHeight = Math.round(cropHeight * scaleY);
+            } else {
+                newWidth = Math.round(cropWidth * scaleX);
+                newHeight = Math.round(cropWidth * scaleX / aspectRatio);
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+            const offsetX = (width - newWidth) / 2;
+            const offsetY = (height - newHeight) / 2;
+            ctx.drawImage(croppedCanvas, offsetX, offsetY, newWidth, newHeight);
 
             const link = document.createElement('a');
-            link.download = 'cropped-image.png';
+            link.download = `cropped-${platform}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-        });
+            instructions.classList.remove('hidden');
+        }
+
+        instagramBtn.addEventListener('click', () => prepareForPlatform(1080, 1350, 'instagram'));
+        xBtn.addEventListener('click', () => prepareForPlatform(1200, 675, 'x'));
+        facebookBtn.addEventListener('click', () => prepareForPlatform(1200, 628, 'facebook'));
 
         resetButton.addEventListener('click', initCropBox);
     </script>
