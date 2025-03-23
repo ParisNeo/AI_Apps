@@ -47,9 +47,12 @@
                     <path id="water-path" :d="waterPath" :fill="waterColor"/>
                 </svg>
             </div>
-            <p class="text-center mt-2 text-lg">{{ currentIntake }} / {{ goal }} ml ({{ currentPeriod.name }})</p>
-            <p class="text-center text-sm">Tokens: {{ tokens }} <span class="text-yellow-500">💧</span></p>
-            <p class="text-center text-sm">Last Drink: {{ lastDrinkTime ? timeSinceLastDrink : 'None today' }}</p>
+            <div class="text-center mt-2">
+                <p class="text-lg font-semibold">Goals</p>
+                <p>Period ({{ currentPeriod.name }}): {{ currentIntake }} / {{ periodGoal }} ml</p>
+                <p>Daily: {{ dailyIntake }} / {{ goal }} ml</p>
+                <p class="text-sm">Tokens: {{ tokens }} <span class="text-yellow-500">💧</span> | Last Drink: {{ lastDrinkTime ? timeSinceLastDrink : 'None today' }}</p>
+            </div>
             <div class="mt-4 flex justify-center space-x-3 flex-wrap">
                 <button @click="logDrink(100)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+100ml</button>
                 <button @click="logDrink(250)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+250ml</button>
@@ -68,14 +71,21 @@
                 </ul>
             </div>
             <div class="mt-6">
-                <h3 class="text-center text-lg font-semibold">Daily Intake</h3>
-                <div class="chart-container" :class="{ 'chart-visible': chartLoaded }">
-                    <canvas id="dailyChart" class="w-full max-w-md mx-auto"></canvas>
-                </div>
-                <h3 class="text-center text-lg font-semibold mt-4">Current Period: {{ currentPeriod.name }}</h3>
+                <h3 class="text-center text-lg font-semibold">Today’s Periods</h3>
                 <div class="chart-container" :class="{ 'chart-visible': chartLoaded }">
                     <canvas id="periodChart" class="w-full max-w-md mx-auto"></canvas>
                 </div>
+                <h3 class="text-center text-lg font-semibold mt-4">All-Time Intake</h3>
+                <div class="chart-container" :class="{ 'chart-visible': chartLoaded }">
+                    <canvas id="allTimeChart" class="w-full max-w-md mx-auto"></canvas>
+                </div>
+                <h3 class="text-center text-lg font-semibold mt-4">Suggested Future Intakes</h3>
+                <ul class="mx-auto max-w-md">
+                    <li v-if="futurePeriods.length === 0" class="py-1 text-gray-500">No future periods today</li>
+                    <li v-for="period in futurePeriods" :key="period.name" class="py-1">
+                        {{ period.name }}: {{ period.suggested }} ml
+                    </li>
+                </ul>
             </div>
         </div>
         <div v-if="showSettings" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
@@ -131,8 +141,8 @@
                 currentDate: new Date().toISOString().split('T')[0],
                 showSettings: false,
                 toast: null,
-                dailyChart: null,
                 periodChart: null,
+                allTimeChart: null,
                 chartLoaded: false,
                 lastDrinkTime: null,
                 notificationsEnabled: true,
@@ -161,13 +171,14 @@
                     try {
                         const periodData = this.history[this.currentDate];
                         if (typeof periodData !== 'object' || periodData === null) return 0;
-                        const intake = periodData[this.currentPeriod.name] || 0;
-                        console.log(`Current intake for ${this.currentPeriod.name}: ${intake}`);
-                        return intake;
+                        return periodData[this.currentPeriod.name] || 0;
                     } catch (error) {
                         this.handleError('Error computing currentIntake', error);
                         return 0;
                     }
+                },
+                dailyIntake() {
+                    return this.totalDailyIntake(this.history[this.currentDate]);
                 },
                 currentPeriod() {
                     try {
@@ -178,12 +189,15 @@
                         return this.periods[0];
                     }
                 },
+                periodGoal() {
+                    return this.goal / this.periods.length; // Equal distribution across 4 periods
+                },
                 waterPath() {
                     try {
                         const bottleBottom = 220;
                         const bottleTop = 50;
                         const bottleHeight = bottleBottom - bottleTop;
-                        const fillRatio = Math.min(this.currentIntake / this.goal, 1);
+                        const fillRatio = Math.min(this.dailyIntake / this.goal, 1); // Use daily intake for bottle
                         const waterHeight = fillRatio * bottleHeight;
                         const waterY = bottleBottom - waterHeight;
                         return `M30 ${waterY} L90 ${waterY} L90 ${bottleBottom} L30 ${bottleBottom} Z`;
@@ -219,6 +233,22 @@
                 },
                 todayIntakes() {
                     return this.intakes[this.currentDate] || [];
+                },
+                futurePeriods() {
+                    try {
+                        const currentHour = new Date().getHours();
+                        const remainingPeriods = this.periods.filter(p => p.start > currentHour);
+                        const remainingGoal = Math.max(this.goal - this.dailyIntake, 0);
+                        const periodsLeft = remainingPeriods.length || 1; // Avoid division by zero
+                        const suggestedPerPeriod = Math.round(remainingGoal / periodsLeft);
+                        return remainingPeriods.map(period => ({
+                            name: period.name,
+                            suggested: suggestedPerPeriod
+                        }));
+                    } catch (error) {
+                        this.handleError('Error computing futurePeriods', error);
+                        return [];
+                    }
                 }
             },
             methods: {
@@ -337,6 +367,7 @@
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
                         this.updateCharts();
+                        this.checkHydrationStatus();
                     } catch (error) {
                         this.handleError('Failed to log drink', error);
                     }
@@ -355,6 +386,7 @@
                         this.updateCharts();
                         this.svgKey++;
                         this.showToast('success', `Updated intake to ${newAmount}ml`);
+                        this.checkHydrationStatus();
                     } catch (error) {
                         this.handleError('Failed to edit intake', error);
                     }
@@ -371,6 +403,7 @@
                         this.updateCharts();
                         this.svgKey++;
                         this.showToast('success', `Removed ${intake.amount}ml intake`);
+                        this.checkHydrationStatus();
                     } catch (error) {
                         this.handleError('Failed to remove intake', error);
                     }
@@ -389,7 +422,7 @@
                 },
                 updateTokens() {
                     try {
-                        const dailyTotal = this.totalDailyIntake(this.history[this.currentDate]);
+                        const dailyTotal = this.dailyIntake;
                         const tokenKey = `tokenAwarded_${this.currentDate}`;
                         const tokenAwarded = localStorage.getItem(tokenKey);
                         if (dailyTotal >= this.goal * 0.8 && dailyTotal <= this.goal * 1.2 && !tokenAwarded) {
@@ -398,11 +431,30 @@
                             this.sounds.tokenChime.play();
                             this.showToast('success', 'Perfect balance! +1 token');
                             this.saveData();
-                        } else if (dailyTotal > this.goal * 1.2) {
-                            this.showToast('error', 'Overhydration warning');
                         }
                     } catch (error) {
                         this.handleError('Error in updateTokens', error);
+                    }
+                },
+                checkHydrationStatus() {
+                    try {
+                        const dailyTotal = this.dailyIntake;
+                        const currentHour = new Date().getHours();
+                        if (dailyTotal > this.goal * 1.2) {
+                            this.showToast('error', `Overhydration warning: ${dailyTotal}ml exceeds 120% of your ${this.goal}ml goal!`);
+                            this.sounds.errorBuzz.play();
+                            if (this.notificationsEnabled && Notification.permission === 'granted') {
+                                new Notification('Overhydration Alert', { body: `You’ve consumed ${dailyTotal}ml—too much for today!` });
+                            }
+                        } else if (dailyTotal < this.goal * 0.5 && currentHour > 12) {
+                            this.showToast('error', `Underhydration warning: ${dailyTotal}ml is below 50% of your ${this.goal}ml goal past midday!`);
+                            this.sounds.warningBeep.play();
+                            if (this.notificationsEnabled && Notification.permission === 'granted') {
+                                new Notification('Underhydration Alert', { body: `Only ${dailyTotal}ml so far—drink more!` });
+                            }
+                        }
+                    } catch (error) {
+                        this.handleError('Error in checkHydrationStatus', error);
                     }
                 },
                 checkInactivity() {
@@ -428,72 +480,76 @@
                 updateCharts() {
                     try {
                         if (!window.Chart) throw new Error('Chart.js not loaded');
-                        const dailyCtx = document.getElementById('dailyChart')?.getContext('2d');
                         const periodCtx = document.getElementById('periodChart')?.getContext('2d');
-                        if (!dailyCtx || !periodCtx) throw new Error('Canvas context not found');
+                        const allTimeCtx = document.getElementById('allTimeChart')?.getContext('2d');
+                        if (!periodCtx || !allTimeCtx) throw new Error('Canvas context not found');
 
-                        const dates = Object.keys(this.history).sort().slice(-7);
-                        const dailyIntakes = dates.map(date => this.totalDailyIntake(this.history[date]));
-                        const periodGoal = this.goal / 4;
+                        // Period Chart (Line Graph)
+                        const periodData = this.periods.map(p => this.history[this.currentDate]?.[p.name] || 0);
+                        if (this.periodChart) this.periodChart.destroy();
+                        this.periodChart = new Chart(periodCtx, {
+                            type: 'line',
+                            data: {
+                                labels: this.periods.map(p => p.name),
+                                datasets: [
+                                    {
+                                        label: 'Intake (ml)',
+                                        data: periodData,
+                                        borderColor: '#34D399',
+                                        backgroundColor: '#34D399',
+                                        fill: false,
+                                        tension: 0.1,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
+                                    },
+                                    {
+                                        label: 'Period Goal',
+                                        data: Array(this.periods.length).fill(this.periodGoal),
+                                        borderColor: '#FFD700',
+                                        borderDash: [5, 5],
+                                        fill: false,
+                                        pointRadius: 0
+                                    }
+                                ]
+                            },
+                            options: { 
+                                scales: { y: { suggestedMax: this.goal / 2, beginAtZero: true } },
+                                plugins: { legend: { display: true }, tooltip: { enabled: true } }
+                            }
+                        });
 
-                        if (this.dailyChart) this.dailyChart.destroy();
-                        this.dailyChart = new Chart(dailyCtx, {
-                            type: 'bar',
+                        // All-Time Chart (Line Graph)
+                        const dates = Object.keys(this.history).sort();
+                        const allTimeData = dates.map(date => this.totalDailyIntake(this.history[date]));
+                        if (this.allTimeChart) this.allTimeChart.destroy();
+                        this.allTimeChart = new Chart(allTimeCtx, {
+                            type: 'line',
                             data: {
                                 labels: dates,
                                 datasets: [
                                     {
                                         label: 'Daily Intake (ml)',
-                                        data: dailyIntakes,
-                                        backgroundColor: dailyIntakes.map(intake => 
-                                            intake < this.goal * 0.8 ? '#F87171' : 
-                                            intake > this.goal * 1.2 ? '#F87171' : 
-                                            '#34D399')
+                                        data: allTimeData,
+                                        borderColor: '#60A5FA',
+                                        backgroundColor: '#60A5FA',
+                                        fill: false,
+                                        tension: 0.1,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6
                                     },
                                     {
                                         label: 'Daily Goal',
                                         data: Array(dates.length).fill(this.goal),
-                                        type: 'line',
                                         borderColor: '#FFD700',
-                                        borderWidth: 2,
+                                        borderDash: [5, 5],
                                         fill: false,
                                         pointRadius: 0
                                     }
                                 ]
                             },
                             options: { 
-                                scales: { y: { suggestedMax: this.goal * 1.5 } }, 
-                                plugins: { legend: { display: true } }
-                            }
-                        });
-
-                        if (this.periodChart) this.periodChart.destroy();
-                        this.periodChart = new Chart(periodCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: [this.currentPeriod.name],
-                                datasets: [
-                                    {
-                                        label: 'Period Intake (ml)',
-                                        data: [this.currentIntake],
-                                        backgroundColor: this.currentIntake < periodGoal * 0.8 ? '#F87171' : 
-                                                       this.currentIntake > periodGoal * 1.2 ? '#F87171' : 
-                                                       '#34D399'
-                                    },
-                                    {
-                                        label: 'Period Goal',
-                                        data: [periodGoal],
-                                        type: 'line',
-                                        borderColor: '#FFD700',
-                                        borderWidth: 2,
-                                        fill: false,
-                                        pointRadius: 0
-                                    }
-                                ]
-                            },
-                            options: { 
-                                scales: { y: { suggestedMax: periodGoal * 1.5 } }, 
-                                plugins: { legend: { display: true } }
+                                scales: { y: { suggestedMax: this.goal * 1.5, beginAtZero: true } },
+                                plugins: { legend: { display: true }, tooltip: { enabled: true } }
                             }
                         });
 
@@ -559,14 +615,29 @@
                         this.handleError('Error in closeSettings', error);
                     }
                 },
+                requestNotificationPermission() {
+                    try {
+                        if ("Notification" in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    this.showToast('success', 'Notifications enabled!');
+                                    this.scheduleNotifications();
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        this.handleError('Error requesting notification permission', error);
+                    }
+                },
                 scheduleNotifications() {
                     try {
-                        if (!("Notification" in window) || !this.notificationsEnabled) return;
+                        if (!("Notification" in window) || !this.notificationsEnabled || Notification.permission !== 'granted') return;
                         if (this.notificationTimer) clearInterval(this.notificationTimer);
 
                         this.notificationTimer = setInterval(() => {
                             this.checkInactivity();
-                            const dailyTotal = this.totalDailyIntake(this.history[this.currentDate]);
+                            this.checkHydrationStatus();
+                            const dailyTotal = this.dailyIntake;
                             const timeSinceLast = this.lastDrinkTime ? (new Date() - new Date(this.lastDrinkTime)) / 1000 / 3600 : Infinity;
                             if (dailyTotal < this.goal && timeSinceLast > this.inactivityThreshold) {
                                 new Notification("Time to Drink!", { body: `It’s been ${Math.round(timeSinceLast)} hours—stay hydrated!` });
@@ -592,6 +663,7 @@
                         this.loadData().then(() => {
                             this.initSounds();
                             this.updateCharts();
+                            this.requestNotificationPermission();
                             this.scheduleNotifications();
                             this.$nextTick(() => {
                                 if (window.feather) {
