@@ -10,12 +10,21 @@
             position: relative;
             max-width: 800px;
             margin: 0 auto;
+            touch-action: none; /* Prevents default touch behaviors */
         }
         #crop-box {
             position: absolute;
             border: 2px dashed #3b82f6;
             background: rgba(59, 130, 246, 0.1);
             cursor: move;
+        }
+        .handle {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
@@ -30,7 +39,10 @@
 
         <div id="cropper" class="hidden">
             <img id="image" class="max-w-full h-auto">
-            <div id="crop-box"></div>
+            <div id="crop-box">
+                <div class="handle" id="top-left" style="top: 0; left: 0;"></div>
+                <div class="handle" id="bottom-right" style="bottom: 0; right: 0;"></div>
+            </div>
         </div>
 
         <div id="controls" class="mt-4 hidden">
@@ -48,14 +60,16 @@
         const image = document.getElementById('image');
         const cropper = document.getElementById('cropper');
         const cropBox = document.getElementById('crop-box');
+        const topLeft = document.getElementById('top-left');
+        const bottomRight = document.getElementById('bottom-right');
         const cropButton = document.getElementById('cropButton');
         const resetButton = document.getElementById('resetButton');
         const controls = document.getElementById('controls');
 
         let isDragging = false;
-        let startX, startY;
-        let boxX = 0, boxY = 0;
-        let boxWidth = 200, boxHeight = 200;
+        let isResizing = false;
+        let activeHandle = null;
+        let startX, startY, initialX, initialY, initialWidth, initialHeight;
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -66,54 +80,108 @@
                     cropper.classList.remove('hidden');
                     controls.classList.remove('hidden');
                     initCropBox();
+                    image.onload = () => updateCropBox(); // Ensure box updates after image loads
                 };
                 reader.readAsDataURL(file);
             }
         });
 
         function initCropBox() {
-            boxX = 50;
-            boxY = 50;
-            boxWidth = 200;
-            boxHeight = 200;
+            initialX = 50;
+            initialY = 50;
+            initialWidth = 200;
+            initialHeight = 200;
             updateCropBox();
         }
 
         function updateCropBox() {
-            cropBox.style.left = `${boxX}px`;
-            cropBox.style.top = `${boxY}px`;
-            cropBox.style.width = `${boxWidth}px`;
-            cropBox.style.height = `${boxHeight}px`;
+            cropBox.style.left = `${initialX}px`;
+            cropBox.style.top = `${initialY}px`;
+            cropBox.style.width = `${initialWidth}px`;
+            cropBox.style.height = `${initialHeight}px`;
         }
 
-        cropBox.addEventListener('mousedown', (e) => {
+        // Mouse Events
+        cropBox.addEventListener('mousedown', startDragging);
+        topLeft.addEventListener('mousedown', (e) => startResizing(e, 'top-left'));
+        bottomRight.addEventListener('mousedown', (e) => startResizing(e, 'bottom-right'));
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', stopAction);
+
+        // Touch Events
+        cropBox.addEventListener('touchstart', startDragging);
+        topLeft.addEventListener('touchstart', (e) => startResizing(e, 'top-left'));
+        bottomRight.addEventListener('touchstart', (e) => startResizing(e, 'bottom-right'));
+        document.addEventListener('touchmove', handleMove);
+        document.addEventListener('touchend', stopAction);
+
+        function getEventPosition(e) {
+            return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : 
+                            { x: e.clientX, y: e.clientY };
+        }
+
+        function startDragging(e) {
+            e.preventDefault();
             isDragging = true;
-            startX = e.clientX - boxX;
-            startY = e.clientY - boxY;
-        });
+            const pos = getEventPosition(e);
+            startX = pos.x - initialX;
+            startY = pos.y - initialY;
+        }
 
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+        function startResizing(e, handle) {
+            e.preventDefault();
+            isResizing = true;
+            activeHandle = handle;
+            const pos = getEventPosition(e);
+            startX = pos.x;
+            startY = pos.y;
+        }
+
+        function handleMove(e) {
+            const pos = getEventPosition(e);
             
-            boxX = Math.max(0, Math.min(e.clientX - startX, image.width - boxWidth));
-            boxY = Math.max(0, Math.min(e.clientY - startY, image.height - boxHeight));
-            updateCropBox();
-        });
+            if (isDragging) {
+                initialX = Math.max(0, Math.min(pos.x - startX, image.width - initialWidth));
+                initialY = Math.max(0, Math.min(pos.y - startY, image.height - initialHeight));
+                updateCropBox();
+            } else if (isResizing) {
+                if (activeHandle === 'top-left') {
+                    const newX = Math.min(pos.x, initialX + initialWidth - 50);
+                    const newY = Math.min(pos.y, initialY + initialHeight - 50);
+                    initialWidth += initialX - newX;
+                    initialHeight += initialY - newY;
+                    initialX = newX;
+                    initialY = newY;
+                } else if (activeHandle === 'bottom-right') {
+                    initialWidth = Math.max(50, pos.x - initialX);
+                    initialHeight = Math.max(50, pos.y - initialY);
+                }
+                
+                // Constrain within image
+                initialX = Math.max(0, initialX);
+                initialY = Math.max(0, initialY);
+                initialWidth = Math.min(initialWidth, image.width - initialX);
+                initialHeight = Math.min(initialHeight, image.height - initialY);
+                updateCropBox();
+            }
+        }
 
-        document.addEventListener('mouseup', () => {
+        function stopAction() {
             isDragging = false;
-        });
+            isResizing = false;
+            activeHandle = null;
+        }
 
         cropButton.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
-            canvas.width = boxWidth;
-            canvas.height = boxHeight;
+            canvas.width = initialWidth;
+            canvas.height = initialHeight;
             const ctx = canvas.getContext('2d');
             
             ctx.drawImage(
                 image,
-                boxX, boxY, boxWidth, boxHeight,
-                0, 0, boxWidth, boxHeight
+                initialX, initialY, initialWidth, initialHeight,
+                0, 0, initialWidth, initialHeight
             );
 
             const link = document.createElement('a');
@@ -122,9 +190,7 @@
             link.click();
         });
 
-        resetButton.addEventListener('click', () => {
-            initCropBox();
-        });
+        resetButton.addEventListener('click', initCropBox);
     </script>
 </body>
 </html>
