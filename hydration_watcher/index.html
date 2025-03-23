@@ -3,50 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Balance</title>
+    <title>Water Harmony</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
-        #water-level { transition: height 0.5s ease; }
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; }
+        .bottle { position: relative; width: 120px; height: 250px; margin: 0 auto; }
+        #water-path { transition: d 0.5s ease; animation: wave 2s infinite; }
+        @keyframes wave { 0%, 100% { d: path("M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 50% { d: path("M30 220 Q40 225 50 220 Q60 215 70 220 Q80 225 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; animation: fadeIn 0.3s; }
         .toast-success { background: #34D399; }
         .toast-error { background: #F87171; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chart-container { opacity: 0; transition: opacity 0.5s; }
+        .chart-visible { opacity: 1; }
+        button { transition: transform 0.2s; }
+        button:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
     <div id="app">
         <div class="container mx-auto p-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold">Water Balance</h1>
-                <button @click="openSettings"><i data-feather="settings"></i></button>
+                <h1 class="text-2xl font-bold text-blue-600">Water Harmony</h1>
+                <button @click="openSettings"><i data-feather="settings" class="text-gray-600"></i></button>
             </div>
-            <div class="mt-4 flex justify-center">
+            <div class="mt-4 bottle">
                 <svg width="120" height="250" viewBox="0 0 120 250">
-                    <path d="M40 20 Q50 10 60 10 Q70 10 80 20 L90 50 Q95 60 95 100 L95 220 Q90 240 60 240 Q30 240 25 220 L25 100 Q25 60 30 50 Z" fill="none" stroke="#000" stroke-width="2"/>
-                    <rect id="water-level" x="30" y="50" width="60" :height="waterHeight" fill="#60A5FA"/>
+                    <path d="M40 20 Q50 10 60 10 Q70 10 80 20 L90 50 Q100 60 100 100 Q100 180 90 220 Q85 230 60 230 Q35 230 30 220 Q20 180 20 100 Q20 60 30 50 Z" fill="none" stroke="#333" stroke-width="2"/>
+                    <path id="water-path" :d="waterPath" fill="#60A5FA"/>
                 </svg>
             </div>
-            <p class="text-center mt-2">{{ currentIntake }} / {{ goal }} ml</p>
-            <p class="text-center">Tokens: {{ tokens }} <span class="text-yellow-500">💧</span></p>
-            <div class="mt-4 flex justify-center space-x-2 flex-wrap">
-                <button @click="logDrink(100)" class="bg-blue-500 text-white px-3 py-1 rounded">+100ml</button>
-                <button @click="logDrink(250)" class="bg-blue-500 text-white px-3 py-1 rounded">+250ml</button>
-                <button @click="logDrink(500)" class="bg-blue-500 text-white px-3 py-1 rounded">+500ml</button>
+            <p class="text-center mt-2 text-lg">{{ currentIntake }} / {{ goal }} ml ({{ currentPeriod.name }})</p>
+            <p class="text-center text-sm">Tokens: {{ tokens }} <span class="text-yellow-500">💧</span></p>
+            <div class="mt-4 flex justify-center space-x-3 flex-wrap">
+                <button @click="logDrink(100)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+100ml</button>
+                <button @click="logDrink(250)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+250ml</button>
+                <button @click="logDrink(500)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+500ml</button>
             </div>
-            <canvas id="intakeChart" class="mt-4 w-full max-w-md mx-auto"></canvas>
+            <div class="mt-6">
+                <h3 class="text-center text-lg font-semibold">Daily Intake</h3>
+                <div class="chart-container" :class="{ 'chart-visible': chartLoaded }">
+                    <canvas id="dailyChart" class="w-full max-w-md mx-auto"></canvas>
+                </div>
+                <h3 class="text-center text-lg font-semibold mt-4">Current Period: {{ currentPeriod.name }}</h3>
+                <div class="chart-container" :class="{ 'chart-visible': chartLoaded }">
+                    <canvas id="periodChart" class="w-full max-w-md mx-auto"></canvas>
+                </div>
+            </div>
         </div>
         <div v-if="showSettings" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-            <div class="bg-white p-4 rounded w-3/4 max-w-md">
-                <h2 class="text-xl font-bold">Settings</h2>
-                <label>Daily Goal (ml):</label>
-                <input type="number" v-model.number="goal" class="border p-2 rounded w-full">
-                <h3 class="mt-2">History</h3>
-                <ul>
-                    <li v-for="(intake, date) in history" :key="date">{{ date }}: {{ intake }} ml</li>
+            <div class="bg-white p-6 rounded-lg w-3/4 max-w-md shadow-lg">
+                <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                <label class="block mt-4">Daily Goal (ml):</label>
+                <input type="number" v-model.number="goal" class="border p-2 rounded w-full mt-1">
+                <h3 class="mt-4 text-lg">History</h3>
+                <ul class="max-h-40 overflow-y-auto">
+                    <li v-for="(day, date) in history" :key="date" class="text-sm">{{ date }}: {{ Object.values(day).reduce((a, b) => a + b, 0) }} ml</li>
                 </ul>
-                <button @click="closeSettings" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Close</button>
+                <button @click="closeSettings" class="mt-4 bg-red-500 text-white px-4 py-2 rounded shadow">Close</button>
             </div>
         </div>
         <div v-if="toast" class="toast" :class="toast.type">{{ toast.message }}</div>
@@ -61,26 +77,44 @@
                 currentDate: new Date().toISOString().split('T')[0],
                 showSettings: false,
                 toast: null,
-                chart: null
+                dailyChart: null,
+                periodChart: null,
+                chartLoaded: false,
+                periods: [
+                    { name: 'Night', start: 0, end: 6 },
+                    { name: 'Morning', start: 6, end: 12 },
+                    { name: 'Afternoon', start: 12, end: 18 },
+                    { name: 'Evening', start: 18, end: 24 }
+                ]
             },
             computed: {
                 currentIntake() {
-                    return this.history[this.currentDate] || 0;
+                    return this.currentPeriodIntake || 0;
                 },
-                waterHeight() {
-                    const maxHeight = 170; // From y=50 to bottom at y=220
-                    return Math.min((this.currentIntake / this.goal) * maxHeight, maxHeight);
+                currentPeriod() {
+                    const hour = new Date().getHours();
+                    return this.periods.find(p => hour >= p.start && hour < p.end) || this.periods[0];
+                },
+                currentPeriodIntake() {
+                    return this.history[this.currentDate]?.[this.currentPeriod.name] || 0;
+                },
+                waterPath() {
+                    const maxHeight = 230; // Bottom of bottle
+                    const height = Math.min((this.currentIntake / this.goal) * (maxHeight - 50), maxHeight - 50); // From 50 to 230
+                    const y = maxHeight - height;
+                    return `M30 ${y} Q40 ${y-5} 50 ${y} Q60 ${y+5} 70 ${y} Q80 ${y-5} 90 ${y} L90 ${maxHeight} Q85 ${maxHeight+10} 60 ${maxHeight+10} Q35 ${maxHeight+10} 30 ${maxHeight} Z`;
                 }
             },
             methods: {
                 logDrink(amount) {
                     try {
-                        if (!this.history[this.currentDate]) this.history[this.currentDate] = 0;
-                        this.history[this.currentDate] += amount;
+                        if (!this.history[this.currentDate]) this.history[this.currentDate] = {};
+                        if (!this.history[this.currentDate][this.currentPeriod.name]) this.history[this.currentDate][this.currentPeriod.name] = 0;
+                        this.history[this.currentDate][this.currentPeriod.name] += amount;
                         this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
-                        this.updateChart();
+                        this.updateCharts();
                     } catch (e) {
                         this.showToast('error', 'Error logging drink');
                         console.error(e);
@@ -88,28 +122,21 @@
                 },
                 updateTokens() {
                     try {
-                        const intake = this.currentIntake;
-                        if (intake >= this.goal * 0.8 && intake <= this.goal * 1.2) {
-                            this.tokens += 1; // 1 token for staying in green zone
-                            this.showToast('success', 'Perfect hydration! +1 token');
-                        } else if (intake > this.goal * 1.2) {
+                        const dailyTotal = Object.values(this.history[this.currentDate] || {}).reduce((a, b) => a + b, 0);
+                        if (dailyTotal >= this.goal * 0.8 && dailyTotal <= this.goal * 1.2) {
+                            if (!this.tokensAwardedToday()) {
+                                this.tokens += 1;
+                                this.showToast('success', 'Perfect balance! +1 token');
+                            }
+                        } else if (dailyTotal > this.goal * 1.2) {
                             this.showToast('error', 'Overhydration warning');
                         }
                     } catch (e) {
                         console.error(e);
                     }
                 },
-                showToast(type, message) {
-                    this.toast = { type: `toast-${type}`, message };
-                    setTimeout(() => this.toast = null, 2000);
-                },
-                openSettings() {
-                    this.showSettings = true;
-                },
-                closeSettings() {
-                    this.showSettings = false;
-                    this.saveData();
-                    this.updateChart();
+                tokensAwardedToday() {
+                    return localStorage.getItem(`tokenAwarded_${this.currentDate}`);
                 },
                 saveData() {
                     try {
@@ -118,6 +145,7 @@
                             history: this.history,
                             tokens: this.tokens
                         }));
+                        if (this.tokensAwardedToday()) localStorage.setItem(`tokenAwarded_${this.currentDate}`, 'true');
                     } catch (e) {
                         this.showToast('error', 'Error saving data');
                         console.error(e);
@@ -137,48 +165,65 @@
                         console.error(e);
                     }
                 },
-                updateChart() {
+                updateCharts() {
                     try {
-                        const ctx = document.getElementById('intakeChart').getContext('2d');
-                        const dates = Object.keys(this.history).sort().slice(-7); // Last 7 days
-                        const intakes = dates.map(date => this.history[date]);
-                        if (this.chart) this.chart.destroy();
-                        this.chart = new Chart(ctx, {
+                        const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+                        const periodCtx = document.getElementById('periodChart').getContext('2d');
+                        const dates = Object.keys(this.history).sort().slice(-7);
+                        const dailyIntakes = dates.map(date => Object.values(this.history[date]).reduce((a, b) => a + b, 0));
+                        const periodGoal = this.goal / 4; // Equal split across 4 periods
+
+                        if (this.dailyChart) this.dailyChart.destroy();
+                        this.dailyChart = new Chart(dailyCtx, {
                             type: 'bar',
                             data: {
                                 labels: dates,
                                 datasets: [{
                                     label: 'Daily Intake (ml)',
-                                    data: intakes,
-                                    backgroundColor: intakes.map(intake => 
-                                        intake < this.goal * 0.8 ? '#F87171' : // Red: underhydration
-                                        intake > this.goal * 1.2 ? '#F87171' : // Red: overhydration
-                                        intake >= this.goal * 0.8 && intake <= this.goal * 1.2 ? '#34D399' : '#FBBF24' // Green: optimal, Yellow: near-optimal
+                                    data: dailyIntakes,
+                                    backgroundColor: dailyIntakes.map(intake => 
+                                        intake < this.goal * 0.8 ? '#F87171' : 
+                                        intake > this.goal * 1.2 ? '#F87171' : 
+                                        intake >= this.goal * 0.8 && intake <= this.goal * 1.2 ? '#34D399' : '#FBBF24'
                                     )
                                 }]
                             },
-                            options: {
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        suggestedMax: this.goal * 1.5,
-                                        grid: {
-                                            color: ctx => {
-                                                const y = ctx.tick.value;
-                                                return y >= this.goal * 0.8 && y <= this.goal * 1.2 ? '#34D399' : 'rgba(0,0,0,0.1)';
-                                            }
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    legend: { display: false }
-                                }
-                            }
+                            options: { scales: { y: { suggestedMax: this.goal * 1.5 } }, plugins: { legend: { display: false } } }
                         });
+
+                        if (this.periodChart) this.periodChart.destroy();
+                        this.periodChart = new Chart(periodCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: [this.currentPeriod.name],
+                                datasets: [{
+                                    label: 'Period Intake (ml)',
+                                    data: [this.currentPeriodIntake],
+                                    backgroundColor: this.currentPeriodIntake < periodGoal * 0.8 ? '#F87171' : 
+                                                    this.currentPeriodIntake > periodGoal * 1.2 ? '#F87171' : 
+                                                    this.currentPeriodIntake >= periodGoal * 0.8 && this.currentPeriodIntake <= periodGoal * 1.2 ? '#34D399' : '#FBBF24'
+                                }]
+                            },
+                            options: { scales: { y: { suggestedMax: periodGoal * 1.5 } }, plugins: { legend: { display: false } } }
+                        });
+
+                        this.chartLoaded = true;
                     } catch (e) {
-                        this.showToast('error', 'Error updating chart');
+                        this.showToast('error', 'Error updating charts');
                         console.error(e);
                     }
+                },
+                showToast(type, message) {
+                    this.toast = { type: `toast-${type}`, message };
+                    setTimeout(() => this.toast = null, 2000);
+                },
+                openSettings() {
+                    this.showSettings = true;
+                },
+                closeSettings() {
+                    this.showSettings = false;
+                    this.saveData();
+                    this.updateCharts();
                 },
                 scheduleNotifications() {
                     try {
@@ -186,10 +231,11 @@
                         Notification.requestPermission().then(permission => {
                             if (permission === "granted") {
                                 setInterval(() => {
-                                    if (this.currentIntake < this.goal) {
-                                        new Notification("Stay Balanced!", { body: "Drink some water to hit your goal!" });
+                                    const dailyTotal = Object.values(this.history[this.currentDate] || {}).reduce((a, b) => a + b, 0);
+                                    if (dailyTotal < this.goal) {
+                                        new Notification("Stay in Harmony!", { body: "Drink to balance your day!" });
                                     }
-                                }, 3600 * 1000); // Every hour
+                                }, 3600 * 1000);
                             }
                         });
                     } catch (e) {
@@ -200,7 +246,7 @@
             },
             mounted() {
                 this.loadData();
-                this.updateChart();
+                this.updateCharts();
                 this.scheduleNotifications();
                 feather.replace();
             }
