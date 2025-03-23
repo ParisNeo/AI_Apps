@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Cropper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #cropper {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #crop-box {
+            position: absolute;
+            border: 2px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            cursor: move;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">Image Cropper</h1>
+        
+        <div class="mb-4">
+            <input type="file" id="imageInput" accept="image/*" 
+                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+
+        <div id="cropper" class="hidden">
+            <img id="image" class="max-w-full h-auto">
+            <div id="crop-box"></div>
+        </div>
+
+        <div id="controls" class="mt-4 hidden">
+            <button id="cropButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">
+                Crop & Download
+            </button>
+            <button id="resetButton" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                Reset
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const image = document.getElementById('image');
+        const cropper = document.getElementById('cropper');
+        const cropBox = document.getElementById('crop-box');
+        const cropButton = document.getElementById('cropButton');
+        const resetButton = document.getElementById('resetButton');
+        const controls = document.getElementById('controls');
+
+        let isDragging = false;
+        let startX, startY;
+        let boxX = 0, boxY = 0;
+        let boxWidth = 200, boxHeight = 200;
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    image.src = e.target.result;
+                    cropper.classList.remove('hidden');
+                    controls.classList.remove('hidden');
+                    initCropBox();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function initCropBox() {
+            boxX = 50;
+            boxY = 50;
+            boxWidth = 200;
+            boxHeight = 200;
+            updateCropBox();
+        }
+
+        function updateCropBox() {
+            cropBox.style.left = `${boxX}px`;
+            cropBox.style.top = `${boxY}px`;
+            cropBox.style.width = `${boxWidth}px`;
+            cropBox.style.height = `${boxHeight}px`;
+        }
+
+        cropBox.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - boxX;
+            startY = e.clientY - boxY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            boxX = Math.max(0, Math.min(e.clientX - startX, image.width - boxWidth));
+            boxY = Math.max(0, Math.min(e.clientY - startY, image.height - boxHeight));
+            updateCropBox();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        cropButton.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = boxWidth;
+            canvas.height = boxHeight;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.drawImage(
+                image,
+                boxX, boxY, boxWidth, boxHeight,
+                0, 0, boxWidth, boxHeight
+            );
+
+            const link = document.createElement('a');
+            link.download = 'cropped-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        resetButton.addEventListener('click', () => {
+            initCropBox();
+        });
+    </script>
+</body>
+</html>
