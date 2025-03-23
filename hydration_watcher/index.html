@@ -144,7 +144,9 @@
                             console.warn(`Invalid history data for ${this.currentDate}:`, periodData);
                             return 0;
                         }
-                        return periodData[this.currentPeriod.name] || 0;
+                        const intake = periodData[this.currentPeriod.name] || 0;
+                        console.log(`Current intake for ${this.currentPeriod.name}: ${intake}`);
+                        return intake;
                     } catch (error) {
                         this.handleError('Error computing currentIntake', error);
                         return 0;
@@ -161,13 +163,15 @@
                 },
                 waterPath() {
                     try {
-                        const maxHeight = 230;
-                        const height = Math.min((this.currentIntake / this.goal) * (maxHeight - 50), maxHeight - 50);
-                        const y = maxHeight - height;
-                        return `M30 ${y} Q40 ${y-5} 50 ${y} Q60 ${y+5} 70 ${y} Q80 ${y-5} 90 ${y} L90 ${maxHeight} Q85 ${maxHeight+10} 60 ${maxHeight+10} Q35 ${maxHeight+10} 30 ${maxHeight} Z`;
+                        const maxHeight = 200; // Adjusted to fit bottle (top at 20, bottom at 220)
+                        const minY = 220; // Bottom of bottle
+                        const fillHeight = (this.currentIntake / this.goal) * maxHeight;
+                        const waterLevel = Math.max(minY - fillHeight, 20); // Cap at top of bottle (y=20)
+                        console.log(`Water level calculation: intake=${this.currentIntake}, goal=${this.goal}, height=${fillHeight}, y=${waterLevel}`);
+                        return `M30 ${waterLevel} Q40 ${waterLevel-5} 50 ${waterLevel} Q60 ${waterLevel+5} 70 ${waterLevel} Q80 ${waterLevel-5} 90 ${waterLevel} L90 ${minY} Q85 ${minY+10} 60 ${minY+10} Q35 ${minY+10} 30 ${minY} Z`;
                     } catch (error) {
                         this.handleError('Error computing waterPath', error);
-                        return `M30 230 Q40 225 50 230 Q60 235 70 230 Q80 225 90 230 L90 230 Q85 240 60 240 Q35 240 30 230 Z`;
+                        return `M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220 Z`; // Default empty path
                     }
                 },
                 timeSinceLastDrink() {
@@ -424,7 +428,6 @@
                         this.showSettings = false;
                         this.saveData();
                         this.updateCharts();
-                        this.scheduleNotifications();
                     } catch (error) {
                         this.handleError('Error in closeSettings', error);
                     }
