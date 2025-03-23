@@ -15,7 +15,7 @@
             0%, 100% { d: path("M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
             50% { d: path("M30 220 Q40 225 50 220 Q60 215 70 220 Q80 225 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
         }
-        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; animation: fadeIn 0.3s; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: white; animation: fadeIn 0.3s; max-width: 400px; word-wrap: break-word; }
         .toast-success { background: #34D399; }
         .toast-error { background: #F87171; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -70,6 +70,9 @@
                 <input type="number" v-model.number="notificationInterval" min="30" class="border p-2 rounded w-full mt-1">
                 <label class="block mt-2">Inactivity Threshold (hours):</label>
                 <input type="number" v-model.number="inactivityThreshold" min="1" class="border p-2 rounded w-full mt-1">
+                <label class="block mt-2">
+                    <input type="checkbox" v-model="debugMode"> Enable Debug Mode
+                </label>
                 <h3 class="mt-4 text-lg">History</h3>
                 <ul class="max-h-40 overflow-y-auto">
                     <li v-for="(day, date) in history" :key="date" class="text-sm">{{ date }}: {{ totalDailyIntake(day) }} ml</li>
@@ -77,7 +80,14 @@
                 <button @click="closeSettings" class="mt-4 bg-red-500 text-white px-4 py-2 rounded shadow">Close</button>
             </div>
         </div>
-        <div v-if="toast" class="toast" :class="toast.type">{{ toast.message }}</div>
+        <div v-if="toast" class="toast" :class="toast.type">
+            <div>{{ toast.message }}</div>
+            <div v-if="debugMode && toast.type === 'toast-error'" class="mt-2">
+                <button @click="copyErrorToClipboard" class="bg-white text-black px-2 py-1 rounded mr-2">Copy to Clipboard</button>
+                <button @click="closeToast" class="bg-white text-black px-2 py-1 rounded">Close</button>
+            </div>
+            <button v-else @click="closeToast" class="bg-white text-black px-2 py-1 rounded mt-2">Close</button>
+        </div>
     </div>
     <script>
         const app = new Vue({
@@ -96,6 +106,7 @@
                 notificationsEnabled: true,
                 notificationInterval: 60,
                 inactivityThreshold: 2,
+                debugMode: false,
                 periods: [
                     { name: 'Night', start: 0, end: 6 },
                     { name: 'Morning', start: 6, end: 12 },
@@ -109,8 +120,7 @@
                     try {
                         return this.history[this.currentDate]?.[this.currentPeriod.name] || 0;
                     } catch (error) {
-                        console.error('Error computing currentIntake:', error);
-                        this.showToast('error', 'Failed to calculate intake');
+                        this.handleError('Error computing currentIntake', error);
                         return 0;
                     }
                 },
@@ -119,8 +129,7 @@
                         const hour = new Date().getHours();
                         return this.periods.find(p => hour >= p.start && hour < p.end) || this.periods[0];
                     } catch (error) {
-                        console.error('Error determining currentPeriod:', error);
-                        this.showToast('error', 'Failed to determine period');
+                        this.handleError('Error determining currentPeriod', error);
                         return this.periods[0];
                     }
                 },
@@ -131,8 +140,7 @@
                         const y = maxHeight - height;
                         return `M30 ${y} Q40 ${y-5} 50 ${y} Q60 ${y+5} 70 ${y} Q80 ${y-5} 90 ${y} L90 ${maxHeight} Q85 ${maxHeight+10} 60 ${maxHeight+10} Q35 ${maxHeight+10} 30 ${maxHeight} Z`;
                     } catch (error) {
-                        console.error('Error computing waterPath:', error);
-                        this.showToast('error', 'Failed to render water level');
+                        this.handleError('Error computing waterPath', error);
                         return `M30 230 Q40 225 50 230 Q60 235 70 230 Q80 225 90 230 L90 230 Q85 240 60 240 Q35 240 30 230 Z`;
                     }
                 },
@@ -142,8 +150,7 @@
                         const diff = (new Date() - new Date(this.lastDrinkTime)) / 1000 / 60; // minutes
                         return diff < 60 ? `${Math.round(diff)} min ago` : `${Math.round(diff / 60)} hr ago`;
                     } catch (error) {
-                        console.error('Error computing timeSinceLastDrink:', error);
-                        this.showToast('error', 'Failed to calculate last drink time');
+                        this.handleError('Error computing timeSinceLastDrink', error);
                         return 'Unknown';
                     }
                 }
@@ -151,30 +158,32 @@
             methods: {
                 logDrink(amount) {
                     try {
-                        console.log(`Logging drink: ${amount}ml`);
+                        console.log(`Attempting to log ${amount}ml`);
+                        if (!Number.isInteger(amount) || amount <= 0) throw new Error('Invalid amount');
                         if (!this.history[this.currentDate]) {
+                            console.log('Initializing history for today');
                             this.$set(this.history, this.currentDate, {});
                         }
                         if (!this.history[this.currentDate][this.currentPeriod.name]) {
+                            console.log(`Initializing ${this.currentPeriod.name} period`);
                             this.$set(this.history[this.currentDate], this.currentPeriod.name, 0);
                         }
                         this.history[this.currentDate][this.currentPeriod.name] += amount;
                         this.lastDrinkTime = new Date().toISOString();
+                        console.log(`Logged ${amount}ml successfully`);
                         this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
                         this.updateCharts();
                     } catch (error) {
-                        console.error('Error in logDrink:', error);
-                        this.showToast('error', 'Failed to log drink');
+                        this.handleError('Failed to log drink', error);
                     }
                 },
                 totalDailyIntake(day) {
                     try {
                         return Object.values(day || {}).reduce((a, b) => a + b, 0);
                     } catch (error) {
-                        console.error('Error in totalDailyIntake:', error);
-                        this.showToast('error', 'Failed to calculate daily intake');
+                        this.handleError('Error in totalDailyIntake', error);
                         return 0;
                     }
                 },
@@ -189,8 +198,7 @@
                             this.showToast('error', 'Overhydration warning');
                         }
                     } catch (error) {
-                        console.error('Error in updateTokens:', error);
-                        this.showToast('error', 'Failed to update tokens');
+                        this.handleError('Error in updateTokens', error);
                     }
                 },
                 saveData() {
@@ -202,13 +210,13 @@
                             lastDrinkTime: this.lastDrinkTime,
                             notificationsEnabled: this.notificationsEnabled,
                             notificationInterval: this.notificationInterval,
-                            inactivityThreshold: this.inactivityThreshold
+                            inactivityThreshold: this.inactivityThreshold,
+                            debugMode: this.debugMode
                         };
                         localStorage.setItem('hydrationData', JSON.stringify(data));
                         console.log('Data saved successfully');
                     } catch (error) {
-                        console.error('Error in saveData:', error);
-                        this.showToast('error', 'Failed to save data');
+                        this.handleError('Error in saveData', error);
                     }
                 },
                 loadData() {
@@ -223,11 +231,11 @@
                             this.notificationsEnabled = parsed.notificationsEnabled !== false;
                             this.notificationInterval = parsed.notificationInterval || 60;
                             this.inactivityThreshold = parsed.inactivityThreshold || 2;
+                            this.debugMode = parsed.debugMode || false;
                             console.log('Data loaded successfully:', parsed);
                         }
                     } catch (error) {
-                        console.error('Error in loadData:', error);
-                        this.showToast('error', 'Failed to load data');
+                        this.handleError('Error in loadData', error);
                     }
                 },
                 updateCharts() {
@@ -277,24 +285,45 @@
                         this.chartLoaded = true;
                         console.log('Charts updated successfully');
                     } catch (error) {
-                        console.error('Error in updateCharts:', error);
-                        this.showToast('error', 'Failed to update charts');
+                        this.handleError('Error in updateCharts', error);
                     }
                 },
                 showToast(type, message) {
                     try {
                         this.toast = { type: `toast-${type}`, message };
-                        setTimeout(() => this.toast = null, 2000);
+                        if (type !== 'error' || !this.debugMode) {
+                            setTimeout(() => this.toast = null, 2000);
+                        }
                     } catch (error) {
                         console.error('Error in showToast:', error);
                     }
+                },
+                handleError(message, error) {
+                    const fullMessage = `${message}: ${error.message || error}`;
+                    console.error(fullMessage);
+                    if (this.debugMode) {
+                        this.toast = { type: 'toast-error', message: fullMessage };
+                    } else {
+                        this.showToast('error', message);
+                    }
+                },
+                copyErrorToClipboard() {
+                    try {
+                        navigator.clipboard.writeText(this.toast.message).then(() => {
+                            this.showToast('success', 'Error copied to clipboard');
+                        });
+                    } catch (error) {
+                        this.handleError('Failed to copy error', error);
+                    }
+                },
+                closeToast() {
+                    this.toast = null;
                 },
                 openSettings() {
                     try {
                         this.showSettings = true;
                     } catch (error) {
-                        console.error('Error in openSettings:', error);
-                        this.showToast('error', 'Failed to open settings');
+                        this.handleError('Error in openSettings', error);
                     }
                 },
                 closeSettings() {
@@ -304,24 +333,16 @@
                         this.updateCharts();
                         this.scheduleNotifications();
                     } catch (error) {
-                        console.error('Error in closeSettings:', error);
-                        this.showToast('error', 'Failed to close settings');
+                        this.handleError('Error in closeSettings', error);
                     }
                 },
                 scheduleNotifications() {
                     try {
-                        if (!("Notification" in window)) {
-                            console.warn('Notifications not supported in this browser');
-                            return;
-                        }
-                        if (!this.notificationsEnabled) return;
+                        if (!("Notification" in window) || !this.notificationsEnabled) return;
                         if (this.notificationTimer) clearInterval(this.notificationTimer);
 
                         Notification.requestPermission().then(permission => {
-                            if (permission !== "granted") {
-                                console.warn('Notification permission denied');
-                                return;
-                            }
+                            if (permission !== "granted") return;
                             this.notificationTimer = setInterval(() => {
                                 const dailyTotal = this.totalDailyIntake(this.history[this.currentDate]);
                                 const timeSinceLast = this.lastDrinkTime ? (new Date() - new Date(this.lastDrinkTime)) / 1000 / 3600 : Infinity;
@@ -332,8 +353,7 @@
                             console.log('Notifications scheduled');
                         });
                     } catch (error) {
-                        console.error('Error in scheduleNotifications:', error);
-                        this.showToast('error', 'Failed to schedule notifications');
+                        this.handleError('Error in scheduleNotifications', error);
                     }
                 }
             },
@@ -348,8 +368,7 @@
                     window.feather.replace();
                     console.log('App initialization complete');
                 } catch (error) {
-                    console.error('Error in mounted:', error);
-                    this.showToast('error', 'Failed to initialize app');
+                    this.handleError('Error in mounted', error);
                 }
             }
         });
