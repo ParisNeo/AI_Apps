@@ -130,7 +130,12 @@
             computed: {
                 currentIntake() {
                     try {
-                        return this.history[this.currentDate]?.[this.currentPeriod.name] || 0;
+                        const periodData = this.history[this.currentDate];
+                        if (typeof periodData !== 'object' || periodData === null) {
+                            console.warn(`Invalid history data for ${this.currentDate}:`, periodData);
+                            return 0;
+                        }
+                        return periodData[this.currentPeriod.name] || 0;
                     } catch (error) {
                         this.handleError('Error computing currentIntake', error);
                         return 0;
@@ -156,7 +161,7 @@
                         return `M30 230 Q40 225 50 230 Q60 235 70 230 Q80 225 90 230 L90 230 Q85 240 60 240 Q35 240 30 230 Z`;
                     }
                 },
-                timeSinceLastDrink() {
+                timeSinceLastDrive() {
                     try {
                         if (!this.lastDrinkTime) return null;
                         const diff = (new Date() - new Date(this.lastDrinkTime)) / 1000 / 60; // minutes
@@ -172,17 +177,28 @@
                     try {
                         console.log(`Attempting to log ${amount}ml`);
                         if (!Number.isInteger(amount) || amount <= 0) throw new Error('Invalid amount');
-                        if (!this.history[this.currentDate]) {
-                            console.log('Initializing history for today');
+
+                        // Ensure history for today is an object
+                        if (!this.history[this.currentDate] || typeof this.history[this.currentDate] !== 'object') {
+                            console.log(`Initializing history for ${this.currentDate}`);
                             this.$set(this.history, this.currentDate, {});
                         }
-                        if (!this.history[this.currentDate][this.currentPeriod.name]) {
-                            console.log(`Initializing ${this.currentPeriod.name} period`);
-                            this.$set(this.history[this.currentDate], this.currentPeriod.name, 0);
+
+                        // Ensure period exists and is a number
+                        const period = this.currentPeriod.name;
+                        if (!(period in this.history[this.currentDate])) {
+                            console.log(`Initializing ${period} period`);
+                            this.$set(this.history[this.currentDate], period, 0);
                         }
-                        this.history[this.currentDate][this.currentPeriod.name] += amount;
+
+                        // Log current state before update
+                        console.log(`Before update - ${period}: ${this.history[this.currentDate][period]}`);
+
+                        // Update intake
+                        this.$set(this.history[this.currentDate], period, this.history[this.currentDate][period] + amount);
                         this.lastDrinkTime = new Date().toISOString();
-                        console.log(`Logged ${amount}ml successfully`);
+
+                        console.log(`Logged ${amount}ml successfully - ${period}: ${this.history[this.currentDate][period]}`);
                         this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
@@ -193,7 +209,8 @@
                 },
                 totalDailyIntake(day) {
                     try {
-                        return Object.values(day || {}).reduce((a, b) => a + b, 0);
+                        if (typeof day !== 'object' || day === null) return 0;
+                        return Object.values(day).reduce((a, b) => a + b, 0);
                     } catch (error) {
                         this.handleError('Error in totalDailyIntake', error);
                         return 0;
@@ -237,14 +254,24 @@
                         if (data) {
                             const parsed = JSON.parse(data);
                             this.goal = parsed.goal || 2000;
-                            this.history = parsed.history || {};
+                            // Ensure history is an object and each date entry is an object
+                            this.history = {};
+                            if (parsed.history && typeof parsed.history === 'object') {
+                                for (const date in parsed.history) {
+                                    if (typeof parsed.history[date] === 'object' && parsed.history[date] !== null) {
+                                        this.$set(this.history, date, { ...parsed.history[date] });
+                                    } else {
+                                        console.warn(`Invalid history entry for ${date}:`, parsed.history[date]);
+                                    }
+                                }
+                            }
                             this.tokens = parsed.tokens || 0;
                             this.lastDrinkTime = parsed.lastDrinkTime || null;
                             this.notificationsEnabled = parsed.notificationsEnabled !== false;
                             this.notificationInterval = parsed.notificationInterval || 60;
                             this.inactivityThreshold = parsed.inactivityThreshold || 2;
                             this.debugMode = parsed.debugMode || false;
-                            console.log('Data loaded successfully:', parsed);
+                            console.log('Data loaded successfully:', this.history);
                         }
                     } catch (error) {
                         this.handleError('Error in loadData', error);
@@ -306,7 +333,7 @@
                         if (type !== 'error' || !this.debugMode) {
                             setTimeout(() => this.toast = null, 2000);
                         }
-                        feather.replace(); // Ensure icons render in toast
+                        feather.replace();
                     } catch (error) {
                         console.error('Error in showToast:', error);
                     }
@@ -316,7 +343,7 @@
                     console.error(fullMessage);
                     if (this.debugMode) {
                         this.toast = { type: 'toast-error', message: fullMessage };
-                        feather.replace(); // Ensure icons render in error toast
+                        feather.replace();
                     } else {
                         this.showToast('error', message);
                     }
