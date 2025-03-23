@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydration Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="container mx-auto p-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Hydration Tracker</h1>
+                <button @click="openSettings"><i data-feather="settings"></i></button>
+            </div>
+            <div class="mt-4 relative h-64 w-32 mx-auto bg-gray-200 rounded">
+                <div class="absolute bottom-0 w-full bg-blue-500 transition-all duration-500" :style="{ height: progress + '%' }"></div>
+            </div>
+            <p class="text-center mt-2">{{ currentIntake }} / {{ goal }} ml</p>
+            <p class="text-center">Current streak: {{ streak }} days</p>
+            <div class="mt-4 flex justify-center space-x-4">
+                <button @click="logDrink(250)" class="bg-blue-500 text-white px-4 py-2 rounded">+250ml</button>
+                <button @click="logDrink(500)" class="bg-blue-500 text-white px-4 py-2 rounded">+500ml</button>
+                <button @click="logDrink(1000)" class="bg-blue-500 text-white px-4 py-2 rounded">+1000ml</button>
+            </div>
+            <div class="mt-4 flex justify-center">
+                <input type="number" v-model.number="customAmount" placeholder="Custom amount (ml)" class="border p-2 rounded">
+                <button @click="logCustomDrink" class="bg-green-500 text-white px-4 py-2 rounded ml-2">Log</button>
+            </div>
+        </div>
+        <div v-if="showSettings" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+            <div class="bg-white p-4 rounded w-3/4 max-w-md">
+                <h2 class="text-xl font-bold">Settings</h2>
+                <div class="mt-4">
+                    <label>Daily Goal (ml):</label>
+                    <input type="number" v-model.number="goal" class="border p-2 rounded w-full">
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-lg">History</h3>
+                    <ul>
+                        <li v-for="(intake, date) in history" :key="date">{{ date }}: {{ intake }} ml</li>
+                    </ul>
+                </div>
+                <button @click="closeSettings" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                goal: 2000,
+                history: {},
+                currentDate: new Date().toISOString().split('T')[0],
+                customAmount: null,
+                showSettings: false
+            },
+            computed: {
+                currentIntake() {
+                    return this.history[this.currentDate] || 0;
+                },
+                progress() {
+                    return Math.min((this.currentIntake / this.goal) * 100, 100);
+                },
+                streak() {
+                    const dates = Object.keys(this.history).sort().reverse();
+                    let streak = 0;
+                    let prevDate = new Date(this.currentDate);
+                    prevDate.setDate(prevDate.getDate() - 1);
+                    while (true) {
+                        const dateStr = prevDate.toISOString().split('T')[0];
+                        if (this.history[dateStr] >= this.goal) {
+                            streak++;
+                            prevDate.setDate(prevDate.getDate() - 1);
+                        } else {
+                            break;
+                        }
+                    }
+                    return streak;
+                }
+            },
+            methods: {
+                logDrink(amount) {
+                    if (!this.history[this.currentDate]) this.history[this.currentDate] = 0;
+                    const prevIntake = this.history[this.currentDate];
+                    this.history[this.currentDate] += amount;
+                    if (prevIntake < this.goal && this.history[this.currentDate] >= this.goal) confetti();
+                    this.saveData();
+                },
+                logCustomDrink() {
+                    if (this.customAmount > 0) {
+                        this.logDrink(this.customAmount);
+                        this.customAmount = null;
+                    }
+                },
+                openSettings() {
+                    this.showSettings = true;
+                },
+                closeSettings() {
+                    this.showSettings = false;
+                    this.saveData();
+                },
+                saveData() {
+                    localStorage.setItem('hydrationGoal', this.goal);
+                    localStorage.setItem('hydrationHistory', JSON.stringify(this.history));
+                },
+                loadData() {
+                    const savedGoal = localStorage.getItem('hydrationGoal');
+                    if (savedGoal) this.goal = parseInt(savedGoal);
+                    const savedHistory = localStorage.getItem('hydrationHistory');
+                    if (savedHistory) this.history = JSON.parse(savedHistory);
+                }
+            },
+            mounted() {
+                this.loadData();
+                feather.replace();
+            }
+        });
+    </script>
+</body>
+</html>
