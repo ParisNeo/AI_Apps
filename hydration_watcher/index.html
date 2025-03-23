@@ -101,6 +101,10 @@
             <button v-else @click="closeToast" class="bg-white text-black p-1 rounded mt-2"><i data-feather="x"></i></button>
         </div>
     </div>
+    <!-- Preload Sound Effects -->
+    <audio id="waterSplash" preload="auto" src="https://cdn.pixabay.com/audio/2022/03/10/audio_5b5b083f4e.mp3"></audio>
+    <audio id="tokenChime" preload="auto" src="https://cdn.pixabay.com/audio/2022/03/10/audio_4e8b5f5f5e.mp3"></audio>
+    <audio id="errorBuzz" preload="auto" src="https://cdn.pixabay.com/audio/2022/03/10/audio_2e8b5f5f5e.mp3"></audio>
     <script>
         const app = new Vue({
             el: '#app',
@@ -125,7 +129,12 @@
                     { name: 'Afternoon', start: 12, end: 18 },
                     { name: 'Evening', start: 18, end: 24 }
                 ],
-                notificationTimer: null
+                notificationTimer: null,
+                sounds: {
+                    waterSplash: null,
+                    tokenChime: null,
+                    errorBuzz: null
+                }
             },
             computed: {
                 currentIntake() {
@@ -194,6 +203,7 @@
                         this.lastDrinkTime = new Date().toISOString();
 
                         console.log(`Logged ${amount}ml successfully - ${period}: ${this.history[this.currentDate][period]}`);
+                        this.sounds.waterSplash.play();
                         this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
@@ -217,6 +227,7 @@
                         if (dailyTotal >= this.goal * 0.8 && dailyTotal <= this.goal * 1.2 && !localStorage.getItem(`tokenAwarded_${this.currentDate}`)) {
                             this.tokens += 1;
                             localStorage.setItem(`tokenAwarded_${this.currentDate}`, 'true');
+                            this.sounds.tokenChime.play();
                             this.showToast('success', 'Perfect balance! +1 token');
                         } else if (dailyTotal > this.goal * 1.2) {
                             this.showToast('error', 'Overhydration warning');
@@ -287,16 +298,30 @@
                             type: 'bar',
                             data: {
                                 labels: dates,
-                                datasets: [{
-                                    label: 'Daily Intake (ml)',
-                                    data: dailyIntakes,
-                                    backgroundColor: dailyIntakes.map(intake => 
-                                        intake < this.goal * 0.8 ? '#F87171' : 
-                                        intake > this.goal * 1.2 ? '#F87171' : 
-                                        '#34D399')
-                                }]
+                                datasets: [
+                                    {
+                                        label: 'Daily Intake (ml)',
+                                        data: dailyIntakes,
+                                        backgroundColor: dailyIntakes.map(intake => 
+                                            intake < this.goal * 0.8 ? '#F87171' : 
+                                            intake > this.goal * 1.2 ? '#F87171' : 
+                                            '#34D399')
+                                    },
+                                    {
+                                        label: 'Daily Goal',
+                                        data: Array(dates.length).fill(this.goal),
+                                        type: 'line',
+                                        borderColor: '#FFD700',
+                                        borderWidth: 2,
+                                        fill: false,
+                                        pointRadius: 0
+                                    }
+                                ]
                             },
-                            options: { scales: { y: { suggestedMax: this.goal * 1.5 } }, plugins: { legend: { display: false } } }
+                            options: { 
+                                scales: { y: { suggestedMax: this.goal * 1.5 } }, 
+                                plugins: { legend: { display: true } }
+                            }
                         });
 
                         if (this.periodChart) this.periodChart.destroy();
@@ -304,15 +329,29 @@
                             type: 'bar',
                             data: {
                                 labels: [this.currentPeriod.name],
-                                datasets: [{
-                                    label: 'Period Intake (ml)',
-                                    data: [this.currentIntake],
-                                    backgroundColor: this.currentIntake < periodGoal * 0.8 ? '#F87171' : 
-                                                   this.currentIntake > periodGoal * 1.2 ? '#F87171' : 
-                                                   '#34D399'
-                                }]
+                                datasets: [
+                                    {
+                                        label: 'Period Intake (ml)',
+                                        data: [this.currentIntake],
+                                        backgroundColor: this.currentIntake < periodGoal * 0.8 ? '#F87171' : 
+                                                       this.currentIntake > periodGoal * 1.2 ? '#F87171' : 
+                                                       '#34D399'
+                                    },
+                                    {
+                                        label: 'Period Goal',
+                                        data: [periodGoal],
+                                        type: 'line',
+                                        borderColor: '#FFD700',
+                                        borderWidth: 2,
+                                        fill: false,
+                                        pointRadius: 0
+                                    }
+                                ]
                             },
-                            options: { scales: { y: { suggestedMax: periodGoal * 1.5 } }, plugins: { legend: { display: false } } }
+                            options: { 
+                                scales: { y: { suggestedMax: periodGoal * 1.5 } }, 
+                                plugins: { legend: { display: true } }
+                            }
                         });
 
                         this.chartLoaded = true;
@@ -330,13 +369,15 @@
                             } else {
                                 console.warn('Feather Icons not loaded');
                             }
-                            if (type !== 'error' || !this.debugMode) {
+                            if (type === 'error' && this.debugMode) {
+                                this.sounds.errorBuzz.play();
+                            } else if (type !== 'error') {
                                 setTimeout(() => this.toast = null, 2000);
                             }
                         });
                     } catch (error) {
                         console.error('Error in showToast:', error);
-                        this.toast = { type: `toast-${type}`, message }; // Fallback without icons
+                        this.toast = { type: `toast-${type}`, message };
                     }
                 },
                 handleError(message, error) {
@@ -350,6 +391,7 @@
                             } else {
                                 console.warn('Feather Icons not loaded');
                             }
+                            this.sounds.errorBuzz.play();
                         });
                     } else {
                         this.showToast('error', message);
@@ -406,6 +448,11 @@
                     } catch (error) {
                         this.handleError('Error in scheduleNotifications', error);
                     }
+                },
+                initSounds() {
+                    this.sounds.waterSplash = document.getElementById('waterSplash');
+                    this.sounds.tokenChime = document.getElementById('tokenChime');
+                    this.sounds.errorBuzz = document.getElementById('errorBuzz');
                 }
             },
             mounted() {
@@ -414,6 +461,7 @@
                     if (!window.Vue) throw new Error('Vue.js not loaded');
                     if (!window.feather) throw new Error('Feather Icons not loaded');
                     this.loadData();
+                    this.initSounds();
                     this.updateCharts();
                     this.scheduleNotifications();
                     this.$nextTick(() => {
