@@ -10,11 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
         .bottle { position: relative; width: 120px; height: 250px; margin: 0 auto; }
-        #water-path { transition: d 0.5s ease; animation: wave 2s infinite; }
-        @keyframes wave { 
-            0%, 100% { d: path("M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
-            50% { d: path("M30 220 Q40 225 50 220 Q60 215 70 220 Q80 225 90 220 L90 220 Q85 230 60 230 Q35 230 30 220"); } 
-        }
+        #water-path { transition: all 0.5s ease; }
         .toast { 
             position: fixed; 
             bottom: 20px; 
@@ -45,7 +41,7 @@
                 <button @click="openSettings"><i data-feather="settings" class="text-gray-600"></i></button>
             </div>
             <div class="mt-4 bottle">
-                <svg width="120" height="250" viewBox="0 0 120 250">
+                <svg width="120" height="250" viewBox="0 0 120 250" :key="svgKey">
                     <path d="M40 20 Q50 10 60 10 Q70 10 80 20 L90 50 Q100 60 100 100 Q100 180 90 220 Q85 230 60 230 Q35 230 30 220 Q20 180 20 100 Q20 60 30 50 Z" fill="none" stroke="#333" stroke-width="2"/>
                     <path id="water-path" :d="waterPath" fill="#60A5FA"/>
                 </svg>
@@ -134,7 +130,8 @@
                     waterSplash: null,
                     tokenChime: null,
                     errorBuzz: null
-                }
+                },
+                svgKey: 0 // For forcing SVG re-render
             },
             computed: {
                 currentIntake() {
@@ -163,15 +160,20 @@
                 },
                 waterPath() {
                     try {
-                        const maxHeight = 200; // Adjusted to fit bottle (top at 20, bottom at 220)
-                        const minY = 220; // Bottom of bottle
-                        const fillHeight = (this.currentIntake / this.goal) * maxHeight;
-                        const waterLevel = Math.max(minY - fillHeight, 20); // Cap at top of bottle (y=20)
-                        console.log(`Water level calculation: intake=${this.currentIntake}, goal=${this.goal}, height=${fillHeight}, y=${waterLevel}`);
-                        return `M30 ${waterLevel} Q40 ${waterLevel-5} 50 ${waterLevel} Q60 ${waterLevel+5} 70 ${waterLevel} Q80 ${waterLevel-5} 90 ${waterLevel} L90 ${minY} Q85 ${minY+10} 60 ${minY+10} Q35 ${minY+10} 30 ${minY} Z`;
+                        const bottleBottom = 220; // Bottom of the bottle
+                        const bottleTop = 50; // Adjusted top to match bottle narrowing
+                        const bottleHeight = bottleBottom - bottleTop; // 170px usable height
+                        const fillRatio = Math.min(this.currentIntake / this.goal, 1); // Cap at 100%
+                        const waterHeight = fillRatio * bottleHeight;
+                        const waterY = bottleBottom - waterHeight;
+
+                        console.log(`Water path: intake=${this.currentIntake}, goal=${this.goal}, ratio=${fillRatio}, height=${waterHeight}, y=${waterY}`);
+
+                        // Simplified rectangle path for water
+                        return `M30 ${waterY} L90 ${waterY} L90 ${bottleBottom} L30 ${bottleBottom} Z`;
                     } catch (error) {
                         this.handleError('Error computing waterPath', error);
-                        return `M30 220 Q40 215 50 220 Q60 225 70 220 Q80 215 90 220 L90 220 Q85 230 60 230 Q35 230 30 220 Z`; // Default empty path
+                        return `M30 220 L90 220 L90 220 L30 220 Z`; // Default empty path
                     }
                 },
                 timeSinceLastDrink() {
@@ -205,6 +207,7 @@
                         console.log(`Before update - ${period}: ${this.history[this.currentDate][period]}`);
                         this.$set(this.history[this.currentDate], period, this.history[this.currentDate][period] + amount);
                         this.lastDrinkTime = new Date().toISOString();
+                        this.svgKey++; // Force SVG re-render
 
                         console.log(`Logged ${amount}ml successfully - ${period}: ${this.history[this.currentDate][period]}`);
                         this.sounds.waterSplash.play();
