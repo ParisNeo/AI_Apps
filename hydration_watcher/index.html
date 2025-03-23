@@ -37,6 +37,7 @@
             </div>
             <p class="text-center mt-2 text-lg">{{ currentIntake }} / {{ goal }} ml ({{ currentPeriod.name }})</p>
             <p class="text-center text-sm">Tokens: {{ tokens }} <span class="text-yellow-500">💧</span></p>
+            <p class="text-center text-sm">Last Drink: {{ lastDrinkTime ? timeSinceLastDrink : 'None today' }}</p>
             <div class="mt-4 flex justify-center space-x-3 flex-wrap">
                 <button @click="logDrink(100)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+100ml</button>
                 <button @click="logDrink(250)" class="bg-blue-500 text-white px-4 py-2 rounded shadow">+250ml</button>
@@ -58,6 +59,14 @@
                 <h2 class="text-xl font-bold text-gray-800">Settings</h2>
                 <label class="block mt-4">Daily Goal (ml):</label>
                 <input type="number" v-model.number="goal" class="border p-2 rounded w-full mt-1">
+                <h3 class="mt-4 text-lg">Notifications</h3>
+                <label class="block mt-2">
+                    <input type="checkbox" v-model="notificationsEnabled"> Enable Notifications
+                </label>
+                <label class="block mt-2">Check Interval (minutes):</label>
+                <input type="number" v-model.number="notificationInterval" min="30" class="border p-2 rounded w-full mt-1">
+                <label class="block mt-2">Inactivity Threshold (hours):</label>
+                <input type="number" v-model.number="inactivityThreshold" min="1" class="border p-2 rounded w-full mt-1">
                 <h3 class="mt-4 text-lg">History</h3>
                 <ul class="max-h-40 overflow-y-auto">
                     <li v-for="(day, date) in history" :key="date" class="text-sm">{{ date }}: {{ Object.values(day).reduce((a, b) => a + b, 0) }} ml</li>
@@ -80,6 +89,10 @@
                 dailyChart: null,
                 periodChart: null,
                 chartLoaded: false,
+                lastDrinkTime: null,
+                notificationsEnabled: true,
+                notificationInterval: 60, // minutes
+                inactivityThreshold: 2, // hours
                 periods: [
                     { name: 'Night', start: 0, end: 6 },
                     { name: 'Morning', start: 6, end: 12 },
@@ -99,10 +112,15 @@
                     return this.history[this.currentDate]?.[this.currentPeriod.name] || 0;
                 },
                 waterPath() {
-                    const maxHeight = 230; // Bottom of bottle
-                    const height = Math.min((this.currentIntake / this.goal) * (maxHeight - 50), maxHeight - 50); // From 50 to 230
+                    const maxHeight = 230;
+                    const height = Math.min((this.currentIntake / this.goal) * (maxHeight - 50), maxHeight - 50);
                     const y = maxHeight - height;
                     return `M30 ${y} Q40 ${y-5} 50 ${y} Q60 ${y+5} 70 ${y} Q80 ${y-5} 90 ${y} L90 ${maxHeight} Q85 ${maxHeight+10} 60 ${maxHeight+10} Q35 ${maxHeight+10} 30 ${maxHeight} Z`;
+                },
+                timeSinceLastDrink() {
+                    if (!this.lastDrinkTime) return null;
+                    const diff = (new Date() - new Date(this.lastDrinkTime)) / 1000 / 60; // minutes
+                    return diff < 60 ? `${Math.round(diff)} min ago` : `${Math.round(diff / 60)} hr ago`;
                 }
             },
             methods: {
@@ -111,6 +129,7 @@
                         if (!this.history[this.currentDate]) this.history[this.currentDate] = {};
                         if (!this.history[this.currentDate][this.currentPeriod.name]) this.history[this.currentDate][this.currentPeriod.name] = 0;
                         this.history[this.currentDate][this.currentPeriod.name] += amount;
+                        this.lastDrinkTime = new Date().toISOString();
                         this.updateTokens();
                         this.showToast('success', `Added ${amount}ml`);
                         this.saveData();
@@ -123,11 +142,10 @@
                 updateTokens() {
                     try {
                         const dailyTotal = Object.values(this.history[this.currentDate] || {}).reduce((a, b) => a + b, 0);
-                        if (dailyTotal >= this.goal * 0.8 && dailyTotal <= this.goal * 1.2) {
-                            if (!this.tokensAwardedToday()) {
-                                this.tokens += 1;
-                                this.showToast('success', 'Perfect balance! +1 token');
-                            }
+                        if (dailyTotal >= this.goal * 0.8 && dailyTotal <= this.goal * 1.2 && !this.tokensAwardedToday()) {
+                            this.tokens += 1;
+                            localStorage.setItem(`tokenAwarded_${this.currentDate}`, 'true');
+                            this.showToast('success', 'Perfect balance! +1 token');
                         } else if (dailyTotal > this.goal * 1.2) {
                             this.showToast('error', 'Overhydration warning');
                         }
@@ -143,9 +161,12 @@
                         localStorage.setItem('hydrationData', JSON.stringify({
                             goal: this.goal,
                             history: this.history,
-                            tokens: this.tokens
+                            tokens: this.tokens,
+                            lastDrinkTime: this.lastDrinkTime,
+                            notificationsEnabled: this.notificationsEnabled,
+                            notificationInterval: this.notificationInterval,
+                            inactivityThreshold: this.inactivityThreshold
                         }));
-                        if (this.tokensAwardedToday()) localStorage.setItem(`tokenAwarded_${this.currentDate}`, 'true');
                     } catch (e) {
                         this.showToast('error', 'Error saving data');
                         console.error(e);
@@ -159,6 +180,10 @@
                             this.goal = parsed.goal || 2000;
                             this.history = parsed.history || {};
                             this.tokens = parsed.tokens || 0;
+                            this.lastDrinkTime = parsed.lastDrinkTime || null;
+                            this.notificationsEnabled = parsed.notificationsEnabled !== false;
+                            this.notificationInterval = parsed.notificationInterval || 60;
+                            this.inactivityThreshold = parsed.inactivityThreshold || 2;
                         }
                     } catch (e) {
                         this.showToast('error', 'Error loading data');
@@ -171,7 +196,7 @@
                         const periodCtx = document.getElementById('periodChart').getContext('2d');
                         const dates = Object.keys(this.history).sort().slice(-7);
                         const dailyIntakes = dates.map(date => Object.values(this.history[date]).reduce((a, b) => a + b, 0));
-                        const periodGoal = this.goal / 4; // Equal split across 4 periods
+                        const periodGoal = this.goal / 4;
 
                         if (this.dailyChart) this.dailyChart.destroy();
                         this.dailyChart = new Chart(dailyCtx, {
@@ -224,19 +249,21 @@
                     this.showSettings = false;
                     this.saveData();
                     this.updateCharts();
+                    this.scheduleNotifications();
                 },
                 scheduleNotifications() {
                     try {
-                        if (!("Notification" in window)) return;
+                        if (!("Notification" in window) || !this.notificationsEnabled) return;
                         Notification.requestPermission().then(permission => {
-                            if (permission === "granted") {
-                                setInterval(() => {
-                                    const dailyTotal = Object.values(this.history[this.currentDate] || {}).reduce((a, b) => a + b, 0);
-                                    if (dailyTotal < this.goal) {
-                                        new Notification("Stay in Harmony!", { body: "Drink to balance your day!" });
-                                    }
-                                }, 3600 * 1000);
-                            }
+                            if (permission !== "granted") return;
+                            clearInterval(this.notificationTimer); // Clear any existing timer
+                            this.notificationTimer = setInterval(() => {
+                                const dailyTotal = Object.values(this.history[this.currentDate] || {}).reduce((a, b) => a + b, 0);
+                                const timeSinceLast = this.lastDrinkTime ? (new Date() - new Date(this.lastDrinkTime)) / 1000 / 3600 : Infinity;
+                                if (dailyTotal < this.goal && timeSinceLast > this.inactivityThreshold) {
+                                    new Notification("Time to Drink!", { body: `It’s been ${Math.round(timeSinceLast)} hours—stay in harmony!` });
+                                }
+                            }, this.notificationInterval * 60 * 1000);
                         });
                     } catch (e) {
                         this.showToast('error', 'Error setting notifications');
