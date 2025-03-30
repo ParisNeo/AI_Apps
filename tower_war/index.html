@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Tower War</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: sans-serif;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #e0ffe0; /* Light green battlefield */
+            display: block; /* Prevents extra space below canvas */
+        }
+        #controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+        }
+        .health-bar {
+            position: relative;
+            width: 100%;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .health-bar-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: red;
+            transition: width 0.1s linear;
+        }
+        .player .health-bar-inner { background-color: #4CAF50; }
+        .enemy .health-bar-inner { background-color: #f44336; }
+    </style>
+</head>
+<body>
+
+    <h1>Simple Tower War</h1>
+    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <div id="status">Loading...</div>
+    <div id="controls">
+        <button id="spawnPlayerUnitBtn">Spawn Unit (Cost: 10)</button>
+        <button id="restartBtn" style="display: none;">Restart Game</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        const spawnPlayerUnitBtn = document.getElementById('spawnPlayerUnitBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // --- Game Configuration ---
+        const GAME_CONFIG = {
+            UNIT_SIZE: 10,
+            UNIT_SPEED: 0.8,
+            UNIT_HEALTH: 50,
+            UNIT_ATTACK: 5,
+            UNIT_ATTACK_RANGE: 5, // Pixel distance to start attacking
+            UNIT_ATTACK_COOLDOWN: 500, // Milliseconds between attacks
+            BASE_WIDTH: 60,
+            BASE_HEIGHT: 80,
+            BASE_HEALTH_MAX: 1000,
+            PLAYER_COLOR: '#3498db', // Blue
+            ENEMY_COLOR: '#e74c3c', // Red
+            AUTO_SPAWN_INTERVAL_ENEMY: 3000, // ms
+            AUTO_SPAWN_INTERVAL_PLAYER: 4000, // ms (Slightly slower for balance)
+            PLAYER_MANUAL_SPAWN_COST: 10,
+            STARTING_RESOURCES: 50,
+            RESOURCE_GAIN_INTERVAL: 1500, // ms
+            RESOURCE_GAIN_AMOUNT: 3,
+        };
+
+        // --- Game State ---
+        let gameState = {
+            playerBase: null,
+            enemyBase: null,
+            playerUnits: [],
+            enemyUnits: [],
+            playerResources: GAME_CONFIG.STARTING_RESOURCES,
+            lastPlayerAutoSpawnTime: 0,
+            lastEnemyAutoSpawnTime: 0,
+            lastResourceGainTime: 0,
+            gameOver: false,
+            winner: null, // 'player' or 'enemy'
+            lastUpdateTime: 0,
+            deltaTime: 0,
+        };
+
+        // --- Base Class ---
+        class Base {
+            constructor(x, y, width, height, color, team) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.team = team;
+                this.health = GAME_CONFIG.BASE_HEALTH_MAX;
+                this.maxHealth = GAME_CONFIG.BASE_HEALTH_MAX;
+            }
+
+            draw(context) {
+                // Draw Base
+                context.fillStyle = this.color;
+                context.fillRect(this.x, this.y, this.width, this.height);
+
+                // Draw Health Bar above base
+                const barWidth = this.width;
+                const barHeight = 10;
+                const barX = this.x;
+                const barY = this.y - barHeight - 5; // 5px padding above
+                const healthPercent = this.health / this.maxHealth;
+
+                context.fillStyle = '#ddd'; // Background of health bar
+                context.fillRect(barX, barY, barWidth, barHeight);
+
+                context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336'; // Health color
+                context.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+
+                // Draw Health Text
+                context.fillStyle = '#000';
+                context.font = '10px Arial';
+                context.textAlign = 'center';
+                context.fillText(`${Math.max(0, Math.round(this.health))}/${this.maxHealth}`, this.x + this.width / 2, barY + barHeight - 1);
+                context.textAlign = 'left'; // Reset alignment
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    this.health = 0;
+                    gameState.gameOver = true;
+                    gameState.winner = (this.team === 'player') ? 'enemy' : 'player';
+                }
+            }
+        }
+
+        // --- Unit Class ---
+        class Unit {
+            constructor(x, y, color, team) {
+                this.id = Date.now() + Math.random(); // Simple unique ID
+                this.x = x;
+                this.y = y;
+                this.size = GAME_CONFIG.UNIT_SIZE;
+                this.color = color;
+                this.team = team;
+                this.health = GAME_CONFIG.UNIT_HEALTH;
+                this.maxHealth = GAME_CONFIG.UNIT_HEALTH;
+                this.attack = GAME_CONFIG.UNIT_ATTACK;
+                this.speed = GAME_CONFIG.UNIT_SPEED;
+                this.attackRange = GAME_CONFIG.UNIT_ATTACK_RANGE + this.size / 2; // Range from center
+                this.attackCooldown = GAME_CONFIG.UNIT_ATTACK_COOLDOWN;
+                this.lastAttackTime = 0;
+                this.target = null; // Can be another unit or the enemy base
+                this.isAlive = true;
+            }
+
+            draw(context) {
+                 // Draw Unit (circle)
+                 context.fillStyle = this.color;
+                 context.beginPath();
+                 context.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                 context.fill();
+
+                 // Draw Health Bar above unit
+                 const barWidth = this.size * 1.5;
+                 const barHeight = 4;
+                 const barX = this.x - barWidth / 2;
+                 const barY = this.y - this.size / 2 - barHeight - 3; // Position above the unit
+                 const healthPercent = this.health / this.maxHealth;
+
+                 context.fillStyle = '#ddd'; // Background
+                 context.fillRect(barX, barY, barWidth, barHeight);
+                 context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336'; // Health color
+                 context.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+            }
+
+            update(deltaTime, enemyUnits, enemyBase) {
+                if (!this.isAlive) return;
+
+                // 1. Find Target
+                this.findTarget(enemyUnits, enemyBase);
+
+                // 2. Attack if target in range and cooldown ready
+                const now = Date.now();
+                if (this.target && this.isInAttackRange() && (now - this.lastAttackTime >= this.attackCooldown)) {
+                    this.attackTarget(now);
+                    // Don't move while attacking
+                    return;
+                }
+
+                // 3. Move if no target or target out of range
+                this.move(deltaTime);
+
+                // 4. Check for collision with enemy base if no unit target
+                 if (!this.target || this.target === enemyBase) {
+                    this.checkBaseCollision(enemyBase);
+                }
+            }
+
+            findTarget(enemyUnits, enemyBase) {
+                let closestEnemy = null;
+                let minDistanceSq = Infinity; // Use squared distance for efficiency
+
+                // Check enemy units first
+                for (const enemy of enemyUnits) {
+                    if (!enemy.isAlive) continue;
+                    const dx = enemy.x - this.x;
+                    const dy = enemy.y - this.y;
+                    const distanceSq = dx * dx + dy * dy;
+
+                    // Target units slightly beyond attack range to anticipate movement
+                    const targetRangeSq = (this.attackRange * 1.5) * (this.attackRange * 1.5);
+
+                    if (distanceSq < minDistanceSq && distanceSq < targetRangeSq) {
+                        minDistanceSq = distanceSq;
+                        closestEnemy = enemy;
+                    }
+                }
+
+                if (closestEnemy) {
+                     this.target = closestEnemy;
+                } else {
+                    // If no units in range, target the base
+                    this.target = enemyBase;
+                }
+            }
+
+
+            isInAttackRange() {
+                if (!this.target) return false;
+
+                const dx = this.target.x + (this.target instanceof Base ? this.target.width / 2 : 0) - this.x; // Target center for base
+                const dy = this.target.y + (this.target instanceof Base ? this.target.height / 2 : 0) - this.y; // Target center for base
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                 // Adjust range check based on target type
+                 let effectiveRange = this.attackRange;
+                 if (this.target instanceof Base) {
+                     // Need to be close to the base's edge
+                     effectiveRange += (this.team === 'player' ? 0 : this.target.width); // Player attacks left edge, enemy attacks right edge
+                 } else {
+                     // Unit vs Unit - range is center to center
+                     effectiveRange += this.target.size / 2;
+                 }
+
+                return distance <= effectiveRange;
+            }
+
+            attackTarget(currentTime) {
+                if (!this.target || (this.target instanceof Unit && !this.target.isAlive)) {
+                    this.target = null; // Target died before attack landed
+                    return;
+                }
+                this.target.takeDamage(this.attack);
+                this.lastAttackTime = currentTime;
+                 // Check if target died after attack
+                if (this.target instanceof Unit && this.target.health <= 0) {
+                    this.target.isAlive = false;
+                    this.target = null; // Stop attacking dead unit
+                }
+            }
+
+            move(deltaTime) {
+                // Simple horizontal movement towards the enemy side
+                const direction = (this.team === 'player') ? 1 : -1;
+                this.x += direction * this.speed * (deltaTime / 16.67); // Normalize speed based on 60fps baseline
+            }
+
+             checkBaseCollision(enemyBase) {
+                 const baseEdgeX = (this.team === 'player') ? enemyBase.x : enemyBase.x + enemyBase.width;
+                 const collision = (this.team === 'player')
+                    ? (this.x + this.size / 2 >= baseEdgeX) // Player unit hits left edge of enemy base
+                    : (this.x - this.size / 2 <= baseEdgeX); // Enemy unit hits right edge of player base
+
+                 if (collision) {
+                     // Stop at the base edge
+                     this.x = (this.team === 'player') ? baseEdgeX - this.size / 2 : baseEdgeX + this.size / 2;
+                     this.target = enemyBase; // Ensure base is targeted
+                 }
+             }
+
+
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    this.health = 0;
+                    this.isAlive = false;
+                }
+            }
+        }
+
+        // --- Game Functions ---
+        function spawnUnit(team) {
+            const color = (team === 'player') ? GAME_CONFIG.PLAYER_COLOR : GAME_CONFIG.ENEMY_COLOR;
+            const spawnY = canvas.height / 2 + (Math.random() * 40 - 20); // Randomize Y slightly
+
+            if (team === 'player') {
+                // Check resources for manual spawn
+                if (gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST) {
+                    gameState.playerResources -= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
+                    const unit = new Unit(gameState.playerBase.x + gameState.playerBase.width + 5, spawnY, color, team);
+                    gameState.playerUnits.push(unit);
+                    updateStatus(); // Update resource display
+                } else {
+                     console.log("Not enough resources to spawn unit!");
+                     // Maybe flash the button or show a message
+                }
+            } else { // Enemy spawn (no cost check needed)
+                const unit = new Unit(gameState.enemyBase.x - 5 - GAME_CONFIG.UNIT_SIZE, spawnY, color, team);
+                gameState.enemyUnits.push(unit);
+            }
+        }
+
+        function update(currentTime) {
+            if (gameState.gameOver) return;
+
+            if (gameState.lastUpdateTime === 0) gameState.lastUpdateTime = currentTime;
+            gameState.deltaTime = currentTime - gameState.lastUpdateTime;
+            gameState.lastUpdateTime = currentTime;
+
+            // --- Auto Spawning ---
+            if (currentTime - gameState.lastPlayerAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_PLAYER) {
+                 // Auto-spawn player doesn't cost resources in this simple version
+                 const unit = new Unit(gameState.playerBase.x + gameState.playerBase.width + 5, canvas.height / 2 + (Math.random() * 40 - 20), GAME_CONFIG.PLAYER_COLOR, 'player');
+                 gameState.playerUnits.push(unit);
+                 gameState.lastPlayerAutoSpawnTime = currentTime;
+            }
+            if (currentTime - gameState.lastEnemyAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_ENEMY) {
+                spawnUnit('enemy'); // Use the function which has no cost check for enemy
+                gameState.lastEnemyAutoSpawnTime = currentTime;
+            }
+
+            // --- Resource Generation ---
+            if (currentTime - gameState.lastResourceGainTime > GAME_CONFIG.RESOURCE_GAIN_INTERVAL) {
+                gameState.playerResources += GAME_CONFIG.RESOURCE_GAIN_AMOUNT;
+                gameState.lastResourceGainTime = currentTime;
+                updateStatus(); // Update display
+            }
+
+
+            // --- Update Units ---
+            // Pass copies of arrays to avoid modification issues during iteration if needed,
+            // though direct modification is okay if careful. Pass enemyBase/playerBase too.
+            gameState.playerUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.enemyUnits, gameState.enemyBase));
+            gameState.enemyUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.playerUnits, gameState.playerBase));
+
+            // --- Remove Dead Units ---
+            gameState.playerUnits = gameState.playerUnits.filter(unit => unit.isAlive);
+            gameState.enemyUnits = gameState.enemyUnits.filter(unit => unit.isAlive);
+
+            // --- Check Game Over ---
+            // Already handled within Base.takeDamage, but could double check here
+             if (gameState.gameOver) {
+                handleGameOver();
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background (optional, canvas has bg color via CSS)
+            // ctx.fillStyle = '#e0ffe0';
+            // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Bases
+            gameState.playerBase.draw(ctx);
+            gameState.enemyBase.draw(ctx);
+
+            // Draw Units
+            gameState.playerUnits.forEach(unit => unit.draw(ctx));
+            gameState.enemyUnits.forEach(unit => unit.draw(ctx));
+
+            // Draw Game Over Text (if applicable)
+            if (gameState.gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
+                ctx.fillStyle = '#fff';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                const message = gameState.winner === 'player' ? 'Player Wins!' : 'Enemy Wins!';
+                ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 10);
+                ctx.textAlign = 'left'; // Reset alignment
+            }
+        }
+
+        function gameLoop(currentTime) {
+            update(currentTime);
+            draw();
+
+            // Keep requesting frames unless game is over
+            // if (!gameState.gameOver) { // Continue drawing even if game over to show final state
+                requestAnimationFrame(gameLoop);
+            // }
+        }
+
+        function updateStatus() {
+            statusDiv.textContent = `Resources: ${gameState.playerResources} | Player Units: ${gameState.playerUnits.length} | Enemy Units: ${gameState.enemyUnits.length}`;
+            spawnPlayerUnitBtn.disabled = gameState.playerResources < GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST || gameState.gameOver;
+            spawnPlayerUnitBtn.textContent = `Spawn Unit (Cost: ${GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST})`;
+        }
+
+         function handleGameOver() {
+            spawnPlayerUnitBtn.disabled = true;
+            restartBtn.style.display = 'inline-block'; // Show restart button
+            updateStatus(); // Update status one last time maybe?
+         }
+
+        function resetGame() {
+             gameState = {
+                playerBase: new Base(
+                    10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
+                    GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
+                    GAME_CONFIG.PLAYER_COLOR, 'player'
+                ),
+                enemyBase: new Base(
+                    canvas.width - GAME_CONFIG.BASE_WIDTH - 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
+                    GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
+                    GAME_CONFIG.ENEMY_COLOR, 'enemy'
+                ),
+                playerUnits: [],
+                enemyUnits: [],
+                playerResources: GAME_CONFIG.STARTING_RESOURCES,
+                lastPlayerAutoSpawnTime: Date.now(), // Reset timers
+                lastEnemyAutoSpawnTime: Date.now(),
+                lastResourceGainTime: Date.now(),
+                gameOver: false,
+                winner: null,
+                lastUpdateTime: 0,
+                deltaTime: 0,
+            };
+            restartBtn.style.display = 'none'; // Hide restart button
+            spawnPlayerUnitBtn.disabled = false; // Re-enable spawn button
+            updateStatus();
+            // Start the loop again if it was stopped (it wasn't in this impl, but good practice)
+            // requestAnimationFrame(gameLoop);
+        }
+
+
+        function init() {
+            // Setup initial game state
+            resetGame(); // Use resetGame for initial setup too
+
+            // Add event listeners
+            spawnPlayerUnitBtn.addEventListener('click', () => {
+                if (!gameState.gameOver) {
+                    spawnUnit('player'); // Function now handles cost check
+                }
+            });
+            restartBtn.addEventListener('click', resetGame);
+
+            // Start the game loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Start the Game ---
+        window.onload = init;
+
+    </script>
+
+</body>
+</html>
