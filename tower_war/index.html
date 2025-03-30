@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower War with Paths</title>
+    <title>Phaser Tower War</title>
+    <!-- Get Phaser via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -13,16 +15,18 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #f0f0f0;
+            background-color: #2c3e50; /* Darker background */
             font-family: sans-serif;
+            color: #ecf0f1; /* Light text */
         }
-        canvas {
-            border: 2px solid #333;
-            background-color: #c8e6c9; /* Slightly different green */
-            display: block;
+        #game-container {
+            border: 3px solid #ecf0f1;
+            box-shadow: 0 0 15px rgba(236, 240, 241, 0.5);
+            margin-bottom: 15px;
+            /* Canvas background will be set by Phaser */
         }
         #controls {
-            margin-top: 15px;
+            margin-top: 10px; /* Reduced margin as game container has margin */
             display: flex;
             gap: 10px;
         }
@@ -32,648 +36,793 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background-color: #3498db; /* Blue button */
             color: white;
             transition: background-color 0.2s;
+            font-weight: bold;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #2980b9;
         }
         button:disabled {
-            background-color: #cccccc;
+            background-color: #95a5a6; /* Greyed out */
             cursor: not-allowed;
         }
         #status {
             margin-top: 10px;
             font-size: 18px;
             font-weight: bold;
-            color: #555;
+            color: #bdc3c7; /* Lighter grey text */
+            min-height: 25px; /* Prevent layout shift */
+            text-align: center;
+            width: 100%;
+        }
+         /* Simple overlay for game over */
+        #gameOverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 48px;
+            display: flex;
+            flex-direction: column; /* Stack text and button */
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 100; /* Ensure it's above canvas */
+            visibility: hidden; /* Hidden by default */
+            opacity: 0;
+            transition: visibility 0s linear 0.5s, opacity 0.5s linear;
+        }
+        #gameOverOverlay.visible {
+            visibility: visible;
+            opacity: 1;
+            transition: visibility 0s linear 0s, opacity 0.5s linear;
+        }
+        #gameOverOverlay button { /* Style restart button on overlay */
+             margin-top: 20px;
+             background-color: #e74c3c; /* Red restart */
+        }
+         #gameOverOverlay button:hover {
+             background-color: #c0392b;
         }
     </style>
 </head>
 <body>
 
-    <h1>Tower War - Pathfinding</h1>
-    <canvas id="gameCanvas" width="800" height="400"></canvas> <!-- Increased height slightly -->
+    <h1>Phaser Tower War</h1>
+    <!-- Container for the Phaser game canvas -->
+    <div id="game-container"></div>
     <div id="status">Loading...</div>
     <div id="controls">
-        <button id="spawnPlayerUnitBtn">Spawn Unit (Cost: 10)</button>
-        <button id="restartBtn" style="display: none;">Restart Game</button>
+        <!-- We'll control these buttons from Phaser -->
+        <button id="spawnPlayerUnitBtn">Spawn Unit (Cost: ?)</button>
+        <!-- Restart button is now part of the game over overlay -->
     </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const statusDiv = document.getElementById('status');
-        const spawnPlayerUnitBtn = document.getElementById('spawnPlayerUnitBtn');
-        const restartBtn = document.getElementById('restartBtn');
+    <!-- Game Over Overlay -->
+    <div id="gameOverOverlay">
+        <span id="gameOverText">Game Over!</span>
+        <button id="restartBtn">Restart Game</button>
+    </div>
 
-        // --- Game Configuration ---
-        const GAME_CONFIG = {
-            UNIT_SIZE: 12, // Slightly larger units
-            UNIT_SPEED: 1.0, // Slightly faster base speed
-            UNIT_HEALTH: 60,
-            UNIT_ATTACK: 6,
-            UNIT_ATTACK_RANGE: 8, // Pixel distance from edge to start attacking
-            UNIT_ATTACK_COOLDOWN: 600, // Milliseconds
-            BASE_WIDTH: 70,
-            BASE_HEIGHT: 90,
-            BASE_HEALTH_MAX: 1500,
-            PLAYER_COLOR: '#0277bd', // Darker Blue
-            ENEMY_COLOR: '#d32f2f', // Darker Red
-            OBSTACLE_COLOR: '#a1887f', // Brownish Grey
-            AUTO_SPAWN_INTERVAL_ENEMY: 2800,
-            AUTO_SPAWN_INTERVAL_PLAYER: 3500,
+
+    <script>
+        // --- Game Configuration (Combined Phaser and Game Logic) ---
+        const CONFIG = {
+            GAME_WIDTH: 900,
+            GAME_HEIGHT: 450,
+            UNIT_SIZE: 14,
+            UNIT_SPEED: 70, // Phaser uses pixels per second for velocity
+            UNIT_HEALTH: 75,
+            UNIT_ATTACK: 8,
+            UNIT_ATTACK_RANGE: 15, // Pixel distance from edge
+            UNIT_ATTACK_COOLDOWN: 700, // Milliseconds
+            BASE_WIDTH: 80,
+            BASE_HEIGHT: 100,
+            BASE_HEALTH_MAX: 2000,
+            PLAYER_COLOR: 0x3498db, // Blue (Hex for Phaser)
+            ENEMY_COLOR: 0xe74c3c, // Red (Hex for Phaser)
+            OBSTACLE_COLOR: 0x8d6e63, // Brownish Grey (Hex)
+            OBSTACLE_BORDER_COLOR: 0x5d4037, // Darker Brown
+            HEALTH_BAR_COLOR_PLAYER: 0x4CAF50,
+            HEALTH_BAR_COLOR_ENEMY: 0xf44336,
+            HEALTH_BAR_BG_COLOR: 0xdddddd,
+            AUTO_SPAWN_INTERVAL_ENEMY: 2500,
+            AUTO_SPAWN_INTERVAL_PLAYER: 3200,
             PLAYER_MANUAL_SPAWN_COST: 10,
             STARTING_RESOURCES: 50,
-            RESOURCE_GAIN_INTERVAL: 1400,
+            RESOURCE_GAIN_INTERVAL: 1200,
             RESOURCE_GAIN_AMOUNT: 3,
-            WAYPOINT_REACH_THRESHOLD: 5, // How close unit needs to be to waypoint
+            WAYPOINT_REACH_THRESHOLD: 8, // Slightly larger threshold for physics movement
+            DEBUG_DRAW_PATHS: false // Set to true to see waypoints and paths
         };
 
-        // --- Game State ---
-        let gameState = {
-            playerBase: null,
-            enemyBase: null,
-            playerUnits: [],
-            enemyUnits: [],
-            obstacles: [],
-            // Define paths using waypoints {x, y}
-            paths: {
-                playerTop: [],
-                playerBottom: [],
-                enemyTop: [],
-                enemyBottom: []
-            },
-            playerResources: GAME_CONFIG.STARTING_RESOURCES,
-            lastPlayerAutoSpawnTime: 0,
-            lastEnemyAutoSpawnTime: 0,
-            lastResourceGainTime: 0,
-            gameOver: false,
-            winner: null,
-            lastUpdateTime: 0,
-            deltaTime: 0,
-        };
+        let gameInstance = null; // To hold the Phaser game instance
+        let gameScene = null; // To hold the reference to the main scene
 
-        // --- Obstacle Class (Simple representation) ---
-        class Obstacle {
-            constructor(x, y, width, height) {
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-            }
+        // --- Game Object Classes (Extending Phaser) ---
 
-            draw(context) {
-                context.fillStyle = GAME_CONFIG.OBSTACLE_COLOR;
-                context.fillRect(this.x, this.y, this.width, this.height);
-                // Add a slight border for definition
-                context.strokeStyle = '#5d4037'; // Darker brown
-                context.lineWidth = 1;
-                context.strokeRect(this.x, this.y, this.width, this.height);
-            }
-        }
-
-
-        // --- Base Class --- (Added simple health bar drawing within Base itself)
-        class Base {
-            constructor(x, y, width, height, color, team) {
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-                this.color = color;
+        class BaseGameObject extends Phaser.GameObjects.Container {
+            constructor(scene, x, y, width, height, color, team, maxHealth) {
+                super(scene, x, y);
+                this.baseWidth = width;
+                this.baseHeight = height;
                 this.team = team;
-                this.health = GAME_CONFIG.BASE_HEALTH_MAX;
-                this.maxHealth = GAME_CONFIG.BASE_HEALTH_MAX;
+                this.maxHealth = maxHealth;
+                this.currentHealth = maxHealth;
+                this.isBase = true; // Identifier
+
+                // --- Visuals ---
+                // Base Body (origin defaults to 0.5, 0.5 - center)
+                this.bodySprite = scene.add.rectangle(0, 0, width, height, color);
+                this.bodySprite.setStrokeStyle(3, 0x333333); // Outline
+                this.add(this.bodySprite); // Add to container
+
+                // Health Bar (relative to container's top-left)
+                const barWidth = width * 0.9;
+                const barHeight = 10;
+                const barX = -barWidth / 2; // Center it horizontally
+                const barY = -height / 2 - barHeight - 5; // Position above base body
+
+                this.healthBarBg = scene.add.rectangle(barX, barY, barWidth, barHeight, CONFIG.HEALTH_BAR_BG_COLOR).setOrigin(0, 0.5);
+                this.healthBar = scene.add.rectangle(barX, barY, barWidth, barHeight, team === 'player' ? CONFIG.HEALTH_BAR_COLOR_PLAYER : CONFIG.HEALTH_BAR_COLOR_ENEMY).setOrigin(0, 0.5);
+                this.add([this.healthBarBg, this.healthBar]); // Add health bars to container
+
+                // --- Physics ---
+                scene.add.existing(this); // Add container to scene
+                scene.physics.add.existing(this, true); // Add static physics body
+                // Adjust physics body size to match visual size
+                this.body.setSize(width, height);
+                // Container position is center, but physics body offset is top-left relative to center
+                // this.body.setOffset(-width / 2, -height / 2); // Not usually needed for static bodies if positioned correctly
+
+                this.updateHealthBar(); // Initial draw
             }
 
-            getCenterX() { return this.x + this.width / 2; }
-            getCenterY() { return this.y + this.height / 2; }
-
-            draw(context) {
-                // Draw Base
-                context.fillStyle = this.color;
-                context.fillRect(this.x, this.y, this.width, this.height);
-                context.strokeStyle = '#333';
-                context.lineWidth = 2;
-                context.strokeRect(this.x, this.y, this.width, this.height);
-
-
-                // Draw Health Bar above base
-                const barWidth = this.width;
-                const barHeight = 10;
-                const barX = this.x;
-                const barY = this.y - barHeight - 5; // 5px padding above
-                const healthPercent = Math.max(0, this.health / this.maxHealth);
-
-                context.fillStyle = '#ddd'; // Background of health bar
-                context.fillRect(barX, barY, barWidth, barHeight);
-
-                context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336'; // Health color
-                context.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-
-                // Draw Health Text
-                context.fillStyle = '#000';
-                context.font = '10px Arial';
-                context.textAlign = 'center';
-                context.fillText(`${Math.max(0, Math.round(this.health))}/${this.maxHealth}`, this.x + this.width / 2, barY + barHeight - 1);
-                context.textAlign = 'left'; // Reset alignment
+            updateHealthBar() {
+                const healthPercent = Math.max(0, this.currentHealth / this.maxHealth);
+                this.healthBar.width = this.healthBarBg.width * healthPercent;
             }
 
             takeDamage(amount) {
-                this.health -= amount;
-                if (this.health <= 0) {
-                    this.health = 0;
-                    if (!gameState.gameOver) { // Prevent triggering multiple times
-                        gameState.gameOver = true;
-                        gameState.winner = (this.team === 'player') ? 'enemy' : 'player';
-                    }
+                this.currentHealth -= amount;
+                this.updateHealthBar();
+
+                // Flash effect (optional)
+                this.scene.tweens.add({
+                    targets: this.bodySprite,
+                    alpha: 0.5,
+                    duration: 80,
+                    yoyo: true,
+                });
+
+
+                if (this.currentHealth <= 0 && !this.scene.gameOver) {
+                    this.currentHealth = 0;
+                    // Let the scene handle game over logic
+                    this.scene.triggerGameOver(this.team === 'player' ? 'enemy' : 'player');
+                    // Maybe add an explosion/destruction animation here
+                    // this.destroy(); // Optionally destroy the base visually
                 }
             }
+
+             // Need getters for physics body dimensions if needed elsewhere
+             getBodyWidth() { return this.body.width; }
+             getBodyHeight() { return this.body.height; }
+             getCenterX() { return this.x; }
+             getCenterY() { return this.y; }
         }
 
-        // --- Unit Class --- (Modified for pathfinding)
-        class Unit {
-            constructor(x, y, color, team, path) { // Added path parameter
-                this.id = Date.now() + Math.random();
-                this.x = x;
-                this.y = y;
-                this.size = GAME_CONFIG.UNIT_SIZE;
-                this.radius = this.size / 2;
-                this.color = color;
+        class UnitGameObject extends Phaser.GameObjects.Container {
+            constructor(scene, x, y, color, team, path) {
+                super(scene, x, y);
+                this.unitSize = CONFIG.UNIT_SIZE;
+                this.radius = this.unitSize / 2;
                 this.team = team;
-                this.health = GAME_CONFIG.UNIT_HEALTH;
-                this.maxHealth = GAME_CONFIG.UNIT_HEALTH;
-                this.attack = GAME_CONFIG.UNIT_ATTACK;
-                this.speed = GAME_CONFIG.UNIT_SPEED * (1 + Math.random() * 0.1 - 0.05); // Slight speed variation
-                this.attackRange = GAME_CONFIG.UNIT_ATTACK_RANGE + this.radius; // Range from center
-                this.attackCooldown = GAME_CONFIG.UNIT_ATTACK_COOLDOWN;
+                this.path = path;
+                this.maxHealth = CONFIG.UNIT_HEALTH;
+                this.currentHealth = this.maxHealth;
+                this.attackPower = CONFIG.UNIT_ATTACK;
+                this.attackRange = CONFIG.UNIT_ATTACK_RANGE + this.radius; // Center-to-center check simplified later
+                this.attackCooldown = CONFIG.UNIT_ATTACK_COOLDOWN;
+                this.speed = CONFIG.UNIT_SPEED * (1 + Math.random() * 0.1 - 0.05); // Slight variation
+                this.isUnit = true; // Identifier
+
+                this.currentWaypointIndex = 0;
+                this.targetUnit = null;
+                this.targetBase = null;
                 this.lastAttackTime = 0;
-                this.targetUnit = null; // Specific unit target
-                this.targetBase = null; // Base target
-                this.isAlive = true;
                 this.isAttacking = false;
 
-                this.path = path; // Array of {x, y} waypoints
-                this.currentWaypointIndex = 0;
-                this.finalTargetX = (team === 'player') ? gameState.enemyBase.x : gameState.playerBase.x + gameState.playerBase.width; // Edge of base
-                this.finalTargetY = (team === 'player') ? gameState.enemyBase.getCenterY() : gameState.playerBase.getCenterY();
+                // Determine final target based on enemy base position
+                const enemyBase = (team === 'player') ? scene.enemyBase : scene.playerBase;
+                this.finalTargetX = (team === 'player') ? enemyBase.x - enemyBase.getBodyWidth() / 2 - this.radius : enemyBase.x + enemyBase.getBodyWidth() / 2 + this.radius;
+                this.finalTargetY = enemyBase.y; // Target center Y of base
+
+
+                // --- Visuals ---
+                this.bodySprite = scene.add.circle(0, 0, this.radius, color).setStrokeStyle(1, 0x000000);
+                this.add(this.bodySprite);
+
+                // Health Bar
+                const barWidth = this.unitSize * 1.5;
+                const barHeight = 4;
+                const barX = -barWidth / 2;
+                const barY = -this.radius - barHeight - 3;
+                this.healthBarBg = scene.add.rectangle(barX, barY, barWidth, barHeight, CONFIG.HEALTH_BAR_BG_COLOR).setOrigin(0, 0.5);
+                this.healthBar = scene.add.rectangle(barX, barY, barWidth, barHeight, team === 'player' ? CONFIG.HEALTH_BAR_COLOR_PLAYER : CONFIG.HEALTH_BAR_COLOR_ENEMY).setOrigin(0, 0.5);
+                this.add([this.healthBarBg, this.healthBar]);
+
+                // --- Physics ---
+                scene.add.existing(this);
+                scene.physics.add.existing(this); // Dynamic body
+                this.body.setCircle(this.radius); // Make physics body circular
+                this.body.setCollideWorldBounds(true);
+                 // Optional: Add slight drag or bounce if desired
+                 // this.body.setDrag(50);
+                 // this.body.setBounce(0.1);
+
+                this.updateHealthBar();
             }
 
-            draw(context) {
-                 // Draw Unit (circle)
-                 context.fillStyle = this.color;
-                 context.beginPath();
-                 context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                 context.fill();
-                 context.strokeStyle = 'rgba(0,0,0,0.5)';
-                 context.lineWidth = 1;
-                 context.stroke();
-
-
-                 // Draw Health Bar above unit
-                 const barWidth = this.size * 1.5;
-                 const barHeight = 4;
-                 const barX = this.x - barWidth / 2;
-                 const barY = this.y - this.radius - barHeight - 3;
-                 const healthPercent = Math.max(0, this.health / this.maxHealth);
-
-                 context.fillStyle = '#ddd';
-                 context.fillRect(barX, barY, barWidth, barHeight);
-                 context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336';
-                 context.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-
-                 // --- DEBUG: Draw Waypoint Line ---
-                 // if (this.currentWaypointIndex < this.path.length) {
-                 //     const wp = this.path[this.currentWaypointIndex];
-                 //     context.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow line
-                 //     context.lineWidth = 1;
-                 //     context.beginPath();
-                 //     context.moveTo(this.x, this.y);
-                 //     context.lineTo(wp.x, wp.y);
-                 //     context.stroke();
-                 // } else { // Draw line to final target
-                 //     context.strokeStyle = 'rgba(255, 0, 255, 0.5)'; // Magenta line
-                 //      context.lineWidth = 1;
-                 //      context.beginPath();
-                 //      context.moveTo(this.x, this.y);
-                 //      context.lineTo(this.finalTargetX, this.finalTargetY);
-                 //      context.stroke();
-                 // }
-                 // --- End Debug ---
+            updateHealthBar() {
+                if (!this.healthBar) return; // Already destroyed
+                const healthPercent = Math.max(0, this.currentHealth / this.maxHealth);
+                this.healthBar.width = this.healthBarBg.width * healthPercent;
             }
 
-            update(deltaTime, enemyUnits, enemyBase) {
-                if (!this.isAlive) return;
+             takeDamage(amount) {
+                if (!this.active) return; // Already dead/destroyed
 
-                this.isAttacking = false; // Reset attacking state each frame
+                this.currentHealth -= amount;
+                this.updateHealthBar();
 
-                // 1. Find Target Unit
-                this.findTargetUnit(enemyUnits);
+                 // Flash effect
+                 this.scene.tweens.add({
+                    targets: this.bodySprite,
+                    alpha: 0.3,
+                    duration: 60,
+                    yoyo: true,
+                });
 
-                // 2. Attack if target unit in range and cooldown ready
-                const now = Date.now();
-                if (this.targetUnit && this.isUnitInAttackRange() && (now - this.lastAttackTime >= this.attackCooldown)) {
-                    this.attackTargetUnit(now);
-                    this.isAttacking = true;
-                    return; // Don't move while attacking a unit
+                if (this.currentHealth <= 0) {
+                    this.currentHealth = 0;
+                    this.die();
                 }
-
-                // 3. Check if Enemy Base is in range (if no unit target or unit out of range)
-                if (!this.targetUnit && this.isBaseInAttackRange(enemyBase)) {
-                    this.targetBase = enemyBase; // Ensure base is targeted
-                     if (now - this.lastAttackTime >= this.attackCooldown) {
-                         this.attackTargetBase(now);
-                         this.isAttacking = true;
-                         return; // Don't move while attacking base
-                     }
-                     // If cooldown not ready, still don't move if in range
-                     return;
-                } else {
-                     this.targetBase = null; // Not in range or targeting a unit
-                }
-
-
-                // 4. Move (if not attacking)
-                this.move(deltaTime);
             }
 
-            findTargetUnit(enemyUnits) {
-                 // If already has a valid target unit in range, keep it unless it moves too far
-                 if (this.targetUnit && this.targetUnit.isAlive && this.getDistanceSq(this.targetUnit.x, this.targetUnit.y) <= (this.attackRange * 1.5) ** 2) {
-                    return; // Keep current target
+            die() {
+                 if (!this.active) return;
+                 // Optional: Add death effect (e.g., particles, shrink tween)
+                 this.scene.tweens.add({
+                    targets: this,
+                    scale: 0,
+                    alpha: 0,
+                    duration: 200,
+                    ease: 'Linear',
+                    onComplete: () => {
+                        this.destroy(); // Remove from scene, physics, and groups
+                    }
+                 });
+                 this.body.enable = false; // Disable physics immediately
+                 this.active = false; // Mark as inactive
+            }
+
+            // Main update logic called by the scene
+             updateUnit(time, delta, enemyUnitsGroup, enemyBase) {
+                 if (!this.active || !this.body) return; // Skip if dead or physics body gone
+
+                 this.isAttacking = false;
+
+                 // --- Targeting ---
+                 this.findTarget(enemyUnitsGroup.getChildren(), enemyBase);
+
+                 const now = time; // Phaser passes time directly
+
+                 // --- Attacking ---
+                 if (this.targetUnit && this.isTargetInRange(this.targetUnit) && (now - this.lastAttackTime >= this.attackCooldown)) {
+                     this.attack(this.targetUnit, now);
+                 } else if (this.targetBase && this.isTargetInRange(this.targetBase) && (now - this.lastAttackTime >= this.attackCooldown)) {
+                     this.attack(this.targetBase, now);
                  }
 
-                let closestEnemy = null;
-                let minDistanceSq = (this.attackRange * 2) ** 2; // Only look for enemies within double attack range
+                 // --- Movement ---
+                 if (!this.isAttacking) {
+                     this.moveAlongPath(delta);
+                 } else {
+                     this.body.setVelocity(0, 0); // Stop moving when attacking
+                 }
+            }
 
-                for (const enemy of enemyUnits) {
-                    if (!enemy.isAlive) continue;
-                    const distSq = this.getDistanceSq(enemy.x, enemy.y);
+            findTarget(enemyUnitsArray, enemyBase) {
+                 // Simple targeting: Attack base if close, otherwise nearest unit.
+                 // Prioritize existing target if still valid and in range.
 
+                // Reset targets if they are dead/inactive
+                if (this.targetUnit && (!this.targetUnit.active || this.targetUnit.currentHealth <= 0)) {
+                    this.targetUnit = null;
+                }
+                 if (this.targetBase && (!this.targetBase.active || this.targetBase.currentHealth <= 0)) {
+                    // Should trigger game over, but good practice
+                    this.targetBase = null;
+                 }
+
+
+                // Check Base first - if close enough, always prioritize it
+                const distToBaseSq = Phaser.Math.Distance.Squared(this.x, this.y, enemyBase.x, enemyBase.y);
+                // Attack range check uses center-to-center distance adjusted for radii/widths
+                const baseAttackRange = this.radius + enemyBase.getBodyWidth() / 2 + CONFIG.UNIT_ATTACK_RANGE;
+                if (distToBaseSq <= baseAttackRange * baseAttackRange) {
+                    this.targetBase = enemyBase;
+                    this.targetUnit = null; // Prioritize base when in range
+                    return;
+                } else {
+                     this.targetBase = null; // Base is out of range
+                }
+
+
+                 // If not targeting base, check units
+                 let closestEnemy = null;
+                 let minDistanceSq = (this.attackRange * 2.5) ** 2; // Search slightly larger radius
+
+                 enemyUnitsArray.forEach(enemy => {
+                    if (!enemy.active || enemy.currentHealth <= 0 || enemy.team === this.team) return;
+
+                    const distSq = Phaser.Math.Distance.Squared(this.x, this.y, enemy.x, enemy.y);
                     if (distSq < minDistanceSq) {
                         minDistanceSq = distSq;
                         closestEnemy = enemy;
                     }
-                }
-                this.targetUnit = closestEnemy; // Can be null if no enemy is close enough
+                 });
+
+                 this.targetUnit = closestEnemy; // Assign closest found enemy (can be null)
+
             }
 
-            getDistanceSq(targetX, targetY) {
-                const dx = targetX - this.x;
-                const dy = targetY - this.y;
-                return dx * dx + dy * dy;
-            }
 
-             isUnitInAttackRange() {
-                 if (!this.targetUnit) return false;
-                 const distSq = this.getDistanceSq(this.targetUnit.x, this.targetUnit.y);
-                 // Check distance between centers vs sum of radii + attack range margin
-                 const range = this.radius + this.targetUnit.radius + GAME_CONFIG.UNIT_ATTACK_RANGE;
+            isTargetInRange(target) {
+                if (!target || !target.active) return false;
+
+                const distSq = Phaser.Math.Distance.Squared(this.x, this.y, target.x, target.y);
+                let range = 0;
+
+                 if (target.isUnit) {
+                    // Unit-to-unit: sum of radii + attack range buffer
+                     range = this.radius + target.radius + CONFIG.UNIT_ATTACK_RANGE;
+                 } else if (target.isBase) {
+                     // Unit-to-base: unit radius + half base width + attack range buffer
+                     range = this.radius + target.getBodyWidth() / 2 + CONFIG.UNIT_ATTACK_RANGE;
+                 }
+
                  return distSq <= range * range;
             }
 
-            isBaseInAttackRange(enemyBase) {
-                const baseEdgeX = (this.team === 'player') ? enemyBase.x : enemyBase.x + enemyBase.width;
-                const closestBaseY = Math.max(enemyBase.y, Math.min(this.y, enemyBase.y + enemyBase.height)); // Closest Y on base edge
+            attack(target, time) {
+                 if (!target || !target.active) { // Target might die between check and attack
+                     this.targetUnit = null;
+                     this.targetBase = null;
+                     return;
+                 }
+                 this.isAttacking = true;
+                 this.lastAttackTime = time;
+                 target.takeDamage(this.attackPower);
 
-                 const distSq = this.getDistanceSq(baseEdgeX, closestBaseY);
-                 // Check distance from unit center to closest point on base edge
-                 return distSq <= (this.radius + GAME_CONFIG.UNIT_ATTACK_RANGE) ** 2;
+                 // Simple attack visual (e.g., quick scale pulse)
+                  this.scene.tweens.add({
+                     targets: this.bodySprite,
+                     scaleX: 1.2,
+                     scaleY: 1.2,
+                     duration: 50,
+                     yoyo: true,
+                     ease: 'Sine.easeInOut'
+                 });
+
+
+                 // If target died, clear target immediately
+                 if (target.currentHealth <= 0) {
+                     if (target.isUnit) this.targetUnit = null;
+                     if (target.isBase) this.targetBase = null; // Base handles game over
+                 }
             }
 
+            moveAlongPath(delta) {
+                 if (!this.active || !this.body) return;
 
-            attackTargetUnit(currentTime) {
-                if (!this.targetUnit || !this.targetUnit.isAlive) {
-                    this.targetUnit = null;
-                    return;
-                }
-                this.targetUnit.takeDamage(this.attack);
-                this.lastAttackTime = currentTime;
-                if (this.targetUnit.health <= 0) {
-                    this.targetUnit.isAlive = false;
-                    this.targetUnit = null; // Clear target
-                }
-            }
+                 let targetX, targetY;
 
-             attackTargetBase(currentTime) {
-                if (!this.targetBase || this.targetBase.health <= 0) return;
-                this.targetBase.takeDamage(this.attack);
-                this.lastAttackTime = currentTime;
-                // Base death is handled in Base.takeDamage setting gameState.gameOver
-            }
-
-
-            move(deltaTime) {
-                let targetX, targetY;
-
-                // Determine current target point (waypoint or final destination)
-                if (this.currentWaypointIndex < this.path.length) {
+                 // Determine current target point
+                 if (this.currentWaypointIndex < this.path.length) {
                     const waypoint = this.path[this.currentWaypointIndex];
                     targetX = waypoint.x;
                     targetY = waypoint.y;
 
-                    // Check if waypoint is reached
-                    const distSq = this.getDistanceSq(targetX, targetY);
-                    if (distSq < GAME_CONFIG.WAYPOINT_REACH_THRESHOLD ** 2) {
+                    // Check if waypoint is reached (using physics body position)
+                    const distSq = Phaser.Math.Distance.Squared(this.body.x + this.radius, this.body.y + this.radius, targetX, targetY); // Body pos is top-left
+                    if (distSq < CONFIG.WAYPOINT_REACH_THRESHOLD ** 2) {
                         this.currentWaypointIndex++;
-                        // Immediately adjust target if we reached the waypoint this frame
-                        if (this.currentWaypointIndex < this.path.length) {
-                            targetX = this.path[this.currentWaypointIndex].x;
-                            targetY = this.path[this.currentWaypointIndex].y;
-                        } else {
-                            // Reached last waypoint, head towards final base target
-                            targetX = this.finalTargetX;
-                            targetY = this.finalTargetY;
-                        }
+                        // Don't immediately recalculate target here, let next frame handle it
                     }
-                } else {
+                 } else {
                     // Heading towards final base target
                      targetX = this.finalTargetX;
                      targetY = this.finalTargetY;
 
-                     // Check if approximately at the final target X (edge of base)
-                     // This prevents units overshooting the base edge if Y is different
-                     const dx = targetX - this.x;
-                     if (Math.abs(dx) < this.radius) {
-                          // Close enough to base X edge, stop horizontal movement.
-                          // Vertical adjustment might still happen if needed,
-                          // but primary goal is to attack, handled in update logic.
-                          // We can just return here to stop pathing movement.
+                     // Check if close enough to final target to stop precise pathing
+                      const finalDistSq = Phaser.Math.Distance.Squared(this.x, this.y, targetX, targetY);
+                     if (finalDistSq < (this.attackRange * 0.8)**2) { // If within attack range, let attack logic take over
+                          this.body.setVelocity(0, 0);
                           return;
                      }
-                }
+                 }
 
-                // Calculate direction vector
-                const dx = targetX - this.x;
-                const dy = targetY - this.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                // Move towards the target point using physics velocity
+                this.scene.physics.moveTo(this, targetX, targetY, this.speed);
 
-                if (distance < 1) return; // Avoid division by zero or tiny movements
-
-                // Normalize vector and apply speed
-                const moveX = (dx / distance) * this.speed * (deltaTime / 16.67); // Normalize speed to ~60fps
-                const moveY = (dy / distance) * this.speed * (deltaTime / 16.67);
-
-                this.x += moveX;
-                this.y += moveY;
-
-            }
-
-            takeDamage(amount) {
-                this.health -= amount;
-                if (this.health <= 0) {
-                    this.health = 0;
-                    this.isAlive = false;
-                }
+                 // Optional: Rotate sprite towards movement direction
+                 this.bodySprite.rotation = Phaser.Math.Angle.Between(this.x, this.y, this.x + this.body.velocity.x, this.y + this.body.velocity.y) + Math.PI/2;
             }
         }
 
-        // --- Game Functions ---
-        function definePathsAndObstacles() {
-            gameState.obstacles = [];
-            // Example: Add a central obstacle block
-            const obsWidth = 100;
-            const obsHeight = 150;
-            const obsX = canvas.width / 2 - obsWidth / 2;
-            const obsY = canvas.height / 2 - obsHeight / 2;
-            gameState.obstacles.push(new Obstacle(obsX, obsY, obsWidth, obsHeight));
 
-            // Add side obstacles (optional)
-             gameState.obstacles.push(new Obstacle(canvas.width * 0.2, 10, 50, 80));
-             gameState.obstacles.push(new Obstacle(canvas.width * 0.8 - 50, canvas.height - 90, 50, 80));
+        // --- Phaser Scene ---
+        class GameScene extends Phaser.Scene {
+            constructor() {
+                super('GameScene');
+                // Game state properties
+                this.playerBase = null;
+                this.enemyBase = null;
+                this.playerUnits = null; // Physics Group
+                this.enemyUnits = null; // Physics Group
+                this.obstacles = null; // Physics Static Group
+                this.paths = { playerTop: [], playerBottom: [], enemyTop: [], enemyBottom: [] };
+                this.playerResources = CONFIG.STARTING_RESOURCES;
+                this.gameOver = false;
+                this.winner = null;
 
+                // Timers
+                this.playerSpawnTimer = null;
+                this.enemySpawnTimer = null;
+                this.resourceTimer = null;
 
-            // --- Define Waypoints ---
-            // Waypoints are defined relative to the map edges and obstacles
-            const margin = 40; // Margin from edges/obstacles
-            const midX = canvas.width / 2;
-            const midY = canvas.height / 2;
-
-            const playerSpawnX = gameState.playerBase.x + gameState.playerBase.width + 10;
-            const enemySpawnX = gameState.enemyBase.x - 10;
-
-            // Player paths (start near player base, go around obstacles, end near enemy base)
-            gameState.paths.playerTop = [
-                { x: playerSpawnX + 50, y: margin },                      // Initial move up
-                { x: midX - obsWidth/2 - margin, y: margin },             // Before top-left corner of central obstacle
-                { x: midX + obsWidth/2 + margin, y: margin },             // After top-right corner of central obstacle
-                { x: enemySpawnX - 50, y: margin },                       // Approach enemy base from top
-                { x: enemySpawnX, y: gameState.enemyBase.getCenterY() }   // Final approach adjustment
-            ];
-            gameState.paths.playerBottom = [
-                 { x: playerSpawnX + 50, y: canvas.height - margin },       // Initial move down
-                 { x: midX - obsWidth/2 - margin, y: canvas.height - margin}, // Before bottom-left corner
-                 { x: midX + obsWidth/2 + margin, y: canvas.height - margin}, // After bottom-right corner
-                 { x: enemySpawnX - 50, y: canvas.height - margin },       // Approach enemy base from bottom
-                 { x: enemySpawnX, y: gameState.enemyBase.getCenterY() }    // Final approach adjustment
-            ];
-
-            // Enemy paths (mirror of player paths)
-            gameState.paths.enemyTop = [
-                 { x: enemySpawnX - 50, y: margin },                      // Initial move up (enemy side)
-                 { x: midX + obsWidth/2 + margin, y: margin },             // Before top-right corner
-                 { x: midX - obsWidth/2 - margin, y: margin },             // After top-left corner
-                 { x: playerSpawnX + 50, y: margin },                       // Approach player base from top
-                 { x: playerSpawnX, y: gameState.playerBase.getCenterY() }   // Final approach adjustment
-            ];
-             gameState.paths.enemyBottom = [
-                 { x: enemySpawnX - 50, y: canvas.height - margin },       // Initial move down
-                 { x: midX + obsWidth/2 + margin, y: canvas.height - margin}, // Before bottom-right corner
-                 { x: midX - obsWidth/2 - margin, y: canvas.height - margin}, // After bottom-left corner
-                 { x: playerSpawnX + 50, y: canvas.height - margin },       // Approach player base from bottom
-                 { x: playerSpawnX, y: gameState.playerBase.getCenterY() }    // Final approach adjustment
-            ];
-        }
-
-
-        function spawnUnit(team, isManual = false) {
-            const base = (team === 'player') ? gameState.playerBase : gameState.enemyBase;
-            const color = (team === 'player') ? GAME_CONFIG.PLAYER_COLOR : GAME_CONFIG.ENEMY_COLOR;
-
-            // Spawn slightly randomized within the base height, just outside the base width
-            const spawnOffset = 10 + GAME_CONFIG.UNIT_SIZE / 2;
-            const spawnX = (team === 'player') ? base.x + base.width + spawnOffset : base.x - spawnOffset;
-            const spawnY = base.y + base.height * 0.2 + Math.random() * base.height * 0.6; // Spawn vertically centered +/- 30%
-
-            let unitToSpawn = null;
-
-            // Determine which path to take (simple logic: top half -> top path, bottom half -> bottom path)
-            let chosenPath;
-            if (spawnY < canvas.height / 2) {
-                chosenPath = (team === 'player') ? gameState.paths.playerTop : gameState.paths.enemyTop;
-            } else {
-                chosenPath = (team === 'player') ? gameState.paths.playerBottom : gameState.paths.enemyBottom;
+                // UI Elements (references to HTML)
+                this.statusText = document.getElementById('status');
+                this.spawnButton = document.getElementById('spawnPlayerUnitBtn');
+                this.restartButton = document.getElementById('restartBtn');
+                this.gameOverOverlay = document.getElementById('gameOverOverlay');
+                this.gameOverText = document.getElementById('gameOverText');
             }
 
-            if (team === 'player') {
-                if (isManual) {
-                    if (gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST) {
-                        gameState.playerResources -= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
-                        unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
-                        updateStatus();
+            preload() {
+                // No assets to load for this version, but you would load images/spritesheets here:
+                // this.load.image('unitSprite', 'path/to/unit.png');
+                // this.load.image('baseSprite', 'path/to/base.png');
+            }
+
+            create() {
+                gameScene = this; // Make scene accessible globally
+                this.gameOver = false;
+                this.winner = null;
+                this.playerResources = CONFIG.STARTING_RESOURCES;
+                this.gameOverOverlay.classList.remove('visible');
+
+
+                // Set background color
+                this.cameras.main.setBackgroundColor('#a5d6a7'); // Light green playing field
+
+                // Initialize physics groups first
+                this.playerUnits = this.physics.add.group({ classType: UnitGameObject, runChildUpdate: false }); // We'll call update manually
+                this.enemyUnits = this.physics.add.group({ classType: UnitGameObject, runChildUpdate: false });
+                this.obstacles = this.physics.add.staticGroup();
+
+                // Create Bases (centered vertically)
+                const baseY = CONFIG.GAME_HEIGHT / 2;
+                this.playerBase = new BaseGameObject(this, CONFIG.BASE_WIDTH / 2 + 20, baseY, CONFIG.BASE_WIDTH, CONFIG.BASE_HEIGHT, CONFIG.PLAYER_COLOR, 'player', CONFIG.BASE_HEALTH_MAX);
+                this.enemyBase = new BaseGameObject(this, CONFIG.GAME_WIDTH - CONFIG.BASE_WIDTH / 2 - 20, baseY, CONFIG.BASE_WIDTH, CONFIG.BASE_HEIGHT, CONFIG.ENEMY_COLOR, 'enemy', CONFIG.BASE_HEALTH_MAX);
+
+                // Define Obstacles and Paths (relative to game dimensions)
+                this.definePathsAndObstacles();
+
+                // Draw path lines for debugging if enabled
+                if (CONFIG.DEBUG_DRAW_PATHS) this.drawDebugPaths();
+
+
+                // Setup Physics Collisions/Overlaps
+                // Units should not collide strongly with each other, maybe just overlap
+                this.physics.add.overlap(this.playerUnits, this.enemyUnits, null, null, this); // Overlap detected, handled in unit update
+                // Units DO collide with obstacles
+                this.physics.add.collider(this.playerUnits, this.obstacles);
+                this.physics.add.collider(this.enemyUnits, this.obstacles);
+                 // Prevent units clumping too much (optional)
+                 this.physics.add.collider(this.playerUnits, this.playerUnits);
+                 this.physics.add.collider(this.enemyUnits, this.enemyUnits);
+
+                // Set up Timers using Phaser's timer events
+                this.setupTimers();
+
+                // Setup UI Button Listeners
+                this.spawnButton.onclick = () => this.spawnPlayerUnit(true); // Manual spawn
+                this.restartButton.onclick = () => this.restartGame();
+
+
+                this.updateStatusDisplay(); // Initial display
+            }
+
+
+            definePathsAndObstacles() {
+                 // Add a central obstacle block
+                const obsWidth = 120;
+                const obsHeight = 180;
+                const obsX = CONFIG.GAME_WIDTH / 2; // Center X
+                const obsY = CONFIG.GAME_HEIGHT / 2; // Center Y
+                 // Use create to add to static group directly
+                const centralObstacle = this.add.rectangle(obsX, obsY, obsWidth, obsHeight, CONFIG.OBSTACLE_COLOR)
+                                              .setStrokeStyle(2, CONFIG.OBSTACLE_BORDER_COLOR);
+                this.obstacles.add(centralObstacle);
+
+
+                // Add smaller side obstacles
+                 const sideObsWidth = 60, sideObsHeight = 100;
+                 const sideObs1 = this.add.rectangle(CONFIG.GAME_WIDTH * 0.25, CONFIG.GAME_HEIGHT * 0.2, sideObsWidth, sideObsHeight, CONFIG.OBSTACLE_COLOR)
+                                         .setStrokeStyle(2, CONFIG.OBSTACLE_BORDER_COLOR);
+                 this.obstacles.add(sideObs1);
+                  const sideObs2 = this.add.rectangle(CONFIG.GAME_WIDTH * 0.75, CONFIG.GAME_HEIGHT * 0.8, sideObsWidth, sideObsHeight, CONFIG.OBSTACLE_COLOR)
+                                         .setStrokeStyle(2, CONFIG.OBSTACLE_BORDER_COLOR);
+                 this.obstacles.add(sideObs2);
+
+
+                // --- Define Waypoints ---
+                const margin = 40;
+                const midX = CONFIG.GAME_WIDTH / 2;
+
+                // Player paths (adjust for base/obstacle positions)
+                const playerSpawnX = this.playerBase.x + this.playerBase.getBodyWidth() / 2 + CONFIG.UNIT_SIZE;
+                const enemyGoalX = this.enemyBase.x - this.enemyBase.getBodyWidth() / 2 - CONFIG.UNIT_SIZE;
+
+                this.paths.playerTop = [
+                    { x: playerSpawnX + 60, y: margin },
+                    { x: midX - obsWidth/2 - margin, y: margin },
+                    { x: midX + obsWidth/2 + margin, y: margin },
+                    { x: enemyGoalX - 60, y: margin },
+                    //{ x: enemyGoalX, y: this.enemyBase.y } // Final target handled by unit logic now
+                ];
+                this.paths.playerBottom = [
+                    { x: playerSpawnX + 60, y: CONFIG.GAME_HEIGHT - margin },
+                    { x: midX - obsWidth/2 - margin, y: CONFIG.GAME_HEIGHT - margin},
+                    { x: midX + obsWidth/2 + margin, y: CONFIG.GAME_HEIGHT - margin},
+                    { x: enemyGoalX - 60, y: CONFIG.GAME_HEIGHT - margin },
+                    //{ x: enemyGoalX, y: this.enemyBase.y }
+                ];
+
+                // Enemy paths (mirror)
+                 const enemySpawnX = this.enemyBase.x - this.enemyBase.getBodyWidth() / 2 - CONFIG.UNIT_SIZE;
+                 const playerGoalX = this.playerBase.x + this.playerBase.getBodyWidth() / 2 + CONFIG.UNIT_SIZE;
+
+                this.paths.enemyTop = [
+                    { x: enemySpawnX - 60, y: margin },
+                    { x: midX + obsWidth/2 + margin, y: margin },
+                    { x: midX - obsWidth/2 - margin, y: margin },
+                    { x: playerGoalX + 60, y: margin },
+                    //{ x: playerGoalX, y: this.playerBase.y }
+                ];
+                this.paths.enemyBottom = [
+                    { x: enemySpawnX - 60, y: CONFIG.GAME_HEIGHT - margin },
+                    { x: midX + obsWidth/2 + margin, y: CONFIG.GAME_HEIGHT - margin },
+                    { x: midX - obsWidth/2 - margin, y: CONFIG.GAME_HEIGHT - margin },
+                    { x: playerGoalX + 60, y: CONFIG.GAME_HEIGHT - margin },
+                   // { x: playerGoalX, y: this.playerBase.y }
+                ];
+            }
+
+             drawDebugPaths() {
+                const graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xff00ff, alpha: 0.5 } }); // Magenta
+                const graphicsEnemy = this.add.graphics({ lineStyle: { width: 2, color: 0x00ffff, alpha: 0.5 } }); // Cyan
+
+                 const drawPath = (path, graph) => {
+                     if (!path || path.length === 0) return;
+                     graph.beginPath();
+                     graph.moveTo(path[0].x, path[0].y);
+                     for (let i = 1; i < path.length; i++) {
+                         graph.lineTo(path[i].x, path[i].y);
+                     }
+                     graph.strokePath();
+                     // Draw waypoint circles
+                     path.forEach(wp => graph.strokeCircle(wp.x, wp.y, 5));
+                 };
+
+                 drawPath(this.paths.playerTop, graphics);
+                 drawPath(this.paths.playerBottom, graphics);
+                 drawPath(this.paths.enemyTop, graphicsEnemy);
+                 drawPath(this.paths.enemyBottom, graphicsEnemy);
+            }
+
+
+            setupTimers() {
+                // Clear existing timers if restarting
+                 if (this.playerSpawnTimer) this.playerSpawnTimer.remove();
+                 if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+                 if (this.resourceTimer) this.resourceTimer.remove();
+
+                 // Auto Spawn Timers
+                this.playerSpawnTimer = this.time.addEvent({
+                    delay: CONFIG.AUTO_SPAWN_INTERVAL_PLAYER,
+                    callback: () => this.spawnUnit('player', false), // Auto spawn
+                    callbackScope: this,
+                    loop: true
+                });
+                this.enemySpawnTimer = this.time.addEvent({
+                    delay: CONFIG.AUTO_SPAWN_INTERVAL_ENEMY,
+                    callback: () => this.spawnUnit('enemy', false), // Auto spawn
+                    callbackScope: this,
+                    loop: true
+                });
+
+                // Resource Gain Timer
+                this.resourceTimer = this.time.addEvent({
+                    delay: CONFIG.RESOURCE_GAIN_INTERVAL,
+                    callback: () => {
+                        if (!this.gameOver) {
+                            this.playerResources += CONFIG.RESOURCE_GAIN_AMOUNT;
+                            this.updateStatusDisplay();
+                        }
+                    },
+                    callbackScope: this,
+                    loop: true
+                });
+            }
+
+
+            spawnUnit(team, isManual = false) {
+                 if (this.gameOver) return;
+
+                 const base = (team === 'player') ? this.playerBase : this.enemyBase;
+                 const color = (team === 'player') ? CONFIG.PLAYER_COLOR : CONFIG.ENEMY_COLOR;
+                 const unitGroup = (team === 'player') ? this.playerUnits : this.enemyUnits;
+
+                 // Spawn position slightly outside base
+                 const spawnX = (team === 'player')
+                    ? base.x + base.getBodyWidth() / 2 + CONFIG.UNIT_SIZE
+                    : base.x - base.getBodyWidth() / 2 - CONFIG.UNIT_SIZE;
+                // Randomize Y spawn position within base height
+                 const spawnY = base.y - base.getBodyHeight() / 2 + CONFIG.UNIT_SIZE / 2 + Math.random() * (base.getBodyHeight() - CONFIG.UNIT_SIZE);
+
+
+                 let canSpawn = true;
+                 if (team === 'player' && isManual) {
+                    if (this.playerResources >= CONFIG.PLAYER_MANUAL_SPAWN_COST) {
+                        this.playerResources -= CONFIG.PLAYER_MANUAL_SPAWN_COST;
                     } else {
-                         // console.log("Not enough resources!"); // Optional feedback
-                         return; // Don't spawn if not enough resources
+                        canSpawn = false;
+                         // Optional: Add feedback like flashing the button or a sound effect
                     }
-                } else { // Auto-spawn player (free)
-                     unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
-                }
-                if (unitToSpawn) gameState.playerUnits.push(unitToSpawn);
+                 }
 
-            } else { // Enemy spawn (always auto, always free for AI)
-                unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
-                gameState.enemyUnits.push(unitToSpawn);
-            }
-        }
+                 if (canSpawn) {
+                    // Determine path
+                    let chosenPath;
+                     if (spawnY < CONFIG.GAME_HEIGHT / 2) {
+                         chosenPath = (team === 'player') ? [...this.paths.playerTop] : [...this.paths.enemyTop]; // Use spread to pass a copy
+                     } else {
+                         chosenPath = (team === 'player') ? [...this.paths.playerBottom] : [...this.paths.enemyBottom];
+                     }
 
-        function update(currentTime) {
-            if (gameState.gameOver) return;
+                    // Create the unit using the group's create method
+                    const unit = unitGroup.create(spawnX, spawnY, color, team, chosenPath);
+                     if (unit) {
+                        // Unit constructor already handles adding to scene/physics
+                     }
+                 }
 
-            if (gameState.lastUpdateTime === 0) gameState.lastUpdateTime = currentTime;
-            gameState.deltaTime = currentTime - gameState.lastUpdateTime;
-            if (gameState.deltaTime > 50) gameState.deltaTime = 16.67; // Cap delta time on lag/tab switch
-            gameState.lastUpdateTime = currentTime;
-
-            // --- Auto Spawning ---
-            if (currentTime - gameState.lastPlayerAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_PLAYER) {
-                 spawnUnit('player', false); // Auto spawn is not manual
-                 gameState.lastPlayerAutoSpawnTime = currentTime;
-            }
-            if (currentTime - gameState.lastEnemyAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_ENEMY) {
-                spawnUnit('enemy', false); // Enemy always auto-spawns
-                gameState.lastEnemyAutoSpawnTime = currentTime;
+                 this.updateStatusDisplay();
             }
 
-            // --- Resource Generation ---
-            if (currentTime - gameState.lastResourceGainTime > GAME_CONFIG.RESOURCE_GAIN_INTERVAL) {
-                gameState.playerResources += GAME_CONFIG.RESOURCE_GAIN_AMOUNT;
-                gameState.lastResourceGainTime = currentTime;
-                updateStatus();
+             spawnPlayerUnit(isManual = true) { // Specific function for button click
+                 this.spawnUnit('player', isManual);
+             }
+
+
+            update(time, delta) {
+                 if (this.gameOver) return;
+
+                // Manual update call for all active units
+                 this.playerUnits.getChildren().forEach(unit => {
+                    if (unit.active) {
+                         unit.updateUnit(time, delta, this.enemyUnits, this.enemyBase);
+                    }
+                 });
+                 this.enemyUnits.getChildren().forEach(unit => {
+                     if (unit.active) {
+                        unit.updateUnit(time, delta, this.playerUnits, this.playerBase);
+                     }
+                 });
+
+                 // Unit cleanup is handled by the unit's die() method using destroy()
             }
 
-            // --- Update Units ---
-            gameState.playerUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.enemyUnits, gameState.enemyBase));
-            gameState.enemyUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.playerUnits, gameState.playerBase));
+             updateStatusDisplay() {
+                 if (this.gameOver) return;
 
-            // --- Remove Dead Units ---
-            gameState.playerUnits = gameState.playerUnits.filter(unit => unit.isAlive);
-            gameState.enemyUnits = gameState.enemyUnits.filter(unit => unit.isAlive);
+                 const playerCount = this.playerUnits ? this.playerUnits.countActive(true) : 0;
+                 const enemyCount = this.enemyUnits ? this.enemyUnits.countActive(true) : 0;
+                 this.statusText.textContent = `Resources: ${this.playerResources} | Player: ${playerCount} | Enemy: ${enemyCount}`;
 
-             // --- Check Game Over --- (Handled by Base.takeDamage now)
-             if (gameState.gameOver) {
-                 handleGameOver();
+                 const canAfford = this.playerResources >= CONFIG.PLAYER_MANUAL_SPAWN_COST;
+                 this.spawnButton.disabled = !canAfford;
+                 this.spawnButton.textContent = `Spawn Unit (Cost: ${CONFIG.PLAYER_MANUAL_SPAWN_COST})`;
+                 // Style button if cannot afford
+                 this.spawnButton.style.backgroundColor = canAfford ? '#3498db' : '#ff9800'; // Blue or Orange
+             }
+
+
+            triggerGameOver(winnerTeam) {
+                if (this.gameOver) return; // Prevent multiple triggers
+
+                this.gameOver = true;
+                this.winner = winnerTeam;
+
+                 // Stop physics? Stop timers?
+                 this.physics.pause();
+                 this.playerSpawnTimer.paused = true;
+                 this.enemySpawnTimer.paused = true;
+                 this.resourceTimer.paused = true;
+
+
+                 // Show Game Over Overlay
+                 this.gameOverText.textContent = (winnerTeam === 'player') ? 'Player Wins!' : 'Enemy Wins!';
+                 this.gameOverOverlay.classList.add('visible');
+
+
+                 // Disable spawn button
+                 this.spawnButton.disabled = true;
+                 this.spawnButton.style.backgroundColor = '#95a5a6'; // Greyed out
+            }
+
+            restartGame() {
+                 console.log("Restarting game...");
+                 // Reset state variables explicitly (important!)
+                 this.gameOver = false;
+                 this.winner = null;
+                 this.playerResources = CONFIG.STARTING_RESOURCES;
+
+
+                // Hide overlay
+                 this.gameOverOverlay.classList.remove('visible');
+
+
+                // Restart the current scene
+                 this.scene.restart();
              }
         }
 
-        function draw() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-             // Draw Obstacles first (background elements)
-            gameState.obstacles.forEach(obs => obs.draw(ctx));
-
-            // Draw Bases
-            gameState.playerBase.draw(ctx);
-            gameState.enemyBase.draw(ctx);
-
-            // Draw Units (draw enemies first so player units appear on top in clashes)
-            gameState.enemyUnits.forEach(unit => unit.draw(ctx));
-            gameState.playerUnits.forEach(unit => unit.draw(ctx));
-
-
-            // Draw Game Over Text (if applicable)
-            if (gameState.gameOver) {
-                ctx.save(); // Save context state
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
-                ctx.fillStyle = '#fff';
-                ctx.font = '40px Arial';
-                ctx.textAlign = 'center';
-                const message = gameState.winner === 'player' ? 'Player Wins!' : 'Enemy Wins!';
-                ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 15);
-                ctx.restore(); // Restore context state (like text align)
-            }
-        }
-
-        function gameLoop(currentTime) {
-            update(currentTime);
-            draw();
-            requestAnimationFrame(gameLoop); // Loop continues even after game over to show final state + message
-        }
-
-        function updateStatus() {
-            statusDiv.textContent = `Resources: ${gameState.playerResources} | Player: ${gameState.playerUnits.length} | Enemy: ${gameState.enemyUnits.length}`;
-            const canAfford = gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
-            spawnPlayerUnitBtn.disabled = !canAfford || gameState.gameOver;
-            spawnPlayerUnitBtn.textContent = `Spawn Unit (Cost: ${GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST})`;
-            // Optionally style button differently if cannot afford
-            spawnPlayerUnitBtn.style.backgroundColor = (!canAfford && !gameState.gameOver) ? '#ff9800' : (gameState.gameOver ? '#cccccc' : '#4CAF50');
-        }
-
-         function handleGameOver() {
-            spawnPlayerUnitBtn.disabled = true;
-            restartBtn.style.display = 'inline-block';
-            updateStatus(); // Final status update
-         }
-
-        function resetGame() {
-             // Create bases first, as paths depend on their positions
-             gameState.playerBase = new Base(
-                 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
-                 GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
-                 GAME_CONFIG.PLAYER_COLOR, 'player'
-             );
-             gameState.enemyBase = new Base(
-                 canvas.width - GAME_CONFIG.BASE_WIDTH - 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
-                 GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
-                 GAME_CONFIG.ENEMY_COLOR, 'enemy'
-             );
-
-             // Define obstacles and paths based on bases/canvas size
-             definePathsAndObstacles();
-
-             // Reset other state variables
-             gameState.playerUnits = [];
-             gameState.enemyUnits = [];
-             gameState.playerResources = GAME_CONFIG.STARTING_RESOURCES;
-             const now = Date.now(); // Use consistent time for resetting timers
-             gameState.lastPlayerAutoSpawnTime = now;
-             gameState.lastEnemyAutoSpawnTime = now;
-             gameState.lastResourceGainTime = now;
-             gameState.gameOver = false;
-             gameState.winner = null;
-             gameState.lastUpdateTime = 0; // Reset last update time for delta calculation
-             gameState.deltaTime = 0;
-
-             // Reset UI
-             restartBtn.style.display = 'none';
-             spawnPlayerUnitBtn.disabled = false;
-             updateStatus(); // Initial status update
-
-             // If the game loop was stopped, restart it (it wasn't, but good practice)
-             // requestAnimationFrame(gameLoop);
-        }
-
-
-        function init() {
-            resetGame(); // Use resetGame for initial setup
-
-            // Event listeners
-            spawnPlayerUnitBtn.addEventListener('click', () => {
-                if (!gameState.gameOver) {
-                    spawnUnit('player', true); // Manual spawn
+        // --- Phaser Game Configuration ---
+        const phaserConfig = {
+            type: Phaser.AUTO, // AUTO tries WebGL first, then falls back to Canvas
+            width: CONFIG.GAME_WIDTH,
+            height: CONFIG.GAME_HEIGHT,
+            parent: 'game-container', // ID of the div to contain the canvas
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    //debug: true, // Set true to see physics bodies and velocity vectors
+                    gravity: { y: 0 } // Top-down game, no gravity needed
                 }
-            });
-            restartBtn.addEventListener('click', resetGame);
+            },
+            scene: [GameScene] // Add the scene to the game
+        };
 
-            // Start the game loop
-            requestAnimationFrame(gameLoop);
-        }
+        // --- Initialize Phaser ---
+         // Ensure DOM is ready before creating game
+         window.onload = () => {
+             gameInstance = new Phaser.Game(phaserConfig);
 
-        // --- Start the Game ---
-        window.onload = init;
+             // Expose reset function globally for button if needed (alternative to scene reference)
+             // window.restartGame = () => {
+             //     if (gameScene) gameScene.restartGame();
+             // }
+         };
 
     </script>
 
