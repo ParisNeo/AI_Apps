@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Tower War</title>
+    <title>Tower War with Paths</title>
     <style>
         body {
             margin: 0;
@@ -18,8 +18,8 @@
         }
         canvas {
             border: 2px solid #333;
-            background-color: #e0ffe0; /* Light green battlefield */
-            display: block; /* Prevents extra space below canvas */
+            background-color: #c8e6c9; /* Slightly different green */
+            display: block;
         }
         #controls {
             margin-top: 15px;
@@ -49,31 +49,12 @@
             font-weight: bold;
             color: #555;
         }
-        .health-bar {
-            position: relative;
-            width: 100%;
-            height: 8px;
-            background-color: #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 2px;
-        }
-        .health-bar-inner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background-color: red;
-            transition: width 0.1s linear;
-        }
-        .player .health-bar-inner { background-color: #4CAF50; }
-        .enemy .health-bar-inner { background-color: #f44336; }
     </style>
 </head>
 <body>
 
-    <h1>Simple Tower War</h1>
-    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <h1>Tower War - Pathfinding</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas> <!-- Increased height slightly -->
     <div id="status">Loading...</div>
     <div id="controls">
         <button id="spawnPlayerUnitBtn">Spawn Unit (Cost: 10)</button>
@@ -89,23 +70,25 @@
 
         // --- Game Configuration ---
         const GAME_CONFIG = {
-            UNIT_SIZE: 10,
-            UNIT_SPEED: 0.8,
-            UNIT_HEALTH: 50,
-            UNIT_ATTACK: 5,
-            UNIT_ATTACK_RANGE: 5, // Pixel distance to start attacking
-            UNIT_ATTACK_COOLDOWN: 500, // Milliseconds between attacks
-            BASE_WIDTH: 60,
-            BASE_HEIGHT: 80,
-            BASE_HEALTH_MAX: 1000,
-            PLAYER_COLOR: '#3498db', // Blue
-            ENEMY_COLOR: '#e74c3c', // Red
-            AUTO_SPAWN_INTERVAL_ENEMY: 3000, // ms
-            AUTO_SPAWN_INTERVAL_PLAYER: 4000, // ms (Slightly slower for balance)
+            UNIT_SIZE: 12, // Slightly larger units
+            UNIT_SPEED: 1.0, // Slightly faster base speed
+            UNIT_HEALTH: 60,
+            UNIT_ATTACK: 6,
+            UNIT_ATTACK_RANGE: 8, // Pixel distance from edge to start attacking
+            UNIT_ATTACK_COOLDOWN: 600, // Milliseconds
+            BASE_WIDTH: 70,
+            BASE_HEIGHT: 90,
+            BASE_HEALTH_MAX: 1500,
+            PLAYER_COLOR: '#0277bd', // Darker Blue
+            ENEMY_COLOR: '#d32f2f', // Darker Red
+            OBSTACLE_COLOR: '#a1887f', // Brownish Grey
+            AUTO_SPAWN_INTERVAL_ENEMY: 2800,
+            AUTO_SPAWN_INTERVAL_PLAYER: 3500,
             PLAYER_MANUAL_SPAWN_COST: 10,
             STARTING_RESOURCES: 50,
-            RESOURCE_GAIN_INTERVAL: 1500, // ms
+            RESOURCE_GAIN_INTERVAL: 1400,
             RESOURCE_GAIN_AMOUNT: 3,
+            WAYPOINT_REACH_THRESHOLD: 5, // How close unit needs to be to waypoint
         };
 
         // --- Game State ---
@@ -114,17 +97,45 @@
             enemyBase: null,
             playerUnits: [],
             enemyUnits: [],
+            obstacles: [],
+            // Define paths using waypoints {x, y}
+            paths: {
+                playerTop: [],
+                playerBottom: [],
+                enemyTop: [],
+                enemyBottom: []
+            },
             playerResources: GAME_CONFIG.STARTING_RESOURCES,
             lastPlayerAutoSpawnTime: 0,
             lastEnemyAutoSpawnTime: 0,
             lastResourceGainTime: 0,
             gameOver: false,
-            winner: null, // 'player' or 'enemy'
+            winner: null,
             lastUpdateTime: 0,
             deltaTime: 0,
         };
 
-        // --- Base Class ---
+        // --- Obstacle Class (Simple representation) ---
+        class Obstacle {
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+
+            draw(context) {
+                context.fillStyle = GAME_CONFIG.OBSTACLE_COLOR;
+                context.fillRect(this.x, this.y, this.width, this.height);
+                // Add a slight border for definition
+                context.strokeStyle = '#5d4037'; // Darker brown
+                context.lineWidth = 1;
+                context.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+
+        // --- Base Class --- (Added simple health bar drawing within Base itself)
         class Base {
             constructor(x, y, width, height, color, team) {
                 this.x = x;
@@ -137,17 +148,24 @@
                 this.maxHealth = GAME_CONFIG.BASE_HEALTH_MAX;
             }
 
+            getCenterX() { return this.x + this.width / 2; }
+            getCenterY() { return this.y + this.height / 2; }
+
             draw(context) {
                 // Draw Base
                 context.fillStyle = this.color;
                 context.fillRect(this.x, this.y, this.width, this.height);
+                context.strokeStyle = '#333';
+                context.lineWidth = 2;
+                context.strokeRect(this.x, this.y, this.width, this.height);
+
 
                 // Draw Health Bar above base
                 const barWidth = this.width;
                 const barHeight = 10;
                 const barX = this.x;
                 const barY = this.y - barHeight - 5; // 5px padding above
-                const healthPercent = this.health / this.maxHealth;
+                const healthPercent = Math.max(0, this.health / this.maxHealth);
 
                 context.fillStyle = '#ddd'; // Background of health bar
                 context.fillRect(barX, barY, barWidth, barHeight);
@@ -167,157 +185,241 @@
                 this.health -= amount;
                 if (this.health <= 0) {
                     this.health = 0;
-                    gameState.gameOver = true;
-                    gameState.winner = (this.team === 'player') ? 'enemy' : 'player';
+                    if (!gameState.gameOver) { // Prevent triggering multiple times
+                        gameState.gameOver = true;
+                        gameState.winner = (this.team === 'player') ? 'enemy' : 'player';
+                    }
                 }
             }
         }
 
-        // --- Unit Class ---
+        // --- Unit Class --- (Modified for pathfinding)
         class Unit {
-            constructor(x, y, color, team) {
-                this.id = Date.now() + Math.random(); // Simple unique ID
+            constructor(x, y, color, team, path) { // Added path parameter
+                this.id = Date.now() + Math.random();
                 this.x = x;
                 this.y = y;
                 this.size = GAME_CONFIG.UNIT_SIZE;
+                this.radius = this.size / 2;
                 this.color = color;
                 this.team = team;
                 this.health = GAME_CONFIG.UNIT_HEALTH;
                 this.maxHealth = GAME_CONFIG.UNIT_HEALTH;
                 this.attack = GAME_CONFIG.UNIT_ATTACK;
-                this.speed = GAME_CONFIG.UNIT_SPEED;
-                this.attackRange = GAME_CONFIG.UNIT_ATTACK_RANGE + this.size / 2; // Range from center
+                this.speed = GAME_CONFIG.UNIT_SPEED * (1 + Math.random() * 0.1 - 0.05); // Slight speed variation
+                this.attackRange = GAME_CONFIG.UNIT_ATTACK_RANGE + this.radius; // Range from center
                 this.attackCooldown = GAME_CONFIG.UNIT_ATTACK_COOLDOWN;
                 this.lastAttackTime = 0;
-                this.target = null; // Can be another unit or the enemy base
+                this.targetUnit = null; // Specific unit target
+                this.targetBase = null; // Base target
                 this.isAlive = true;
+                this.isAttacking = false;
+
+                this.path = path; // Array of {x, y} waypoints
+                this.currentWaypointIndex = 0;
+                this.finalTargetX = (team === 'player') ? gameState.enemyBase.x : gameState.playerBase.x + gameState.playerBase.width; // Edge of base
+                this.finalTargetY = (team === 'player') ? gameState.enemyBase.getCenterY() : gameState.playerBase.getCenterY();
             }
 
             draw(context) {
                  // Draw Unit (circle)
                  context.fillStyle = this.color;
                  context.beginPath();
-                 context.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                 context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                  context.fill();
+                 context.strokeStyle = 'rgba(0,0,0,0.5)';
+                 context.lineWidth = 1;
+                 context.stroke();
+
 
                  // Draw Health Bar above unit
                  const barWidth = this.size * 1.5;
                  const barHeight = 4;
                  const barX = this.x - barWidth / 2;
-                 const barY = this.y - this.size / 2 - barHeight - 3; // Position above the unit
-                 const healthPercent = this.health / this.maxHealth;
+                 const barY = this.y - this.radius - barHeight - 3;
+                 const healthPercent = Math.max(0, this.health / this.maxHealth);
 
-                 context.fillStyle = '#ddd'; // Background
+                 context.fillStyle = '#ddd';
                  context.fillRect(barX, barY, barWidth, barHeight);
-                 context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336'; // Health color
+                 context.fillStyle = (this.team === 'player') ? '#4CAF50' : '#f44336';
                  context.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+
+                 // --- DEBUG: Draw Waypoint Line ---
+                 // if (this.currentWaypointIndex < this.path.length) {
+                 //     const wp = this.path[this.currentWaypointIndex];
+                 //     context.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow line
+                 //     context.lineWidth = 1;
+                 //     context.beginPath();
+                 //     context.moveTo(this.x, this.y);
+                 //     context.lineTo(wp.x, wp.y);
+                 //     context.stroke();
+                 // } else { // Draw line to final target
+                 //     context.strokeStyle = 'rgba(255, 0, 255, 0.5)'; // Magenta line
+                 //      context.lineWidth = 1;
+                 //      context.beginPath();
+                 //      context.moveTo(this.x, this.y);
+                 //      context.lineTo(this.finalTargetX, this.finalTargetY);
+                 //      context.stroke();
+                 // }
+                 // --- End Debug ---
             }
 
             update(deltaTime, enemyUnits, enemyBase) {
                 if (!this.isAlive) return;
 
-                // 1. Find Target
-                this.findTarget(enemyUnits, enemyBase);
+                this.isAttacking = false; // Reset attacking state each frame
 
-                // 2. Attack if target in range and cooldown ready
+                // 1. Find Target Unit
+                this.findTargetUnit(enemyUnits);
+
+                // 2. Attack if target unit in range and cooldown ready
                 const now = Date.now();
-                if (this.target && this.isInAttackRange() && (now - this.lastAttackTime >= this.attackCooldown)) {
-                    this.attackTarget(now);
-                    // Don't move while attacking
-                    return;
+                if (this.targetUnit && this.isUnitInAttackRange() && (now - this.lastAttackTime >= this.attackCooldown)) {
+                    this.attackTargetUnit(now);
+                    this.isAttacking = true;
+                    return; // Don't move while attacking a unit
                 }
 
-                // 3. Move if no target or target out of range
+                // 3. Check if Enemy Base is in range (if no unit target or unit out of range)
+                if (!this.targetUnit && this.isBaseInAttackRange(enemyBase)) {
+                    this.targetBase = enemyBase; // Ensure base is targeted
+                     if (now - this.lastAttackTime >= this.attackCooldown) {
+                         this.attackTargetBase(now);
+                         this.isAttacking = true;
+                         return; // Don't move while attacking base
+                     }
+                     // If cooldown not ready, still don't move if in range
+                     return;
+                } else {
+                     this.targetBase = null; // Not in range or targeting a unit
+                }
+
+
+                // 4. Move (if not attacking)
                 this.move(deltaTime);
-
-                // 4. Check for collision with enemy base if no unit target
-                 if (!this.target || this.target === enemyBase) {
-                    this.checkBaseCollision(enemyBase);
-                }
             }
 
-            findTarget(enemyUnits, enemyBase) {
-                let closestEnemy = null;
-                let minDistanceSq = Infinity; // Use squared distance for efficiency
+            findTargetUnit(enemyUnits) {
+                 // If already has a valid target unit in range, keep it unless it moves too far
+                 if (this.targetUnit && this.targetUnit.isAlive && this.getDistanceSq(this.targetUnit.x, this.targetUnit.y) <= (this.attackRange * 1.5) ** 2) {
+                    return; // Keep current target
+                 }
 
-                // Check enemy units first
+                let closestEnemy = null;
+                let minDistanceSq = (this.attackRange * 2) ** 2; // Only look for enemies within double attack range
+
                 for (const enemy of enemyUnits) {
                     if (!enemy.isAlive) continue;
-                    const dx = enemy.x - this.x;
-                    const dy = enemy.y - this.y;
-                    const distanceSq = dx * dx + dy * dy;
+                    const distSq = this.getDistanceSq(enemy.x, enemy.y);
 
-                    // Target units slightly beyond attack range to anticipate movement
-                    const targetRangeSq = (this.attackRange * 1.5) * (this.attackRange * 1.5);
-
-                    if (distanceSq < minDistanceSq && distanceSq < targetRangeSq) {
-                        minDistanceSq = distanceSq;
+                    if (distSq < minDistanceSq) {
+                        minDistanceSq = distSq;
                         closestEnemy = enemy;
                     }
                 }
+                this.targetUnit = closestEnemy; // Can be null if no enemy is close enough
+            }
 
-                if (closestEnemy) {
-                     this.target = closestEnemy;
-                } else {
-                    // If no units in range, target the base
-                    this.target = enemyBase;
-                }
+            getDistanceSq(targetX, targetY) {
+                const dx = targetX - this.x;
+                const dy = targetY - this.y;
+                return dx * dx + dy * dy;
+            }
+
+             isUnitInAttackRange() {
+                 if (!this.targetUnit) return false;
+                 const distSq = this.getDistanceSq(this.targetUnit.x, this.targetUnit.y);
+                 // Check distance between centers vs sum of radii + attack range margin
+                 const range = this.radius + this.targetUnit.radius + GAME_CONFIG.UNIT_ATTACK_RANGE;
+                 return distSq <= range * range;
+            }
+
+            isBaseInAttackRange(enemyBase) {
+                const baseEdgeX = (this.team === 'player') ? enemyBase.x : enemyBase.x + enemyBase.width;
+                const closestBaseY = Math.max(enemyBase.y, Math.min(this.y, enemyBase.y + enemyBase.height)); // Closest Y on base edge
+
+                 const distSq = this.getDistanceSq(baseEdgeX, closestBaseY);
+                 // Check distance from unit center to closest point on base edge
+                 return distSq <= (this.radius + GAME_CONFIG.UNIT_ATTACK_RANGE) ** 2;
             }
 
 
-            isInAttackRange() {
-                if (!this.target) return false;
-
-                const dx = this.target.x + (this.target instanceof Base ? this.target.width / 2 : 0) - this.x; // Target center for base
-                const dy = this.target.y + (this.target instanceof Base ? this.target.height / 2 : 0) - this.y; // Target center for base
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                 // Adjust range check based on target type
-                 let effectiveRange = this.attackRange;
-                 if (this.target instanceof Base) {
-                     // Need to be close to the base's edge
-                     effectiveRange += (this.team === 'player' ? 0 : this.target.width); // Player attacks left edge, enemy attacks right edge
-                 } else {
-                     // Unit vs Unit - range is center to center
-                     effectiveRange += this.target.size / 2;
-                 }
-
-                return distance <= effectiveRange;
-            }
-
-            attackTarget(currentTime) {
-                if (!this.target || (this.target instanceof Unit && !this.target.isAlive)) {
-                    this.target = null; // Target died before attack landed
+            attackTargetUnit(currentTime) {
+                if (!this.targetUnit || !this.targetUnit.isAlive) {
+                    this.targetUnit = null;
                     return;
                 }
-                this.target.takeDamage(this.attack);
+                this.targetUnit.takeDamage(this.attack);
                 this.lastAttackTime = currentTime;
-                 // Check if target died after attack
-                if (this.target instanceof Unit && this.target.health <= 0) {
-                    this.target.isAlive = false;
-                    this.target = null; // Stop attacking dead unit
+                if (this.targetUnit.health <= 0) {
+                    this.targetUnit.isAlive = false;
+                    this.targetUnit = null; // Clear target
                 }
             }
 
-            move(deltaTime) {
-                // Simple horizontal movement towards the enemy side
-                const direction = (this.team === 'player') ? 1 : -1;
-                this.x += direction * this.speed * (deltaTime / 16.67); // Normalize speed based on 60fps baseline
+             attackTargetBase(currentTime) {
+                if (!this.targetBase || this.targetBase.health <= 0) return;
+                this.targetBase.takeDamage(this.attack);
+                this.lastAttackTime = currentTime;
+                // Base death is handled in Base.takeDamage setting gameState.gameOver
             }
 
-             checkBaseCollision(enemyBase) {
-                 const baseEdgeX = (this.team === 'player') ? enemyBase.x : enemyBase.x + enemyBase.width;
-                 const collision = (this.team === 'player')
-                    ? (this.x + this.size / 2 >= baseEdgeX) // Player unit hits left edge of enemy base
-                    : (this.x - this.size / 2 <= baseEdgeX); // Enemy unit hits right edge of player base
 
-                 if (collision) {
-                     // Stop at the base edge
-                     this.x = (this.team === 'player') ? baseEdgeX - this.size / 2 : baseEdgeX + this.size / 2;
-                     this.target = enemyBase; // Ensure base is targeted
-                 }
-             }
+            move(deltaTime) {
+                let targetX, targetY;
 
+                // Determine current target point (waypoint or final destination)
+                if (this.currentWaypointIndex < this.path.length) {
+                    const waypoint = this.path[this.currentWaypointIndex];
+                    targetX = waypoint.x;
+                    targetY = waypoint.y;
+
+                    // Check if waypoint is reached
+                    const distSq = this.getDistanceSq(targetX, targetY);
+                    if (distSq < GAME_CONFIG.WAYPOINT_REACH_THRESHOLD ** 2) {
+                        this.currentWaypointIndex++;
+                        // Immediately adjust target if we reached the waypoint this frame
+                        if (this.currentWaypointIndex < this.path.length) {
+                            targetX = this.path[this.currentWaypointIndex].x;
+                            targetY = this.path[this.currentWaypointIndex].y;
+                        } else {
+                            // Reached last waypoint, head towards final base target
+                            targetX = this.finalTargetX;
+                            targetY = this.finalTargetY;
+                        }
+                    }
+                } else {
+                    // Heading towards final base target
+                     targetX = this.finalTargetX;
+                     targetY = this.finalTargetY;
+
+                     // Check if approximately at the final target X (edge of base)
+                     // This prevents units overshooting the base edge if Y is different
+                     const dx = targetX - this.x;
+                     if (Math.abs(dx) < this.radius) {
+                          // Close enough to base X edge, stop horizontal movement.
+                          // Vertical adjustment might still happen if needed,
+                          // but primary goal is to attack, handled in update logic.
+                          // We can just return here to stop pathing movement.
+                          return;
+                     }
+                }
+
+                // Calculate direction vector
+                const dx = targetX - this.x;
+                const dy = targetY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 1) return; // Avoid division by zero or tiny movements
+
+                // Normalize vector and apply speed
+                const moveX = (dx / distance) * this.speed * (deltaTime / 16.67); // Normalize speed to ~60fps
+                const moveY = (dy / distance) * this.speed * (deltaTime / 16.67);
+
+                this.x += moveX;
+                this.y += moveY;
+
+            }
 
             takeDamage(amount) {
                 this.health -= amount;
@@ -329,24 +431,100 @@
         }
 
         // --- Game Functions ---
-        function spawnUnit(team) {
+        function definePathsAndObstacles() {
+            gameState.obstacles = [];
+            // Example: Add a central obstacle block
+            const obsWidth = 100;
+            const obsHeight = 150;
+            const obsX = canvas.width / 2 - obsWidth / 2;
+            const obsY = canvas.height / 2 - obsHeight / 2;
+            gameState.obstacles.push(new Obstacle(obsX, obsY, obsWidth, obsHeight));
+
+            // Add side obstacles (optional)
+             gameState.obstacles.push(new Obstacle(canvas.width * 0.2, 10, 50, 80));
+             gameState.obstacles.push(new Obstacle(canvas.width * 0.8 - 50, canvas.height - 90, 50, 80));
+
+
+            // --- Define Waypoints ---
+            // Waypoints are defined relative to the map edges and obstacles
+            const margin = 40; // Margin from edges/obstacles
+            const midX = canvas.width / 2;
+            const midY = canvas.height / 2;
+
+            const playerSpawnX = gameState.playerBase.x + gameState.playerBase.width + 10;
+            const enemySpawnX = gameState.enemyBase.x - 10;
+
+            // Player paths (start near player base, go around obstacles, end near enemy base)
+            gameState.paths.playerTop = [
+                { x: playerSpawnX + 50, y: margin },                      // Initial move up
+                { x: midX - obsWidth/2 - margin, y: margin },             // Before top-left corner of central obstacle
+                { x: midX + obsWidth/2 + margin, y: margin },             // After top-right corner of central obstacle
+                { x: enemySpawnX - 50, y: margin },                       // Approach enemy base from top
+                { x: enemySpawnX, y: gameState.enemyBase.getCenterY() }   // Final approach adjustment
+            ];
+            gameState.paths.playerBottom = [
+                 { x: playerSpawnX + 50, y: canvas.height - margin },       // Initial move down
+                 { x: midX - obsWidth/2 - margin, y: canvas.height - margin}, // Before bottom-left corner
+                 { x: midX + obsWidth/2 + margin, y: canvas.height - margin}, // After bottom-right corner
+                 { x: enemySpawnX - 50, y: canvas.height - margin },       // Approach enemy base from bottom
+                 { x: enemySpawnX, y: gameState.enemyBase.getCenterY() }    // Final approach adjustment
+            ];
+
+            // Enemy paths (mirror of player paths)
+            gameState.paths.enemyTop = [
+                 { x: enemySpawnX - 50, y: margin },                      // Initial move up (enemy side)
+                 { x: midX + obsWidth/2 + margin, y: margin },             // Before top-right corner
+                 { x: midX - obsWidth/2 - margin, y: margin },             // After top-left corner
+                 { x: playerSpawnX + 50, y: margin },                       // Approach player base from top
+                 { x: playerSpawnX, y: gameState.playerBase.getCenterY() }   // Final approach adjustment
+            ];
+             gameState.paths.enemyBottom = [
+                 { x: enemySpawnX - 50, y: canvas.height - margin },       // Initial move down
+                 { x: midX + obsWidth/2 + margin, y: canvas.height - margin}, // Before bottom-right corner
+                 { x: midX - obsWidth/2 - margin, y: canvas.height - margin}, // After bottom-left corner
+                 { x: playerSpawnX + 50, y: canvas.height - margin },       // Approach player base from bottom
+                 { x: playerSpawnX, y: gameState.playerBase.getCenterY() }    // Final approach adjustment
+            ];
+        }
+
+
+        function spawnUnit(team, isManual = false) {
+            const base = (team === 'player') ? gameState.playerBase : gameState.enemyBase;
             const color = (team === 'player') ? GAME_CONFIG.PLAYER_COLOR : GAME_CONFIG.ENEMY_COLOR;
-            const spawnY = canvas.height / 2 + (Math.random() * 40 - 20); // Randomize Y slightly
+
+            // Spawn slightly randomized within the base height, just outside the base width
+            const spawnOffset = 10 + GAME_CONFIG.UNIT_SIZE / 2;
+            const spawnX = (team === 'player') ? base.x + base.width + spawnOffset : base.x - spawnOffset;
+            const spawnY = base.y + base.height * 0.2 + Math.random() * base.height * 0.6; // Spawn vertically centered +/- 30%
+
+            let unitToSpawn = null;
+
+            // Determine which path to take (simple logic: top half -> top path, bottom half -> bottom path)
+            let chosenPath;
+            if (spawnY < canvas.height / 2) {
+                chosenPath = (team === 'player') ? gameState.paths.playerTop : gameState.paths.enemyTop;
+            } else {
+                chosenPath = (team === 'player') ? gameState.paths.playerBottom : gameState.paths.enemyBottom;
+            }
 
             if (team === 'player') {
-                // Check resources for manual spawn
-                if (gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST) {
-                    gameState.playerResources -= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
-                    const unit = new Unit(gameState.playerBase.x + gameState.playerBase.width + 5, spawnY, color, team);
-                    gameState.playerUnits.push(unit);
-                    updateStatus(); // Update resource display
-                } else {
-                     console.log("Not enough resources to spawn unit!");
-                     // Maybe flash the button or show a message
+                if (isManual) {
+                    if (gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST) {
+                        gameState.playerResources -= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
+                        unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
+                        updateStatus();
+                    } else {
+                         // console.log("Not enough resources!"); // Optional feedback
+                         return; // Don't spawn if not enough resources
+                    }
+                } else { // Auto-spawn player (free)
+                     unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
                 }
-            } else { // Enemy spawn (no cost check needed)
-                const unit = new Unit(gameState.enemyBase.x - 5 - GAME_CONFIG.UNIT_SIZE, spawnY, color, team);
-                gameState.enemyUnits.push(unit);
+                if (unitToSpawn) gameState.playerUnits.push(unitToSpawn);
+
+            } else { // Enemy spawn (always auto, always free for AI)
+                unitToSpawn = new Unit(spawnX, spawnY, color, team, chosenPath);
+                gameState.enemyUnits.push(unitToSpawn);
             }
         }
 
@@ -355,17 +533,16 @@
 
             if (gameState.lastUpdateTime === 0) gameState.lastUpdateTime = currentTime;
             gameState.deltaTime = currentTime - gameState.lastUpdateTime;
+            if (gameState.deltaTime > 50) gameState.deltaTime = 16.67; // Cap delta time on lag/tab switch
             gameState.lastUpdateTime = currentTime;
 
             // --- Auto Spawning ---
             if (currentTime - gameState.lastPlayerAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_PLAYER) {
-                 // Auto-spawn player doesn't cost resources in this simple version
-                 const unit = new Unit(gameState.playerBase.x + gameState.playerBase.width + 5, canvas.height / 2 + (Math.random() * 40 - 20), GAME_CONFIG.PLAYER_COLOR, 'player');
-                 gameState.playerUnits.push(unit);
+                 spawnUnit('player', false); // Auto spawn is not manual
                  gameState.lastPlayerAutoSpawnTime = currentTime;
             }
             if (currentTime - gameState.lastEnemyAutoSpawnTime > GAME_CONFIG.AUTO_SPAWN_INTERVAL_ENEMY) {
-                spawnUnit('enemy'); // Use the function which has no cost check for enemy
+                spawnUnit('enemy', false); // Enemy always auto-spawns
                 gameState.lastEnemyAutoSpawnTime = currentTime;
             }
 
@@ -373,13 +550,10 @@
             if (currentTime - gameState.lastResourceGainTime > GAME_CONFIG.RESOURCE_GAIN_INTERVAL) {
                 gameState.playerResources += GAME_CONFIG.RESOURCE_GAIN_AMOUNT;
                 gameState.lastResourceGainTime = currentTime;
-                updateStatus(); // Update display
+                updateStatus();
             }
 
-
             // --- Update Units ---
-            // Pass copies of arrays to avoid modification issues during iteration if needed,
-            // though direct modification is okay if careful. Pass enemyBase/playerBase too.
             gameState.playerUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.enemyUnits, gameState.enemyBase));
             gameState.enemyUnits.forEach(unit => unit.update(gameState.deltaTime, gameState.playerUnits, gameState.playerBase));
 
@@ -387,103 +561,109 @@
             gameState.playerUnits = gameState.playerUnits.filter(unit => unit.isAlive);
             gameState.enemyUnits = gameState.enemyUnits.filter(unit => unit.isAlive);
 
-            // --- Check Game Over ---
-            // Already handled within Base.takeDamage, but could double check here
+             // --- Check Game Over --- (Handled by Base.takeDamage now)
              if (gameState.gameOver) {
-                handleGameOver();
-            }
+                 handleGameOver();
+             }
         }
 
         function draw() {
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw background (optional, canvas has bg color via CSS)
-            // ctx.fillStyle = '#e0ffe0';
-            // ctx.fillRect(0, 0, canvas.width, canvas.height);
+             // Draw Obstacles first (background elements)
+            gameState.obstacles.forEach(obs => obs.draw(ctx));
 
             // Draw Bases
             gameState.playerBase.draw(ctx);
             gameState.enemyBase.draw(ctx);
 
-            // Draw Units
-            gameState.playerUnits.forEach(unit => unit.draw(ctx));
+            // Draw Units (draw enemies first so player units appear on top in clashes)
             gameState.enemyUnits.forEach(unit => unit.draw(ctx));
+            gameState.playerUnits.forEach(unit => unit.draw(ctx));
+
 
             // Draw Game Over Text (if applicable)
             if (gameState.gameOver) {
+                ctx.save(); // Save context state
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
+                ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
                 ctx.fillStyle = '#fff';
-                ctx.font = '30px Arial';
+                ctx.font = '40px Arial';
                 ctx.textAlign = 'center';
                 const message = gameState.winner === 'player' ? 'Player Wins!' : 'Enemy Wins!';
-                ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 10);
-                ctx.textAlign = 'left'; // Reset alignment
+                ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 15);
+                ctx.restore(); // Restore context state (like text align)
             }
         }
 
         function gameLoop(currentTime) {
             update(currentTime);
             draw();
-
-            // Keep requesting frames unless game is over
-            // if (!gameState.gameOver) { // Continue drawing even if game over to show final state
-                requestAnimationFrame(gameLoop);
-            // }
+            requestAnimationFrame(gameLoop); // Loop continues even after game over to show final state + message
         }
 
         function updateStatus() {
-            statusDiv.textContent = `Resources: ${gameState.playerResources} | Player Units: ${gameState.playerUnits.length} | Enemy Units: ${gameState.enemyUnits.length}`;
-            spawnPlayerUnitBtn.disabled = gameState.playerResources < GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST || gameState.gameOver;
+            statusDiv.textContent = `Resources: ${gameState.playerResources} | Player: ${gameState.playerUnits.length} | Enemy: ${gameState.enemyUnits.length}`;
+            const canAfford = gameState.playerResources >= GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST;
+            spawnPlayerUnitBtn.disabled = !canAfford || gameState.gameOver;
             spawnPlayerUnitBtn.textContent = `Spawn Unit (Cost: ${GAME_CONFIG.PLAYER_MANUAL_SPAWN_COST})`;
+            // Optionally style button differently if cannot afford
+            spawnPlayerUnitBtn.style.backgroundColor = (!canAfford && !gameState.gameOver) ? '#ff9800' : (gameState.gameOver ? '#cccccc' : '#4CAF50');
         }
 
          function handleGameOver() {
             spawnPlayerUnitBtn.disabled = true;
-            restartBtn.style.display = 'inline-block'; // Show restart button
-            updateStatus(); // Update status one last time maybe?
+            restartBtn.style.display = 'inline-block';
+            updateStatus(); // Final status update
          }
 
         function resetGame() {
-             gameState = {
-                playerBase: new Base(
-                    10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
-                    GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
-                    GAME_CONFIG.PLAYER_COLOR, 'player'
-                ),
-                enemyBase: new Base(
-                    canvas.width - GAME_CONFIG.BASE_WIDTH - 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
-                    GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
-                    GAME_CONFIG.ENEMY_COLOR, 'enemy'
-                ),
-                playerUnits: [],
-                enemyUnits: [],
-                playerResources: GAME_CONFIG.STARTING_RESOURCES,
-                lastPlayerAutoSpawnTime: Date.now(), // Reset timers
-                lastEnemyAutoSpawnTime: Date.now(),
-                lastResourceGainTime: Date.now(),
-                gameOver: false,
-                winner: null,
-                lastUpdateTime: 0,
-                deltaTime: 0,
-            };
-            restartBtn.style.display = 'none'; // Hide restart button
-            spawnPlayerUnitBtn.disabled = false; // Re-enable spawn button
-            updateStatus();
-            // Start the loop again if it was stopped (it wasn't in this impl, but good practice)
-            // requestAnimationFrame(gameLoop);
+             // Create bases first, as paths depend on their positions
+             gameState.playerBase = new Base(
+                 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
+                 GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
+                 GAME_CONFIG.PLAYER_COLOR, 'player'
+             );
+             gameState.enemyBase = new Base(
+                 canvas.width - GAME_CONFIG.BASE_WIDTH - 10, canvas.height / 2 - GAME_CONFIG.BASE_HEIGHT / 2,
+                 GAME_CONFIG.BASE_WIDTH, GAME_CONFIG.BASE_HEIGHT,
+                 GAME_CONFIG.ENEMY_COLOR, 'enemy'
+             );
+
+             // Define obstacles and paths based on bases/canvas size
+             definePathsAndObstacles();
+
+             // Reset other state variables
+             gameState.playerUnits = [];
+             gameState.enemyUnits = [];
+             gameState.playerResources = GAME_CONFIG.STARTING_RESOURCES;
+             const now = Date.now(); // Use consistent time for resetting timers
+             gameState.lastPlayerAutoSpawnTime = now;
+             gameState.lastEnemyAutoSpawnTime = now;
+             gameState.lastResourceGainTime = now;
+             gameState.gameOver = false;
+             gameState.winner = null;
+             gameState.lastUpdateTime = 0; // Reset last update time for delta calculation
+             gameState.deltaTime = 0;
+
+             // Reset UI
+             restartBtn.style.display = 'none';
+             spawnPlayerUnitBtn.disabled = false;
+             updateStatus(); // Initial status update
+
+             // If the game loop was stopped, restart it (it wasn't, but good practice)
+             // requestAnimationFrame(gameLoop);
         }
 
 
         function init() {
-            // Setup initial game state
-            resetGame(); // Use resetGame for initial setup too
+            resetGame(); // Use resetGame for initial setup
 
-            // Add event listeners
+            // Event listeners
             spawnPlayerUnitBtn.addEventListener('click', () => {
                 if (!gameState.gameOver) {
-                    spawnUnit('player'); // Function now handles cost check
+                    spawnUnit('player', true); // Manual spawn
                 }
             });
             restartBtn.addEventListener('click', resetGame);
