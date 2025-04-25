@@ -2,140 +2,291 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Make it viewport-fit=cover for notch/dynamic island areas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>WebCraftorApps Zoo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* iPhone-like home button */
+        html {
+            scroll-behavior: smooth; /* Smooth scrolling */
+        }
+        body {
+            /* Gradient background */
+            background: linear-gradient(160deg, #2a3a4a 0%, #1a202c 100%);
+            color: #e2e8f0; /* Light text */
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            /* Prevent text selection */
+            user-select: none;
+            -webkit-user-select: none;
+            /* Allow padding for status bar and home button */
+            padding-top: env(safe-area-inset-top, 1.5rem); /* Adjust for notch */
+            padding-bottom: env(safe-area-inset-bottom, 5rem); /* Adjust for home indicator/button */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Status Bar Styling */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: env(safe-area-inset-left, 0); /* Respect safe area */
+            right: env(safe-area-inset-right, 0); /* Respect safe area */
+            height: env(safe-area-inset-top, 1.5rem); /* Adjust height dynamically */
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem; /* Add horizontal padding */
+            padding-top: env(safe-area-inset-top); /* Add padding only at the top within the bar */
+            box-sizing: content-box; /* Ensure padding doesn't increase height */
+            font-size: 0.8rem;
+            color: #f7fafc; /* Lighter text for status bar */
+            z-index: 100;
+            line-height: 1; /* Ensure text fits */
+        }
+        .status-bar > * {
+             min-height: 1.5rem; /* Ensure content doesn't collapse vertically */
+             display: flex;
+             align-items: center;
+        }
+
+        /* App Grid Styling */
+        .app-grid {
+            padding: 1.5rem 1rem; /* Padding below status bar */
+            display: grid;
+            /* More realistic app icon grid */
+            grid-template-columns: repeat(4, 1fr); /* Default 4 columns for mobile */
+            gap: 1.5rem 1rem; /* Adjust gap */
+            max-width: 900px; /* Max width for larger screens */
+            margin: 0 auto; /* Center the grid */
+        }
+        @media (min-width: 640px) { /* sm */
+            .app-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+        @media (min-width: 768px) { /* md */
+            .app-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        @media (min-width: 1024px) { /* lg */
+            .app-grid { grid-template-columns: repeat(7, 1fr); }
+        }
+
+        /* App Card Styling */
+        .app-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: #f7fafc; /* White text for app names */
+            transition: transform 0.1s ease-out;
+            touch-action: manipulation; /* Improve touch interaction */
+        }
+        .app-card:active {
+            transform: scale(0.95); /* Scale down on tap */
+        }
+        .app-icon-wrapper {
+            width: 60px; /* Standard icon size */
+            height: 60px;
+            margin-bottom: 0.5rem;
+            position: relative; /* For potential badges or effects */
+        }
+        .app-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 22.5%; /* iOS squircle-like radius */
+            background-color: #4a5568; /* Placeholder background */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex; /* Center placeholder text/icon */
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Placeholder icon size */
+        }
+        .app-name {
+            font-size: 0.75rem; /* Smaller font size */
+            line-height: 1.2;
+            /* Prevent long names from breaking layout */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        /* Home Button Styling */
         .home-button {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.8) 100%);
-            border: 2px solid rgba(255,255,255,0.3);
-            z-index: 1000;
-            display: none;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(env(safe-area-inset-bottom, 0) + 50px); /* Height + safe area */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align button to bottom within the area */
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Padding above safe area */
+            pointer-events: none; /* Allow clicks through the container */
+            z-index: 100;
         }
-        @media (max-width: 768px) {
-            .home-button { display: block; }
-            body { padding-bottom: 80px; }
+        .home-button-inner {
+            width: 134px; /* iOS home indicator width */
+            height: 5px; /* iOS home indicator height */
+            border-radius: 2.5px;
+            background-color: rgba(255, 255, 255, 0.4); /* Semi-transparent white */
+            pointer-events: auto; /* Make the button clickable */
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
-        /* Disable text selection for better touch experience */
-        body { user-select: none; -webkit-user-select: none; }
-        /* Smooth scrolling for touch */
-        html { scroll-behavior: smooth; }
+        .home-button-inner:active {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Hide home bar on desktop */
+         @media (min-width: 768px) { /* md */
+            .home-button { display: none; }
+            body { padding-bottom: 1rem; } /* Reset bottom padding */
+        }
+
+        /* Title Animation */
+        .title-animation {
+            animation: titleGlow 2s ease-in-out infinite alternate;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(59, 130, 246, 0.7);
+        }
+        @keyframes titleGlow {
+            from { opacity: 0.8; }
+            to { opacity: 1; text-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(59, 130, 246, 0.9); }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-black text-white min-h-screen flex flex-col items-center pt-12 pb-20 overflow-x-hidden">
+<body>
     <!-- Status Bar -->
-    <div class="fixed top-0 left-0 right-0 h-8 bg-black/80 backdrop-blur-sm flex justify-between px-4 items-center text-sm z-50">
-        <span id="browser-indicator">Safari</span>
-        <span id="time-indicator"></span>
+    <div class="status-bar">
+        <span id="time-indicator">9:41 AM</span>
+        <!-- Add more status icons like Wifi, Battery if desired -->
+        <span id="browser-indicator">Device</span>
     </div>
 
-    <h1 class="text-3xl md:text-4xl font-bold mb-8 text-cyan-300 animate-bounce-slow">
+    <h1 class="text-3xl md:text-4xl font-bold my-6 md:my-8 text-center title-animation">
         WebCraftorApps
     </h1>
 
-    <div id="app-container" class="w-full px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 max-w-2xl md:max-w-4xl">
+    <div id="app-container" class="app-grid">
         <!-- Apps will be dynamically inserted here -->
     </div>
 
-    <div class="home-button" onclick="scrollToTop()"></div>
+    <!-- Home Button/Indicator -->
+    <div class="home-button">
+        <div class="home-button-inner" onclick="scrollToTop()"></div>
+    </div>
 
     <script>
+        // Define all apps based on the folder structure
         const apps = [
-            { name: "Chess", path: "chess_game/index.html", icon: "chess_game/icon.png", desc: "Classic strategy game" },
-            { name: "Projects", path: "todo_app/index.html", icon: "todo_app/icon.png", desc: "Task management" },
-            { name: "Todo", path: "simple_todo_app/index.html", icon: "simple_todo_app/icon.png", desc: "Simple tasks" },
-            { name: "Weight", path: "weight_tracking_app/index.html", icon: "weight_tracking_app/icon.png", desc: "Track weight" },
-            { name: "Snake", path: "snake_game/index.html", icon: "snake_game/icon.png", desc: "Retro arcade" },
-            { name: "TF Video", path: "tensorflow_js_segmentation/index.html", icon: "tensorflow_js_segmentation/icon.png", desc: "Video processing", isDownload: true },
-            { name: "Baby", path: "baby_caring_app/index.html", icon: "baby_caring_app/icon.png", desc: "Infant care" },
-            { name: "Level", path: "level_app/index.html", icon: "level_app/icon.png", desc: "Mobile leveling" },
-            { name: "LoLLMS", path: "lollms_chat/index.html", icon: "lollms_chat/icon.png", desc: "AI chat UI" },
-            { name: "PillPal", path: "PillPal/index.html", icon: "PillPal/icon.png", desc: "Meds tracker" },
-            { name: "Watcher", path: "Weight_Watcher_App/index.html", icon: "Weight_Watcher_App/icon.png", desc: "Weight & diet" }
+            { name: "Audio Mix", path: "Audio_mixing_app/index.html", icon: "Audio_mixing_app/icon.png", desc: "Mix audio tracks", color: "#4CAF50" },
+            { name: "Baby Care", path: "baby_caring_app/index.html", icon: "baby_caring_app/icon.png", desc: "Infant tracker", color: "#e0f7fa"},
+            { name: "Cards", path: "cards_app/index.html", icon: "cards_app/icon.png", desc: "Loyalty cards", color: "#FFC107"},
+            { name: "Chess", path: "chess_game/index.html", icon: "chess_game/icon.png", desc: "Classic strategy", color: "#b58863"},
+            { name: "Hydration", path: "hydration_watcher/index.html", icon: "hydration_watcher/icon.png", desc: "Water intake", color: "#60A5FA" },
+            { name: "Image Crop", path: "images_cropper/index.html", icon: "images_cropper/icon.png", desc: "Crop photos", color: "#3b82f6" },
+            { name: "Level Tool", path: "level_app/index.html", icon: "level_app/icon.png", desc: "Mobile level", color: "#28a745" },
+            { name: "LoLLMS Chat", path: "lollms_chat/index.html", icon: "lollms_chat/icon.png", desc: "AI chat UI", color: "#4b5563" },
+            { name: "PillPal", path: "PillPal/index.html", icon: "PillPal/icon.png", desc: "Meds reminder", color: "#60a5fa" },
+            { name: "Simple Todo", path: "simple_todo_app/index.html", icon: "simple_todo_app/icon.png", desc: "Quick tasks", color: "#10b981"},
+            { name: "Snake", path: "snake_game/index.html", icon: "snake_game/icon.png", desc: "Retro arcade", color: "#4caf50" },
+            { name: "Vid Segment", path: "tensorflow_js_segmentation/index.html", icon: "tensorflow_js_segmentation/icon.png", desc: "TFjs segmentation", color: "#1f1f1f", isDownload: false }, // Assuming it's usable online
+            { name: "Todo Pro", path: "todo_app/index.html", icon: "todo_app/icon.png", desc: "Project tasks", color: "#3b82f6" },
+            { name: "Tower War", path: "tower_war/index.html", icon: "tower_war/icon.png", desc: "Strategy game", color: "#3498db" },
+            { name: "Weight Track", path: "weight_tracking_app/index.html", icon: "weight_tracking_app/icon.png", desc: "Track weight", color: "#ff69b4"},
+            { name: "Weight Watch", path: "Weight_Watcher_App/index.html", icon: "Weight_Watcher_App/icon.png", desc: "Weight & diet", color: "#60A5FA" }
         ];
 
+        // Placeholder Icon SVG Data URI (simple square with initial)
+        function createPlaceholderIcon(initial, color = '#555') {
+            const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22.5' fill='${color}'/><text x='50' y='50' font-size='50' font-family='sans-serif' fill='%23fff' text-anchor='middle' dy='.35em'>${initial}</text></svg>`;
+            return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+        }
+
         function createAppCard(app) {
-            const card = document.createElement('div');
-            card.className = 'group flex flex-col items-center p-2 rounded-2xl bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-300 touch-action-manipulation';
+            const card = document.createElement('a'); // Use anchor tag for navigation
+            card.href = app.isDownload ? 'javascript:void(0)' : app.path;
+            if (app.isDownload) {
+                card.onclick = () => downloadFile(app.path);
+            }
+            card.className = 'app-card';
+
+            const placeholder = createPlaceholderIcon(app.name.charAt(0), app.color || '#555');
+
             card.innerHTML = `
-                <div class="relative w-20 h-20 md:w-24 md:h-24 mb-2">
-                    <img src="${app.icon}" alt="${app.name}" class="w-full h-full object-cover rounded-xl shadow-md group-hover:shadow-lg transition-shadow duration-300">
-                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-xl">
-                        <span class="text-xs text-white text-center px-1">${app.desc}</span>
-                    </div>
+                <div class="app-icon-wrapper">
+                    <img src="${app.icon}" alt="${app.name}" class="app-icon"
+                         onerror="this.src='${placeholder}'; this.onerror=null;">
                 </div>
-                <a href="${app.isDownload ? 'javascript:void(0)' : app.path}" 
-                   onclick="${app.isDownload ? `downloadFile('${app.path}')` : ''}"
-                   class="text-cyan-300 text-sm md:text-base font-medium truncate w-full text-center group-hover:text-cyan-200 transition-colors duration-300">
-                    ${app.name}${app.isDownload ? '*' : ''}
-                </a>
+                <span class="app-name">${app.name}${app.isDownload ? '*' : ''}</span>
             `;
-            card.addEventListener('touchstart', () => card.classList.add('scale-95'), { passive: true });
-            card.addEventListener('touchend', () => card.classList.remove('scale-95'), { passive: true });
+            // Tooltip (optional, better for desktop)
+            card.title = app.desc;
+
             return card;
         }
 
         function renderApps() {
             const container = document.getElementById('app-container');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear existing
+            // Sort apps alphabetically by name for consistency
+            apps.sort((a, b) => a.name.localeCompare(b.name));
             apps.forEach(app => container.appendChild(createAppCard(app)));
         }
 
         function downloadFile(filePath) {
             const link = document.createElement('a');
             link.href = filePath;
-            link.download = filePath.split('/').pop();
+            link.download = filePath.split('/').pop(); // Extract filename
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            alert(`Attempting to download: ${link.download}.\nNote: Direct downloads might be blocked by browser security for local files.`);
         }
 
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Browser detection and adjustments
+        // Device/OS detection for status bar
         const userAgent = navigator.userAgent.toLowerCase();
+        const platform = navigator.platform.toLowerCase();
         const browserIndicator = document.getElementById('browser-indicator');
-        if (userAgent.includes('firefox')) {
-            browserIndicator.textContent = 'Firefox';
-            document.body.style.background = 'linear-gradient(to bottom, #1a1a1a, #000)';
-        } else if (userAgent.includes('chrome')) {
-            browserIndicator.textContent = 'Chrome';
-        } else if (userAgent.includes('safari')) {
-            browserIndicator.textContent = 'Safari';
-            document.body.classList.add('bg-gray-900');
-        }
+        const body = document.body;
+
+        let os = 'OS';
+        if (platform.includes('mac') || platform.includes('iphone') || platform.includes('ipad')) os = 'Apple';
+        else if (platform.includes('win')) os = 'Windows';
+        else if (platform.includes('linux')) os = 'Linux';
+        else if (userAgent.includes('android')) os = 'Android';
+
+        let browser = 'Browser';
+        if (userAgent.includes('firefox')) browser = 'Firefox';
+        else if (userAgent.includes('edg')) browser = 'Edge'; // Edge before Chrome
+        else if (userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Chrome';
+        else if (userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Safari';
+
+
+        browserIndicator.textContent = `${os} / ${browser}`;
+        // Add body classes if needed for more specific styling
+        // if (os === 'Apple') body.classList.add('os-apple');
+        // if (browser === 'Safari') body.classList.add('browser-safari');
+
 
         // Time display
         function updateTime() {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            // More iOS-like time format
+            const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
             document.getElementById('time-indicator').textContent = time;
         }
-        setInterval(updateTime, 1000);
+        setInterval(updateTime, 1000 * 60); // Update every minute
         updateTime();
 
         // Initial render
         renderApps();
 
-        // Custom animations
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'bounce-slow': 'bounce 3s infinite'
-                    }
-                }
-            }
-        };
     </script>
 </body>
 </html>
