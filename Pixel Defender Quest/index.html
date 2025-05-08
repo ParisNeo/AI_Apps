@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pixel Defender Quest - Mobile Touch</title>
+    <title>Pixel Defender Quest - Adaptive</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -12,7 +12,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevent body scrollbars */
+            overflow: hidden; 
             background-color: #2c3e50;
             color: #ecf0f1;
             font-family: 'Press Start 2P', cursive;
@@ -29,12 +29,14 @@
 
         .main-title {
             color: #f1c40f;
-            text-shadow: 2px 2px #e74c3c; /* Adjusted shadow for smaller screens */
+            text-shadow: 2px 2px #e74c3c; 
             margin-bottom: 10px;
-            font-size: 1.5em; /* Responsive font size */
+            font-size: clamp(1em, 4vw, 1.8em); /* Responsive font size */
             text-align: center;
             width: 100%;
-            flex-shrink: 0; /* Prevent title from shrinking too much */
+            flex-shrink: 0; 
+            z-index: 10; 
+            position: relative;
         }
 
         .screen {
@@ -42,20 +44,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 95vw; /* Use viewport width */
+            width: 95vw; 
             max-width: 800px; 
-            padding: 10px; /* Reduced padding for smaller screens */
+            padding: 10px; 
             box-sizing: border-box;
             background-color: rgba(44, 62, 80, 0.95); 
-            border: 3px solid #bdc3c7; /* Thinner border */
-            box-shadow: 0 0 15px rgba(0,0,0,0.5); /* Reduced shadow */
+            border: 3px solid #bdc3c7; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5); 
             text-align: center;
             position: fixed; 
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             overflow-y: auto; 
-            max-height: 80vh; /* Max height considering title */
+            max-height: 85vh; 
             z-index: 100; 
         }
         .screen.active {
@@ -63,48 +65,54 @@
             z-index: 200; 
         }
 
-        #game-ui-outer-container { /* New wrapper for scaling the game area */
+        /* Special container for the game screen content that needs scaling */
+        #game-ui-outer-container {
             width: 100%;
-            display: flex;
+            height: calc(100% - 50px); /* Adjust height considering title */
+            display: none; /* Hidden by default, activated via JS */
             justify-content: center;
             align-items: center;
-            flex-grow: 1; /* Allow it to take available space */
+            position: fixed; /* Take up viewport */
+            top: 40px; /* Below title */
+            left: 0;
+            z-index: 150; /* Below active menus but above body */
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        #game-ui-outer-container.active {
+             display: flex;
         }
 
         #game-ui-container {
-            /* Max width determined by content, scaling will handle fit */
-            padding: 0; /* Padding handled by outer elements if needed */
-            border: none; /* Border handled by screen */
-            box-shadow: none; /* Shadow handled by screen */
-            position: relative; /* For scaling transform origin */
-            transform-origin: center center; /* For scaling */
-            background-color: transparent; /* Let screen background show */
-            max-width: initial; /* Override previous max-width */
-            max-height: initial;
-            overflow: visible; /* Allow scaled content to be seen */
+            position: relative; 
+            transform-origin: center center; 
+            background-color: transparent;
+            width: auto; 
+            height: auto; 
         }
-
 
         #game-area { 
             display: flex; 
-            gap: 10px;  /* Reduced gap */
+            flex-direction: row; 
+            gap: 10px;  
             align-items: flex-start; 
         }
         canvas {
-            border: 2px solid #ecf0f1; /* Thinner border */
+            border: 2px solid #ecf0f1; 
             background-color: #76C7AF; 
             cursor: crosshair;
             image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;
-            touch-action: none; /* Prevent default touch actions like scroll/zoom */
-            display: block; /* Remove extra space below canvas */
+            touch-action: none; 
+            display: block; 
+            flex-shrink: 0; 
         }
         #controls {
             display: flex; flex-direction: column; gap: 8px; padding: 8px;
             background-color: #2c3e50; border: 1px solid #7f8c8d;
-            min-width: 180px; /* Slightly reduced min-width */
-            max-height: calc(10 * 40px + 4px); /* Adjust if TILE_SIZE changes */
+            min-width: 180px; 
+            max-height: calc(10 * 40px + 4px); /* TILE_SIZE based */
             overflow-y: auto;
-            flex-shrink: 0; /* Prevent controls from shrinking too much */
+            flex-shrink: 0; 
         }
         
         .control-group { margin-bottom:8px; }
@@ -115,12 +123,12 @@
 
         button, .menu-button, .profile-button {
             font-family: 'Press Start 2P', cursive; background-color: #3498db; color: white;
-            border: 2px solid #2980b9; padding: 12px 15px; /* Increased padding for touch */
-            cursor: pointer; text-transform: uppercase; font-size: 0.75em; 
+            border: 2px solid #2980b9; padding: 12px 15px; cursor: pointer;
+            text-transform: uppercase; font-size: 0.75em; 
             transition: background-color 0.2s, transform 0.1s;
             display: block; width: 100%; max-width: 260px; 
             margin: 5px auto; box-sizing: border-box;
-            touch-action: manipulation; /* Improve touch responsiveness */
+            touch-action: manipulation; 
         }
         button:hover, .menu-button:hover, .profile-button:hover { background-color: #2980b9; }
         button:active, .menu-button:active, .profile-button:active { background-color: #1f6390; transform: scale(0.97); }
@@ -144,7 +152,7 @@
         .info-bar span { color: #f1c40f; }
 
         .screen h2 { font-size: 1.2em; color: #f1c40f; margin-bottom: 10px; }
-        .screen p, .screen li { font-size: 0.7em; line-height: 1.5; text-align: left; margin-bottom: 6px; max-width: 90%; } /* Wider content */
+        .screen p, .screen li { font-size: 0.7em; line-height: 1.5; text-align: left; margin-bottom: 6px; max-width: 90%; } 
         .screen ul { padding-left: 15px; }
 
         input[type="text"] {
@@ -169,32 +177,25 @@
         #level-cleared-screen h2 { font-size: 1.4em; color: #2ecc71; }
         #level-cleared-screen p { text-align: center; font-size: 0.9em; }
 
-        /* Media Query for smaller screens (smartphones) */
-        @media (max-width: 700px) { /* Adjust breakpoint as needed */
-            .main-title { font-size: 1.2em; margin-bottom: 8px; }
-            .screen { padding: 8px; max-height: 90vh; }
-            .screen h2 { font-size: 1.1em; margin-bottom: 8px; }
-            .screen p, .screen li { font-size: 0.65em; }
-            button, .menu-button, .profile-button { font-size: 0.7em; padding: 10px 12px; }
-            input[type="text"] { font-size: 0.7em; padding: 8px;}
-
+        /* --- Layout Adaptation Media Query --- */
+        @media (max-aspect-ratio: 1/1) { /* Portrait or Square */
             #game-area {
-                flex-direction: column; /* Stack canvas and controls */
-                align-items: center; /* Center them when stacked */
-                width: 100%;
+                flex-direction: column; 
+                align-items: center; 
+                width: auto; 
             }
             #controls {
-                min-width: 90%; /* Controls take more width */
-                max-height: 150px; /* Limit height when stacked */
-                margin-top: 10px;
+                min-width: 85%; 
+                max-width: calc(15 * 40px); 
+                max-height: 18vh; 
+                margin-top: 8px;
             }
-             .info-bar { font-size: 0.7em;}
-             .control-group h3 {font-size: 0.75em;}
-             button.tower-button { font-size: 0.65em; padding: 6px 8px;}
         }
-         @media (max-height: 450px) { /* For very short screens in landscape */
+         @media (max-height: 450px) and (min-aspect-ratio: 1/1) { /* Short Landscape */
             .main-title { font-size: 1em; margin-bottom: 5px; }
-            #controls { max-height: 120px; }
+            #controls { max-height: calc(10 * 40px * 0.8); } 
+            button, .menu-button, .profile-button { padding: 8px 10px; font-size: 0.65em;}
+            .info-bar { font-size: 0.7em;}
         }
 
     </style>
@@ -202,24 +203,18 @@
 <body>
     <h1 class="main-title">Pixel Defender Quest</h1>
 
-    <!-- Profile Screen -->
-    <div id="profile-screen" class="screen">
-        <h2>Player Profiles</h2>
-        <div id="profile-list"><h4>Select Profile:</h4><ul></ul></div>
-        <div id="newProfileArea"><p>Or Create New (3-8 Chars):</p><input type="text" id="newProfileNameInput" maxlength="8" minlength="3" placeholder="PROFILE NAME"><button id="createProfileBtn" class="menu-button">Create & Select</button></div>
-    </div>
-    
-    <!-- Main Menu Screen -->
-    <div id="main-menu" class="screen">
-        <h2>Main Menu</h2><p id="activeProfileDisplay" style="font-size:0.7em; margin-bottom:10px; color:#1abc9c;">No active profile</p>
-        <button id="playGameBtn" class="menu-button">Play</button> <button id="continueGameBtn" class="menu-button" style="display:none;">Continue Game</button>
-        <button id="startNewGameForProfileBtn" class="menu-button" style="display:none;">Start New Game</button><button id="changeProfileBtn" class="menu-button">Change Profile</button>
-        <button id="viewHighScoresBtn" class="menu-button">High Scores (Profile)</button><button id="helpBtn" class="menu-button">Help</button><button id="creditsBtn" class="menu-button">Credits</button>
-    </div>
+    <!-- Non-Game Screens (position: fixed) -->
+    <div id="profile-screen" class="screen"><h2>Player Profiles</h2><div id="profile-list"><h4>Select Profile:</h4><ul></ul></div><div id="newProfileArea"><p>Or Create New (3-8 Chars):</p><input type="text" id="newProfileNameInput" maxlength="8" minlength="3" placeholder="PROFILE NAME"><button id="createProfileBtn" class="menu-button">Create & Select</button></div></div>
+    <div id="main-menu" class="screen"><h2>Main Menu</h2><p id="activeProfileDisplay" style="font-size:0.7em; margin-bottom:10px; color:#1abc9c;">No active profile</p><button id="playGameBtn" class="menu-button">Play</button> <button id="continueGameBtn" class="menu-button" style="display:none;">Continue Game</button><button id="startNewGameForProfileBtn" class="menu-button" style="display:none;">Start New Game</button><button id="changeProfileBtn" class="menu-button">Change Profile</button><button id="viewHighScoresBtn" class="menu-button">High Scores (Profile)</button><button id="helpBtn" class="menu-button">Help</button><button id="creditsBtn" class="menu-button">Credits</button></div>
+    <div id="help-screen" class="screen"><h2>How to Play</h2><p>Stop invaders!</p><ul><li>Profiles: Create/select to save progress.</li><li>Towers: Select, then tap grid to place. Costs gold.</li><li>Gold: Earn from invaders & waves.</li><li>Lives: Start 20. 0 = Game Over.</li><li>Waves: Tap "Start Wave".</li><li>Unlocks: Turret(Start), Cannon(Lvl 4), Freezer(Lvl 7).</li><li>Level Reset: Towers sold (full refund).</li><li>Progress: Saved per profile.</li></ul><button id="helpBackBtn" class="menu-button">Back to Main Menu</button></div>
+    <div id="credits-screen" class="screen"><h2>Credits</h2><p>Concept: ParisNeo</p><p>AI Asst: Gemini (Google)</p><p>Font: Press Start 2P</p><p>Thanks!</p><button id="creditsBackBtn" class="menu-button">Back to Main Menu</button></div>
+    <div id="highscores-screen" class="screen"><h2 id="highScoresTitle">High Scores</h2><div id="highscores-list-container"><ol id="highScoreListDisplay"></ol></div><button id="highScoresBackBtn" class="menu-button">Back to Main Menu</button></div>
+    <div id="level-cleared-screen" class="screen"><h2 id="levelClearedTitle">Level X Cleared!</h2><p id="levelClearedMessage">Bonus Gold: +Y</p><p>Next level...</p></div>
+    <div id="end-game-overlay" class="screen"><h2 id="message-title">Game Over!</h2><p id="message-text">Invaders broke through!</p><div id="highScoreInputArea" style="display:none;"><p>New High Score! 3 Initials:</p><input type="text" id="playerNameInput" maxlength="3" size="3"><button id="submitScoreButton">OK</button></div><button id="endGameToMainMenuBtn" class="menu-button">Back to Main Menu</button></div>
 
-    <!-- Game UI Container -->
-    <div id="game-ui-outer-container" class="screen"> <!-- This screen is special, it contains the scalable game UI -->
-        <div id="game-ui-container"> <!-- This div will be scaled -->
+    <!-- Game UI Container (position: fixed container, scaled inner div) -->
+    <div id="game-ui-outer-container"> 
+        <div id="game-ui-container"> 
             <div id="game-area">
                 <canvas id="gameCanvas"></canvas>
                 <div id="controls">
@@ -231,24 +226,11 @@
         </div>
     </div>
 
-
-    <!-- Help Screen -->
-    <div id="help-screen" class="screen"><h2>How to Play</h2><p>Stop invaders!</p><ul><li><strong>Profiles:</strong> Create/select to save progress.</li><li><strong>Towers:</strong> Select, then tap on grid to place. Cost gold.</li><li><strong>Gold:</strong> Earn from invaders & waves.</li><li><strong>Lives:</strong> Start 20. 0 = Game Over.</li><li><strong>Waves:</strong> Tap "Start Wave".</li><li><strong>Unlocks:</strong> Turret (Start), Cannon (Lvl 4), Freezer (Lvl 7).</li><li><strong>Level Reset:</strong> Towers sold (full refund).</li><li><strong>Progress:</strong> Saved per profile.</li></ul><button id="helpBackBtn" class="menu-button">Back to Main Menu</button></div>
-    <!-- Credits Screen -->
-    <div id="credits-screen" class="screen"><h2>Credits</h2><p><strong>Concept & Design:</strong> ParisNeo</p><p><strong>AI Assistance:</strong> Gemini (Google)</p><p><strong>Font:</strong> "Press Start 2P" by CodeMan38</p><p>Thanks for playing!</p><button id="creditsBackBtn" class="menu-button">Back to Main Menu</button></div>
-    <!-- High Scores Screen -->
-    <div id="highscores-screen" class="screen"><h2 id="highScoresTitle">High Scores</h2><div id="highscores-list-container"><ol id="highScoreListDisplay"></ol></div><button id="highScoresBackBtn" class="menu-button">Back to Main Menu</button></div>
-    <!-- Level Cleared Screen -->
-    <div id="level-cleared-screen" class="screen"><h2 id="levelClearedTitle">Level X Cleared!</h2><p id="levelClearedMessage">Bonus Gold: +Y</p><p>Next level...</p></div>
-    <!-- End Game Message Overlay -->
-    <div id="end-game-overlay" class="screen"><h2 id="message-title">Game Over!</h2><p id="message-text">Invaders broke through!</p><div id="highScoreInputArea" style="display:none;"><p>New High Score! 3 Initials:</p><input type="text" id="playerNameInput" maxlength="3" size="3"><button id="submitScoreButton">OK</button></div><button id="endGameToMainMenuBtn" class="menu-button">Back to Main Menu</button></div>
-
     <script>
         // --- DOM Elements ---
         const allScreens = document.querySelectorAll('.screen');
-        const gameUIOuterContainer = document.getElementById('game-ui-outer-container'); // For scaling
-        const gameUiContainer = document.getElementById('game-ui-container'); // The actual content to scale
-        // ... (all other DOM element selections remain the same)
+        const gameUIOuterContainer = document.getElementById('game-ui-outer-container'); 
+        const gameUiContainer = document.getElementById('game-ui-container'); 
         const profileScreen = document.getElementById('profile-screen');
         const mainMenuScreen = document.getElementById('main-menu');
         const helpScreen = document.getElementById('help-screen');
@@ -294,55 +276,93 @@
         const towerButtons = document.querySelectorAll('.tower-button');
 
         // --- Game Constants & Variables ---
-        const TILE_SIZE = 40; const GRID_WIDTH = 15; const GRID_HEIGHT = 10;
-        canvas.width = GRID_WIDTH * TILE_SIZE; canvas.height = GRID_HEIGHT * TILE_SIZE;
+        const TILE_SIZE = 40; 
+        const GRID_WIDTH = 15; 
+        const GRID_HEIGHT = 10;
+        canvas.width = GRID_WIDTH * TILE_SIZE; 
+        canvas.height = GRID_HEIGHT * TILE_SIZE;
         let gold, lives, currentLevel, score, currentWaveInLevel;
-        const MAX_LEVELS = 25; let wavesForCurrentLevel = [];
+        const MAX_LEVELS = 25; 
+        let wavesForCurrentLevel = [];
         let enemies = [], towers = [], projectiles = [];
-        let selectedTowerType = null; let waveInProgress = false;
+        let selectedTowerType = null; 
+        let waveInProgress = false;
         let enemiesThisWave, enemiesSpawnedThisWave, enemiesThisWavePlus, enemiesSpawnedThisWavePlus;
         let spawnInterval, spawnIntervalPlus, lastSpawnTime, lastSpawnTimePlus;
         let gameOver = false, gameWon = false;
         let path = [], currentLevelPrng, audioContext, gameLoopAnimationId = null, lastTime = 0;
-        let touchPlacementPreview = { x: -1, y: -1, active: false }; // For touch placement preview
+        let touchPlacementPreview = { x: -1, y: -1, active: false }; 
         
+        // --- Profile & Game State Management ---
         let gameState = 'PROFILE_SELECT'; 
-        let profiles = []; let activeProfileName = null;
+        let profiles = []; 
+        let activeProfileName = null;
         const LS_PROFILES_KEY = "pixelDefender_profiles";
         const LS_PROFILE_PROGRESS_PREFIX = "pixelDefender_profile_";
         const LS_PROFILE_HIGHSCORES_PREFIX = "pixelDefender_profile_";
 
+        // --- Scaling Function ---
         function scaleGameArea() {
-            if (gameState !== 'PLAYING') { // Only scale when game screen is active
-                 gameUiContainer.style.transform = 'scale(1)'; // Reset scale if not playing
+            // Ensure elements exist before proceeding
+            if (!gameUIOuterContainer || !gameUiContainer || !canvas || !document.getElementById('controls') || !document.getElementById('game-area')) {
+                console.warn("Scaling elements not ready.");
+                return;
+            }
+
+            if (!gameUIOuterContainer.classList.contains('active')) {
+                 gameUiContainer.style.transform = 'scale(1)'; 
                  return;
             }
-            const gameAreaWidth = canvas.width + document.getElementById('controls').offsetWidth + 20; // Approx width with gap
-            const gameAreaHeight = canvas.height; // Dominated by canvas height
+            
+            const controlsElement = document.getElementById('controls');
+            const gameAreaElement = document.getElementById('game-area');
+            const gameAreaStyle = window.getComputedStyle(gameAreaElement);
+            const outerContainerBounds = gameUIOuterContainer.getBoundingClientRect();
 
-            const viewportWidth = window.innerWidth * 0.90; // 90% of viewport for some padding
-            const viewportHeight = window.innerHeight * 0.80; // 80% to leave space for title & some bottom margin
+            let gameContentWidth, gameContentHeight;
+            const gap = parseInt(gameAreaStyle.gap) || 10;
 
-            let scale = Math.min(viewportWidth / gameAreaWidth, viewportHeight / gameAreaHeight);
-            scale = Math.min(scale, 1.2); // Max scale to prevent excessive largeness on big screens
+            // Calculate intrinsic content size based on current layout
+            if (gameAreaStyle.flexDirection === 'column') {
+                gameContentWidth = canvas.offsetWidth; // Use offsetWidth for actual rendered width
+                gameContentHeight = canvas.offsetHeight + controlsElement.offsetHeight + gap; 
+            } else {
+                gameContentWidth = canvas.offsetWidth + controlsElement.offsetWidth + gap;
+                gameContentHeight = canvas.offsetHeight;
+            }
+
+            if (!gameContentWidth || !gameContentHeight || gameContentWidth <= 0 || gameContentHeight <= 0) {
+                 console.warn("Invalid content dimensions for scaling:", gameContentWidth, gameContentHeight);
+                 return; 
+            }
+
+            const availableWidth = outerContainerBounds.width * 0.98; 
+            const availableHeight = outerContainerBounds.height * 0.98;
+
+            let scale = Math.min(availableWidth / gameContentWidth, availableHeight / gameContentHeight);
+            scale = Math.min(scale, 1.1); 
+            scale = Math.max(scale, 0.1); 
 
             gameUiContainer.style.transform = `scale(${scale})`;
         }
 
-
+        // --- Screen Switching ---
         function switchScreen(targetScreenId) {
             allScreens.forEach(screen => screen.classList.remove('active'));
+            gameUIOuterContainer.classList.remove('active'); 
+
             const target = document.getElementById(targetScreenId);
-            
-            if (targetScreenId === 'game-ui-outer-container') { // Special handling for game screen
+
+            if (targetScreenId === 'game-ui-outer-container') { 
                 gameUIOuterContainer.classList.add('active');
-                scaleGameArea(); // Scale it when it becomes active
+                requestAnimationFrame(scaleGameArea); // Use RAF to ensure layout is ready
             } else if (target) {
                 target.classList.add('active');
-                gameUiContainer.style.transform = 'scale(1)'; // Reset game area scale if not game screen
+                gameUiContainer.style.transform = 'scale(1)'; 
             } else { 
                 document.getElementById('profile-screen').classList.add('active'); 
-                gameState = 'PROFILE_SELECT'; return; 
+                gameState = 'PROFILE_SELECT'; 
+                return; 
             }
             
             if (targetScreenId === 'profile-screen') gameState = 'PROFILE_SELECT';
@@ -353,6 +373,7 @@
             else if (targetScreenId === 'level-cleared-screen') gameState = 'LEVEL_CLEARED_TRANSITION';
         }
 
+        // --- Tower & Enemy Definitions ---
         const towerTypes = {
             turret: { name: "Turret", cost: 50, range: TILE_SIZE * 2.5, damage: 15, fireRate: 1000, color: '#3498db', projectileColor: '#5dade2', projectileSpeed: 5, projectileSize: 3, unlockLevel: 1 },
             cannon: { name: "Cannon", cost: 120, range: TILE_SIZE * 2, damage: 50, fireRate: 2000, color: '#e74c3c', projectileColor: '#c0392b', projectileSpeed: 4, projectileSize: 5, unlockLevel: 4 },
@@ -365,58 +386,96 @@
             boss: { health: 500, speed: 0.4, color: '#7f8c8d', size: TILE_SIZE * 0.7, goldValue: 50}
         };
 
-        function mulberry32(a) { return function() { var t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } }
+        // --- PRNG ---
+        function mulberry32(a) { 
+            return function() { 
+                var t = a += 0x6D2B79F5; 
+                t = Math.imul(t ^ t >>> 15, t | 1); 
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61); 
+                return ((t ^ t >>> 14) >>> 0) / 4294967296; 
+            }
+        }
+
+        // --- Level/Wave Generation ---
         function getWavesForLevel(levelNum) {
-            const waves = []; const difficultyMultiplier = 1 + (levelNum - 1) * 0.15; const enemyHealthMultiplier = 1 + (levelNum - 1) * 0.1; const enemySpeedMultiplier = 1 + (levelNum - 1) * 0.05;
-            const baseEnemies = JSON.parse(JSON.stringify(enemyTypes)); Object.keys(baseEnemies).forEach(key => { baseEnemies[key].health = Math.floor(enemyTypes[key].health * enemyHealthMultiplier); baseEnemies[key].speed = parseFloat((enemyTypes[key].speed * enemySpeedMultiplier).toFixed(1)); });
+            const waves = []; 
+            const difficultyMultiplier = 1 + (levelNum - 1) * 0.15; 
+            const enemyHealthMultiplier = 1 + (levelNum - 1) * 0.1; 
+            const enemySpeedMultiplier = 1 + (levelNum - 1) * 0.05;
+            const baseEnemies = JSON.parse(JSON.stringify(enemyTypes)); 
+            Object.keys(baseEnemies).forEach(key => { 
+                baseEnemies[key].health = Math.floor(enemyTypes[key].health * enemyHealthMultiplier); 
+                baseEnemies[key].speed = parseFloat((enemyTypes[key].speed * enemySpeedMultiplier).toFixed(1)); 
+            });
             waves.push({ count: Math.floor((5 + levelNum) * difficultyMultiplier * 0.7), type: 'basic', interval: Math.max(400, 1200 - levelNum * 30), enemyStats: baseEnemies });
             let type2 = (levelNum % 3 === 0) ? 'strong' : 'fast';
             waves.push({ count: Math.floor((3 + levelNum) * difficultyMultiplier * 0.6), type: 'basic', interval: Math.max(350, 1100 - levelNum * 25), plus: { count: Math.floor((2 + Math.floor(levelNum/2)) * difficultyMultiplier * 0.5), type: type2, interval: Math.max(500, 1300 - levelNum * 20), enemyStats: baseEnemies }, enemyStats: baseEnemies });
-            let type3 = (levelNum % 5 === 0 && levelNum >=5) ? 'boss' : ((levelNum % 2 === 0) ? 'strong' : 'fast'); let count3_main = (type3 === 'boss') ? Math.max(1, Math.floor(levelNum / 7)) : Math.floor((4 + levelNum) * difficultyMultiplier * 0.5);
+            let type3 = (levelNum % 5 === 0 && levelNum >=5) ? 'boss' : ((levelNum % 2 === 0) ? 'strong' : 'fast'); 
+            let count3_main = (type3 === 'boss') ? Math.max(1, Math.floor(levelNum / 7)) : Math.floor((4 + levelNum) * difficultyMultiplier * 0.5);
             waves.push({ count: count3_main, type: type3, interval: Math.max(600, (type3 === 'boss' ? 2500 : 1500) - levelNum * 20), plus: (type3 !== 'boss' ? { count: Math.floor((3 + levelNum) * difficultyMultiplier * 0.4), type: 'basic', interval: Math.max(300, 900 - levelNum * 15), enemyStats: baseEnemies } : null), enemyStats: baseEnemies });
-            if (levelNum > 15 && levelNum % 4 === 0) { waves.push({ count: Math.floor((10 + levelNum) * difficultyMultiplier * 0.8), type: 'fast', interval: Math.max(200, 700 - levelNum * 10), enemyStats: baseEnemies });}
+            if (levelNum > 15 && levelNum % 4 === 0) { 
+                waves.push({ count: Math.floor((10 + levelNum) * difficultyMultiplier * 0.8), type: 'fast', interval: Math.max(200, 700 - levelNum * 10), enemyStats: baseEnemies });
+            }
             return waves;
         }
         function generateLevelPath(levelSeed) { 
-            currentLevelPrng = mulberry32(levelSeed + 1000 + Date.now()); path = []; const tempGrid = Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(false));
-            let startY = Math.floor(currentLevelPrng() * (GRID_HEIGHT - 2)) + 1; let currentX = 0; let currentY = startY; path.push({ x: currentX, y: currentY }); tempGrid[currentY][currentX] = true;
-            let attempts = 0; const maxAttempts = GRID_WIDTH * GRID_HEIGHT * 2; 
+            currentLevelPrng = mulberry32(levelSeed + 1000 + Date.now()); 
+            path = []; 
+            const tempGrid = Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(false));
+            let startY = Math.floor(currentLevelPrng() * (GRID_HEIGHT - 2)) + 1; 
+            let currentX = 0; 
+            let currentY = startY; 
+            path.push({ x: currentX, y: currentY }); 
+            tempGrid[currentY][currentX] = true;
+            let attempts = 0; 
+            const maxAttempts = GRID_WIDTH * GRID_HEIGHT * 2; 
             while (currentX < GRID_WIDTH - 1 && attempts < maxAttempts) {
-                attempts++; let possibleMoves = [];
+                attempts++; 
+                let possibleMoves = [];
                 if (currentX + 1 < GRID_WIDTH && !tempGrid[currentY][currentX + 1]) possibleMoves.push({ x: currentX + 1, y: currentY, weight: 4 });
                 if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY + 1][currentX]) possibleMoves.push({ x: currentX, y: currentY + 1, weight: 2 });
                 if (currentY - 1 >= 0 && !tempGrid[currentY - 1][currentX]) possibleMoves.push({ x: currentX, y: currentY - 1, weight: 2 });
                 if (currentX > 1 && currentX -1 >=0 && !tempGrid[currentY][currentX-1] && currentLevelPrng() < 0.15 && path.length > 3) possibleMoves.push({x: currentX-1, y: currentY, weight: 1});
-                if (possibleMoves.length === 0) { if (path.length > 1 && currentLevelPrng() < 0.8) { path.pop(); if (path.length > 0) { const prev = path[path.length -1]; currentX = prev.x; currentY = prev.y; continue; } else { break; }} else { if (currentX + 1 < GRID_WIDTH && !tempGrid[currentY][currentX + 1]) { currentX++; } else if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY + 1][currentX]) { currentY++; } else if (currentY - 1 >= 0 && !tempGrid[currentY - 1][currentX]) { currentY--; } else { break; } if (!tempGrid[currentY][currentX]) { path.push({ x: currentX, y: currentY }); tempGrid[currentY][currentX] = true; } continue; }}
-                const totalWeight = possibleMoves.reduce((sum, move) => sum + move.weight, 0); let randomPick = currentLevelPrng() * totalWeight; let chosenMove = possibleMoves[possibleMoves.length - 1]; 
+                if (possibleMoves.length === 0) { 
+                    if (path.length > 1 && currentLevelPrng() < 0.8) { path.pop(); if (path.length > 0) { const prev = path[path.length -1]; currentX = prev.x; currentY = prev.y; continue; } else { break; }} 
+                    else { if (currentX + 1 < GRID_WIDTH && !tempGrid[currentY][currentX + 1]) { currentX++; } else if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY + 1][currentX]) { currentY++; } else if (currentY - 1 >= 0 && !tempGrid[currentY - 1][currentX]) { currentY--; } else { break; } if (!tempGrid[currentY][currentX]) { path.push({ x: currentX, y: currentY }); tempGrid[currentY][currentX] = true; } continue; }}
+                const totalWeight = possibleMoves.reduce((sum, move) => sum + move.weight, 0); 
+                let randomPick = currentLevelPrng() * totalWeight; 
+                let chosenMove = possibleMoves[possibleMoves.length - 1]; 
                 for (const move of possibleMoves) { if (randomPick < move.weight) { chosenMove = move; break; } randomPick -= move.weight; }
                 currentX = chosenMove.x; currentY = chosenMove.y; path.push({ x: currentX, y: currentY }); tempGrid[currentY][currentX] = true;
             }
-            while(currentX < GRID_WIDTH - 1) { currentX++; if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; } else { let newY = currentY; if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY+1][currentX]) newY = currentY+1; else if (currentY - 1 >= 0 && !tempGrid[currentY-1][currentX]) newY = currentY-1; currentY = newY; if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; }}}
+            while(currentX < GRID_WIDTH - 1) { 
+                currentX++; 
+                if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; } 
+                else { let newY = currentY; if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY+1][currentX]) newY = currentY+1; else if (currentY - 1 >= 0 && !tempGrid[currentY-1][currentX]) newY = currentY-1; currentY = newY; if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; }}}
         }
         
+        // --- Audio Functions ---
         function initAudio() { 
-            if (audioContext) return; // Already initialized
+            if (audioContext) return; 
             if (window.AudioContext || window.webkitAudioContext) { 
                 audioContext = new (window.AudioContext || window.webkitAudioContext)(); 
-                 // Play a silent sound to unlock audio on iOS Safari, etc.
-                const buffer = audioContext.createBuffer(1, 1, 22050);
-                const source = audioContext.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContext.destination);
-                source.start(0);
-                console.log("AudioContext initialized.");
-            } else {
-                console.warn("Web Audio API not supported.");
+                const buffer = audioContext.createBuffer(1, 1, 22050); 
+                const source = audioContext.createBufferSource(); 
+                source.buffer = buffer; 
+                source.connect(audioContext.destination); 
+                source.start(0); 
+                console.log("AudioContext initialized."); 
+            } else { 
+                console.warn("Web Audio API not supported."); 
             }
         }
-        // Add a general event listener to initialize audio on first user interaction
-        document.body.addEventListener('touchstart', initAudio, { once: true });
+        document.body.addEventListener('touchstart', initAudio, { once: true }); 
         document.body.addEventListener('click', initAudio, { once: true });
 
-
         function playSound(type, options = {}) { 
-            if (!audioContext) return; const oscillator = audioContext.createOscillator(); const gainNode = audioContext.createGain(); oscillator.connect(gainNode); gainNode.connect(audioContext.destination); gainNode.gain.setValueAtTime(options.volume || 0.1, audioContext.currentTime);
+            if (!audioContext) return; 
+            const oscillator = audioContext.createOscillator(); 
+            const gainNode = audioContext.createGain(); 
+            oscillator.connect(gainNode); 
+            gainNode.connect(audioContext.destination); 
+            gainNode.gain.setValueAtTime(options.volume || 0.1, audioContext.currentTime);
             switch(type) {
                 case 'waveStart': oscillator.type = 'sawtooth'; oscillator.frequency.setValueAtTime(200, audioContext.currentTime); oscillator.frequency.linearRampToValueAtTime(500, audioContext.currentTime + 0.4); gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.6); oscillator.start(audioContext.currentTime); oscillator.stop(audioContext.currentTime + 0.6); break;
                 case 'enemyDefeat': oscillator.type = 'triangle'; oscillator.frequency.setValueAtTime(options.freq || 250, audioContext.currentTime); oscillator.frequency.exponentialRampToValueAtTime((options.freq || 250) * 0.5, audioContext.currentTime + 0.15); gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.15); oscillator.start(audioContext.currentTime); oscillator.stop(audioContext.currentTime + 0.15); break;
@@ -427,168 +486,610 @@
             }
         }
 
-        function drawGrid() { ctx.strokeStyle = '#6AAB9C'; ctx.lineWidth = 0.5; for (let x = 0; x < GRID_WIDTH; x++) { for (let y = 0; y < GRID_HEIGHT; y++) { ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); } } }
-        function drawPath() { if (!path || path.length === 0) return; ctx.fillStyle = '#D2B48C'; ctx.strokeStyle = '#8C6D46'; ctx.lineWidth = 2; path.forEach(p => { ctx.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE); ctx.strokeRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE); }); }
-        function drawTowers() { towers.forEach(tower => { ctx.fillStyle = tower.type.color; ctx.fillRect( tower.x * TILE_SIZE + TILE_SIZE * 0.15, tower.y * TILE_SIZE + TILE_SIZE * 0.15, TILE_SIZE * 0.7, TILE_SIZE * 0.7 ); ctx.save(); ctx.translate(tower.x * TILE_SIZE + TILE_SIZE / 2, tower.y * TILE_SIZE + TILE_SIZE / 2); ctx.rotate(tower.angle || 0); ctx.fillStyle = 'grey'; ctx.fillRect(-TILE_SIZE * 0.1, -TILE_SIZE * 0.35, TILE_SIZE * 0.2, TILE_SIZE * 0.35); ctx.restore(); }); }
-        function drawEnemies() { enemies.forEach(enemy => { ctx.fillStyle = enemy.isSlowed ? '#ADD8E6' : enemy.currentStats.color; const size = enemy.currentStats.size * (enemy.isSlowed ? 0.8 : 1); ctx.beginPath(); ctx.arc(enemy.x, enemy.y, size, 0, Math.PI * 2); ctx.fill(); const healthBarWidth = TILE_SIZE * 0.6; const healthBarHeight = 5; ctx.fillStyle = 'red'; ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth, healthBarHeight); ctx.fillStyle = 'lime'; ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth * (enemy.health / enemy.maxHealth), healthBarHeight); }); }
-        function drawProjectiles() { projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }); }
-        
-        function drawPlacementPreview(gridX, gridY) { // Now takes gridX, gridY
-            if (!selectedTowerType || gridX === -1) return; // gridX -1 means no active preview
-            const towerData = towerTypes[selectedTowerType]; if (currentLevel < towerData.unlockLevel) return; 
-            
-            let canPlace = true; const onPath = path.some(p => p.x === gridX && p.y === gridY);
-            const occupied = towers.some(t => t.x === gridX && t.y === gridY);
+        // --- Drawing Functions ---
+        function drawGrid() { 
+            ctx.strokeStyle = '#6AAB9C'; 
+            ctx.lineWidth = 0.5; 
+            for (let x = 0; x < GRID_WIDTH; x++) { 
+                for (let y = 0; y < GRID_HEIGHT; y++) { 
+                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); 
+                } 
+            } 
+        }
+        function drawPath() { 
+            if (!path || path.length === 0) return; 
+            ctx.fillStyle = '#D2B48C'; 
+            ctx.strokeStyle = '#8C6D46'; 
+            ctx.lineWidth = 2; 
+            path.forEach(p => { 
+                ctx.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE); 
+                ctx.strokeRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE); 
+            }); 
+        }
+        function drawTowers() { 
+            towers.forEach(tower => { 
+                ctx.fillStyle = tower.type.color; 
+                ctx.fillRect( tower.x * TILE_SIZE + TILE_SIZE * 0.15, tower.y * TILE_SIZE + TILE_SIZE * 0.15, TILE_SIZE * 0.7, TILE_SIZE * 0.7 ); 
+                ctx.save(); 
+                ctx.translate(tower.x * TILE_SIZE + TILE_SIZE / 2, tower.y * TILE_SIZE + TILE_SIZE / 2); 
+                ctx.rotate(tower.angle || 0); 
+                ctx.fillStyle = 'grey'; 
+                ctx.fillRect(-TILE_SIZE * 0.1, -TILE_SIZE * 0.35, TILE_SIZE * 0.2, TILE_SIZE * 0.35); 
+                ctx.restore(); 
+            }); 
+        }
+        function drawEnemies() { 
+            enemies.forEach(enemy => { 
+                ctx.fillStyle = enemy.isSlowed ? '#ADD8E6' : enemy.currentStats.color; 
+                const size = enemy.currentStats.size * (enemy.isSlowed ? 0.8 : 1); 
+                ctx.beginPath(); 
+                ctx.arc(enemy.x, enemy.y, size, 0, Math.PI * 2); 
+                ctx.fill(); 
+                const healthBarWidth = TILE_SIZE * 0.6; 
+                const healthBarHeight = 5; 
+                ctx.fillStyle = 'red'; 
+                ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth, healthBarHeight); 
+                ctx.fillStyle = 'lime'; 
+                ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth * (enemy.health / enemy.maxHealth), healthBarHeight); 
+            }); 
+        }
+        function drawProjectiles() { 
+            projectiles.forEach(p => { 
+                ctx.fillStyle = p.color; 
+                ctx.beginPath(); 
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); 
+                ctx.fill(); 
+            }); 
+        }
+        function drawPlacementPreview(gridX, gridY) { 
+            if (!selectedTowerType || gridX === -1) return; 
+            const towerData = towerTypes[selectedTowerType]; 
+            if (currentLevel < towerData.unlockLevel) return; 
+            let canPlace = true; 
+            const onPath = path.some(p => p.x === gridX && p.y === gridY); 
+            const occupied = towers.some(t => t.x === gridX && t.y === gridY); 
             if (onPath || occupied || gold < towerData.cost) canPlace = false;
-            
-            ctx.globalAlpha = 0.5; ctx.fillStyle = canPlace ? towerData.color : 'rgba(255,0,0,0.5)';
+            ctx.globalAlpha = 0.5; 
+            ctx.fillStyle = canPlace ? towerData.color : 'rgba(255,0,0,0.5)'; 
             ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            ctx.beginPath(); ctx.arc(gridX * TILE_SIZE + TILE_SIZE / 2, gridY * TILE_SIZE + TILE_SIZE / 2, towerData.range, 0, Math.PI * 2);
-            ctx.strokeStyle = canPlace ? 'rgba(255,255,255,0.8)' : 'rgba(200,0,0,0.8)'; ctx.lineWidth = 2; ctx.stroke();
-            ctx.globalAlpha = 1.0; ctx.lineWidth = 0.5; 
+            ctx.beginPath(); 
+            ctx.arc(gridX * TILE_SIZE + TILE_SIZE / 2, gridY * TILE_SIZE + TILE_SIZE / 2, towerData.range, 0, Math.PI * 2);
+            ctx.strokeStyle = canPlace ? 'rgba(255,255,255,0.8)' : 'rgba(200,0,0,0.8)'; 
+            ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1.0; ctx.lineWidth = 0.5; 
         }
-        function clearTouchPlacementPreview() {
-            touchPlacementPreview.active = false;
-            touchPlacementPreview.x = -1;
-            touchPlacementPreview.y = -1;
-            // Redraw game state without preview (will happen in next gameLoop frame)
+        function clearTouchPlacementPreview() { 
+            touchPlacementPreview.active = false; 
+            touchPlacementPreview.x = -1; 
+            touchPlacementPreview.y = -1; 
         }
 
+        // --- UI Update ---
         function updateControlsUI() { 
-            goldDisplay.textContent = gold; livesDisplay.textContent = lives; levelDisplay.textContent = currentLevel;
-            maxLevelDisplay.textContent = MAX_LEVELS; waveDisplay.textContent = currentWaveInLevel; maxWaveInLevelDisplay.textContent = wavesForCurrentLevel.length;
+            goldDisplay.textContent = gold; 
+            livesDisplay.textContent = lives; 
+            levelDisplay.textContent = currentLevel;
+            maxLevelDisplay.textContent = MAX_LEVELS; 
+            waveDisplay.textContent = currentWaveInLevel; 
+            maxWaveInLevelDisplay.textContent = wavesForCurrentLevel.length;
             scoreDisplay.textContent = score;
-            towerButtons.forEach(btn => {
-                const type = btn.dataset.type; const towerData = towerTypes[type]; const unlockSpan = btn.querySelector('.tower-unlock');
-                if (currentLevel >= towerData.unlockLevel) { btn.disabled = gold < towerData.cost; btn.style.opacity = (gold < towerData.cost) ? "0.6" : "1"; if (unlockSpan) unlockSpan.textContent = ""; btn.classList.toggle('selected', type === selectedTowerType); }
-                else { btn.disabled = true; btn.style.opacity = "0.4"; if (unlockSpan) unlockSpan.textContent = `(Lvl ${towerData.unlockLevel})`; btn.classList.remove('selected'); }
+            towerButtons.forEach(btn => { 
+                const type = btn.dataset.type; 
+                const towerData = towerTypes[type]; 
+                const unlockSpan = btn.querySelector('.tower-unlock'); 
+                if (currentLevel >= towerData.unlockLevel) { 
+                    btn.disabled = gold < towerData.cost; 
+                    btn.style.opacity = (gold < towerData.cost) ? "0.6" : "1"; 
+                    if (unlockSpan) unlockSpan.textContent = ""; 
+                    btn.classList.toggle('selected', type === selectedTowerType); 
+                } else { 
+                    btn.disabled = true; 
+                    btn.style.opacity = "0.4"; 
+                    if (unlockSpan) unlockSpan.textContent = `(Lvl ${towerData.unlockLevel})`; 
+                    btn.classList.remove('selected'); 
+                } 
             });
-            startWaveButton.disabled = waveInProgress || gameOver || gameWon || currentWaveInLevel >= wavesForCurrentLevel.length;
+            startWaveButton.disabled = waveInProgress || gameOver || gameWon || currentWaveInLevel >= wavesForCurrentLevel.length; 
             startWaveButton.style.opacity = startWaveButton.disabled ? "0.5" : "1";
-            if (!waveInProgress && currentWaveInLevel < wavesForCurrentLevel.length && !gameOver && !gameWon) { const nextWaveData = wavesForCurrentLevel[currentWaveInLevel]; let infoText = `Next: ${nextWaveData.count} ${nextWaveData.type}(s)`; if (nextWaveData.plus) infoText += ` & ${nextWaveData.plus.count} ${nextWaveData.plus.type}(s)`; waveInfoDisplay.textContent = infoText; }
-            else if (currentWaveInLevel >= wavesForCurrentLevel.length && enemies.length === 0 && !waveInProgress && !gameOver && !gameWon) { waveInfoDisplay.textContent = "Level Cleared! Next Level..."; }
-            else if (gameWon) { waveInfoDisplay.textContent = "ALL LEVELS CLEARED!"; } else { waveInfoDisplay.textContent = ""; }
+            if (!waveInProgress && currentWaveInLevel < wavesForCurrentLevel.length && !gameOver && !gameWon) { 
+                const nextWaveData = wavesForCurrentLevel[currentWaveInLevel]; 
+                let infoText = `Next: ${nextWaveData.count} ${nextWaveData.type}(s)`; 
+                if (nextWaveData.plus) infoText += ` & ${nextWaveData.plus.count} ${nextWaveData.plus.type}(s)`; 
+                waveInfoDisplay.textContent = infoText; 
+            } else if (currentWaveInLevel >= wavesForCurrentLevel.length && enemies.length === 0 && !waveInProgress && !gameOver && !gameWon) { 
+                waveInfoDisplay.textContent = "Level Cleared! Next Level..."; 
+            } else if (gameWon) { 
+                waveInfoDisplay.textContent = "ALL LEVELS CLEARED!"; 
+            } else { 
+                waveInfoDisplay.textContent = ""; 
+            }
         }
 
-        function placeTower(gridX, gridY) { // Now takes grid coords
+        // --- Game Logic ---
+        function placeTower(gridX, gridY) { 
             if (!selectedTowerType || gameOver || gameWon) return; 
-            const towerData = towerTypes[selectedTowerType]; if (currentLevel < towerData.unlockLevel) { playSound('error'); return; }
-            if (gold >= towerData.cost) { const onPath = path.some(p => p.x === gridX && p.y === gridY); const occupied = towers.some(t => t.x === gridX && t.y === gridY); if (!onPath && !occupied && gridX < GRID_WIDTH && gridY < GRID_HEIGHT && gridX >=0 && gridY >=0) { towers.push({ x: gridX, y: gridY, type: towerData, lastShotTime: 0, angle: 0 }); gold -= towerData.cost; playSound('placeTower'); updateControlsUI(); clearTouchPlacementPreview(); selectedTowerType = null; updateControlsUI(); /* Deselect tower */ } else { playSound('error'); } }
-            else { playSound('error'); }
+            const towerData = towerTypes[selectedTowerType]; 
+            if (currentLevel < towerData.unlockLevel) { playSound('error'); return; }
+            if (gold >= towerData.cost) { 
+                const onPath = path.some(p => p.x === gridX && p.y === gridY); 
+                const occupied = towers.some(t => t.x === gridX && t.y === gridY); 
+                if (!onPath && !occupied && gridX >= 0 && gridX < GRID_WIDTH && gridY >= 0 && gridY < GRID_HEIGHT) { 
+                    towers.push({ x: gridX, y: gridY, type: towerData, lastShotTime: 0, angle: 0 }); 
+                    gold -= towerData.cost; 
+                    playSound('placeTower'); 
+                    clearTouchPlacementPreview(); 
+                    selectedTowerType = null; // Deselect after placing
+                    updateControlsUI(); 
+                } else { 
+                    playSound('error'); 
+                } 
+            } else { 
+                playSound('error'); 
+            }
         }
         function spawnEnemy(waveInfo, isPlus = false) {
-            if (path.length === 0) return; const enemyTypeKey = waveInfo.type; if (!waveInfo.enemyStats) { console.error("CRITICAL: waveInfo.enemyStats undefined", waveInfo); return; } const baseStats = waveInfo.enemyStats[enemyTypeKey]; if (!baseStats) { console.error("Undefined enemy type", enemyTypeKey); return; }
-            enemies.push({ x: path[0].x * TILE_SIZE + TILE_SIZE / 2, y: path[0].y * TILE_SIZE + TILE_SIZE / 2, pathIndex: 0, currentStats: JSON.parse(JSON.stringify(baseStats)), health: baseStats.health, maxHealth: baseStats.health, speed: baseStats.speed, baseSpeed: baseStats.speed, isSlowed: false, slowTimer: 0, id: Math.random().toString(36).substr(2, 9) });
+            if (path.length === 0) return; 
+            const enemyTypeKey = waveInfo.type; 
+            if (!waveInfo.enemyStats) { console.error("CRITICAL: waveInfo.enemyStats undefined", waveInfo); return; } 
+            const baseStats = waveInfo.enemyStats[enemyTypeKey]; 
+            if (!baseStats) { console.error("Undefined enemy type", enemyTypeKey); return; }
+            enemies.push({ 
+                x: path[0].x * TILE_SIZE + TILE_SIZE / 2, 
+                y: path[0].y * TILE_SIZE + TILE_SIZE / 2, 
+                pathIndex: 0, 
+                currentStats: JSON.parse(JSON.stringify(baseStats)), 
+                health: baseStats.health, 
+                maxHealth: baseStats.health, 
+                speed: baseStats.speed, 
+                baseSpeed: baseStats.speed, 
+                isSlowed: false, 
+                slowTimer: 0, 
+                id: Math.random().toString(36).substr(2, 9) 
+            });
             if (!isPlus) enemiesSpawnedThisWave++; else enemiesSpawnedThisWavePlus++;
         }
         function startNextWave() { 
-            if (waveInProgress || currentWaveInLevel >= wavesForCurrentLevel.length || gameOver || gameWon) return; initAudio(); currentWaveInLevel++; waveInProgress = true; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0;
-            const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; if (!waveData) { waveInProgress = false; return; } enemiesThisWave = waveData.count; spawnInterval = waveData.interval;
-            if (waveData.plus) { enemiesThisWavePlus = waveData.plus.count; spawnIntervalPlus = waveData.plus.interval; } else { enemiesThisWavePlus = 0; } playSound('waveStart'); updateControlsUI();
+            if (waveInProgress || currentWaveInLevel >= wavesForCurrentLevel.length || gameOver || gameWon) return; 
+            initAudio(); 
+            currentWaveInLevel++; 
+            waveInProgress = true; 
+            enemiesSpawnedThisWave = 0; 
+            enemiesSpawnedThisWavePlus = 0; 
+            lastSpawnTime = 0; 
+            lastSpawnTimePlus = 0;
+            const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; 
+            if (!waveData) { waveInProgress = false; return; } 
+            enemiesThisWave = waveData.count; 
+            spawnInterval = waveData.interval; 
+            if (waveData.plus) { 
+                enemiesThisWavePlus = waveData.plus.count; 
+                spawnIntervalPlus = waveData.plus.interval; 
+            } else { 
+                enemiesThisWavePlus = 0; 
+            } 
+            playSound('waveStart'); 
+            updateControlsUI();
         }
         function updateEnemies(deltaTime) { 
             for (let i = enemies.length - 1; i >= 0; i--) {
-                const enemy = enemies[i]; if (enemy.isSlowed) { enemy.slowTimer -= deltaTime; if (enemy.slowTimer <= 0) { enemy.isSlowed = false; enemy.speed = enemy.baseSpeed; }}
-                if (path.length === 0 || enemy.pathIndex + 1 >= path.length) { enemies.splice(i, 1); lives--; updateControlsUI(); if (lives <= 0 && !gameOver && !gameWon) { handleEndGame(false); } continue; }
-                const targetWaypoint = path[enemy.pathIndex + 1]; const targetX = targetWaypoint.x * TILE_SIZE + TILE_SIZE / 2; const targetY = targetWaypoint.y * TILE_SIZE + TILE_SIZE / 2;
-                const dx = targetX - enemy.x; const dy = targetY - enemy.y; const distance = Math.sqrt(dx * dx + dy * dy); const moveFactor = deltaTime / 16.666; const moveSpeed = enemy.speed * moveFactor; 
-                if (distance < moveSpeed ) { enemy.pathIndex++; if (enemy.pathIndex >= path.length -1) { enemies.splice(i, 1); lives--; updateControlsUI(); if (lives <= 0 && !gameOver && !gameWon) { handleEndGame(false); } continue; } enemy.x = targetX; enemy.y = targetY; }
-                else { enemy.x += (dx / distance) * moveSpeed; enemy.y += (dy / distance) * moveSpeed; }
+                const enemy = enemies[i]; 
+                if (enemy.isSlowed) { 
+                    enemy.slowTimer -= deltaTime; 
+                    if (enemy.slowTimer <= 0) { 
+                        enemy.isSlowed = false; 
+                        enemy.speed = enemy.baseSpeed; 
+                    }
+                }
+                if (path.length === 0 || enemy.pathIndex + 1 >= path.length) { 
+                    enemies.splice(i, 1); 
+                    lives--; 
+                    updateControlsUI(); 
+                    if (lives <= 0 && !gameOver && !gameWon) { 
+                        handleEndGame(false); 
+                    } 
+                    continue; 
+                }
+                const targetWaypoint = path[enemy.pathIndex + 1]; 
+                const targetX = targetWaypoint.x * TILE_SIZE + TILE_SIZE / 2; 
+                const targetY = targetWaypoint.y * TILE_SIZE + TILE_SIZE / 2;
+                const dx = targetX - enemy.x; 
+                const dy = targetY - enemy.y; 
+                const distance = Math.sqrt(dx * dx + dy * dy); 
+                const moveFactor = deltaTime / 16.666; // Normalize speed
+                const moveSpeed = enemy.speed * moveFactor; 
+                if (distance < moveSpeed ) { 
+                    enemy.pathIndex++; 
+                    if (enemy.pathIndex >= path.length -1) { 
+                        enemies.splice(i, 1); 
+                        lives--; 
+                        updateControlsUI(); 
+                        if (lives <= 0 && !gameOver && !gameWon) { 
+                            handleEndGame(false); 
+                        } 
+                        continue; 
+                    } 
+                    enemy.x = targetX; // Snap to waypoint
+                    enemy.y = targetY; 
+                } else { 
+                    enemy.x += (dx / distance) * moveSpeed; 
+                    enemy.y += (dy / distance) * moveSpeed; 
+                }
             }
         }
         function updateTowers(currentTime, deltaTime) {
             towers.forEach(tower => {
                 if (currentTime - tower.lastShotTime > tower.type.fireRate) {
-                    let target = null; let minDistanceToEnd = Infinity;
-                    enemies.forEach(enemy => { const dxt = (tower.x * TILE_SIZE + TILE_SIZE / 2) - enemy.x; const dyt = (tower.y * TILE_SIZE + TILE_SIZE / 2) - enemy.y; const distanceToTower = Math.sqrt(dxt * dxt + dyt * dyt);
-                        if (distanceToTower <= tower.type.range) { let distanceToEnd = 0; for(let j = enemy.pathIndex; j < path.length -1; j++) { const p1 = path[j], p2 = path[j+1]; distanceToEnd += Math.sqrt(Math.pow((p2.x-p1.x)*TILE_SIZE,2) + Math.pow((p2.y-p1.y)*TILE_SIZE,2)); } if (enemy.pathIndex < path.length - 1) { const nextWpX = path[enemy.pathIndex + 1].x * TILE_SIZE + TILE_SIZE / 2; const nextWpY = path[enemy.pathIndex + 1].y * TILE_SIZE + TILE_SIZE / 2; distanceToEnd += Math.sqrt(Math.pow(nextWpX - enemy.x, 2) + Math.pow(nextWpY - enemy.y, 2));} if (distanceToEnd < minDistanceToEnd) { minDistanceToEnd = distanceToEnd; target = enemy; } } });
-                    if (target) { const angle = Math.atan2( target.y - (tower.y * TILE_SIZE + TILE_SIZE / 2), target.x - (tower.x * TILE_SIZE + TILE_SIZE / 2) ); tower.angle = angle + Math.PI / 2; 
-                        projectiles.push({ x: tower.x * TILE_SIZE + TILE_SIZE / 2, y: tower.y * TILE_SIZE + TILE_SIZE / 2, target: target, speed: tower.type.projectileSpeed, damage: tower.type.damage, color: tower.type.projectileColor, size: tower.type.projectileSize, originTowerTypeKey: Object.keys(towerTypes).find(key => towerTypes[key] === tower.type) }); tower.lastShotTime = currentTime;
-                        let soundOpts = { freq: 700, duration: 0.08, oscType: 'triangle', freqRamp: 350 }; if (tower.type === towerTypes.cannon) soundOpts = { freq: 200, duration: 0.15, oscType: 'square', volume: 0.15 }; if (tower.type === towerTypes.freezer) soundOpts = { freq: 1200, duration: 0.1, oscType: 'sine', freqRamp: 900, volume: 0.08 }; playSound('projectile', soundOpts); }
+                    let target = null; 
+                    let minDistanceToEnd = Infinity;
+                    enemies.forEach(enemy => { 
+                        const dxt = (tower.x * TILE_SIZE + TILE_SIZE / 2) - enemy.x; 
+                        const dyt = (tower.y * TILE_SIZE + TILE_SIZE / 2) - enemy.y; 
+                        const distanceToTower = Math.sqrt(dxt * dxt + dyt * dyt); 
+                        if (distanceToTower <= tower.type.range) { 
+                            let distanceToEnd = 0; 
+                            for(let j = enemy.pathIndex; j < path.length -1; j++) { 
+                                const p1 = path[j], p2 = path[j+1]; 
+                                distanceToEnd += Math.sqrt(Math.pow((p2.x-p1.x)*TILE_SIZE,2) + Math.pow((p2.y-p1.y)*TILE_SIZE,2)); 
+                            } 
+                            if (enemy.pathIndex < path.length - 1) { 
+                                const nextWpX = path[enemy.pathIndex + 1].x * TILE_SIZE + TILE_SIZE / 2; 
+                                const nextWpY = path[enemy.pathIndex + 1].y * TILE_SIZE + TILE_SIZE / 2; 
+                                distanceToEnd += Math.sqrt(Math.pow(nextWpX - enemy.x, 2) + Math.pow(nextWpY - enemy.y, 2));
+                            } 
+                            if (distanceToEnd < minDistanceToEnd) { 
+                                minDistanceToEnd = distanceToEnd; 
+                                target = enemy; 
+                            } 
+                        } 
+                    });
+                    if (target) { 
+                        const angle = Math.atan2( target.y - (tower.y * TILE_SIZE + TILE_SIZE / 2), target.x - (tower.x * TILE_SIZE + TILE_SIZE / 2) ); 
+                        tower.angle = angle + Math.PI / 2; 
+                        projectiles.push({ 
+                            x: tower.x * TILE_SIZE + TILE_SIZE / 2, 
+                            y: tower.y * TILE_SIZE + TILE_SIZE / 2, 
+                            target: target, 
+                            speed: tower.type.projectileSpeed, 
+                            damage: tower.type.damage, 
+                            color: tower.type.projectileColor, 
+                            size: tower.type.projectileSize, 
+                            originTowerTypeKey: Object.keys(towerTypes).find(key => towerTypes[key] === tower.type) 
+                        }); 
+                        tower.lastShotTime = currentTime;
+                        let soundOpts = { freq: 700, duration: 0.08, oscType: 'triangle', freqRamp: 350 }; 
+                        if (tower.type === towerTypes.cannon) soundOpts = { freq: 200, duration: 0.15, oscType: 'square', volume: 0.15 }; 
+                        if (tower.type === towerTypes.freezer) soundOpts = { freq: 1200, duration: 0.1, oscType: 'sine', freqRamp: 900, volume: 0.08 }; 
+                        playSound('projectile', soundOpts); 
+                    }
                 }
             });
         }
         function updateProjectiles(deltaTime) { 
             for (let i = projectiles.length - 1; i >= 0; i--) {
-                const p = projectiles[i]; if (!p.target || p.target.health <= 0 || !enemies.includes(p.target)) { projectiles.splice(i,1); continue; }
-                const dx = p.target.x - p.x; const dy = p.target.y - p.y; const distance = Math.sqrt(dx * dx + dy * dy); const moveFactor = deltaTime / 16.666; const moveSpeed = p.speed * moveFactor;
-                if (distance < moveSpeed + p.target.currentStats.size/2) { p.target.health -= p.damage; if (p.originTowerTypeKey === 'freezer') { const freezerData = towerTypes.freezer; p.target.isSlowed = true; p.target.speed = p.target.baseSpeed * (1 - freezerData.slowFactor); p.target.slowTimer = freezerData.slowDuration; }
-                    if (p.target.health <= 0) { const enemyIdx = enemies.indexOf(p.target); if (enemyIdx > -1) { gold += enemies[enemyIdx].currentStats.goldValue; score += enemies[enemyIdx].currentStats.goldValue * 10; playSound('enemyDefeat', {freq: enemies[enemyIdx].currentStats.size > TILE_SIZE * 0.6 ? 150: 250, volume: 0.08}); enemies.splice(enemyIdx, 1); updateControlsUI(); } } projectiles.splice(i, 1); }
-                else { p.x += (dx / distance) * moveSpeed; p.y += (dy / distance) * moveSpeed; }
+                const p = projectiles[i]; 
+                if (!p.target || p.target.health <= 0 || !enemies.includes(p.target)) { 
+                    projectiles.splice(i,1); 
+                    continue; 
+                }
+                const dx = p.target.x - p.x; 
+                const dy = p.target.y - p.y; 
+                const distance = Math.sqrt(dx * dx + dy * dy); 
+                const moveFactor = deltaTime / 16.666; 
+                const moveSpeed = p.speed * moveFactor;
+                if (distance < moveSpeed + p.target.currentStats.size/2) { 
+                    p.target.health -= p.damage; 
+                    if (p.originTowerTypeKey === 'freezer') { 
+                        const freezerData = towerTypes.freezer; 
+                        p.target.isSlowed = true; 
+                        p.target.speed = p.target.baseSpeed * (1 - freezerData.slowFactor); 
+                        p.target.slowTimer = freezerData.slowDuration; 
+                    } 
+                    if (p.target.health <= 0) { 
+                        const enemyIdx = enemies.indexOf(p.target); 
+                        if (enemyIdx > -1) { 
+                            gold += enemies[enemyIdx].currentStats.goldValue; 
+                            score += enemies[enemyIdx].currentStats.goldValue * 10; 
+                            playSound('enemyDefeat', {freq: enemies[enemyIdx].currentStats.size > TILE_SIZE * 0.6 ? 150: 250, volume: 0.08}); 
+                            enemies.splice(enemyIdx, 1); 
+                            updateControlsUI(); 
+                        } 
+                    } 
+                    projectiles.splice(i, 1); 
+                } else { 
+                    p.x += (dx / distance) * moveSpeed; 
+                    p.y += (dy / distance) * moveSpeed; 
+                }
             }
         }
         function handleWaveSpawning(currentTime) { 
-            if (!waveInProgress || gameOver || gameWon) return; const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; if (!waveData) return;
-            if (enemiesSpawnedThisWave < enemiesThisWave && currentTime - lastSpawnTime > spawnInterval) { spawnEnemy(waveData); lastSpawnTime = currentTime; }
-            if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { spawnEnemy(waveData.plus, true); lastSpawnTimePlus = currentTime; }
-            if (enemiesSpawnedThisWave >= enemiesThisWave && (!waveData.plus || enemiesSpawnedThisWavePlus >= enemiesThisWavePlus) && enemies.length === 0) {
-                waveInProgress = false; const waveClearGoldBase = 25 + currentWaveInLevel * 5 + currentLevel * 5; gold += waveClearGoldBase; score += 50 + currentWaveInLevel * 10 + currentLevel * 10; saveGameProgress(); 
-                if (currentWaveInLevel >= wavesForCurrentLevel.length) { handleLevelCleared(); } else { updateControlsUI(); }
+            if (!waveInProgress || gameOver || gameWon) return; 
+            const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; 
+            if (!waveData) return;
+            if (enemiesSpawnedThisWave < enemiesThisWave && currentTime - lastSpawnTime > spawnInterval) { 
+                spawnEnemy(waveData); 
+                lastSpawnTime = currentTime; 
+            }
+            if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { 
+                spawnEnemy(waveData.plus, true); 
+                lastSpawnTimePlus = currentTime; 
+            }
+            if (enemiesSpawnedThisWave >= enemiesThisWave && (!waveData.plus || enemiesSpawnedThisWavePlus >= enemiesThisWavePlus) && enemies.length === 0) { 
+                waveInProgress = false; 
+                const waveClearGoldBase = 25 + currentWaveInLevel * 5 + currentLevel * 5; 
+                gold += waveClearGoldBase; 
+                score += 50 + currentWaveInLevel * 10 + currentLevel * 10; 
+                saveGameProgress(); 
+                if (currentWaveInLevel >= wavesForCurrentLevel.length) { 
+                    handleLevelCleared(); // Pass nothing, bonuses calculated inside
+                } else { 
+                    updateControlsUI(); 
+                }
             }
         }
-        function sellAllTowers() { let refund = 0; towers.forEach(tower => { refund += tower.type.cost; }); gold += refund; towers = []; if (refund > 0) playSound('sellTower', {volume: 0.15}); return refund; }
+        function sellAllTowers() { 
+            let refund = 0; 
+            towers.forEach(tower => { refund += tower.type.cost; }); 
+            gold += refund; 
+            towers = []; 
+            if (refund > 0) playSound('sellTower', {volume: 0.15}); 
+            return refund; 
+        }
         function showLevelClearedScreen(levelBonusGoldDisplay, towerRefundDisplay) {
-            gameState = 'LEVEL_CLEARED_TRANSITION'; levelClearedTitle.textContent = `Level ${currentLevel} Cleared!`; levelClearedMessage.innerHTML = `Level Bonus: +${levelBonusGoldDisplay}G<br>Towers Sold: +${towerRefundDisplay}G`; switchScreen('level-cleared-screen');
-            setTimeout(() => { if (gameState === 'LEVEL_CLEARED_TRANSITION') { currentLevel++; if (currentLevel > MAX_LEVELS) { handleEndGame(true); } else { setupNextLevel(); switchScreen('game-ui-outer-container'); updateControlsUI(); saveGameProgress();}}}, 3000); 
+            gameState = 'LEVEL_CLEARED_TRANSITION'; 
+            levelClearedTitle.textContent = `Level ${currentLevel} Cleared!`; 
+            levelClearedMessage.innerHTML = `Level Bonus: +${levelBonusGoldDisplay}G<br>Towers Sold: +${towerRefundDisplay}G`; 
+            switchScreen('level-cleared-screen'); 
+            setTimeout(() => { 
+                if (gameState === 'LEVEL_CLEARED_TRANSITION') { 
+                    currentLevel++; 
+                    if (currentLevel > MAX_LEVELS) { 
+                        handleEndGame(true); 
+                    } else { 
+                        setupNextLevel(); 
+                        switchScreen('game-ui-outer-container'); 
+                        updateControlsUI(); 
+                        saveGameProgress(); 
+                    }
+                }
+            }, 3000); 
         }
-        function handleLevelCleared() { const levelBonusForDisplay = 100 + currentLevel * 20; gold += levelBonusForDisplay; score += 200 + currentLevel * 50; const towerRefundForDisplay = sellAllTowers(); updateControlsUI(); saveGameProgress(); showLevelClearedScreen(levelBonusForDisplay, towerRefundForDisplay); }
-        function setupNextLevel() { currentWaveInLevel = 0; gold += 50 + currentLevel * 5; projectiles = []; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = []; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel); }
+        function handleLevelCleared() { 
+            const levelBonusForDisplay = 100 + currentLevel * 20; 
+            gold += levelBonusForDisplay; 
+            score += 200 + currentLevel * 50; 
+            const towerRefundForDisplay = sellAllTowers(); 
+            updateControlsUI(); 
+            saveGameProgress(); 
+            showLevelClearedScreen(levelBonusForDisplay, towerRefundForDisplay); 
+        }
+        function setupNextLevel() { 
+            currentWaveInLevel = 0; 
+            gold += 50 + currentLevel * 5; 
+            projectiles = []; 
+            enemiesSpawnedThisWave = 0; 
+            enemiesSpawnedThisWavePlus = 0; 
+            lastSpawnTime = 0; 
+            lastSpawnTimePlus = 0; 
+            enemies = []; 
+            generateLevelPath(currentLevel); 
+            wavesForCurrentLevel = getWavesForLevel(currentLevel); 
+        }
         
-        function loadProfiles() { const storedProfiles = localStorage.getItem(LS_PROFILES_KEY); profiles = storedProfiles ? JSON.parse(storedProfiles) : []; populateProfileList(); }
-        function saveProfiles() { localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles)); }
+        // --- Profile, Save/Load, High Score Logic ---
+        function loadProfiles() { 
+            const storedProfiles = localStorage.getItem(LS_PROFILES_KEY); 
+            profiles = storedProfiles ? JSON.parse(storedProfiles) : []; 
+            populateProfileList(); 
+        }
+        function saveProfiles() { 
+            localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles)); 
+        }
         function populateProfileList() {
-            profileListUl.innerHTML = ''; if (profiles.length === 0) { profileListUl.innerHTML = "<li>No profiles yet. Create one!</li>"; }
-            else { profiles.forEach(name => { const li = document.createElement('li'); const btn = document.createElement('button'); btn.textContent = name; btn.classList.add('profile-button'); btn.onclick = () => selectProfile(name); li.appendChild(btn); profileListUl.appendChild(li); }); }
+            profileListUl.innerHTML = ''; 
+            if (profiles.length === 0) { 
+                profileListUl.innerHTML = "<li>No profiles yet. Create one!</li>"; 
+            } else { 
+                profiles.forEach(name => { 
+                    const li = document.createElement('li'); 
+                    const btn = document.createElement('button'); 
+                    btn.textContent = name; 
+                    btn.classList.add('profile-button'); 
+                    btn.onclick = () => selectProfile(name); 
+                    li.appendChild(btn); 
+                    profileListUl.appendChild(li); 
+                }); 
+            }
         }
-        function createProfile() { const newName = newProfileNameInput.value.trim().toUpperCase(); if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) { profiles.push(newName); saveProfiles(); populateProfileList(); selectProfile(newName); newProfileNameInput.value = ''; } else { alert("Profile name must be unique, 3-8 chars long."); } }
-        function selectProfile(name) { activeProfileName = name; localStorage.setItem("pixelDefender_lastActiveProfile", name); activeProfileDisplay.textContent = `Profile: ${activeProfileName}`; updateMainMenuButtons(); switchScreen('main-menu'); }
-        function updateMainMenuButtons() {
-            if (activeProfileName) { playGameBtn.style.display = 'none'; changeProfileBtn.style.display = 'block'; const progress = loadGameProgress(true); 
-                if (progress && progress.currentLevel <= MAX_LEVELS) { continueGameBtn.style.display = 'block'; startNewGameForProfileBtn.textContent = `Start New (Lvl 1)`; }
-                else { continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.textContent = `Start New Game`; } startNewGameForProfileBtn.style.display = 'block'; }
-            else { playGameBtn.style.display = 'block'; continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.style.display = 'none'; changeProfileBtn.style.display = 'none'; activeProfileDisplay.textContent = "No active profile"; }
+        function createProfile() { 
+            const newName = newProfileNameInput.value.trim().toUpperCase(); 
+            if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) { 
+                profiles.push(newName); 
+                saveProfiles(); 
+                populateProfileList(); 
+                selectProfile(newName); 
+                newProfileNameInput.value = ''; 
+            } else { 
+                alert("Profile name must be unique, 3-8 chars long."); 
+            }
         }
-        function saveGameProgress() { if (!activeProfileName || (gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION' && gameState !== 'GAME_SETUP')) return; const progress = { currentLevel, gold, lives, score }; localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress)); console.log("Game saved for profile:", activeProfileName, progress); }
-        function loadGameProgress(checkOnly = false) { if (!activeProfileName) return null; const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); if (saved) { const progress = JSON.parse(saved); if (!checkOnly) { currentLevel = progress.currentLevel; gold = progress.gold; lives = progress.lives; score = progress.score; console.log("Game loaded for profile:", activeProfileName, progress); } return progress; } return null; }
-        function getProfileHighScores() { if (!activeProfileName) return []; const scores = localStorage.getItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores"); return scores ? JSON.parse(scores) : []; }
-        function saveProfileHighScores(scores) { if (!activeProfileName) return; scores.sort((a, b) => b.score - a.score); localStorage.setItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores", JSON.stringify(scores.slice(0, 5))); }
-        function displayProfileHighScores() { if (!activeProfileName) { highScoreListDisplay.innerHTML = "<li>Select a profile to see scores.</li>"; highScoresTitle.textContent = "High Scores"; return; } highScoresTitle.textContent = `High Scores: ${activeProfileName}`; const scores = getProfileHighScores(); highScoreListDisplay.innerHTML = ''; if (scores.length === 0) { highScoreListDisplay.innerHTML = "<li>No scores yet for this profile!</li>"; } else { scores.forEach(scoreItem => { const li = document.createElement('li'); li.textContent = `${scoreItem.name}: `; const scoreSpan = document.createElement('span'); scoreSpan.textContent = scoreItem.score; li.appendChild(scoreSpan); highScoreListDisplay.appendChild(li); }); } }
+        function selectProfile(name) { 
+            activeProfileName = name; 
+            localStorage.setItem("pixelDefender_lastActiveProfile", name); 
+            activeProfileDisplay.textContent = `Profile: ${activeProfileName}`; 
+            updateMainMenuButtons(); 
+            switchScreen('main-menu'); 
+        }
+        function updateMainMenuButtons() { 
+            if (activeProfileName) { 
+                playGameBtn.style.display = 'none'; 
+                changeProfileBtn.style.display = 'block'; 
+                const progress = loadGameProgress(true); 
+                if (progress && progress.currentLevel <= MAX_LEVELS) { 
+                    continueGameBtn.style.display = 'block'; 
+                    startNewGameForProfileBtn.textContent = `Start New (Lvl 1)`; 
+                } else { 
+                    continueGameBtn.style.display = 'none'; 
+                    startNewGameForProfileBtn.textContent = `Start New Game`; 
+                } 
+                startNewGameForProfileBtn.style.display = 'block'; 
+            } else { 
+                playGameBtn.style.display = 'block'; 
+                continueGameBtn.style.display = 'none'; 
+                startNewGameForProfileBtn.style.display = 'none'; 
+                changeProfileBtn.style.display = 'none'; 
+                activeProfileDisplay.textContent = "No active profile"; 
+            }
+        }
+        function saveGameProgress() { 
+            if (!activeProfileName || (gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION' && gameState !== 'GAME_SETUP')) return; 
+            const progress = { currentLevel, gold, lives, score }; 
+            localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress)); 
+            console.log("Game saved for profile:", activeProfileName); 
+        }
+        function loadGameProgress(checkOnly = false) { 
+            if (!activeProfileName) return null; 
+            const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); 
+            if (saved) { 
+                try { 
+                    const progress = JSON.parse(saved); 
+                    if (!checkOnly) { 
+                        currentLevel = progress.currentLevel; 
+                        gold = progress.gold; 
+                        lives = progress.lives; 
+                        score = progress.score; 
+                        console.log("Game loaded:", progress); 
+                    } 
+                    return progress; 
+                } catch(e){ 
+                    console.error("Error parsing saved progress:",e); 
+                    localStorage.removeItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); 
+                    return null; 
+                }
+            } 
+            return null; 
+        }
+        function getProfileHighScores() { 
+            if (!activeProfileName) return []; 
+            const scores = localStorage.getItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores"); 
+            try { 
+                return scores ? JSON.parse(scores) : []; 
+            } catch(e){ 
+                console.error("Error parsing high scores:", e); 
+                localStorage.removeItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores");
+                return [];
+            }
+        }
+        function saveProfileHighScores(scores) { 
+            if (!activeProfileName) return; 
+            scores.sort((a, b) => b.score - a.score); 
+            localStorage.setItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores", JSON.stringify(scores.slice(0, 5))); 
+        }
+        function displayProfileHighScores() { 
+            if (!activeProfileName) { highScoreListDisplay.innerHTML = "<li>Select profile first.</li>"; highScoresTitle.textContent = "High Scores"; return; } 
+            highScoresTitle.textContent = `High Scores: ${activeProfileName}`; 
+            const scores = getProfileHighScores(); 
+            highScoreListDisplay.innerHTML = ''; 
+            if (scores.length === 0) { highScoreListDisplay.innerHTML = "<li>No scores yet!</li>"; } 
+            else { scores.forEach(scoreItem => { const li = document.createElement('li'); li.textContent = `${scoreItem.name}: `; const scoreSpan = document.createElement('span'); scoreSpan.textContent = scoreItem.score; li.appendChild(scoreSpan); highScoreListDisplay.appendChild(li); }); } 
+        }
         let scoreSubmitted = false; 
-        function checkAndPromptForProfileHighScore() { scoreSubmitted = false; const highScores = getProfileHighScores(); if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { highScoreInputArea.style.display = 'block'; playerNameInput.value = activeProfileName ? activeProfileName.substring(0,3).toUpperCase() : "YOU"; playerNameInput.focus(); } else { highScoreInputArea.style.display = 'none'; } }
-        submitScoreButton.addEventListener('click', () => { if(scoreSubmitted) return; const name = playerNameInput.value.trim().toUpperCase().substring(0,3) || "AAA"; const currentProfileHighScores = getProfileHighScores(); currentProfileHighScores.push({ name, score }); saveProfileHighScores(currentProfileHighScores); highScoreInputArea.style.display = 'none'; scoreSubmitted = true; });
+        function checkAndPromptForProfileHighScore() { 
+            scoreSubmitted = false; 
+            const highScores = getProfileHighScores(); 
+            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { 
+                highScoreInputArea.style.display = 'block'; 
+                playerNameInput.value = activeProfileName ? activeProfileName.substring(0,3).toUpperCase() : "YOU"; 
+                playerNameInput.focus(); 
+            } else { 
+                highScoreInputArea.style.display = 'none'; 
+            } 
+        }
+        submitScoreButton.addEventListener('click', () => { 
+            if(scoreSubmitted) return; 
+            const name = playerNameInput.value.trim().toUpperCase().substring(0,3) || "AAA"; 
+            const currentProfileHighScores = getProfileHighScores(); 
+            currentProfileHighScores.push({ name, score }); 
+            saveProfileHighScores(currentProfileHighScores); 
+            highScoreInputArea.style.display = 'none'; 
+            scoreSubmitted = true; 
+        });
 
+        // --- Game State Control ---
         function resetGameVariables(startFresh = true) { 
-            sellAllTowers(); towers = []; projectiles = []; selectedTowerType = null; waveInProgress = false; gameOver = false; gameWon = false; scoreSubmitted = false; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = [];
-            gameState = 'GAME_SETUP'; if (startFresh) { currentLevel = 1; gold = 150; lives = 20; score = 0; } else { const loadedProgress = loadGameProgress(); if (!loadedProgress) { currentLevel = 1; gold = 150; lives = 20; score = 0;}}
-            currentWaveInLevel = 0; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel); updateControlsUI(); saveGameProgress(); 
+            sellAllTowers(); 
+            towers = []; projectiles = []; selectedTowerType = null; waveInProgress = false; 
+            gameOver = false; gameWon = false; scoreSubmitted = false; 
+            enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; 
+            lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = [];
+            gameState = 'GAME_SETUP'; 
+            if (startFresh) { 
+                currentLevel = 1; gold = 150; lives = 20; score = 0; 
+                // Clear saved progress only if explicitly starting fresh for this profile
+                if(activeProfileName) localStorage.removeItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); 
+            } else { 
+                const loadedProgress = loadGameProgress(); 
+                if (!loadedProgress) { 
+                    currentLevel = 1; gold = 150; lives = 20; score = 0; 
+                }
+            }
+            currentWaveInLevel = 0; 
+            generateLevelPath(currentLevel); 
+            wavesForCurrentLevel = getWavesForLevel(currentLevel); 
+            updateControlsUI(); 
+            saveGameProgress(); 
         }
         function startGame(continuePreviousGame) {
             if (!activeProfileName) { alert("Please select or create a profile first!"); switchScreen('profile-screen'); return; }
-            initAudio(); resetGameVariables(!continuePreviousGame); gameState = 'PLAYING'; switchScreen('game-ui-outer-container');
-            if (gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); lastTime = performance.now(); gameLoopAnimationId = requestAnimationFrame(gameLoop);
+            initAudio(); 
+            resetGameVariables(!continuePreviousGame); 
+            gameState = 'PLAYING'; 
+            switchScreen('game-ui-outer-container');
+            if (gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); 
+            lastTime = performance.now(); 
+            gameLoopAnimationId = requestAnimationFrame(gameLoop);
         }
-        function handleEndGame(won) {
-            gameState = 'END_GAME'; gameOver = true; gameWon = won; if (gameLoopAnimationId) { cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; }
-            if (won) { messageTitle.textContent = "VICTORY!"; messageTitle.style.color = "#2ecc71"; messageText.textContent = `All ${MAX_LEVELS} levels cleared! Final Score: ${score}`; } else { messageTitle.textContent = "Game Over!"; messageTitle.style.color = "#e74c3c"; messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`; }
-            checkAndPromptForProfileHighScore(); switchScreen('end-game-overlay');
+        function handleEndGame(won) { 
+            gameState = 'END_GAME'; 
+            gameOver = true; 
+            gameWon = won; 
+            if (gameLoopAnimationId) { cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; } 
+            if (won) { messageTitle.textContent = "VICTORY!"; messageTitle.style.color = "#2ecc71"; messageText.textContent = `All ${MAX_LEVELS} levels cleared! Final Score: ${score}`; } 
+            else { messageTitle.textContent = "Game Over!"; messageTitle.style.color = "#e74c3c"; messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`; } 
+            checkAndPromptForProfileHighScore(); 
+            switchScreen('end-game-overlay'); 
         }
 
+        // --- Main Game Loop ---
         function gameLoop(currentTime) {
-            if (gameState !== 'PLAYING' || gameOver) { if(gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; return; }
-            const deltaTime = currentTime - lastTime; lastTime = currentTime;
-            ctx.clearRect(0, 0, canvas.width, canvas.height); drawPath(); drawGrid();
-            updateEnemies(deltaTime); updateTowers(currentTime, deltaTime); updateProjectiles(deltaTime); handleWaveSpawning(currentTime);
-            drawTowers(); drawEnemies(); drawProjectiles(); 
-            if (touchPlacementPreview.active) { // Draw touch preview if active
-                drawPlacementPreview(touchPlacementPreview.x, touchPlacementPreview.y);
+            if (gameState !== 'PLAYING' || gameOver) { 
+                if(gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); 
+                gameLoopAnimationId = null; 
+                return; 
+            }
+            const deltaTime = currentTime - lastTime; 
+            lastTime = currentTime;
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            drawPath(); 
+            drawGrid();
+            updateEnemies(deltaTime); 
+            updateTowers(currentTime, deltaTime); 
+            updateProjectiles(deltaTime); 
+            handleWaveSpawning(currentTime);
+            drawTowers(); 
+            drawEnemies(); 
+            drawProjectiles(); 
+            if (touchPlacementPreview.active) { 
+                drawPlacementPreview(touchPlacementPreview.x, touchPlacementPreview.y); 
             }
             updateControlsUI();
-            if (gameState === 'PLAYING' && !gameOver) { gameLoopAnimationId = requestAnimationFrame(gameLoop); }
+            if (gameState === 'PLAYING' && !gameOver) { 
+                gameLoopAnimationId = requestAnimationFrame(gameLoop); 
+            }
         }
         
+        // --- Event Listeners ---
         playGameBtn.addEventListener('click', () => { if (activeProfileName) { updateMainMenuButtons(); } else { switchScreen('profile-screen'); } });
         continueGameBtn.addEventListener('click', () => startGame(true));
-        startNewGameForProfileBtn.addEventListener('click', () => startGame(false));
+        startNewGameForProfileBtn.addEventListener('click', () => { if(confirm('Start a new game? Your current progress for this profile will be lost.')) { startGame(false); }});
         changeProfileBtn.addEventListener('click', () => { activeProfileName = null; localStorage.removeItem("pixelDefender_lastActiveProfile"); updateMainMenuButtons(); switchScreen('profile-screen'); });
         createProfileBtn.addEventListener('click', createProfile);
         viewHighScoresBtn.addEventListener('click', () => { displayProfileHighScores(); switchScreen('highscores-screen'); });
@@ -599,133 +1100,43 @@
         highScoresBackBtn.addEventListener('click', () => switchScreen('main-menu'));
         endGameToMainMenuBtn.addEventListener('click', () => { if (highScoreInputArea.style.display === 'block' && !scoreSubmitted) { highScoreInputArea.style.display = 'none'; } updateMainMenuButtons(); switchScreen('main-menu'); });
 
-        // --- Touch and Mouse Event Handling for Canvas ---
-        let lastTapTime = 0;
-        let lastTapGridX = -1, lastTapGridY = -1;
-        const DOUBLE_TAP_THRESHOLD = 300; // ms
-
-        canvas.addEventListener('click', (event) => { // For mouse users
-            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
-            initAudio();
-            const rect = canvas.getBoundingClientRect();
-            // Adjust click coordinates by the scale factor
-            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            const clickX = (event.clientX - rect.left) / scale;
-            const clickY = (event.clientY - rect.top) / scale;
-            const gridX = Math.floor(clickX / TILE_SIZE);
-            const gridY = Math.floor(clickY / TILE_SIZE);
-            
-            if (selectedTowerType) {
-                placeTower(gridX, gridY);
-            }
-        });
-
-        canvas.addEventListener('mousemove', (event) => { // Mouse preview
-            if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType || 'ontouchstart' in window) return; // Skip if touch device (simple check)
-            const rect = canvas.getBoundingClientRect();
-            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            const mouseX = (event.clientX - rect.left) / scale;
-            const mouseY = (event.clientY - rect.top) / scale;
-            const gridX = Math.floor(mouseX / TILE_SIZE);
-            const gridY = Math.floor(mouseY / TILE_SIZE);
-            
-            touchPlacementPreview.active = true;
-            touchPlacementPreview.x = gridX;
-            touchPlacementPreview.y = gridY;
-            // Game loop will pick this up for drawing
-        });
-         canvas.addEventListener('mouseleave', () => {
-             if ('ontouchstart' in window) return;
-             clearTouchPlacementPreview();
-         });
-
-
-        canvas.addEventListener('touchstart', (event) => {
-            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
-            event.preventDefault(); // Prevent scrolling/zooming on canvas
-            initAudio();
-            const rect = canvas.getBoundingClientRect();
-            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
-            const touchX = (event.touches[0].clientX - rect.left) / scale;
-            const touchY = (event.touches[0].clientY - rect.top) / scale;
-            const gridX = Math.floor(touchX / TILE_SIZE);
-            const gridY = Math.floor(touchY / TILE_SIZE);
-
-            if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) {
-                clearTouchPlacementPreview();
-                return;
-            }
-
-            const currentTime = new Date().getTime();
-            if (selectedTowerType) {
-                if (touchPlacementPreview.active && touchPlacementPreview.x === gridX && touchPlacementPreview.y === gridY && (currentTime - lastTapTime < DOUBLE_TAP_THRESHOLD)) {
-                    // Second tap on the same previewed cell: Place tower
-                    placeTower(gridX, gridY);
-                    clearTouchPlacementPreview(); // Clear after placing
-                } else {
-                    // First tap or tap on a new cell: Show preview
-                    touchPlacementPreview.active = true;
-                    touchPlacementPreview.x = gridX;
-                    touchPlacementPreview.y = gridY;
-                    // Game loop will draw it
-                }
-            }
-            lastTapTime = currentTime;
-            lastTapGridX = gridX;
-            lastTapGridY = gridY;
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (event) => {
-            if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType) return;
-            event.preventDefault();
-             if (touchPlacementPreview.active) { // If a preview was active from a tap
-                const rect = canvas.getBoundingClientRect();
-                const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
-                const touchX = (event.touches[0].clientX - rect.left) / scale;
-                const touchY = (event.touches[0].clientY - rect.top) / scale;
-                const gridX = Math.floor(touchX / TILE_SIZE);
-                const gridY = Math.floor(touchY / TILE_SIZE);
-
-                if (gridX !== touchPlacementPreview.x || gridY !== touchPlacementPreview.y) {
-                    clearTouchPlacementPreview(); // Moved away, clear static preview
-                }
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', (event) => {
-            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
-            // If a preview is active and the finger lifts, it stays for the next tap to confirm.
-            // No specific action on touchend alone unless we want to clear preview if not placed.
-            // The current logic in touchstart handles the tap-preview, tap-again-to-place.
-        });
-
-
-        towerButtons.forEach(button => {
-            button.addEventListener('click', () => { // Works for mouse and simple taps
-                if (gameState === 'PLAYING' && !gameOver && !gameWon) { 
-                    initAudio(); const type = button.dataset.type; const towerData = towerTypes[type];
-                    if (currentLevel >= towerData.unlockLevel) { 
-                        selectedTowerType = (selectedTowerType === type && !touchPlacementPreview.active) ? null : type; // Allow re-selecting if preview is not for this
-                        if(selectedTowerType !== type) clearTouchPlacementPreview(); // Clear preview if deselecting or choosing another
-                    } 
-                    else { selectedTowerType = null; playSound('error'); clearTouchPlacementPreview(); } 
-                    updateControlsUI(); 
-                }
-            });
-        });
+        let lastTapTime = 0; let lastTapGridX = -1, lastTapGridY = -1; const DOUBLE_TAP_THRESHOLD = 300; 
+        canvas.addEventListener('click', (event) => { if (gameState !== 'PLAYING' || gameOver || gameWon || 'ontouchstart' in window) return; initAudio(); const rect = canvas.getBoundingClientRect(); const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1; const clickX = (event.clientX - rect.left) / scale; const clickY = (event.clientY - rect.top) / scale; const gridX = Math.floor(clickX / TILE_SIZE); const gridY = Math.floor(clickY / TILE_SIZE); if (selectedTowerType) { placeTower(gridX, gridY); } });
+        canvas.addEventListener('mousemove', (event) => { if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType || 'ontouchstart' in window) return; const rect = canvas.getBoundingClientRect(); const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1; const mouseX = (event.clientX - rect.left) / scale; const mouseY = (event.clientY - rect.top) / scale; const gridX = Math.floor(mouseX / TILE_SIZE); const gridY = Math.floor(mouseY / TILE_SIZE); if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) { clearTouchPlacementPreview(); return;} touchPlacementPreview.active = true; touchPlacementPreview.x = gridX; touchPlacementPreview.y = gridY; });
+        canvas.addEventListener('mouseleave', () => { if ('ontouchstart' in window) return; clearTouchPlacementPreview(); });
+        canvas.addEventListener('touchstart', (event) => { if (gameState !== 'PLAYING' || gameOver || gameWon) return; event.preventDefault(); initAudio(); const rect = canvas.getBoundingClientRect(); const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1; const touchX = (event.touches[0].clientX - rect.left) / scale; const touchY = (event.touches[0].clientY - rect.top) / scale; const gridX = Math.floor(touchX / TILE_SIZE); const gridY = Math.floor(touchY / TILE_SIZE); if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) { clearTouchPlacementPreview(); return; } const currentTime = new Date().getTime(); if (selectedTowerType) { if (touchPlacementPreview.active && touchPlacementPreview.x === gridX && touchPlacementPreview.y === gridY && (currentTime - lastTapTime < DOUBLE_TAP_THRESHOLD)) { placeTower(gridX, gridY); } else { touchPlacementPreview.active = true; touchPlacementPreview.x = gridX; touchPlacementPreview.y = gridY; } } lastTapTime = currentTime; lastTapGridX = gridX; lastTapGridY = gridY; }, { passive: false });
+        canvas.addEventListener('touchmove', (event) => { if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType) return; event.preventDefault(); if (touchPlacementPreview.active) { const rect = canvas.getBoundingClientRect(); const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1; const touchX = (event.touches[0].clientX - rect.left) / scale; const touchY = (event.touches[0].clientY - rect.top) / scale; const gridX = Math.floor(touchX / TILE_SIZE); const gridY = Math.floor(touchY / TILE_SIZE); if (gridX !== touchPlacementPreview.x || gridY !== touchPlacementPreview.y) { clearTouchPlacementPreview(); } } }, { passive: false });
+        canvas.addEventListener('touchend', (event) => { if (gameState !== 'PLAYING' || gameOver || gameWon) return; /* No action needed here for tap-tap place */ });
+        towerButtons.forEach(button => { button.addEventListener('click', () => { if (gameState === 'PLAYING' && !gameOver && !gameWon) { initAudio(); const type = button.dataset.type; const towerData = towerTypes[type]; if (currentLevel >= towerData.unlockLevel) { selectedTowerType = (selectedTowerType === type && !touchPlacementPreview.active) ? null : type; if(selectedTowerType !== type) clearTouchPlacementPreview(); } else { selectedTowerType = null; playSound('error'); clearTouchPlacementPreview(); } updateControlsUI(); } }); });
         startWaveButton.addEventListener('click', () => { if (gameState === 'PLAYING' && !gameOver && !gameWon) { initAudio(); startNextWave(); } });
 
-        window.addEventListener('resize', scaleGameArea); // Rescale on window resize
+        // --- Resize / Orientation Change Handling ---
+        window.addEventListener('resize', scaleGameArea); 
+        window.addEventListener('orientationchange', () => {
+             // Adding a slight delay after orientation change can help ensure
+             // the browser has finalized the layout changes before scaling.
+             setTimeout(scaleGameArea, 100); 
+        }); 
 
+        // --- Initial Setup on Load ---
         window.onload = () => {
-            loadProfiles(); const lastActive = localStorage.getItem("pixelDefender_lastActiveProfile");
-            if (lastActive && profiles.includes(lastActive)) { activeProfileName = lastActive; }
-            if (activeProfileName) { selectProfile(activeProfileName); } else { switchScreen('profile-screen'); }
-            updateMainMenuButtons(); 
-            // Initial scale if game screen is somehow active early (shouldn't be)
-             if (gameUIOuterContainer.classList.contains('active')) {
-                scaleGameArea();
+            loadProfiles(); 
+            const lastActive = localStorage.getItem("pixelDefender_lastActiveProfile");
+            if (lastActive && profiles.includes(lastActive)) { 
+                activeProfileName = lastActive; 
             }
+            if (activeProfileName) { 
+                selectProfile(activeProfileName); 
+            } else { 
+                switchScreen('profile-screen'); 
+            }
+            updateMainMenuButtons(); 
+            // Initial scale calculation after a short delay for layout stability
+            requestAnimationFrame(() => { 
+                 if (gameUIOuterContainer.classList.contains('active')) {
+                    scaleGameArea();
+                 }
+            });
         };
     </script>
 </body>
