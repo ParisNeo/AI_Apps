@@ -8,68 +8,79 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         html {
-            scroll-behavior: smooth; /* Smooth scrolling */
+            scroll-behavior: smooth;
+            /* Consider adding box-sizing globally if not already handled by Tailwind preflight */
+            /* box-sizing: border-box; */
         }
+        /* *, *:before, *:after { box-sizing: inherit; } */
+
         body {
-            /* Gradient background */
             background: linear-gradient(160deg, #2a3a4a 0%, #1a202c 100%);
-            color: #e2e8f0; /* Light text */
+            color: #e2e8f0;
             min-height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            /* Prevent text selection */
             user-select: none;
             -webkit-user-select: none;
-            /* Allow padding for status bar and home button */
-            padding-top: env(safe-area-inset-top, 1.5rem); /* Adjust for notch */
-            padding-bottom: env(safe-area-inset-bottom, 5rem); /* Adjust for home indicator/button */
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            padding-top: env(safe-area-inset-top, 1.5rem);
+            padding-bottom: env(safe-area-inset-bottom, 5rem);
+            overflow-x: hidden;
         }
 
-        /* Status Bar Styling */
         .status-bar {
             position: fixed;
             top: 0;
-            left: env(safe-area-inset-left, 0); /* Respect safe area */
-            right: env(safe-area-inset-right, 0); /* Respect safe area */
-            height: env(safe-area-inset-top, 1.5rem); /* Adjust height dynamically */
+            left: env(safe-area-inset-left, 0);
+            right: env(safe-area-inset-right, 0);
+            height: env(safe-area-inset-top, 1.5rem);
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 1rem; /* Add horizontal padding */
-            padding-top: env(safe-area-inset-top); /* Add padding only at the top within the bar */
-            box-sizing: content-box; /* Ensure padding doesn't increase height */
+            padding: 0 1rem;
+            padding-top: env(safe-area-inset-top);
+            box-sizing: content-box;
             font-size: 0.8rem;
-            color: #f7fafc; /* Lighter text for status bar */
+            color: #f7fafc;
             z-index: 100;
-            line-height: 1; /* Ensure text fits */
+            line-height: 1;
         }
         .status-bar > * {
-             min-height: 1.5rem; /* Ensure content doesn't collapse vertically */
+             min-height: 1.5rem;
              display: flex;
              align-items: center;
         }
 
-        /* App Grid Styling */
+        /* App Grid Styling - UPDATED for better mobile responsiveness */
         .app-grid {
-            padding: 1.5rem 1rem; /* Padding below status bar */
+            padding: 1.5rem 1rem; /* Vertical padding 1.5rem, Horizontal padding 1rem */
             display: grid;
-            /* More realistic app icon grid */
-            grid-template-columns: repeat(4, 1fr); /* Default 4 columns for mobile */
-            gap: 1.5rem 1rem; /* Adjust gap */
-            max-width: 900px; /* Max width for larger screens */
-            margin: 0 auto; /* Center the grid */
+            /* Use auto-fit for responsive columns on mobile */
+            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); /* Min item width ~60px icon + small breathing room */
+            gap: 1.25rem 0.75rem; /* Slightly reduced gap for smaller screens: row column */
+            max-width: 900px;
+            margin: 0 auto;
         }
+
+        /* Adjust column count and gap for larger screens if auto-fit isn't desired or needs override */
         @media (min-width: 640px) { /* sm */
-            .app-grid { grid-template-columns: repeat(5, 1fr); }
+            .app-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 1.5rem 1rem; /* Restore original gap */
+            }
         }
         @media (min-width: 768px) { /* md */
-            .app-grid { grid-template-columns: repeat(6, 1fr); }
+            .app-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 1.5rem 1rem; /* Restore original gap */
+            }
         }
         @media (min-width: 1024px) { /* lg */
-            .app-grid { grid-template-columns: repeat(7, 1fr); }
+            .app-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 1.5rem 1rem; /* Restore original gap */
+            }
         }
 
         /* App Card Styling */
@@ -111,7 +122,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 100%;
+            max-width: 100%; /* Ensures name fits within the card's width */
         }
 
         /* Home Button Styling */
@@ -186,7 +197,7 @@
                 name: "{{ app.name }}",
                 path: "{{ app.path }}",
                 icon: "{{ app.icon }}",
-                desc: {{ app.desc_js | safe }},  // CORRECTED: Use pre-processed desc_js directly
+                desc: {{ app.desc_js | safe }},  // Use pre-processed desc_js and mark as safe
                 color: "{{ app.color }}",
                 isDownload: {{ app.isDownload_js }} // Use the pre-formatted JS boolean
             }{% if not loop.last %},{% endif %}
