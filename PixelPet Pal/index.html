@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PixelCat Pal Rescue</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -10,27 +10,32 @@
         body {
             font-family: 'Press Start 2P', cursive;
             margin: 0;
-            overflow: hidden;
             background-color: #222;
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            height: 100vh; /* Make body fill viewport height */
             text-align: center;
+            padding: 5px; /* Small padding around the game container */
+            box-sizing: border-box;
         }
 
         #game-container {
-            width: 520px; 
-            height: 850px; 
+            width: 100%; 
+            height: 100%; 
+            max-width: 520px; /* Maintain original max width */
             background-color: #f0f0f0;
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.3);
-            padding: 15px;
+            padding: 10px; /* Reduced padding inside game container */
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            /* justify-content: space-between; -- Removed as screen-area will grow */
             position: relative;
+            box-sizing: border-box;
+            overflow: hidden; /* Clip content that might overflow */
         }
 
         #top-bar {
@@ -38,22 +43,24 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 5px;
+            flex-shrink: 0; /* Prevent shrinking */
         }
 
-        #language-switcher { font-size: 10px; }
+        #language-switcher { font-size: 12px; } /* Increased */
         .lang-button {
             font-family: 'Press Start 2P', cursive; background: none; border: none;
-            color: #0f380f; cursor: pointer; padding: 2px 5px; font-size: 10px;
+            color: #0f380f; cursor: pointer; padding: 2px 5px; font-size: 12px; /* Increased */
         }
         .lang-button.active { background-color: #8bac0f; color: #0f380f; border-radius: 3px; font-weight: bold; }
         #love-points-display {
-            font-size: 12px; color: #ff69b4; background-color: #444;
+            font-size: 14px; color: #ff69b4; background-color: #444; /* Increased */
             padding: 3px 6px; border-radius: 5px;
         }
 
         #screen-area {
             width: 100%;
-            height: 330px; 
+            flex-grow: 1; /* Allow screen area to take up available vertical space */
+            min-height: 0; /* Important for flex children with aspect-ratio */
             background-color: #9bbc0f; 
             border: 5px solid #306230;
             border-radius: 10px;
@@ -62,6 +69,7 @@
             display: flex; 
             justify-content: center;
             align-items: center;
+            margin-bottom: 5px; 
         }
 
         #pixel-pet-canvas {
@@ -70,30 +78,37 @@
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
             border: 2px solid #0f380f; 
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 240 / 180; /* Maintain aspect ratio */
         }
 
         #info-panel {
             background-color: #cadc9f; border: 3px solid #8bac0f; border-radius: 8px;
-            padding: 8px; margin-top: 8px; color: #0f380f;
+            padding: 6px; 
+            margin-top: 5px; 
+            color: #0f380f;
+            flex-shrink: 0; 
         }
         
-        .status-bar-container { margin-bottom: 6px; display: flex; align-items: center;}
-        .status-bar-label { font-size: 11px; margin-right: 5px; display: inline-block; width: 115px; text-align: left;}
-        .status-bar { display: inline-block; width: calc(100% - 130px); height: 14px; background-color: #8bac0f; border: 1px solid #0f380f; border-radius: 3px; overflow: hidden; position: relative;}
-        .status-bar-fill { height: 100%; background-color: #306230; transition: width 0.5s ease-out, background-color 0.5s ease-out; text-align: center; line-height: 14px; font-size: 9px; color: #cadc9f;}
+        .status-bar-container { margin-bottom: 4px; display: flex; align-items: center;} 
+        .status-bar-label { font-size: 13px; margin-right: 5px; display: inline-block; width: 95px; text-align: left; flex-shrink: 0;} /* Increased font, adjusted width */
+        .status-bar { display: inline-block; width: calc(100% - 100px); height: 12px; background-color: #8bac0f; border: 1px solid #0f380f; border-radius: 3px; overflow: hidden; position: relative;} /* Adjusted height and calc */
+        .status-bar-fill { height: 100%; background-color: #306230; transition: width 0.5s ease-out, background-color 0.5s ease-out; text-align: center; line-height: 12px; font-size: 10px; color: #cadc9f;} /* Adjusted line-height, font-size */
         
-        #pet-name-display, #pet-age-display, #pet-intelligence-display { font-size: 13px; margin-bottom: 4px;}
+        #pet-name-display, #pet-age-display, #pet-intelligence-display { font-size: 14px; margin-bottom: 3px;} /* Increased font, reduced margin */
 
         #controls {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; 
+            flex-shrink: 0; 
         }
 
         .action-button {
-            background-color: #ff69b4; color: white; border: 3px solid #c71585; padding: 9px 0;
-            font-family: 'Press Start 2P', cursive; font-size: 10px;
+            background-color: #ff69b4; color: white; border: 3px solid #c71585; padding: 8px 0; 
+            font-family: 'Press Start 2P', cursive; font-size: 11px; /* Slightly increased font */
             border-radius: 8px; cursor: pointer;
             box-shadow: 0 3px #8b0000; transition: all 0.1s ease; line-height: 1.2;
-            min-height: 45px; 
+            min-height: 40px; /* Adjusted min-height for touch */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -103,37 +118,45 @@
         .action-button.disabled { background-color: #aaa; color: #777; border-color: #888; box-shadow: 0 3px #555; cursor: not-allowed;}
 
         #message-area {
-            margin-top: 8px; height: 40px; background-color: #444; color: #0f0; padding: 6px;
-            border-radius: 5px; font-size: 11px; overflow-y: auto; text-align: left; line-height: 1.3;
+            margin-top: 5px; 
+            height: auto; 
+            min-height: 30px; 
+            max-height: 50px; /* Allow for 2-3 lines */
+            background-color: #444; color: #0f0; padding: 5px; 
+            border-radius: 5px; font-size: 12px; overflow-y: auto; text-align: left; line-height: 1.3; /* Increased font */
+            flex-shrink: 0; 
         }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.92);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; padding: 20px; box-sizing: border-box; text-align: center;
+            z-index: 100; padding: 15px; box-sizing: border-box; text-align: center; 
         }
-        .overlay h1 { color: #ff69b4; margin-bottom: 15px; font-size: 20px;}
-        .overlay p { margin-bottom: 15px; line-height: 1.4; font-size: 12px;}
-        .overlay input[type="text"], .overlay input[type="checkbox"] {
-            font-family: 'Press Start 2P', cursive; padding: 8px; margin-bottom: 15px;
+        .overlay h1 { color: #ff69b4; margin-bottom: 10px; font-size: 20px;} 
+        .overlay p { margin-bottom: 10px; line-height: 1.4; font-size: 13px;} /* Increased font */
+        .overlay input[type="text"] {
+            font-family: 'Press Start 2P', cursive; padding: 8px; margin-bottom: 10px; 
             border: 2px solid #ff69b4; background-color: #333; color: #fff; font-size: 14px; text-align: center;
+            width: 80%; max-width: 200px; /* Ensure input doesn't get too wide */
         }
-        .overlay input[type="checkbox"] { width: 20px; height: 20px; margin-right: 5px; vertical-align: middle;}
-        .overlay label { font-size: 12px; vertical-align: middle; }
+        .overlay input[type="checkbox"] {
+             width: 18px; height: 18px; margin-right: 5px; vertical-align: middle; margin-bottom: 10px;
+        }
+        .overlay label { font-size: 13px; vertical-align: middle; } /* Increased font */
 
         .overlay button, .shop-item button {
-            background-color: #00ff00; color: #0f380f; border: 3px solid #00aa00; padding: 12px 25px;
+            background-color: #00ff00; color: #0f380f; border: 3px solid #00aa00; padding: 10px 20px; 
             font-family: 'Press Start 2P', cursive; font-size: 14px; border-radius: 8px; cursor: pointer;
-            box-shadow: 0 3px #006400; margin-top: 10px;
+            box-shadow: 0 3px #006400; margin-top: 8px; 
         }
         .overlay button:active, .shop-item button:active { background-color: #00aa00; box-shadow: 0 1px #006400; transform: translateY(2px);}
         .shop-item button.disabled { background-color: #aaa; color: #777; border-color: #888; box-shadow: 0 3px #555; cursor: not-allowed;}
 
         #fact-bubble {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.95); color: #0f380f; padding: 8px 12px;
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); 
+            background-color: rgba(255, 255, 255, 0.95); color: #0f380f; padding: 6px 10px; 
             border-radius: 10px; border: 2px solid #8bac0f; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-size: 10px; max-width: 80%; text-align: center; z-index: 50;
+            font-size: 11px; max-width: 85%; text-align: center; z-index: 50; /* Increased font */
             opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none;
         }
         #fact-bubble.visible { opacity: 1; }
@@ -141,25 +164,32 @@
         #shop-overlay { display: none; } 
         #shop-items-grid { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-            width: 95%; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* More responsive columns */
+            gap: 10px; 
+            width: 100%; 
             margin-top: 10px;
-            max-height: 400px; 
+            max-height: 55vh; /* Relative max height for shop items */
             overflow-y: auto;
-            padding-right: 5px; 
+            padding-right: 5px; /* For scrollbar */
         }
         .shop-item {
-            background-color: #333; border: 2px solid #ff69b4; border-radius: 8px; padding: 10px;
-            font-size: 10px; display: flex; flex-direction: column; justify-content: space-between;
+            background-color: #333; border: 2px solid #ff69b4; border-radius: 8px; padding: 8px; 
+            font-size: 11px; display: flex; flex-direction: column; justify-content: space-between; /* Increased font */
         }
-        .shop-item p { margin: 4px 0; }
-        .shop-item .item-name { font-size: 11px; font-weight: bold; color: #fff; }
-        .shop-item .item-desc { font-size: 9px; color: #ccc; flex-grow: 1; margin-bottom: 5px;}
+        .shop-item p { margin: 3px 0; } 
+        .shop-item .item-name { font-size: 12px; font-weight: bold; color: #fff; } /* Increased font */
+        .shop-item .item-desc { font-size: 10px; color: #ccc; flex-grow: 1; margin-bottom: 5px;} /* Increased font */
         .shop-item .item-cost { color: #ffd700; font-weight: bold;} 
-        .shop-item button { font-size: 11px; padding: 8px 15px; margin-top: 5px;}
+        .shop-item button { font-size: 12px; padding: 6px 12px; margin-top: 5px;} /* Increased font, adjusted padding */
 
         #sickness-icon { color: red; font-size: 14px; margin-left: 5px; display: none; }
+
+        /* Minor adjustment for start screen text on smaller devices */
+        #start-screen p[data-translate-key="careInstructionsPixelCat"] {
+            font-size: 12px !important; /* Increased font */
+            margin-top: 15px !important; 
+        }
+
     </style>
 </head>
 <body>
@@ -181,7 +211,7 @@
                 <label for="real-time-mode-checkbox" data-translate-key="realTimeModeLabel">Real-Time Mode</label>
             </div>
             <button id="start-button" data-translate-key="hatchPet">Hatch Cat!</button>
-            <p style="font-size:10px; margin-top: 20px;" data-translate-key="careInstructionsPixelCat">Care for your pixel cat! Earn Love Points, buy items, and watch it grow. In Real-Time Mode, your cat lives on even when you're away!</p>
+            <p data-translate-key="careInstructionsPixelCat" style="font-size:10px; margin-top: 20px;">Care for your pixel cat! Earn Love Points, buy items, and watch it grow. In Real-Time Mode, your cat lives on even when you're away!</p>
         </div>
 
         <div id="game-over-screen" class="overlay" style="display: none;">
@@ -992,7 +1022,7 @@
         }
 
         function drawPixelPet() {
-            if (!petCtx || !gameState || !gameState.catGenes) return; // Guard against missing context or gameState
+            if (!petCtx || !gameState || !gameState.catGenes) return; 
             petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height);
             
             updatePetAnimationState(); 
@@ -1001,17 +1031,19 @@
             const genes = gameState.catGenes;
             const state = petAnimationState; 
 
-            const canvasLogicalWidth = pixelPetCanvas.width / PIXEL_SCALE;
-            const canvasLogicalHeight = pixelPetCanvas.height / PIXEL_SCALE;
+            // Use the canvas's attribute width/height for logical drawing
+            const canvasLogicalWidth = pixelPetCanvas.width / PIXEL_SCALE; // e.g., 240 / 5 = 48
+            const canvasLogicalHeight = pixelPetCanvas.height / PIXEL_SCALE; // e.g., 180 / 5 = 36
 
-            const catSpriteWidth = 20; // Main body width in logical pixels
+
+            const catSpriteWidth = 20; 
             const catAnchorX = Math.floor(canvasLogicalWidth / 2); 
-            const catAnchorY = canvasLogicalHeight - 4; // Paws rest here, a bit higher
+            const catAnchorY = canvasLogicalHeight - 4; 
 
             const fur1 = genes.furColor1;
             let fur2 = (genes.pattern !== 'solid' && genes.pattern !== 'tuxedo') ? genes.furColor2 : (genes.pattern === 'tuxedo' ? '#FFFFFF' : fur1);
             if (genes.pattern === 'solid') fur2 = fur1;
-            if (genes.pattern === 'tuxedo' && (fur1 === '#FFFFFF' || fur1 === '#F5F5DC')) genes.furColor1 = '#222222'; // Darker base for tuxedo
+            if (genes.pattern === 'tuxedo' && (fur1 === '#FFFFFF' || fur1 === '#F5F5DC')) genes.furColor1 = '#222222';
 
 
             const eyeColor = genes.eyeColor;
@@ -1021,7 +1053,6 @@
             const sickGreenishTint = 'rgba(100, 180, 100, 0.3)'; 
             const shadowColor = 'rgba(0,0,0,0.1)';
 
-            // --- Draw Environment ---
             petCtx.fillStyle = shadowColor;
             petCtx.beginPath();
             petCtx.ellipse(catAnchorX * PIXEL_SCALE, (catAnchorY + 0.5) * PIXEL_SCALE, 9 * PIXEL_SCALE, 1.5 * PIXEL_SCALE, 0, 0, 2 * Math.PI);
@@ -1173,7 +1204,7 @@
                     drawPixelRect(petCtx, currentX + 9, bodyY + 0.5, 2, 1.5, bellColor); 
                 }
             }
-             if (state === 'thinking' && !gameState.equippedAccessory) { // Lightbulb if no other head accessory
+             if (state === 'thinking' && !gameState.equippedAccessory) { 
                 const bulbX = accBaseX + 2;
                 const bulbY = accBaseY - 5;
                 if(animFrame === 0) { 
@@ -1186,27 +1217,27 @@
 
             if (gameState.isSick && state !== 'sleeping') {
                 petCtx.fillStyle = sickGreenishTint;
-                petCtx.fillRect(0,0, pixelPetCanvas.width, pixelPetCanvas.height);
+                petCtx.fillRect(0,0, pixelPetCanvas.width, pixelPetCanvas.height); // Use attribute width/height
             }
         }
 
         function animate(timestamp) {
             if (gameState.isGameOver && !gameLoopInterval) { 
                 if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-                if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height); // Clear canvas on game over
-                return; // Stop animation completely if game is over
+                if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height);
+                return; 
             }
             
-            animationFrameId = requestAnimationFrame(animate); // Store the ID
+            animationFrameId = requestAnimationFrame(animate); 
             const deltaTime = timestamp - lastFrameTime;
 
             if (deltaTime > animationInterval) {
                 lastFrameTime = timestamp - (deltaTime % animationInterval);
                 currentPetAnimationFrame = (currentPetAnimationFrame + 1) % 2; 
-                if(!gameState.isGameOver) { // Only draw if game is not over
+                if(!gameState.isGameOver) { 
                      if(petCtx) drawPixelPet(); 
                 } else {
-                     if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height); // Clear if game over screen is showing
+                     if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height);
                 }
             }
         }
@@ -1217,7 +1248,7 @@
                 return;
             }
             localStorage.removeItem('pixelPetGameStateDeluxe'); 
-            loadGameState(); // This will set up default game state including generated cat genes
+            loadGameState(); 
             initGame(true); 
         });
 
@@ -1239,35 +1270,39 @@
         langEnButton.addEventListener('click', () => setLanguage('en'));
         langFrButton.addEventListener('click', () => setLanguage('fr'));
 
-        window.addEventListener('resize', () => { /* Fixed canvas */ });
         window.addEventListener('beforeunload', saveGameState); 
 
-        // --- Startup ---
         loadGameState(); 
-        setLanguage(currentLanguage); // This now calls applyTranslations which calls populateShop
+        setLanguage(currentLanguage); 
         
         if (gameState.isGameOver) { 
-             if(startScreen) startScreen.style.display = 'flex'; // Show start screen to allow restart
+             if(startScreen) startScreen.style.display = 'flex'; 
              if(finalAgeDisplay) finalAgeDisplay.textContent = gameState.age; 
              if(gameOverMessage) gameOverMessage.textContent = translate(lastGameOverMessageKey || 'gameOverDefault', { petName: gameState.petName });
              if(gameOverScreen) gameOverScreen.style.display = 'flex'; 
              disableButtons();
-             if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; // Stop animation
-             if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height); // Clear canvas
+             if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; 
+             if(petCtx) petCtx.clearRect(0, 0, pixelPetCanvas.width, pixelPetCanvas.height); 
         } else if (!localStorage.getItem('pixelPetGameStateDeluxe') ) { 
              if(startScreen) startScreen.style.display = 'flex';
              disableButtons(); 
         } else {
             initGame(false); 
         }
-        // Moved animation start into initGame or conditional start.
         
         function applyTranslations() {
             document.querySelectorAll('[data-translate-key]').forEach(el => {
                 const key = el.getAttribute('data-translate-key');
                 if (el.id === 'love-points-display') { 
                     el.textContent = translate(key, { points: gameState.lovePoints });
-                } else {
+                } else if (el.id === 'start-screen' && key === 'careInstructionsPixelCat') { // Special handling for the P tag with inline style
+                    // Do nothing here, it will be handled by the specific selector later or we assume its content is okay.
+                    // The important part is not to overwrite its other attributes or children if any.
+                    // Or target it more specifically if its text content needs dynamic parameters
+                    // For now, the generic replacement is fine as it has no params.
+                     el.textContent = translate(key);
+                }
+                else {
                     el.textContent = translate(key);
                 }
             });
@@ -1285,7 +1320,7 @@
             const intLabelSpan = document.getElementById('pet-intelligence-display').querySelector('span[data-translate-key="labelIntelligence"]');
             if(intLabelSpan) intLabelSpan.textContent = translate('labelIntelligence');
 
-            if (messageArea && (messageArea.firstChild?.textContent.includes('Welcome') || messageArea.children.length === 0) ) {
+            if (messageArea && (messageArea.firstChild?.textContent.includes('Welcome') || messageArea.firstChild?.textContent.includes('Bienvenue') || messageArea.children.length === 0) ) {
                  messageArea.innerHTML = ''; 
                  addMessage(translate('welcomeMessagePixelCat'));
             }
@@ -1348,7 +1383,7 @@
                         if (gameState.lovePoints < item.cost) buyButtonEl.classList.add('disabled');
                     }
                 } else { 
-                    buyButtonEl.textContent = translate(item.consumable ? 'useButton' : 'buyButton', { cost: item.cost });
+                    buyButtonEl.textContent = translate(item.consumable || item.type === 'food' || item.type === 'special' ? 'useButton' : 'buyButton', { cost: item.cost }); // Adjusted logic for use/buy
                      if (gameState.lovePoints < item.cost) buyButtonEl.classList.add('disabled');
                 }
 
@@ -1371,32 +1406,35 @@
             }
 
             if (gameState.lovePoints >= item.cost) {
-                if (item.type === 'accessory' && !gameState.inventory.includes(itemKey)) { // Only deduct for new accessory purchase
-                    gameState.lovePoints -= item.cost;
-                } else if (item.consumable) { // Deduct for consumables
+                 // Deduct cost only if it's a new purchase or a consumable being used
+                if (!gameState.inventory.includes(itemKey) || item.consumable || item.oneTimeUse) {
                     gameState.lovePoints -= item.cost;
                 }
 
 
                 if (item.type === 'food') {
-                    addMessage(translate('itemPurchased', {itemName: translate(item.nameKey)}), 'event'); // Message purchase for food
+                    addMessage(translate('itemUsed', {itemName: translate(item.nameKey)}), 'event'); // Food is used
                     feedPet(itemKey); 
                 } else if (item.type === 'toy') {
-                     if (!gameState.inventory.includes(itemKey) || item.oneTimeUse) { 
-                        if(!gameState.inventory.includes(itemKey)) gameState.inventory.push(itemKey);
+                     if (!gameState.inventory.includes(itemKey)) { 
+                        gameState.inventory.push(itemKey);
                         addMessage(translate('itemPurchased', {itemName: translate(item.nameKey)}), 'event');
+                     } else if (item.oneTimeUse) {
+                        addMessage(translate('itemUsed', {itemName: translate(item.nameKey)}), 'event');
+                     } else {
+                        // If already owned and not oneTimeUse, just play
                      }
                      playWithPet(itemKey);
                      if (item.oneTimeUse) { 
                         const itemIndex = gameState.inventory.indexOf(itemKey);
                         if (itemIndex > -1) gameState.inventory.splice(itemIndex, 1);
                      }
-                } else if (item.type === 'accessory') {
+                } else if (item.type === 'accessory') { // This branch is for initial purchase
                     if (!gameState.inventory.includes(itemKey)) {
                         gameState.inventory.push(itemKey);
                         addMessage(translate('itemPurchased', {itemName: translate(item.nameKey)}), 'event');
                     }
-                    equipAccessory(itemKey); 
+                    equipAccessory(itemKey); // Equip after purchase
                 } else if (item.type === 'special') { 
                     if (item.effect.cleanliness) {
                         gameState.cleanliness = Math.min(MAX_STAT, gameState.cleanliness + item.effect.cleanliness);
