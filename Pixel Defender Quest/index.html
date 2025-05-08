@@ -13,28 +13,29 @@
             font-family: 'Press Start 2P', cursive;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            align-items: center; /* Horizontally center content (title and active screen) */
+            justify-content: center; /* Vertically center the block of (title + active screen) */
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 10px; /* Overall padding for the body */
             box-sizing: border-box;
-            overflow-x: hidden; /* Allow vertical scroll if needed, prevent horizontal */
+            overflow-x: hidden; /* Prevent horizontal scrollbars */
         }
 
         .main-title {
             color: #f1c40f;
             text-shadow: 3px 3px #e74c3c;
-            margin-bottom: 20px;
+            margin-bottom: 20px; /* Space between title and the screen below it */
             font-size: 2em;
             text-align: center;
+            /* position: relative; z-index: 10; Removed as screens are no longer absolutely positioned preventing overlap */
         }
 
         .screen {
             display: none; /* Hidden by default */
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Align to top for scrollable content */
+            justify-content: flex-start; /* Content within screen starts at its top */
             width: 100%;
             max-width: 800px; 
             padding: 20px;
@@ -43,34 +44,30 @@
             border: 4px solid #bdc3c7; 
             box-shadow: 0 0 25px rgba(0,0,0,0.6);
             text-align: center;
-            position: absolute; 
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            max-height: 90vh; /* Prevent screen from being taller than viewport */
+            /* Removed absolute positioning to allow normal flow after the title */
+            /* position: absolute; */
+            /* top: 50%; */
+            /* left: 50%; */
+            /* transform: translate(-50%, -50%); */
+            max-height: 85vh; /* Adjust to ensure screen + title fit well and screen can scroll */
             overflow-y: auto; /* Allow scrolling within a screen if content is too tall */
         }
         .screen.active {
-            display: flex; 
+            display: flex; /* This makes the active screen visible and participate in body's flex layout */
         }
         
-        .main-title {
-            position: relative;
-            z-index: 10; 
-        }
-
-
         #game-ui-container {
             /* Desktop: Canvas(600) + Controls(200) + Gap(15) + Padding(2*20=40) = 855px */
+            /* This specific max-width will override .screen's max-width: 800px for the game UI */
             max-width: calc(15 * 40px + 200px + 15px + 40px); 
-            justify-content: center; /* Center #game-area if it's narrower */
+            justify-content: center; 
         }
 
         #game-area {
             display: flex;
             gap: 15px;
             align-items: flex-start; 
-            width: 100%; /* Allow it to fill game-ui-container */
+            width: 100%; 
         }
 
         canvas {
@@ -80,7 +77,7 @@
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
-            flex-shrink: 0; /* Prevent canvas from shrinking if space is tight */
+            flex-shrink: 0; 
         }
 
         #controls {
@@ -91,7 +88,7 @@
             background-color: #2c3e50;
             border: 2px solid #7f8c8d;
             min-width: 200px;
-            max-height: calc(10 * 40px + 6px + 2*10px); /* Canvas height + borders + padding */
+            max-height: calc(10 * 40px + 6px + 2*10px); 
             overflow-y: auto;
         }
         
@@ -173,34 +170,35 @@
         #end-game-overlay p { font-size: 1em; text-align:center; }
 
         /* --- Smartphone Adaptations --- */
-        @media (max-width: 855px) { /* Breakpoint where desktop layout might be too wide */
+        @media (max-width: 855px) { /* Breakpoint for game area stacking */
             .main-title {
-                font-size: 1.6em; /* Slightly smaller title */
+                font-size: 1.6em; 
                 margin-bottom: 15px;
             }
-            .screen {
-                padding: 15px; /* Reduce padding on screens */
+            .screen { /* Applies to all screens on mobile */
+                padding: 15px;
                 max-width: 95vw; /* Allow screens to use more viewport width */
+                max-height: 88vh; /* Slightly more height for mobile screens */
             }
             #game-ui-container {
-                 /* Mobile: Canvas(600) + Padding(2*15=30) = 630px */
-                max-width: calc(15 * 40px + 30px);
+                /* Mobile: Canvas(600) + Padding(2*15=30) = 630px, or full width if smaller */
+                max-width: calc(15 * 40px + 30px); 
+                padding: 15px; /* Consistent padding */
             }
             #game-area {
-                flex-direction: column; /* Stack canvas and controls */
-                align-items: center; /* Center items in the column */
+                flex-direction: column; 
+                align-items: center; 
                 gap: 10px;
             }
             canvas {
-                /* Canvas size is fixed by JS, ensure it doesn't cause overflow if screen is too small */
                 max-width: 100%; 
             }
             #controls {
-                width: 100%; /* Controls take full width of their container */
-                max-width: calc(15 * 40px); /* Max width same as canvas */
-                min-width: unset; /* Remove desktop min-width */
-                margin-top: 10px; /* Space between canvas and controls */
-                max-height: 200px; /* Constrain height on mobile, allow scroll */
+                width: 100%; 
+                max-width: calc(15 * 40px); 
+                min-width: unset; 
+                margin-top: 10px; 
+                max-height: 200px; /* More constrained height for controls on mobile */
             }
             button, .menu-button {
                 font-size: 0.8em;
@@ -214,10 +212,10 @@
             .info-bar {
                 font-size: 0.75em;
             }
-            .screen h2 {
+            .screen h2 { /* Applies to h2 in all screens on mobile */
                 font-size: 1.3em;
             }
-             .screen p, .screen li {
+             .screen p, .screen li { /* Applies to p, li in all screens on mobile */
                 font-size: 0.75em;
             }
             #end-game-overlay h2 { font-size: 1.5em; }
@@ -234,8 +232,8 @@
                 font-size: 0.7em;
                 padding: 8px 10px;
             }
-            .tower-button {
-                font-size: 0.7em;
+            .tower-button { /* Corrected selector */
+                font-size: 0.7em; /* Ensure this isn't tower-button specific */
             }
             .info-bar {
                 font-size: 0.7em;
@@ -409,10 +407,10 @@
         let currentLevelPrng;
         let audioContext;
         let gameLoopAnimationId = null;
-        let lastTime = 0; // Moved to global scope for gameLoop
+        let lastTime = 0; 
 
         // --- Game State Management ---
-        let gameState = 'MENU'; // Initial state
+        let gameState = 'MENU'; 
 
         function switchScreen(targetScreenId) {
             document.querySelectorAll('.screen').forEach(screen => {
@@ -421,11 +419,9 @@
             const target = document.getElementById(targetScreenId);
             if (target) {
                 target.classList.add('active');
-                 // Scroll active screen to top, useful for long help/credit screens on mobile
                 target.scrollTop = 0;
             } else {
                 console.error("Target screen not found:", targetScreenId);
-                // Fallback to main menu if target is invalid
                 document.getElementById('main-menu').classList.add('active');
                 gameState = 'MENU';
                 return;
@@ -435,7 +431,6 @@
             else if (targetScreenId === 'help-screen') gameState = 'HELP';
             else if (targetScreenId === 'credits-screen') gameState = 'CREDITS';
             else if (targetScreenId === 'highscores-screen') gameState = 'HIGHSCORES';
-            // PLAYING and END_GAME states are managed by their respective flow functions
         }
 
         // --- Tower & Enemy Definitions ---
@@ -467,14 +462,12 @@
             const difficultyMultiplier = 1 + (levelNum - 1) * 0.15; 
             const enemyHealthMultiplier = 1 + (levelNum - 1) * 0.1;
             const enemySpeedMultiplier = 1 + (levelNum - 1) * 0.05;
-            // Create a deep copy of enemyTypes to modify for this level
             const baseEnemies = JSON.parse(JSON.stringify(enemyTypes)); 
             Object.keys(baseEnemies).forEach(key => {
                 baseEnemies[key].health = Math.floor(enemyTypes[key].health * enemyHealthMultiplier);
                 baseEnemies[key].speed = parseFloat((enemyTypes[key].speed * enemySpeedMultiplier).toFixed(1));
             });
 
-            // Wave 1
             waves.push({ 
                 count: Math.floor((5 + levelNum) * difficultyMultiplier * 0.7), 
                 type: 'basic', 
@@ -482,7 +475,6 @@
                 enemyStats: baseEnemies 
             });
 
-            // Wave 2
             let type2 = (levelNum % 3 === 0) ? 'strong' : 'fast';
             waves.push({ 
                 count: Math.floor((3 + levelNum) * difficultyMultiplier * 0.6), 
@@ -492,12 +484,11 @@
                     count: Math.floor((2 + Math.floor(levelNum/2)) * difficultyMultiplier * 0.5), 
                     type: type2, 
                     interval: Math.max(500, 1300 - levelNum * 20),
-                    enemyStats: baseEnemies // Pass scaled stats to 'plus' part
+                    enemyStats: baseEnemies 
                 },
                 enemyStats: baseEnemies
             });
             
-            // Wave 3
             let type3 = (levelNum % 5 === 0 && levelNum >=5) ? 'boss' : ((levelNum % 2 === 0) ? 'strong' : 'fast');
             let count3_main = (type3 === 'boss') ? Math.max(1, Math.floor(levelNum / 7)) : Math.floor((4 + levelNum) * difficultyMultiplier * 0.5);
             
@@ -509,12 +500,11 @@
                     count: Math.floor((3 + levelNum) * difficultyMultiplier * 0.4),
                     type: 'basic',
                     interval: Math.max(300, 900 - levelNum * 15),
-                    enemyStats: baseEnemies // Pass scaled stats to 'plus' part
+                    enemyStats: baseEnemies 
                 } : null),
                 enemyStats: baseEnemies
             });
             
-            // Optional 4th wave for higher levels
             if (levelNum > 15 && levelNum % 4 === 0) { 
                  waves.push({ 
                     count: Math.floor((10 + levelNum) * difficultyMultiplier * 0.8), 
@@ -527,7 +517,7 @@
         }
 
         function generateLevelPath(levelSeed) { 
-            currentLevelPrng = mulberry32(levelSeed + 1000 + Date.now()); // Add more seed variance
+            currentLevelPrng = mulberry32(levelSeed + 1000 + Date.now()); 
             path = [];
             const tempGrid = Array(GRID_HEIGHT).fill(null).map(() => Array(GRID_WIDTH).fill(false));
             let startY = Math.floor(currentLevelPrng() * (GRID_HEIGHT - 2)) + 1; 
@@ -542,24 +532,20 @@
             while (currentX < GRID_WIDTH - 1 && attempts < maxAttempts) {
                 attempts++; 
                 let possibleMoves = [];
-                // Prioritize Right
                 if (currentX + 1 < GRID_WIDTH && !tempGrid[currentY][currentX + 1]) {
                     possibleMoves.push({ x: currentX + 1, y: currentY, weight: 4 });
                 }
-                // Down
                 if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY + 1][currentX]) {
                     possibleMoves.push({ x: currentX, y: currentY + 1, weight: 2 });
                 }
-                // Up
                 if (currentY - 1 >= 0 && !tempGrid[currentY - 1][currentX]) {
                     possibleMoves.push({ x: currentX, y: currentY - 1, weight: 2 });
                 }
-                // Occasionally allow left
                 if (currentX > 1 && currentX -1 >=0 && !tempGrid[currentY][currentX-1] && currentLevelPrng() < 0.15 && path.length > 3) {
                     possibleMoves.push({x: currentX-1, y: currentY, weight: 1});
                 }
 
-                if (possibleMoves.length === 0) { // Backtrack or recover
+                if (possibleMoves.length === 0) { 
                     if (path.length > 1 && currentLevelPrng() < 0.8) { 
                         path.pop(); 
                         if (path.length > 0) { 
@@ -567,12 +553,12 @@
                             currentX = prev.x; 
                             currentY = prev.y; 
                             continue; 
-                        } else { break; } // Should not happen
-                    } else { // Try to force a move
+                        } else { break; } 
+                    } else { 
                         if (currentX + 1 < GRID_WIDTH && !tempGrid[currentY][currentX + 1]) { currentX++; }
                         else if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY + 1][currentX]) { currentY++; }
                         else if (currentY - 1 >= 0 && !tempGrid[currentY - 1][currentX]) { currentY--; }
-                        else { break; } // Truly stuck
+                        else { break; } 
                         
                         if (!tempGrid[currentY][currentX]) {
                              path.push({ x: currentX, y: currentY });
@@ -582,10 +568,9 @@
                     }
                 }
 
-                // Weighted random choice
                 const totalWeight = possibleMoves.reduce((sum, move) => sum + move.weight, 0);
                 let randomPick = currentLevelPrng() * totalWeight; 
-                let chosenMove = possibleMoves[possibleMoves.length - 1]; // Default to last if something goes wrong
+                let chosenMove = possibleMoves[possibleMoves.length - 1]; 
                 for (const move of possibleMoves) { 
                     if (randomPick < move.weight) { 
                         chosenMove = move; 
@@ -600,13 +585,12 @@
                 tempGrid[currentY][currentX] = true;
             }
             
-            // Ensure path reaches the end
             while(currentX < GRID_WIDTH - 1) {
                 currentX++; 
                 if (!tempGrid[currentY][currentX]) { 
                     path.push({x: currentX, y: currentY}); 
                     tempGrid[currentY][currentX] = true; 
-                } else { // Path crossed, try to jog Y
+                } else { 
                     let newY = currentY;
                     if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY+1][currentX]) newY = currentY+1;
                     else if (currentY - 1 >= 0 && !tempGrid[currentY-1][currentX]) newY = currentY-1;
@@ -614,7 +598,7 @@
                     if (!tempGrid[currentY][currentX]) { 
                         path.push({x: currentX, y: currentY});
                         tempGrid[currentY][currentX] = true;
-                    } // If still blocked, path might be imperfect for this seed
+                    } 
                 }
             }
         }
@@ -825,49 +809,35 @@
                     updateUI();
                 } else { 
                     playSound('error'); 
-                    console.log("Cannot place tower: on path, occupied, or out of bounds."); 
                 }
             } else { 
                 playSound('error'); 
-                console.log("Not enough gold!"); 
             }
         }
 
         function spawnEnemy(waveInfo, isPlus = false) {
-            if (path.length === 0) {
-                console.warn("Attempted to spawn enemy with no path defined.");
-                return; 
-            }
+            if (path.length === 0) return; 
             const enemyTypeKey = waveInfo.type; 
-            if (!waveInfo.enemyStats) {
-                console.error("CRITICAL: waveInfo.enemyStats is undefined in spawnEnemy!", "waveInfo:", JSON.stringify(waveInfo), "isPlus:", isPlus);
-                return; 
-            }
+            if (!waveInfo.enemyStats) return; 
             const baseStats = waveInfo.enemyStats[enemyTypeKey]; 
-            if (!baseStats) { 
-                console.error("Undefined enemy type in wave data:", enemyTypeKey, "Available stats:", JSON.stringify(waveInfo.enemyStats)); 
-                return; 
-            }
+            if (!baseStats) return; 
             
             enemies.push({ 
                 x: path[0].x * TILE_SIZE + TILE_SIZE / 2, 
                 y: path[0].y * TILE_SIZE + TILE_SIZE / 2, 
                 pathIndex: 0, 
-                currentStats: JSON.parse(JSON.stringify(baseStats)), // Ensure deep copy for each enemy instance
+                currentStats: JSON.parse(JSON.stringify(baseStats)),
                 health: baseStats.health, 
                 maxHealth: baseStats.health, 
                 speed: baseStats.speed, 
                 baseSpeed: baseStats.speed, 
                 isSlowed: false, 
                 slowTimer: 0, 
-                id: Math.random().toString(36).substr(2, 9) // Unique ID
+                id: Math.random().toString(36).substr(2, 9) 
             });
 
-            if (!isPlus) {
-                enemiesSpawnedThisWave++;
-            } else {
-                enemiesSpawnedThisWavePlus++;
-            }
+            if (!isPlus) enemiesSpawnedThisWave++;
+            else enemiesSpawnedThisWavePlus++;
          }
 
         function startNextWave() { 
@@ -882,8 +852,7 @@
 
             const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; 
             if (!waveData) { 
-                console.error("Error: No wave data for current wave " + currentWaveInLevel); 
-                waveInProgress = false; // Prevent further issues
+                waveInProgress = false; 
                 return; 
             }
             enemiesThisWave = waveData.count; 
@@ -914,7 +883,7 @@
                     enemies.splice(i, 1); 
                     lives--; 
                     updateUI(); 
-                    if (lives <= 0 && !gameOver && !gameWon) { // Ensure end game isn't called multiple times
+                    if (lives <= 0 && !gameOver && !gameWon) { 
                         handleEndGame(false); 
                     } 
                     continue; 
@@ -926,12 +895,12 @@
                 const dx = targetX - enemy.x; 
                 const dy = targetY - enemy.y; 
                 const distance = Math.sqrt(dx * dx + dy * dy); 
-                const moveFactor = deltaTime / 16.666; // Normalize speed to ~60fps
+                const moveFactor = deltaTime / 16.666; 
                 const moveSpeed = enemy.speed * moveFactor; 
 
                 if (distance < moveSpeed ) { 
                     enemy.pathIndex++; 
-                    if (enemy.pathIndex >= path.length -1) { // Reached absolute end of path array
+                    if (enemy.pathIndex >= path.length -1) { 
                         enemies.splice(i, 1); 
                         lives--; 
                         updateUI(); 
@@ -940,7 +909,6 @@
                         }
                         continue; 
                     }
-                    // Snap to waypoint to avoid overshooting on low FPS
                     enemy.x = targetX;
                     enemy.y = targetY;
                 } else { 
@@ -1049,29 +1017,22 @@
         function handleWaveSpawning(currentTime) { 
             if (!waveInProgress || gameOver || gameWon) return;
             const waveData = wavesForCurrentLevel[currentWaveInLevel - 1]; 
-            if (!waveData) {
-                console.warn("handleWaveSpawning: No wave data for wave " + currentWaveInLevel);
-                return;
-            }
+            if (!waveData) return;
 
-            // Main enemy type spawning
             if (enemiesSpawnedThisWave < enemiesThisWave && currentTime - lastSpawnTime > spawnInterval) { 
                 spawnEnemy(waveData); 
                 lastSpawnTime = currentTime; 
             }
             
-            // Secondary "plus" enemy type spawning
-            if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { // Ensure interval is read from plus obj
+            if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { 
                 spawnEnemy(waveData.plus, true); 
                 lastSpawnTimePlus = currentTime; 
             }
 
-            // Check if wave is over
             if (enemiesSpawnedThisWave >= enemiesThisWave && 
                (!waveData.plus || enemiesSpawnedThisWavePlus >= enemiesThisWavePlus) && 
                enemies.length === 0) {
                 waveInProgress = false; 
-                console.log(`Level ${currentLevel} Wave ${currentWaveInLevel} cleared!`);
                 gold += 25 + currentWaveInLevel * 5 + currentLevel * 5; 
                 score += 50 + currentWaveInLevel * 10 + currentLevel * 10;
                 
@@ -1083,13 +1044,12 @@
         }
 
         function handleLevelCleared() {
-            console.log(`Level ${currentLevel} ALL WAVES CLEARED!`);
             gold += 100 + currentLevel * 20; 
             score += 200 + currentLevel * 50; 
             currentLevel++;
 
             if (currentLevel > MAX_LEVELS) { 
-                handleEndGame(true); // Game won
+                handleEndGame(true); 
             } else { 
                 setupNextLevel(); 
             } 
@@ -1098,15 +1058,13 @@
 
         function setupNextLevel() {
             currentWaveInLevel = 0; 
-            gold += 50 + currentLevel * 5; // Bonus gold for starting next level
-            projectiles = []; // Clear projectiles from previous level
-            // Enemies are already cleared by wave logic. Towers are kept.
+            gold += 50 + currentLevel * 5; 
+            projectiles = []; 
             generateLevelPath(currentLevel); 
             wavesForCurrentLevel = getWavesForLevel(currentLevel); 
             updateUI();
         }
         
-        // --- High Score Logic ---
         function getHighScores() { 
             const scores = localStorage.getItem('pixelDefenderHighScores'); 
             return scores ? JSON.parse(scores) : []; 
@@ -1137,7 +1095,7 @@
         function checkAndPromptForHighScore() { 
             scoreSubmitted = false; 
             const highScores = getHighScores();
-            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { // Check against 5th or last score
+            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { 
                 highScoreInputArea.style.display = 'block'; 
                 playerNameInput.value = "YOU"; 
                 playerNameInput.focus();
@@ -1155,14 +1113,12 @@
             scoreSubmitted = true;
         });
 
-        // --- Game State Control ---
         function resetGameVariables() {
             gold = 150; 
             lives = 20; 
             currentLevel = 1; 
             score = 0; 
             currentWaveInLevel = 0;
-            
             enemies = []; 
             towers = []; 
             projectiles = [];
@@ -1171,7 +1127,6 @@
             gameOver = false; 
             gameWon = false; 
             scoreSubmitted = false;
-            
             generateLevelPath(currentLevel);
             wavesForCurrentLevel = getWavesForLevel(currentLevel);
         }
@@ -1188,8 +1143,8 @@
         }
 
         function handleEndGame(won) {
-            gameState = 'END_GAME'; // Set game state for overlay
-            gameOver = true; // General flag to stop game logic updates
+            gameState = 'END_GAME'; 
+            gameOver = true; 
             gameWon = won; 
 
             if (gameLoopAnimationId) {
@@ -1207,12 +1162,10 @@
                 messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`;
             }
             checkAndPromptForHighScore();
-            switchScreen('end-game-overlay'); // Show the end game screen
+            switchScreen('end-game-overlay'); 
         }
 
-        // --- Main Game Loop ---
         function gameLoop(currentTime) {
-            // Stop loop if not playing or game has definitively ended (via gameOver flag set in handleEndGame)
             if (gameState !== 'PLAYING' || gameOver) { 
                 if(gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId);
                 gameLoopAnimationId = null;
@@ -1236,22 +1189,11 @@
             drawProjectiles();
             updateUI();
 
-            // Desktop-only placement preview on mousemove
-            // For mobile, this block won't typically run or be effective. Placement happens on click/tap.
-            // We check if it's likely not a touch device by seeing if primary input is coarse (touch)
-            if (typeof window.matchMedia === 'function' && window.matchMedia("(pointer: fine)").matches) {
-                // The `drawPlacementPreview` is called by the mousemove listener,
-                // this is just to ensure canvas is redrawn if mouse leaves and comes back
-                // and nothing else is animating. The actual preview drawing is event-driven.
-            }
-
-
-            if (gameState === 'PLAYING' && !gameOver) { // Ensure we only request next frame if still actively playing
+            if (gameState === 'PLAYING' && !gameOver) { 
                 gameLoopAnimationId = requestAnimationFrame(gameLoop);
             }
         }
         
-        // --- Menu Navigation Event Listeners ---
         startGameBtn.addEventListener('click', startGameFlow);
         viewHighScoresBtn.addEventListener('click', () => {
             displayHighScoresOnScreen(); 
@@ -1265,25 +1207,18 @@
         highScoresBackBtn.addEventListener('click', () => switchScreen('main-menu'));
         endGameBackToMenuBtn.addEventListener('click', () => {
             if (highScoreInputArea.style.display === 'block' && !scoreSubmitted) {
-                // Optionally auto-submit if desired, or just hide
                 highScoreInputArea.style.display = 'none'; 
             }
             switchScreen('main-menu');
         });
 
-        // --- In-Game Event Listeners ---
         canvas.addEventListener('click', (event) => {
             if (gameState === 'PLAYING' && !gameOver && !gameWon) placeTower(event);
         });
 
-        // Mousemove for preview - primarily for desktop.
-        // On touch devices, this listener might not fire or behave as expected.
-        // The game is still playable via tap-to-place.
         canvas.addEventListener('mousemove', (event) => {
-            // Only show mouse-based preview if it's likely not a primary touch device
              if (typeof window.matchMedia === 'function' && !window.matchMedia("(pointer: coarse)").matches) {
                 if (gameState === 'PLAYING' && selectedTowerType && !gameOver && !gameWon) {
-                    // Redraw necessary elements before preview
                     ctx.clearRect(0,0,canvas.width, canvas.height); 
                     drawPath(); drawGrid(); drawTowers(); drawEnemies(); drawProjectiles(); 
                     drawPlacementPreview(event);
@@ -1291,10 +1226,8 @@
             }
         });
          canvas.addEventListener('mouseleave', () => {
-            // Clear preview if mouse leaves, primarily for desktop
             if (typeof window.matchMedia === 'function' && !window.matchMedia("(pointer: coarse)").matches) {
                 if (gameState === 'PLAYING' && selectedTowerType && !gameOver && !gameWon) {
-                    // Redraw to clear preview
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     drawPath(); drawGrid(); drawTowers(); drawEnemies(); drawProjectiles();
                 }
@@ -1318,9 +1251,7 @@
             }
         });
 
-        // --- Initial Setup ---
         switchScreen('main-menu'); 
-
     </script>
 </body>
 </html>
