@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Defender Quest - Profiles & Progress</title>
+    <title>Pixel Defender Quest - Final Polish</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -14,10 +14,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Align title to top */
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding-top: 20px; /* Space for the title */
             box-sizing: border-box;
             overflow: hidden; 
         }
@@ -25,11 +25,11 @@
         .main-title {
             color: #f1c40f;
             text-shadow: 3px 3px #e74c3c;
-            margin-bottom: 20px;
-            font-size: 1.8em; /* Slightly smaller if space is tight */
+            margin-bottom: 15px;
+            font-size: 1.8em;
             text-align: center;
-            position: relative;
-            z-index: 10; 
+            width: 100%;
+            /* z-index will be lower than active screens */
         }
 
         .screen {
@@ -37,27 +37,29 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 95%; /* Use percentage for better responsiveness */
+            width: 95%;
             max-width: 800px; 
-            padding: 15px; /* Adjust padding */
+            padding: 15px;
             box-sizing: border-box;
-            background-color: rgba(44, 62, 80, 0.92); 
+            background-color: rgba(44, 62, 80, 0.95); /* Slightly more opaque */
             border: 4px solid #bdc3c7; 
             box-shadow: 0 0 25px rgba(0,0,0,0.6);
             text-align: center;
-            position: absolute; 
+            position: fixed; /* Fixed to viewport for centering */
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            overflow-y: auto; /* Allow scrolling for content-heavy screens */
-            max-height: 90vh; /* Prevent screen from being too tall */
+            overflow-y: auto; 
+            max-height: 85vh; /* Max height to leave space for title */
+            z-index: 100; /* Default z-index for screens */
         }
         .screen.active {
             display: flex; 
+            z-index: 200; /* Active screen is on top */
         }
 
         #game-ui-container {
-            max-width: calc(15 * 40px + 200px + 15px + 40px + 20px); /* Canvas + Controls + Gap + Padding + شويه زيادة */
+            max-width: calc(15 * 40px + 200px + 15px + 40px + 20px); 
         }
 
         #game-area { display: flex; gap: 15px; align-items: flex-start; }
@@ -80,7 +82,7 @@
         button, .menu-button, .profile-button {
             font-family: 'Press Start 2P', cursive; background-color: #3498db; color: white;
             border: 2px solid #2980b9; padding: 10px 15px; cursor: pointer;
-            text-transform: uppercase; font-size: 0.8em; /* Smaller default button size */
+            text-transform: uppercase; font-size: 0.8em;
             transition: background-color 0.2s, transform 0.1s;
             display: block; width: 100%; max-width: 280px; 
             margin: 6px auto; box-sizing: border-box;
@@ -103,7 +105,7 @@
         }
         .tower-button .tower-unlock { color: #f1c40f; }
 
-        .info-bar { font-size: 0.85em; margin-bottom: 5px; } /* Slightly smaller */
+        .info-bar { font-size: 0.85em; margin-bottom: 5px; }
         .info-bar span { color: #f1c40f; }
 
         .screen h2 { font-size: 1.4em; color: #f1c40f; margin-bottom: 15px; }
@@ -136,7 +138,7 @@
     </style>
 </head>
 <body>
-   
+    <h1 class="main-title">Pixel Defender Quest</h1>
 
     <!-- Profile Screen -->
     <div id="profile-screen" class="screen">
@@ -150,14 +152,14 @@
             <input type="text" id="newProfileNameInput" maxlength="8" minlength="3" placeholder="PROFILE NAME">
             <button id="createProfileBtn" class="menu-button">Create & Select</button>
         </div>
-        <button id="profileToMainMenuBtn" class="menu-button">Back to Menu</button>
+        <!-- Removed "Back to Menu" from profile screen, as it's the first point of entry -->
     </div>
     
     <!-- Main Menu Screen -->
     <div id="main-menu" class="screen">
         <h2>Main Menu</h2>
         <p id="activeProfileDisplay" style="font-size:0.7em; margin-bottom:10px; color:#1abc9c;">No active profile</p>
-        <button id="playGameBtn" class="menu-button">Play</button> <!-- Was startGameBtn -->
+        <button id="playGameBtn" class="menu-button">Play</button> 
         <button id="continueGameBtn" class="menu-button" style="display:none;">Continue Game</button>
         <button id="startNewGameForProfileBtn" class="menu-button" style="display:none;">Start New Game</button>
         <button id="changeProfileBtn" class="menu-button">Change Profile</button>
@@ -212,7 +214,7 @@
             <li><strong>Waves:</strong> Click "Start Wave" to begin. Survive all waves in a level to advance.</li>
             <li><strong>Unlocks:</strong> Better towers unlock as you reach higher levels!</li>
             <li><strong>Tower Types:</strong> Turret (Basic), Cannon (High Dmg, Lvl 4), Freezer (Slow, Lvl 7).</li>
-            <li><strong>Level Reset:</strong> At the start of each new level, existing towers are sold (full refund), letting you re-strategize.</li>
+            <li><strong>Level Reset:</strong> At the start of each new level, existing towers are sold (full refund), letting you re-strategize!</li>
             <li><strong>Progress:</strong> Your game (level, gold, lives, score) is saved automatically for the active profile after each wave and level.</li>
         </ul>
         <button id="helpBackBtn" class="menu-button">Back to Main Menu</button>
@@ -232,7 +234,7 @@
     <div id="highscores-screen" class="screen">
         <h2 id="highScoresTitle">High Scores</h2>
         <div id="highscores-list-container">
-            <ol id="highScoreListDisplay"></ol> <!-- Populated by JS -->
+            <ol id="highScoreListDisplay"></ol>
         </div>
         <button id="highScoresBackBtn" class="menu-button">Back to Main Menu</button>
     </div>
@@ -242,7 +244,6 @@
         <h2 id="levelClearedTitle">Level X Cleared!</h2>
         <p id="levelClearedMessage">Bonus Gold: +Y</p>
         <p>Preparing next level...</p>
-        <!-- Automatically proceeds after a delay -->
     </div>
 
     <!-- End Game Message Overlay -->
@@ -272,7 +273,6 @@
         const profileListUl = profileScreen.querySelector('#profile-list ul');
         const newProfileNameInput = document.getElementById('newProfileNameInput');
         const createProfileBtn = document.getElementById('createProfileBtn');
-        const profileToMainMenuBtn = document.getElementById('profileToMainMenuBtn');
         
         const activeProfileDisplay = document.getElementById('activeProfileDisplay');
         const playGameBtn = document.getElementById('playGameBtn');
@@ -312,52 +312,38 @@
         const towerButtons = document.querySelectorAll('.tower-button');
 
         // --- Game Constants & Variables ---
-        const TILE_SIZE = 40;
-        const GRID_WIDTH = 15;
-        const GRID_HEIGHT = 10;
-        canvas.width = GRID_WIDTH * TILE_SIZE;
-        canvas.height = GRID_HEIGHT * TILE_SIZE;
-
+        const TILE_SIZE = 40; const GRID_WIDTH = 15; const GRID_HEIGHT = 10;
+        canvas.width = GRID_WIDTH * TILE_SIZE; canvas.height = GRID_HEIGHT * TILE_SIZE;
         let gold, lives, currentLevel, score, currentWaveInLevel;
-        const MAX_LEVELS = 25;
-        let wavesForCurrentLevel = [];
+        const MAX_LEVELS = 25; let wavesForCurrentLevel = [];
         let enemies = [], towers = [], projectiles = [];
-        let selectedTowerType = null;
-        let waveInProgress = false;
+        let selectedTowerType = null; let waveInProgress = false;
         let enemiesThisWave, enemiesSpawnedThisWave, enemiesThisWavePlus, enemiesSpawnedThisWavePlus;
         let spawnInterval, spawnIntervalPlus, lastSpawnTime, lastSpawnTimePlus;
         let gameOver = false, gameWon = false;
         let path = [], currentLevelPrng, audioContext, gameLoopAnimationId = null, lastTime = 0;
         
         // --- Profile & Game State Management ---
-        let gameState = 'PROFILE_SELECT'; // Initial state
-        let profiles = [];
-        let activeProfileName = null;
+        let gameState = 'PROFILE_SELECT'; 
+        let profiles = []; let activeProfileName = null;
         const LS_PROFILES_KEY = "pixelDefender_profiles";
         const LS_PROFILE_PROGRESS_PREFIX = "pixelDefender_profile_";
-        const LS_PROFILE_HIGHSCORES_PREFIX = "pixelDefender_profile_"; // Same prefix for simplicity, differentiated by suffix
+        const LS_PROFILE_HIGHSCORES_PREFIX = "pixelDefender_profile_";
 
         function switchScreen(targetScreenId) {
             allScreens.forEach(screen => screen.classList.remove('active'));
             const target = document.getElementById(targetScreenId);
-            if (target) {
-                target.classList.add('active');
-            } else { // Fallback
-                console.error("Target screen not found:", targetScreenId);
-                document.getElementById('profile-screen').classList.add('active'); // Default to profile if error
-                gameState = 'PROFILE_SELECT'; return;
-            }
-            // Update gameState based on the new screen
+            if (target) { target.classList.add('active'); }
+            else { document.getElementById('profile-screen').classList.add('active'); gameState = 'PROFILE_SELECT'; return; }
+            
             if (targetScreenId === 'profile-screen') gameState = 'PROFILE_SELECT';
             else if (targetScreenId === 'main-menu') gameState = 'MENU';
             else if (targetScreenId === 'help-screen') gameState = 'HELP';
             else if (targetScreenId === 'credits-screen') gameState = 'CREDITS';
             else if (targetScreenId === 'highscores-screen') gameState = 'HIGHSCORES';
             else if (targetScreenId === 'level-cleared-screen') gameState = 'LEVEL_CLEARED_TRANSITION';
-            // PLAYING and END_GAME are set by their specific flow functions.
         }
 
-        // --- Tower Definitions & Unlocks ---
         const towerTypes = {
             turret: { name: "Turret", cost: 50, range: TILE_SIZE * 2.5, damage: 15, fireRate: 1000, color: '#3498db', projectileColor: '#5dade2', projectileSpeed: 5, projectileSize: 3, unlockLevel: 1 },
             cannon: { name: "Cannon", cost: 120, range: TILE_SIZE * 2, damage: 50, fireRate: 2000, color: '#e74c3c', projectileColor: '#c0392b', projectileSpeed: 4, projectileSize: 5, unlockLevel: 4 },
@@ -497,45 +483,58 @@
             if (enemiesSpawnedThisWave < enemiesThisWave && currentTime - lastSpawnTime > spawnInterval) { spawnEnemy(waveData); lastSpawnTime = currentTime; }
             if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { spawnEnemy(waveData.plus, true); lastSpawnTimePlus = currentTime; }
             if (enemiesSpawnedThisWave >= enemiesThisWave && (!waveData.plus || enemiesSpawnedThisWavePlus >= enemiesThisWavePlus) && enemies.length === 0) {
-                waveInProgress = false; console.log(`Level ${currentLevel} Wave ${currentWaveInLevel} cleared!`);
-                const waveClearGold = 25 + currentWaveInLevel * 5 + currentLevel * 5; gold += waveClearGold; score += 50 + currentWaveInLevel * 10 + currentLevel * 10;
-                saveGameProgress(); // Save after wave clear
-                if (currentWaveInLevel >= wavesForCurrentLevel.length) { handleLevelCleared(waveClearGold); } 
-                else { updateControlsUI(); } // Update UI if not moving to next level immediately
+                waveInProgress = false; 
+                const waveClearGoldBase = 25 + currentWaveInLevel * 5 + currentLevel * 5; gold += waveClearGoldBase; 
+                score += 50 + currentWaveInLevel * 10 + currentLevel * 10;
+                saveGameProgress(); 
+                if (currentWaveInLevel >= wavesForCurrentLevel.length) { handleLevelCleared(waveClearGoldBase); } 
+                else { updateControlsUI(); }
             }
         }
         function sellAllTowers() { let refund = 0; towers.forEach(tower => { refund += tower.type.cost; }); gold += refund; towers = []; if (refund > 0) playSound('sellTower', {volume: 0.15}); return refund; }
         
-        function showLevelClearedScreen(levelBonusGold, totalRefund) {
+        function showLevelClearedScreen(levelBonusGoldDisplay, towerRefundDisplay) {
+            gameState = 'LEVEL_CLEARED_TRANSITION'; // Set state during transition
             levelClearedTitle.textContent = `Level ${currentLevel} Cleared!`;
-            levelClearedMessage.innerHTML = `Wave Gold: ${levelBonusGold - (25 + currentWaveInLevel * 5 + currentLevel * 5)} (approx)<br>Level Bonus: +${100 + currentLevel * 20}G<br>Towers Sold: +${totalRefund}G`; // Show breakdown
+            levelClearedMessage.innerHTML = `Level Bonus: +${levelBonusGoldDisplay}G<br>Towers Sold: +${towerRefundDisplay}G`;
             switchScreen('level-cleared-screen');
             setTimeout(() => {
-                if (gameState === 'LEVEL_CLEARED_TRANSITION') { // Ensure we only proceed if still on this screen
-                    currentLevel++;
+                if (gameState === 'LEVEL_CLEARED_TRANSITION') { 
+                    currentLevel++; // Actual level increment happens *after* screen
                     if (currentLevel > MAX_LEVELS) { handleEndGame(true); } 
-                    else { setupNextLevel(); switchScreen('game-ui-container'); updateControlsUI(); saveGameProgress();} // Switch back to game
+                    else { 
+                        setupNextLevel(); 
+                        switchScreen('game-ui-container'); // Go to game screen for next level
+                        updateControlsUI(); 
+                        saveGameProgress(); // Save state for the start of the new level
+                    }
                 }
-            }, 3000); // Show for 3 seconds
+            }, 3000); 
         }
 
-        function handleLevelCleared(waveClearGold) {
+        function handleLevelCleared() { // Removed waveClearGold parameter, it's part of general gold update now
             console.log(`Level ${currentLevel} ALL WAVES CLEARED!`);
-            const levelBonus = 100 + currentLevel * 20; gold += levelBonus; 
+            const levelBonusForDisplay = 100 + currentLevel * 20; gold += levelBonusForDisplay; 
             score += 200 + currentLevel * 50; 
-            const towerRefund = sellAllTowers();
-            updateControlsUI(); // Update gold immediately after selling
-            saveGameProgress(); // Save progress including new gold, before showing level clear screen
-            showLevelClearedScreen(levelBonus, towerRefund); // Pass bonuses for display
+            const towerRefundForDisplay = sellAllTowers();
+            updateControlsUI(); 
+            saveGameProgress(); 
+            showLevelClearedScreen(levelBonusForDisplay, towerRefundForDisplay); 
         }
 
-        function setupNextLevel() {
-            currentWaveInLevel = 0; gold += 50 + currentLevel * 5; // Start of next level bonus
-            projectiles = []; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel); 
-            // UI update will be handled by the game loop or when switching back to game screen
+        function setupNextLevel() { // Called when proceeding to the actual next level
+            currentWaveInLevel = 0; 
+            gold += 50 + currentLevel * 5; // Bonus for starting the new level
+            projectiles = []; 
+            enemiesSpawnedThisWave = 0; // Reset wave specific counters
+            enemiesSpawnedThisWavePlus = 0;
+            lastSpawnTime = 0;
+            lastSpawnTimePlus = 0;
+            enemies = [];
+            generateLevelPath(currentLevel); 
+            wavesForCurrentLevel = getWavesForLevel(currentLevel); 
         }
         
-        // --- Profile, Save/Load, High Score Logic ---
         function loadProfiles() { const storedProfiles = localStorage.getItem(LS_PROFILES_KEY); profiles = storedProfiles ? JSON.parse(storedProfiles) : []; populateProfileList(); }
         function saveProfiles() { localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles)); }
         function populateProfileList() {
@@ -545,65 +544,41 @@
         }
         function createProfile() {
             const newName = newProfileNameInput.value.trim().toUpperCase();
-            if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) {
-                profiles.push(newName); saveProfiles(); populateProfileList(); selectProfile(newName); newProfileNameInput.value = '';
-            } else { alert("Profile name must be unique, 3-8 chars long."); }
+            if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) { profiles.push(newName); saveProfiles(); populateProfileList(); selectProfile(newName); newProfileNameInput.value = ''; }
+            else { alert("Profile name must be unique, 3-8 chars long."); }
         }
-        function selectProfile(name) { activeProfileName = name; activeProfileDisplay.textContent = `Profile: ${activeProfileName}`; updateMainMenuButtons(); switchScreen('main-menu'); }
+        function selectProfile(name) { activeProfileName = name; localStorage.setItem("pixelDefender_lastActiveProfile", name); activeProfileDisplay.textContent = `Profile: ${activeProfileName}`; updateMainMenuButtons(); switchScreen('main-menu'); }
         function updateMainMenuButtons() {
             if (activeProfileName) {
-                playGameBtn.style.display = 'none'; // Hide generic play
-                changeProfileBtn.style.display = 'block';
-                const progress = loadGameProgress(true); // Dry run to check if progress exists
-                if (progress) {
+                playGameBtn.style.display = 'none'; changeProfileBtn.style.display = 'block';
+                const progress = loadGameProgress(true); 
+                if (progress && progress.currentLevel <= MAX_LEVELS) { // Only show continue if not past max levels
                     continueGameBtn.style.display = 'block';
                     startNewGameForProfileBtn.textContent = `Start New (Lvl 1)`;
-                } else {
-                    continueGameBtn.style.display = 'none';
-                    startNewGameForProfileBtn.textContent = `Start New Game`;
-                }
+                } else { continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.textContent = `Start New Game`; }
                 startNewGameForProfileBtn.style.display = 'block';
-            } else {
-                playGameBtn.style.display = 'block';
-                continueGameBtn.style.display = 'none';
-                startNewGameForProfileBtn.style.display = 'none';
-                changeProfileBtn.style.display = 'none';
-                activeProfileDisplay.textContent = "No active profile";
-            }
+            } else { playGameBtn.style.display = 'block'; continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.style.display = 'none'; changeProfileBtn.style.display = 'none'; activeProfileDisplay.textContent = "No active profile"; }
         }
         function saveGameProgress() {
-            if (!activeProfileName || gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION') return; // Only save if profile active and in game context
-            const progress = { currentLevel, gold, lives, score };
-            localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress));
-            console.log("Game saved for profile:", activeProfileName, progress);
+            if (!activeProfileName || (gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION' && gameState !== 'GAME_SETUP')) return; 
+            const progress = { currentLevel, gold, lives, score }; localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress)); console.log("Game saved for profile:", activeProfileName, progress);
         }
         function loadGameProgress(checkOnly = false) {
-            if (!activeProfileName) return null;
-            const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress");
-            if (saved) {
-                const progress = JSON.parse(saved);
-                if (!checkOnly) {
-                    currentLevel = progress.currentLevel; gold = progress.gold; lives = progress.lives; score = progress.score;
-                    // Path and waves will be regenerated based on currentLevel in reset/setup
-                    console.log("Game loaded for profile:", activeProfileName, progress);
-                }
-                return progress;
-            }
-            return null;
+            if (!activeProfileName) return null; const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress");
+            if (saved) { const progress = JSON.parse(saved); if (!checkOnly) { currentLevel = progress.currentLevel; gold = progress.gold; lives = progress.lives; score = progress.score; console.log("Game loaded for profile:", activeProfileName, progress); } return progress; } return null;
         }
         function getProfileHighScores() { if (!activeProfileName) return []; const scores = localStorage.getItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores"); return scores ? JSON.parse(scores) : []; }
         function saveProfileHighScores(scores) { if (!activeProfileName) return; scores.sort((a, b) => b.score - a.score); localStorage.setItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores", JSON.stringify(scores.slice(0, 5))); }
         function displayProfileHighScores() {
             if (!activeProfileName) { highScoreListDisplay.innerHTML = "<li>Select a profile to see scores.</li>"; highScoresTitle.textContent = "High Scores"; return; }
-            highScoresTitle.textContent = `High Scores: ${activeProfileName}`;
-            const scores = getProfileHighScores(); highScoreListDisplay.innerHTML = '';
+            highScoresTitle.textContent = `High Scores: ${activeProfileName}`; const scores = getProfileHighScores(); highScoreListDisplay.innerHTML = '';
             if (scores.length === 0) { highScoreListDisplay.innerHTML = "<li>No scores yet for this profile!</li>"; }
             else { scores.forEach(scoreItem => { const li = document.createElement('li'); li.textContent = `${scoreItem.name}: `; const scoreSpan = document.createElement('span'); scoreSpan.textContent = scoreItem.score; li.appendChild(scoreSpan); highScoreListDisplay.appendChild(li); }); }
         }
         let scoreSubmitted = false; 
         function checkAndPromptForProfileHighScore() { 
             scoreSubmitted = false; const highScores = getProfileHighScores();
-            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { highScoreInputArea.style.display = 'block'; playerNameInput.value = "YOU"; playerNameInput.focus(); }
+            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { highScoreInputArea.style.display = 'block'; playerNameInput.value = activeProfileName ? activeProfileName.substring(0,3).toUpperCase() : "YOU"; playerNameInput.focus(); } /* Prefill with profile name */
             else { highScoreInputArea.style.display = 'none'; }
         }
         submitScoreButton.addEventListener('click', () => {
@@ -612,45 +587,23 @@
             saveProfileHighScores(currentProfileHighScores); highScoreInputArea.style.display = 'none'; scoreSubmitted = true;
         });
 
-        // --- Game State Control & Flow ---
-        function resetGameVariables(startFresh = true) { // startFresh = true means Lvl 1, false means load or default
-            sellAllTowers(); // Sell before setting new values
-            towers = []; 
-            projectiles = []; 
-            selectedTowerType = null; 
-            waveInProgress = false;
-            gameOver = false; 
-            gameWon = false; 
-            scoreSubmitted = false;
-            enemiesSpawnedThisWave = 0; // Reset these counters too
-            enemiesSpawnedThisWavePlus = 0;
-            lastSpawnTime = 0;
-            lastSpawnTimePlus = 0;
-            enemies = []; // Clear enemies array
-
-            if (startFresh) {
-                currentLevel = 1; gold = 150; lives = 20; score = 0; 
-            } else {
-                const loadedProgress = loadGameProgress();
-                if (!loadedProgress) { // No save file, or load failed, start fresh
-                    currentLevel = 1; gold = 150; lives = 20; score = 0;
-                }
-                // currentLevel, gold, lives, score are already set by loadGameProgress if successful
-            }
-            currentWaveInLevel = 0; // Always start a level from wave 0
-            generateLevelPath(currentLevel);
-            wavesForCurrentLevel = getWavesForLevel(currentLevel);
-            updateControlsUI(); 
-            saveGameProgress(); // Save initial state of new/continued game
+        function resetGameVariables(startFresh = true) { 
+            sellAllTowers(); towers = []; projectiles = []; selectedTowerType = null; waveInProgress = false;
+            gameOver = false; gameWon = false; scoreSubmitted = false; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = [];
+            gameState = 'GAME_SETUP'; // Temporary state for saving
+            if (startFresh) { currentLevel = 1; gold = 150; lives = 20; score = 0; }
+            else { const loadedProgress = loadGameProgress(); if (!loadedProgress) { currentLevel = 1; gold = 150; lives = 20; score = 0;}}
+            currentWaveInLevel = 0; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel);
+            updateControlsUI(); saveGameProgress(); 
         }
         function startGame(continuePreviousGame) {
             if (!activeProfileName) { alert("Please select or create a profile first!"); switchScreen('profile-screen'); return; }
-            initAudio(); gameState = 'PLAYING';
-            resetGameVariables(!continuePreviousGame); // If !continue, then startFresh is true
+            initAudio(); 
+            resetGameVariables(!continuePreviousGame); 
+            gameState = 'PLAYING'; // Set to playing *after* reset and save
             switchScreen('game-ui-container');
             if (gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId);
-            lastTime = performance.now(); 
-            gameLoopAnimationId = requestAnimationFrame(gameLoop);
+            lastTime = performance.now(); gameLoopAnimationId = requestAnimationFrame(gameLoop);
         }
         function handleEndGame(won) {
             gameState = 'END_GAME'; gameOver = true; gameWon = won; 
@@ -658,8 +611,8 @@
             if (won) { messageTitle.textContent = "VICTORY!"; messageTitle.style.color = "#2ecc71"; messageText.textContent = `All ${MAX_LEVELS} levels cleared! Final Score: ${score}`; }
             else { messageTitle.textContent = "Game Over!"; messageTitle.style.color = "#e74c3c"; messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`; }
             checkAndPromptForProfileHighScore(); switchScreen('end-game-overlay');
-            // Optionally clear saved progress for this profile if game is lost to force "new game"
-            // For now, progress remains, allowing retrying the level via "Continue"
+            // If lost, consider clearing progress for this profile to encourage restart
+            // if (!won) { localStorage.removeItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); }
         }
 
         function gameLoop(currentTime) {
@@ -673,13 +626,11 @@
             if (gameState === 'PLAYING' && !gameOver) { gameLoopAnimationId = requestAnimationFrame(gameLoop); }
         }
         
-        // --- Event Listeners ---
-        playGameBtn.addEventListener('click', () => { if (activeProfileName) { updateMainMenuButtons(); /* Will show Continue/New */ } else { switchScreen('profile-screen'); } });
+        playGameBtn.addEventListener('click', () => { if (activeProfileName) { updateMainMenuButtons(); } else { switchScreen('profile-screen'); } });
         continueGameBtn.addEventListener('click', () => startGame(true));
         startNewGameForProfileBtn.addEventListener('click', () => startGame(false));
-        changeProfileBtn.addEventListener('click', () => { activeProfileName = null; updateMainMenuButtons(); switchScreen('profile-screen'); });
+        changeProfileBtn.addEventListener('click', () => { activeProfileName = null; localStorage.removeItem("pixelDefender_lastActiveProfile"); updateMainMenuButtons(); switchScreen('profile-screen'); });
         createProfileBtn.addEventListener('click', createProfile);
-        profileToMainMenuBtn.addEventListener('click', () => switchScreen('main-menu'));
         viewHighScoresBtn.addEventListener('click', () => { displayProfileHighScores(); switchScreen('highscores-screen'); });
         helpBtn.addEventListener('click', () => switchScreen('help-screen'));
         creditsBtn.addEventListener('click', () => switchScreen('credits-screen'));
@@ -700,23 +651,14 @@
         });
         startWaveButton.addEventListener('click', () => { if (gameState === 'PLAYING' && !gameOver && !gameWon) { initAudio(); startNextWave(); } });
 
-        // --- Initial Setup ---
         window.onload = () => {
             loadProfiles();
-            // Try to load last active profile, if any
             const lastActive = localStorage.getItem("pixelDefender_lastActiveProfile");
-            if (lastActive && profiles.includes(lastActive)) {
-                activeProfileName = lastActive;
-            }
-
-            if (activeProfileName) {
-                selectProfile(activeProfileName); // This will update UI and switch to main menu
-            } else {
-                switchScreen('profile-screen'); // Start at profile selection if no valid last active
-            }
-            updateMainMenuButtons(); // Ensure buttons reflect current profile state
+            if (lastActive && profiles.includes(lastActive)) { activeProfileName = lastActive; }
+            if (activeProfileName) { selectProfile(activeProfileName); } 
+            else { switchScreen('profile-screen'); }
+            updateMainMenuButtons(); 
         };
-
     </script>
 </body>
 </html>
