@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Rubik's 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(45deg, #1a001a, #330033, #4d004d);
+            color: #00ff00; /* Neon green */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align top */
+            min-height: 100vh;
+            padding-top: 10px;
+        }
+
+        #gameContainer {
+            width: 80vw;
+            max-width: 600px;
+            height: 60vh;
+            max-height: 500px;
+            border: 5px solid #ff00ff; /* Neon pink border */
+            box-shadow: 0 0 20px #ff00ff, inset 0 0 15px #ff00ffaa;
+            background-color: #0a000a; /* Dark purple-black */
+            position: relative;
+        }
+
+        #canvas {
+            display: block; /* Removes bottom space under canvas */
+        }
+        
+        .controls-panel {
+            background-color: rgba(20, 0, 20, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #00ffff; /* Neon cyan */
+            box-shadow: 0 0 15px #00ffff;
+            margin-top: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 700px;
+        }
+
+        .controls-panel h2 {
+            margin-top: 0;
+            color: #ffff00; /* Neon yellow */
+            font-size: 1.2em;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        
+        .button-group {
+            margin-bottom: 10px;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #333;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 5px #00ff0077;
+        }
+
+        button:hover {
+            background-color: #00ff00;
+            color: #111;
+            box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+        }
+
+        button.active-mode {
+            background-color: #00cc00;
+            color: #000;
+            border-color: #ffff00;
+            box-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+        }
+        
+        #messageArea {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.5);
+            border: 1px dashed #00ffff;
+            min-height: 20px;
+            font-size: 0.8em;
+            color: #00ffff; /* Neon cyan for messages */
+        }
+
+        #learnInstructions {
+            font-size: 0.7em;
+            color: #ff00ff; /* Neon pink for learn instructions */
+        }
+
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="controls-panel">
+        <h2>Retro Rubik's 3D</h2>
+        
+        <div class="button-group" id="modeButtons">
+            <button id="playModeBtn">Play Mode</button>
+            <button id="aiModeBtn">AI Mode</button>
+            <button id="learnModeBtn">Learn Mode</button>
+        </div>
+
+        <div class="button-group" id="actionButtons">
+            <button id="scrambleBtn">Scramble</button>
+            <button id="resetBtn">Reset Cube</button>
+        </div>
+        
+        <div class="button-group" id="moveButtonsContainer" style="display:none;">
+            <!-- Standard Rubik's Moves -->
+            <p id="learnInstructions">Click to see move animation:</p>
+            <button class="moveBtn" data-move="F">F</button>
+            <button class="moveBtn" data-move="F'">F'</button>
+            <button class="moveBtn" data-move="B">B</button>
+            <button class="moveBtn" data-move="B'">B'</button>
+            <button class="moveBtn" data-move="U">U</button>
+            <button class="moveBtn" data-move="U'">U'</button>
+            <button class="moveBtn" data-move="D">D</button>
+            <button class="moveBtn" data-move="D'">D'</button>
+            <button class="moveBtn" data-move="R">R</button>
+            <button class="moveBtn" data-move="R'">R'</button>
+            <button class="moveBtn" data-move="L">L</button>
+            <button class="moveBtn" data-move="L'">L'</button>
+            <!-- Middle slice moves can be added if desired: M, M', E, E', S, S' -->
+        </div>
+        <div id="messageArea">Welcome! Select a mode.</div>
+    </div>
+
+    <script>
+        const CUBE_SIZE = 3; // 3x3x3
+        const CUBIE_SIZE = 1;
+        const CUBIE_SPACING = 0.05; // Small gap between cubies
+        const EFFECTIVE_CUBIE_SIZE = CUBIE_SIZE + CUBIE_SPACING;
+
+        // Standard Rubik's colors
+        const COLORS = {
+            FRONT:  0xff0000, // Red
+            BACK:   0xffa500, // Orange
+            UP:     0xffffff, // White
+            DOWN:   0xffff00, // Yellow
+            RIGHT:  0x0000ff, // Blue
+            LEFT:   0x00ff00, // Green
+            INTERNAL: 0x333333 // Dark grey for internal faces
+        };
+
+        let scene, camera, renderer, controls;
+        let cubies = [];
+        let pivot; // For rotating faces
+        let isAnimating = false;
+        let currentMode = 'play'; // 'play', 'ai', 'learn'
+
+        const messageArea = document.getElementById('messageArea');
+        const moveButtonsContainer = document.getElementById('moveButtonsContainer');
+        
+        // Game Mode Buttons
+        const playModeBtn = document.getElementById('playModeBtn');
+        const aiModeBtn = document.getElementById('aiModeBtn');
+        const learnModeBtn = document.getElementById('learnModeBtn');
+        const modeButtons = [playModeBtn, aiModeBtn, learnModeBtn];
+
+        // Action Buttons
+        const scrambleBtn = document.getElementById('scrambleBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        init();
+        animate();
+
+        function init() {
+            const container = document.getElementById('gameContainer');
+            const canvasEl = document.getElementById('canvas');
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a000a); // Matches container bg
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1).normalize();
+            scene.add(directionalLight);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.screenSpacePanning = false;
+            controls.minDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.5;
+            controls.maxDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 5;
+            controls.target.set(0,0,0); // Ensure controls orbit the cube's center
+
+            // Pivot for rotations
+            pivot = new THREE.Object3D();
+            scene.add(pivot);
+
+            createRubiksCube();
+            setupEventListeners();
+            updateModeUI();
+        }
+
+        function createRubiksCube() {
+            // Clear existing cubies if any (for reset)
+            cubies.forEach(cubie => scene.remove(cubie));
+            cubies = [];
+
+            const geometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+            const offset = (CUBE_SIZE - 1) / 2 * EFFECTIVE_CUBIE_SIZE; // To center the cube at (0,0,0)
+
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        // Skip inner cubie for 3x3x3 (if not rendering internal pieces)
+                        if (CUBE_SIZE > 2 && x > 0 && x < CUBE_SIZE - 1 && y > 0 && y < CUBE_SIZE - 1 && z > 0 && z < CUBE_SIZE - 1) {
+                            continue;
+                        }
+
+                        const materials = [
+                            new THREE.MeshStandardMaterial({ color: (x === CUBE_SIZE - 1) ? COLORS.RIGHT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }), // Right face (+X)
+                            new THREE.MeshStandardMaterial({ color: (x === 0) ? COLORS.LEFT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),       // Left face (-X)
+                            new THREE.MeshStandardMaterial({ color: (y === CUBE_SIZE - 1) ? COLORS.UP : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),     // Top face (+Y)
+                            new THREE.MeshStandardMaterial({ color: (y === 0) ? COLORS.DOWN : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),   // Bottom face (-Y)
+                            new THREE.MeshStandardMaterial({ color: (z === CUBE_SIZE - 1) ? COLORS.FRONT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),  // Front face (+Z)
+                            new THREE.MeshStandardMaterial({ color: (z === 0) ? COLORS.BACK : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 })    // Back face (-Z)
+                        ];
+                        
+                        const cubie = new THREE.Mesh(geometry, materials);
+                        cubie.position.set(
+                            x * EFFECTIVE_CUBIE_SIZE - offset,
+                            y * EFFECTIVE_CUBIE_SIZE - offset,
+                            z * EFFECTIVE_CUBIE_SIZE - offset
+                        );
+                        // Store original position for layer identification
+                        cubie.userData.originalX = x;
+                        cubie.userData.originalY = y;
+                        cubie.userData.originalZ = z;
+                        
+                        cubies.push(cubie);
+                        scene.add(cubie);
+                    }
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            window.addEventListener('resize', onWindowResize, false);
+
+            playModeBtn.addEventListener('click', () => setMode('play'));
+            aiModeBtn.addEventListener('click', () => setMode('ai'));
+            learnModeBtn.addEventListener('click', () => setMode('learn'));
+
+            scrambleBtn.addEventListener('click', scrambleCube);
+            resetBtn.addEventListener('click', resetCube);
+
+            document.querySelectorAll('.moveBtn').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    const move = button.dataset.move;
+                    performMove(move);
+                    if (currentMode === 'learn') {
+                         messageArea.textContent = `Performing move: ${move}`;
+                    }
+                });
+            });
+        }
+        
+        function setMode(mode) {
+            currentMode = mode;
+            updateModeUI();
+            messageArea.textContent = `Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode.`;
+            if (mode === 'ai') {
+                messageArea.textContent += " AI will make some moves...";
+                setTimeout(aiPlay, 1000); // AI makes a move after a short delay
+            }
+            resetCube(); // Reset cube on mode switch for a clean state
+        }
+
+        function updateModeUI() {
+            modeButtons.forEach(btn => btn.classList.remove('active-mode'));
+            if (currentMode === 'play') {
+                playModeBtn.classList.add('active-mode');
+                moveButtonsContainer.style.display = 'block';
+                document.getElementById('learnInstructions').style.display = 'none';
+                controls.enabled = true; // Allow camera control
+            } else if (currentMode === 'ai') {
+                aiModeBtn.classList.add('active-mode');
+                moveButtonsContainer.style.display = 'none';
+                controls.enabled = true; 
+            } else if (currentMode === 'learn') {
+                learnModeBtn.classList.add('active-mode');
+                moveButtonsContainer.style.display = 'block';
+                document.getElementById('learnInstructions').style.display = 'block';
+                controls.enabled = true;
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('gameContainer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function getCubiesInLayer(axis, layerIndex) {
+            const layerCubies = [];
+            const centerOffset = (CUBE_SIZE - 1) / 2;
+            // Target position for the layer along the axis, considering the offset
+            // Layer indices: 0 (e.g. Left, Down, Back), 1 (Middle), 2 (e.g. Right, Up, Front)
+            const targetPos = (layerIndex - centerOffset) * EFFECTIVE_CUBIE_SIZE;
+            
+            cubies.forEach(cubie => {
+                let cubiePosOnAxis;
+                if (axis === 'x') cubiePosOnAxis = cubie.position.x;
+                else if (axis === 'y') cubiePosOnAxis = cubie.position.y;
+                else if (axis === 'z') cubiePosOnAxis = cubie.position.z;
+
+                // Use a small tolerance for float comparisons
+                if (Math.abs(cubiePosOnAxis - targetPos) < EFFECTIVE_CUBIE_SIZE / 2) {
+                    layerCubies.push(cubie);
+                }
+            });
+            return layerCubies;
+        }
+
+        function rotateLayerAroundAxis(axis, layerIndex, angle) {
+            if (isAnimating) return;
+            isAnimating = true;
+            controls.enabled = false; // Disable camera controls during animation
+
+            pivot.rotation.set(0, 0, 0); // Reset pivot rotation
+            pivot.position.set(0,0,0); // Ensure pivot is at origin
+            
+            const layerCubies = getCubiesInLayer(axis, layerIndex);
+            
+            if (layerCubies.length === 0) {
+                console.warn(`No cubies found for axis ${axis}, layer ${layerIndex}`);
+                isAnimating = false;
+                controls.enabled = (currentMode !== 'ai'); // Re-enable controls
+                return;
+            }
+
+            // Attach cubies in the layer to the pivot
+            layerCubies.forEach(cubie => {
+                // THREE.Object3D.attach: Keeps world transform of child.
+                // We want the cubies to rotate around the world origin with the pivot.
+                // So, we convert their world positions to be local to the pivot,
+                // then add them as children. scene.attach(cubie) is simpler after.
+                // Actually, THREE.Object3D.attach is what we want:
+                // It reparents the object to this object and adjusts its matrix
+                // such that it maintains its world space position, orientation and scale.
+                 pivot.attach(cubie);
+            });
+            
+            // Animate the pivot
+            let currentAngle = 0;
+            const targetAngle = angle;
+            const animationSpeed = 0.1; // Adjust for faster/slower animation
+
+            function animateRotation() {
+                let deltaAngle = targetAngle * animationSpeed;
+                if (Math.abs(currentAngle + deltaAngle) >= Math.abs(targetAngle)) {
+                    deltaAngle = targetAngle - currentAngle; // Ensure exact final angle
+                }
+                
+                if (axis === 'x') pivot.rotation.x += deltaAngle;
+                else if (axis === 'y') pivot.rotation.y += deltaAngle;
+                else if (axis === 'z') pivot.rotation.z += deltaAngle;
+                
+                currentAngle += deltaAngle;
+
+                if (Math.abs(currentAngle - targetAngle) < 0.001) { // Animation finished
+                    // Snap to final rotation to avoid precision errors
+                    if (axis === 'x') pivot.rotation.x = targetAngle;
+                    else if (axis === 'y') pivot.rotation.y = targetAngle;
+                    else if (axis === 'z') pivot.rotation.z = targetAngle;
+
+                    // Detach cubies and update their world matrices
+                    // Important: iterate backwards or copy array if modifying while iterating
+                    [...layerCubies].forEach(cubie => {
+                        // scene.attach(cubie) will re-parent the cubie to the scene
+                        // while preserving its current world transformation.
+                        scene.attach(cubie); 
+                    });
+                    
+                    // Cubies positions and rotations are now updated in world space.
+                    // We need to round them to align to grid for future layer selections.
+                    cubies.forEach(c => {
+                        c.position.x = Math.round(c.position.x / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        c.position.y = Math.round(c.position.y / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        c.position.z = Math.round(c.position.z / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        
+                        // Round quaternion components if necessary, or just rely on matrix updates
+                        // For simplicity, we rely on the matrix. More robust would be to round Euler angles.
+                    });
+
+
+                    isAnimating = false;
+                    controls.enabled = (currentMode !== 'ai'); // Re-enable controls
+                    if (currentMode === 'ai' && aiMoveQueue.length > 0) {
+                        setTimeout(aiPlay, 200); // Next AI move
+                    }
+
+                } else {
+                    requestAnimationFrame(animateRotation);
+                }
+            }
+            animateRotation();
+        }
+
+
+        function performMove(moveNotation) {
+            if (isAnimating) return;
+            const PI_2 = Math.PI / 2;
+            let axis, layer, direction;
+
+            switch (moveNotation) {
+                // Front Face (Red, +Z axis)
+                case 'F':  axis = 'z'; layer = CUBE_SIZE - 1; direction = -1; break; // Clockwise from front
+                case 'F\'': axis = 'z'; layer = CUBE_SIZE - 1; direction = 1;  break; // Counter-clockwise
+
+                // Back Face (Orange, -Z axis)
+                case 'B':  axis = 'z'; layer = 0; direction = 1;  break; // Clockwise from front (so CCW for back face itself)
+                case 'B\'': axis = 'z'; layer = 0; direction = -1; break;
+
+                // Up Face (White, +Y axis)
+                case 'U':  axis = 'y'; layer = CUBE_SIZE - 1; direction = -1; break; // Clockwise from top
+                case 'U\'': axis = 'y'; layer = CUBE_SIZE - 1; direction = 1;  break;
+
+                // Down Face (Yellow, -Y axis)
+                case 'D':  axis = 'y'; layer = 0; direction = 1;  break; // Clockwise from top (so CCW for bottom face itself)
+                case 'D\'': axis = 'y'; layer = 0; direction = -1; break;
+
+                // Right Face (Blue, +X axis)
+                case 'R':  axis = 'x'; layer = CUBE_SIZE - 1; direction = -1; break; // Clockwise from right
+                case 'R\'': axis = 'x'; layer = CUBE_SIZE - 1; direction = 1;  break;
+
+                // Left Face (Green, -X axis)
+                case 'L':  axis = 'x'; layer = 0; direction = 1;  break; // Clockwise from right (so CCW for left face itself)
+                case 'L\'': axis = 'x'; layer = 0; direction = -1; break;
+                
+                default: console.warn("Unknown move:", moveNotation); return;
+            }
+            rotateLayerAroundAxis(axis, layer, direction * PI_2);
+        }
+
+        function scrambleCube() {
+            if (isAnimating) return;
+            messageArea.textContent = "Scrambling...";
+            resetCube(); // Start from a solved state before scrambling
+
+            const moves = ['F', 'F\'', 'B', 'B\'', 'U', 'U\'', 'D', 'D\'', 'R', 'R\'', 'L', 'L\''];
+            const numScrambleMoves = 20 + Math.floor(Math.random() * 10); // 20-29 moves
+            let moveCount = 0;
+
+            function applyRandomMove() {
+                if (moveCount >= numScrambleMoves || isAnimating) { // Check isAnimating again
+                    if (!isAnimating) { // Ensure this runs only once after all scrambles
+                         messageArea.textContent = "Cube scrambled! Your turn.";
+                    }
+                    return;
+                }
+                
+                const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                performMove(randomMove);
+                moveCount++;
+                // Wait for the current animation to finish before queueing the next
+                // This relies on isAnimating flag and the animation loop structure
+                setTimeout(applyRandomMove, 250); // Adjust delay as needed based on animation speed
+            }
+            applyRandomMove();
+        }
+
+        function resetCube() {
+            if (isAnimating) {
+                // Potentially queue reset or just ignore if animation is critical
+                console.log("Animation in progress, reset deferred or ignored.");
+                return;
+            }
+            // Stop any ongoing AI process
+            clearTimeout(aiPlayTimeoutId);
+            aiMoveQueue = [];
+
+            createRubiksCube(); // Recreates the cube in its solved state
+            messageArea.textContent = "Cube reset to solved state.";
+            controls.reset(); // Reset camera position too
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0,0,0);
+            controls.target.set(0,0,0);
+        }
+
+        let aiMoveQueue = [];
+        let aiPlayTimeoutId;
+
+        function aiPlay() {
+            if (currentMode !== 'ai' || isAnimating) return;
+
+            if (aiMoveQueue.length === 0) {
+                // Generate a few random moves for the AI to perform
+                const moves = ['F', 'R', 'U', 'B', 'L', 'D', 'F\'', 'R\'', 'U\'', 'B\'', 'L\'', 'D\''];
+                const numAiMoves = 3 + Math.floor(Math.random() * 4); // 3-6 moves
+                for (let i = 0; i < numAiMoves; i++) {
+                    aiMoveQueue.push(moves[Math.floor(Math.random() * moves.length)]);
+                }
+                messageArea.textContent = "AI is thinking... and will make " + numAiMoves + " moves.";
+            }
+
+            if (aiMoveQueue.length > 0) {
+                const move = aiMoveQueue.shift();
+                messageArea.textContent = `AI performs: ${move}`;
+                performMove(move); // performMove will handle calling aiPlay again via its animation callback
+            } else {
+                 messageArea.textContent = "AI finished its sequence. Select another mode or scramble.";
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Only required if controls.enableDamping or controls.autoRotate are set to true
+            renderer.render(scene, camera);
+        }
+
+    </script>
+</body>
+</html>

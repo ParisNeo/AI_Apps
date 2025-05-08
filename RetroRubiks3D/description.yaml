@@ -1,0 +1,16 @@
+author: ParisNeo
+category: Games
+creation_date: 2023-10-27
+last_update_date: 2023-10-27
+description: |
+  A 3D Rubik's Cube game built with Three.js, designed with a nostalgic 90s aesthetic.
+  Features interactive play mode, a conceptual AI play mode (demonstrates moves or simple patterns),
+  and a learn mode to understand basic cube rotations.
+  Aims to be engaging, educational, and visually pleasant.
+disclaimer: |
+  This is a simplified Rubik's Cube simulation for educational and entertainment purposes.
+  The AI mode is conceptual and does not implement a full solving algorithm.
+  Performance may vary depending on the browser and system.
+model: gemini 2.5 05-06
+name: RetroRubiks3D
+version: 1.0
