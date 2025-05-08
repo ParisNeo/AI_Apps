@@ -9,8 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/i18next/i18next.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend/i18nextHttpBackend.min.js"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script> -->
 
     <style>
         :root {
@@ -313,6 +311,14 @@
             background-color: #c0392b;
             color: var(--text-color);
         }
+        .modal-content small {
+            display: block;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: var(--border-color);
+        }
+
         .close-button {
             color: var(--border-color);
             float: right;
@@ -399,13 +405,14 @@
                 <option value="openai">OpenAI</option>
                 <option value="gemini">Google Gemini</option>
                 <option value="ollama">Ollama</option>
+                <option value="lollms">Lollms</option>
             </select>
 
             <div id="openai-settings">
                 <label for="openai-api-key" data-i18n="openaiApiKey">OpenAI API Key:</label>
                 <input type="password" id="openai-api-key" placeholder="sk-...">
                 <label for="openai-model" data-i18n="openaiModel">OpenAI Model:</label>
-                <input type="text" id="openai-model" placeholder="gpt-4-turbo">
+                <input type="text" id="openai-model" placeholder="gpt-4o-mini">
             </div>
 
             <div id="gemini-settings">
@@ -418,9 +425,17 @@
             <div id="ollama-settings">
                 <label for="ollama-host" data-i18n="ollamaHost">Ollama Host Address:</label>
                 <input type="text" id="ollama-host" placeholder="http://localhost:11434">
-                <label for="ollama-model" data-i18n="ollamaModel">Ollama Model:</label>
+                <label for="ollama-model" data-i18n="ollamaModel">Ollama Model (optional):</label>
                 <input type="text" id="ollama-model" placeholder="llama3">
-                 <small data-i18n="ollamaInfo">Ensure Ollama server is running and accessible. For cross-domain requests, Ollama needs to be configured for CORS (e.g., OLLAMA_ORIGINS='*').</small>
+                <small data-i18n="ollamaInfo">Ensure Ollama server is running and accessible. For cross-domain requests (e.g. from phone), Ollama needs CORS configured (e.g., OLLAMA_ORIGINS='*').</small>
+            </div>
+
+            <div id="lollms-settings">
+                <label for="lollms-host" data-i18n="lollmsHost">Lollms Host Address:</label>
+                <input type="text" id="lollms-host" placeholder="http://localhost:9600">
+                <label for="lollms-model" data-i18n="lollmsModel">Lollms Model (optional):</label>
+                <input type="text" id="lollms-model" placeholder="Leave blank for current">
+                <small data-i18n="lollmsInfo">Ensure Lollms server is running (default: http://localhost:9600). For cross-domain access, configure Lollms CORS (e.g. add your app's origin to Lollms settings or start with appropriate flags).</small>
             </div>
             <br>
             <button id="save-settings-btn" data-i18n="saveSettings">Save Settings</button>
@@ -457,18 +472,20 @@
         let settings = {
             provider: 'ollama',
             openaiApiKey: '',
-            openaiModel: 'gpt-4o-mini', // Updated model
+            openaiModel: 'gpt-4o-mini',
             geminiApiKey: '',
             geminiModel: 'gemini-1.5-flash-latest',
             ollamaHost: 'http://localhost:11434',
-            ollamaModel: 'llama3',
+            ollamaModel: '', // Optional
+            lollmsHost: 'http://localhost:9600',
+            lollmsModel: '', // Optional
             language: 'en',
             currentSystemPromptName: ''
         };
 
         let systemPrompts = {};
-        let chatHistory = []; // To store conversation for API context
-        let currentImageBase64 = null; // For image uploads
+        let chatHistory = []; 
+        let currentImageBase64 = null;
 
         // --- DOM Elements ---
         const chatContainer = document.getElementById('chat-container');
@@ -480,15 +497,23 @@
         const settingsModal = document.getElementById('settings-modal');
         const saveSettingsBtn = document.getElementById('save-settings-btn');
         const aiProviderSelect = document.getElementById('ai-provider');
+        
         const openaiSettingsDiv = document.getElementById('openai-settings');
-        const geminiSettingsDiv = document.getElementById('gemini-settings');
-        const ollamaSettingsDiv = document.getElementById('ollama-settings');
         const openaiApiKeyInput = document.getElementById('openai-api-key');
         const openaiModelInput = document.getElementById('openai-model');
+        
+        const geminiSettingsDiv = document.getElementById('gemini-settings');
         const geminiApiKeyInput = document.getElementById('gemini-api-key');
         const geminiModelInput = document.getElementById('gemini-model');
+        
+        const ollamaSettingsDiv = document.getElementById('ollama-settings');
         const ollamaHostInput = document.getElementById('ollama-host');
         const ollamaModelInput = document.getElementById('ollama-model');
+
+        const lollmsSettingsDiv = document.getElementById('lollms-settings');
+        const lollmsHostInput = document.getElementById('lollms-host');
+        const lollmsModelInput = document.getElementById('lollms-model');
+
         const settingsStatus = document.getElementById('settings-status');
 
         const systemPromptManageBtn = document.getElementById('system-prompt-manage-btn');
@@ -518,8 +543,11 @@
                     geminiApiKey: "Gemini API Key:",
                     geminiModel: "Gemini Model:",
                     ollamaHost: "Ollama Host Address:",
-                    ollamaModel: "Ollama Model:",
-                    ollamaInfo: "Ensure Ollama server is running and accessible. For cross-domain requests, Ollama needs to be configured for CORS (e.g., OLLAMA_ORIGINS='*'). You can also use a local proxy.",
+                    ollamaModel: "Ollama Model (optional):",
+                    ollamaInfo: "Ensure Ollama server is running and accessible. For cross-domain requests (e.g. from phone), Ollama needs CORS configured (e.g., OLLAMA_ORIGINS='*').",
+                    lollmsHost: "Lollms Host Address:",
+                    lollmsModel: "Lollms Model (optional):",
+                    lollmsInfo: "Ensure Lollms server is running (default: http://localhost:9600). For cross-domain access, configure Lollms CORS (e.g. add your app's origin to Lollms settings or start with appropriate flags).",
                     saveSettings: "Save Settings",
                     managePromptsTitle: "Manage System Prompts",
                     selectPromptEdit: "Select Prompt to Edit/Delete:",
@@ -539,9 +567,11 @@
                     statusError: "Error: ",
                     errorApiKeyMissing: "API Key for {provider} is missing.",
                     errorOllamaHostMissing: "Ollama host address is missing.",
-                    errorOllamaModelMissing: "Ollama model name is missing.",
+                    errorLollmsHostMissing: "Lollms host address is missing.",
                     errorOpenAIModelMissing: "OpenAI model name is missing.",
                     errorGeminiModelMissing: "Gemini model name is missing.",
+                    // errorOllamaModelMissing: "Ollama model name is missing.", // No longer strictly required
+                    // errorLollmsModelMissing: "Lollms model name is missing.", // No longer strictly required
                     confirmDeletePrompt: "Are you sure you want to delete prompt '{promptName}'?",
                     defaultPromptPirate: "90s Pirate Captain",
                     defaultPromptPirateText: "Ye be chattin' with Cap'n Bytebeard, a swashbucklin' pirate from the digital seas of the 1990s! I speak in pirate lingo, love talkin' 'bout old computers, retro games, and treasure. Ask me anythin', matey, but expect a hearty YARRR! and tales of adventure!",
@@ -551,7 +581,7 @@
                     welcomeMessage: "Welcome to RetroAI ChatterBox! Configure your AI provider in Settings to get started.",
                     imagePreview: "Image to send:",
                     chatCleared: "Chat cleared!",
-                    noModelForProvider: "No model specified for the selected provider in settings."
+                    noModelForProvider: "No model specified for the selected provider in settings (OpenAI/Gemini require one)."
                 }
             },
             fr: {
@@ -566,8 +596,11 @@
                     geminiApiKey: "Clé API Gemini:",
                     geminiModel: "Modèle Gemini:",
                     ollamaHost: "Adresse Hôte Ollama:",
-                    ollamaModel: "Modèle Ollama:",
-                    ollamaInfo: "Assurez-vous que le serveur Ollama est en cours d'exécution et accessible. Pour les requêtes interdomaines, Ollama doit être configuré pour CORS (ex: OLLAMA_ORIGINS='*'). Vous pouvez aussi utiliser un proxy local.",
+                    ollamaModel: "Modèle Ollama (optionnel):",
+                    ollamaInfo: "Assurez-vous que le serveur Ollama est en cours d'exécution et accessible. Pour les requêtes interdomaines (ex: depuis un téléphone), Ollama doit être configuré pour CORS (ex: OLLAMA_ORIGINS='*').",
+                    lollmsHost: "Adresse Hôte Lollms:",
+                    lollmsModel: "Modèle Lollms (optionnel):",
+                    lollmsInfo: "Assurez-vous que le serveur Lollms est en cours d'exécution (défaut: http://localhost:9600). Pour l'accès interdomaine, configurez Lollms CORS (ex: ajoutez l'origine de votre app aux paramètres Lollms ou démarrez avec les options appropriées).",
                     saveSettings: "Sauvegarder",
                     managePromptsTitle: "Gérer les Prompts Système",
                     selectPromptEdit: "Choisir Prompt à Éditer/Supprimer:",
@@ -587,7 +620,7 @@
                     statusError: "Erreur : ",
                     errorApiKeyMissing: "La clé API pour {provider} est manquante.",
                     errorOllamaHostMissing: "L'adresse de l'hôte Ollama est manquante.",
-                    errorOllamaModelMissing: "Le nom du modèle Ollama est manquant.",
+                    errorLollmsHostMissing: "L'adresse de l'hôte Lollms est manquante.",
                     errorOpenAIModelMissing: "Le nom du modèle OpenAI est manquant.",
                     errorGeminiModelMissing: "Le nom du modèle Gemini est manquant.",
                     confirmDeletePrompt: "Êtes-vous sûr de vouloir supprimer le prompt '{promptName}' ?",
@@ -599,7 +632,7 @@
                     welcomeMessage: "Bienvenue sur RetroAI ChatterBox ! Configurez votre fournisseur IA dans les Options pour commencer.",
                     imagePreview: "Image à envoyer :",
                     chatCleared: "Chat vidé !",
-                    noModelForProvider: "Aucun modèle spécifié pour le fournisseur sélectionné dans les paramètres."
+                    noModelForProvider: "Aucun modèle spécifié pour le fournisseur sélectionné (OpenAI/Gemini en requièrent un)."
                 }
             }
         };
@@ -607,7 +640,7 @@
         async function initI18next() {
             await i18next.init({
                 lng: settings.language,
-                debug: false, // set to true for debugging
+                debug: false,
                 resources: translations
             });
             updateUIStrings();
@@ -623,7 +656,6 @@
                 const key = el.getAttribute('data-i18n-placeholder');
                 el.placeholder = i18next.t(key);
             });
-            // Update dynamic select options
              if (promptListSelect.options[0] && promptListSelect.options[0].value === "") {
                 promptListSelect.options[0].textContent = i18next.t('newPromptOption');
             }
@@ -637,8 +669,14 @@
             const newLang = e.target.value;
             i18next.changeLanguage(newLang).then(() => {
                 settings.language = newLang;
-                saveSettings(); // Save language preference
+                saveSettings(); 
                 updateUIStrings();
+                // Default prompts might need re-evaluation based on new language
+                const currentPrompts = Object.keys(systemPrompts).length;
+                addDefaultSystemPrompts(); // This will add if they don't exist for the new lang
+                if (Object.keys(systemPrompts).length > currentPrompts) {
+                    populatePromptSelectors(); // Repopulate if new defaults were added
+                }
             });
         });
 
@@ -648,14 +686,15 @@
             if (storedSettings) {
                 Object.assign(settings, JSON.parse(storedSettings));
             }
-            // Apply loaded settings to UI
             aiProviderSelect.value = settings.provider;
             openaiApiKeyInput.value = settings.openaiApiKey;
             openaiModelInput.value = settings.openaiModel || 'gpt-4o-mini';
             geminiApiKeyInput.value = settings.geminiApiKey;
             geminiModelInput.value = settings.geminiModel || 'gemini-1.5-flash-latest';
             ollamaHostInput.value = settings.ollamaHost || 'http://localhost:11434';
-            ollamaModelInput.value = settings.ollamaModel || 'llama3';
+            ollamaModelInput.value = settings.ollamaModel || '';
+            lollmsHostInput.value = settings.lollmsHost || 'http://localhost:9600';
+            lollmsModelInput.value = settings.lollmsModel || '';
             languageSwitcher.value = settings.language;
             updateProviderSettingsVisibility();
         }
@@ -668,8 +707,9 @@
             settings.geminiModel = geminiModelInput.value;
             settings.ollamaHost = ollamaHostInput.value;
             settings.ollamaModel = ollamaModelInput.value;
+            settings.lollmsHost = lollmsHostInput.value;
+            settings.lollmsModel = lollmsModelInput.value;
             settings.language = languageSwitcher.value;
-            // currentSystemPromptName is saved when selected
             localStorage.setItem('retroAIChatterSettings', JSON.stringify(settings));
         }
 
@@ -677,23 +717,34 @@
             openaiSettingsDiv.style.display = aiProviderSelect.value === 'openai' ? 'block' : 'none';
             geminiSettingsDiv.style.display = aiProviderSelect.value === 'gemini' ? 'block' : 'none';
             ollamaSettingsDiv.style.display = aiProviderSelect.value === 'ollama' ? 'block' : 'none';
+            lollmsSettingsDiv.style.display = aiProviderSelect.value === 'lollms' ? 'block' : 'none';
         }
 
         aiProviderSelect.addEventListener('change', updateProviderSettingsVisibility);
 
         // --- System Prompts Management ---
         function addDefaultSystemPrompts() {
-            const defaultPrompts = {
-                [i18next.t('defaultPromptPirate')]: i18next.t('defaultPromptPirateText'),
-                [i18next.t('defaultPromptCyberPet')]: i18next.t('defaultPromptCyberPetText'),
-            };
+            // Use current language for default prompt keys/text
+            const pirateNameKey = 'defaultPromptPirate';
+            const pirateTextKey = 'defaultPromptPirateText';
+            const cyberpetNameKey = 'defaultPromptCyberPet';
+            const cyberpetTextKey = 'defaultPromptCyberPetText';
+
+            const defaultPromptsData = [
+                { nameKey: pirateNameKey, textKey: pirateTextKey },
+                { nameKey: cyberpetNameKey, textKey: cyberpetTextKey }
+            ];
+            
             let promptsAdded = false;
-            for (const name in defaultPrompts) {
-                if (!systemPrompts[name]) {
-                    systemPrompts[name] = defaultPrompts[name];
+            defaultPromptsData.forEach(pd => {
+                const name = i18next.t(pd.nameKey);
+                const text = i18next.t(pd.textKey);
+                if (!systemPrompts[name] && name !== pd.nameKey) { // Check if i18n key resolved
+                    systemPrompts[name] = text;
                     promptsAdded = true;
                 }
-            }
+            });
+
             if (promptsAdded) saveSystemPrompts();
         }
 
@@ -703,13 +754,12 @@
             if (storedPrompts) {
                 systemPrompts = JSON.parse(storedPrompts);
             }
-            addDefaultSystemPrompts(); // Add defaults if not present
+            addDefaultSystemPrompts(); 
             populatePromptSelectors();
-            // Restore selected system prompt
             if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
                 systemPromptSelector.value = settings.currentSystemPromptName;
             } else {
-                 systemPromptSelector.value = ""; // Default to no prompt
+                 systemPromptSelector.value = "";
             }
         }
 
@@ -719,7 +769,6 @@
         }
 
         function populatePromptSelectors() {
-            // Populate modal dropdown
             promptListSelect.innerHTML = `<option value="">${i18next.t('newPromptOption')}</option>`;
             Object.keys(systemPrompts).forEach(name => {
                 const option = document.createElement('option');
@@ -728,7 +777,6 @@
                 promptListSelect.appendChild(option);
             });
 
-            // Populate main UI dropdown
             const currentSelected = systemPromptSelector.value;
             systemPromptSelector.innerHTML = `<option value="">${i18next.t('noSystemPrompt')}</option>`;
             Object.keys(systemPrompts).forEach(name => {
@@ -737,7 +785,6 @@
                 option.textContent = name;
                 systemPromptSelector.appendChild(option);
             });
-             // Re-select if possible
             if (systemPrompts[currentSelected]) {
                 systemPromptSelector.value = currentSelected;
             } else if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
@@ -749,9 +796,8 @@
         
         systemPromptSelector.addEventListener('change', (e) => {
             settings.currentSystemPromptName = e.target.value;
-            saveSettings(); // Save this preference
+            saveSettings();
         });
-
 
         // --- Chat Logic ---
         function addMessage(text, sender, imageUrl = null) {
@@ -759,17 +805,14 @@
             messageDiv.classList.add('message', sender);
             
             if (sender === 'ai') {
-                // Render Markdown for AI messages
-                // Sanitize basic HTML, allow only specific tags if needed (marked does some basic sanitization)
                 messageDiv.innerHTML = marked.parse(text);
             } else {
-                // For user messages, just set textContent to prevent XSS from user input if it were ever displayed raw
                 messageDiv.textContent = text;
             }
 
             if (imageUrl) {
                 const p = document.createElement('p');
-                p.textContent = i18next.t('imagePreview');
+                p.textContent = i18next.t('imagePreview'); // Could be specific for sent image
                 messageDiv.appendChild(p);
                 const img = document.createElement('img');
                 img.src = imageUrl;
@@ -783,9 +826,8 @@
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // Add to chat history for API context
             if (sender === 'user') {
-                chatHistory.push({ role: 'user', content: text, ...(imageUrl && { image: currentImageBase64 }) });
+                chatHistory.push({ role: 'user', content: text, ...(imageUrl && { imageBase64Data: currentImageBase64 }) });
             } else if (sender === 'ai') {
                  chatHistory.push({ role: 'assistant', content: text });
             }
@@ -809,18 +851,32 @@
             }
         }
 
+        async function handleApiError(response, providerName) {
+            let errorData, errorMessage;
+            try {
+                errorData = await response.json();
+                errorMessage = errorData.error?.message || errorData.error || JSON.stringify(errorData);
+            } catch (e) {
+                try {
+                    errorMessage = await response.text();
+                } catch (e2) {
+                    errorMessage = response.statusText;
+                }
+            }
+            throw new Error(`${providerName} API Error: ${response.status} ${errorMessage}`);
+        }
 
         async function handleSendMessage() {
             const userInput = messageInput.value.trim();
             if (!userInput && !currentImageBase64) return;
 
-            addMessage(userInput, 'user', currentImageBase64 ? currentImageBase64 : null); // Show image for user too
-            const userMessageForApi = userInput; // Store before clearing
+            addMessage(userInput, 'user', currentImageBase64); 
+            const userMessageForApi = userInput;
             
             messageInput.value = '';
-            const uploadedImageBase64 = currentImageBase64; // Capture before clearing
-            currentImageBase64 = null; // Clear after sending
-            document.getElementById('image-upload-input').value = ''; // Clear file input
+            const uploadedImageBase64 = currentImageBase64; 
+            currentImageBase64 = null; 
+            document.getElementById('image-upload-input').value = ''; 
 
             sendBtn.disabled = true;
             showTypingIndicator(true);
@@ -832,30 +888,38 @@
 
                 let aiResponse = '';
                 const provider = settings.provider;
-                const currentModel = provider === 'openai' ? settings.openaiModel :
-                                     provider === 'gemini' ? settings.geminiModel :
-                                     settings.ollamaModel;
-                if (!currentModel) {
-                    throw new Error(i18next.t('noModelForProvider'));
-                }
 
-
-                // Construct messages for API
-                const messages = [];
+                // Construct messages for APIs that use OpenAI-like message format
+                const apiMessages = [];
                 if (systemPromptText) {
-                    messages.push({ role: "system", content: systemPromptText });
+                    apiMessages.push({ role: "system", content: systemPromptText });
                 }
-                // Add recent chat history (simple approach: last N messages)
-                const historySlice = chatHistory.slice(-6); // e.g., last 3 user/AI pairs + current
-                historySlice.forEach(msg => {
-                    if (msg.role === 'user') {
-                        const contentParts = [{ type: "text", text: msg.content }];
-                        if (msg.image) {
-                            contentParts.push({ type: "image_url", image_url: { url: msg.image, detail: "auto" }});
+                const historySlice = chatHistory.slice(-10); // Last 5 pairs + current user message
+
+                historySlice.forEach(histMsg => {
+                    if (histMsg.role === 'user') {
+                        const contentParts = [{ type: "text", text: histMsg.content }];
+                        // For OpenAI/Gemini, image is part of content array for the user message
+                        if (histMsg.imageBase64Data && (provider === 'openai' || provider === 'gemini')) {
+                            contentParts.push({ type: "image_url", image_url: { url: histMsg.imageBase64Data }});
                         }
-                         messages.push({ role: "user", content: provider === 'gemini' ? contentParts.map(p => p.type === "text" ? {text:p.text} : {inline_data: {mime_type: 'image/jpeg', data: p.image_url.url.split(',')[1]}}) : contentParts });
-                    } else {
-                        messages.push({ role: "assistant", content: msg.content });
+                        // Gemini expects a slightly different structure for content parts for images
+                        if (provider === 'gemini') {
+                            const geminiParts = contentParts.map(p => {
+                                if (p.type === "text") return { text: p.text };
+                                if (p.type === "image_url") return { inline_data: { mime_type: 'image/jpeg', data: p.image_url.url.split(',')[1] }}; // Assumes JPEG, adjust if needed
+                                return p;
+                            });
+                            apiMessages.push({ role: "user", parts: geminiParts });
+                        } else {
+                             apiMessages.push({ role: "user", content: contentParts.length > 1 ? contentParts : contentParts[0].text }); // OpenAI format
+                        }
+                    } else if (histMsg.role === 'assistant') {
+                        if (provider === 'gemini') {
+                            apiMessages.push({ role: "model", parts: [{ text: histMsg.content }] });
+                        } else {
+                            apiMessages.push({ role: "assistant", content: histMsg.content });
+                        }
                     }
                 });
 
@@ -864,135 +928,115 @@
                     if (!settings.openaiApiKey) throw new Error(i18next.t('errorApiKeyMissing', {provider: "OpenAI"}));
                     if (!settings.openaiModel) throw new Error(i18next.t('errorOpenAIModelMissing'));
                     
-                    const OAIpayload = {
+                    const payload = {
                         model: settings.openaiModel,
-                        messages: messages.map(m => {
-                            if (m.role === 'user' && Array.isArray(m.content)) { // Handle multimodal content
-                                return { role: 'user', content: m.content };
-                            }
-                            return { role: m.role, content: m.content };
-                        })
+                        messages: apiMessages // Already constructed
                     };
-                    // Add current user message (which is already in `messages` if logic correct)
-                    // If the last message in `messages` is not the current user input, this means it's not added yet.
-                    // The current user input is already added to chatHistory and then to messages.
-
                     const response = await fetch('https://api.openai.com/v1/chat/completions', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${settings.openaiApiKey}`
-                        },
-                        body: JSON.stringify(OAIpayload)
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${settings.openaiApiKey}`},
+                        body: JSON.stringify(payload)
                     });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`OpenAI API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
-                    }
+                    if (!response.ok) await handleApiError(response, "OpenAI");
                     const data = await response.json();
                     aiResponse = data.choices[0]?.message?.content || "No response from OpenAI.";
 
                 } else if (provider === 'gemini') {
                     if (!settings.geminiApiKey) throw new Error(i18next.t('errorApiKeyMissing', {provider: "Gemini"}));
-                     if (!settings.geminiModel) throw new Error(i18next.t('errorGeminiModelMissing'));
+                    if (!settings.geminiModel) throw new Error(i18next.t('errorGeminiModelMissing'));
 
-                    // Gemini wants a specific format for contents
-                    const geminiContents = messages.map(msg => {
-                        let parts = [];
-                        if (msg.role === 'user') {
-                            if (Array.isArray(msg.content)) { // This is our structure for multimodal
-                                msg.content.forEach(part => {
-                                    if (part.type === 'text') parts.push({ text: part.text });
-                                    else if (part.type === 'image_url' || part.inline_data) { // Checking for both structures
-                                        const base64Data = (part.image_url?.url || part.inline_data?.data).split(',')[1];
-                                        parts.push({ inline_data: { mime_type: 'image/jpeg', data: base64Data } });
-                                    }
-                                });
-                            } else { // text only
-                                parts.push({ text: msg.content });
-                            }
-                            return { role: 'user', parts };
-                        } else if (msg.role === 'assistant') {
-                            return { role: 'model', parts: [{ text: msg.content }] };
-                        } else if (msg.role === 'system' && msg.content) { // Gemini does not have a direct "system" role in contents, prepend to user message or use specific system instruction field if available
-                            // For simplicity, we'll prepend system prompt to the first user message's text part if this message is the system prompt
-                            // This is a simplification. Real system instructions in Gemini are set differently.
-                            // A better way for Gemini system instructions:
-                            // Use the 'system_instruction' field at the top level of the request if using newer models.
-                            // For older models like gemini-pro, system instructions are often prepended to the user prompt.
-                            // Here we assume `messages` includes system prompt as first element.
-                            // If a proper system message exists, it should be handled differently.
-                            // Let's assume for gemini-pro-vision, it's part of the user's first message
-                            return null; // System prompt handled separately for gemini or prepended.
-                        }
-                        return null;
-                    }).filter(Boolean); // Remove nulls
-
-                    // If system prompt exists, and using a model that supports it, add it.
-                    // For gemini-1.5-flash-latest, system_instruction is supported.
-                    let geminiPayload = { contents: geminiContents };
-                    if (systemPromptText && (settings.geminiModel.includes("1.5") || settings.geminiModel.includes("gemini-pro"))) { // Newer models
+                    let geminiPayload = { contents: apiMessages }; // apiMessages already formatted for gemini
+                     if (systemPromptText) { // Gemini uses system_instruction
                          geminiPayload.system_instruction = { parts: [{ text: systemPromptText }] };
-                         // Remove system prompt from `contents` if it was added
+                         // Remove system prompt from contents if it was added there by mistake
                          geminiPayload.contents = geminiPayload.contents.filter(c => c.role !== 'system');
-                    } else if (systemPromptText && geminiPayload.contents.length > 0 && geminiPayload.contents[0].role === 'user') {
-                        // Prepend to first user message for older models or if system_instruction not used
-                        geminiPayload.contents[0].parts.unshift({ text: systemPromptText + "\n\n" });
-                    }
-
+                     }
 
                     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.geminiModel}:generateContent?key=${settings.geminiApiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(geminiPayload)
                     });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Gemini API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
-                    }
+                    if (!response.ok) await handleApiError(response, "Gemini");
                     const data = await response.json();
                     aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini.";
-
-
+                
                 } else if (provider === 'ollama') {
                     if (!settings.ollamaHost) throw new Error(i18next.t('errorOllamaHostMissing'));
-                    if (!settings.ollamaModel) throw new Error(i18next.t('errorOllamaModelMissing'));
-
-                    // Ollama requires just the current prompt, but can take images
-                    // And system prompt goes into `system` field
-                    let ollamaPayload = {
-                        model: settings.ollamaModel,
-                        prompt: userMessageForApi, // Just the last user message text
+                    // Ollama model is optional, server uses current if not specified.
+                    
+                    const ollamaPayload = {
+                        model: settings.ollamaModel || undefined, // Send undefined if empty
+                        messages: apiMessages.map(m => ({ // Ollama /api/chat expects this format
+                            role: m.role, 
+                            content: typeof m.content === 'string' ? m.content : (m.content.find(p=>p.type==='text')?.text || ''), // Extract text content
+                            images: uploadedImageBase64 && m.role === 'user' && m.content.some(p=>p.type==='image_url') ? [uploadedImageBase64.split(',')[1]] : undefined
+                        })).filter(m => m.content || m.images), // Filter out empty messages unless they have images
                         stream: false
                     };
-                    if (systemPromptText) {
-                        ollamaPayload.system = systemPromptText;
-                    }
-                    if (uploadedImageBase64) {
-                        ollamaPayload.images = [uploadedImageBase64.split(',')[1]]; // Send only base64 part
-                    }
-                    // For Ollama, `chatHistory` isn't directly used in `/api/generate`.
-                    // If using `/api/chat`, then `messages` array similar to OpenAI is used.
-                    // For simplicity with `/api/generate` and images, we send current prompt + system.
-                    // A more advanced Ollama integration would use `/api/chat` for history.
+                    // If system prompt was part of apiMessages, ensure it's correctly formatted or handled
+                    // Ollama's /api/chat takes system message in the messages array.
 
-                    const response = await fetch(`${settings.ollamaHost}/api/generate`, {
+                    const response = await fetch(`${settings.ollamaHost}/api/chat`, { // Using /api/chat for better history/image support
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(ollamaPayload)
                     });
-                     if (!response.ok) {
-                        let errorText = `Ollama API Error: ${response.status} ${response.statusText}`;
-                        try {
-                            const errorData = await response.json();
-                            errorText += ` - ${errorData.error || ''}`;
-                        } catch (e) { /* ignore if not json */ }
-                        throw new Error(errorText);
-                    }
+                    if (!response.ok) await handleApiError(response, "Ollama");
                     const data = await response.json();
-                    aiResponse = data.response || "No response from Ollama.";
-                }
+                    aiResponse = data.message?.content || "No response from Ollama.";
 
+                } else if (provider === 'lollms') {
+                    if (!settings.lollmsHost) throw new Error(i18next.t('errorLollmsHostMissing'));
+                    
+                    let endpoint = `${settings.lollmsHost}`;
+                    let lollmsPayload;
+
+                    if (uploadedImageBase64) {
+                        endpoint += '/lollms_generate_with_images';
+                        let promptForLollmsImage = "";
+                        if (systemPromptText) promptForLollmsImage += systemPromptText + "\n\n";
+                        historySlice.forEach(hMsg => { // historySlice includes current user message
+                            promptForLollmsImage += `${hMsg.role === 'user' ? 'User' : 'Assistant'}: ${hMsg.content}\n`;
+                        });
+                        
+                        lollmsPayload = {
+                            prompt: promptForLollmsImage.trim(),
+                            images: [uploadedImageBase64.split(',')[1]],
+                            model_name: settings.lollmsModel || undefined,
+                            stream: false
+                        };
+                    } else { // Text only, use OpenAI compatible endpoint for better history
+                        endpoint += '/v1/chat/completions';
+                        lollmsPayload = {
+                            model: settings.lollmsModel || undefined,
+                            messages: apiMessages.filter(m=>m.role!=='system' || m.content).map(m => ({ // Lollms /v1/chat expects this
+                                role: m.role,
+                                content: m.role === 'system' ? m.content : (typeof m.content === 'string' ? m.content : m.content[0].text) // Simplify content
+                            })),
+                            stream: false
+                        };
+                        // Add system prompt back if it was filtered
+                        if(systemPromptText && !lollmsPayload.messages.find(m=>m.role==='system')){
+                            lollmsPayload.messages.unshift({role:'system', content: systemPromptText});
+                        }
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(lollmsPayload)
+                    });
+
+                    if (!response.ok) await handleApiError(response, "Lollms");
+
+                    if (uploadedImageBase64) { // /lollms_generate_with_images returns plain text
+                        aiResponse = await response.text();
+                    } else { // /v1/chat/completions returns JSON
+                        const data = await response.json();
+                        aiResponse = data.choices[0]?.message?.content || "No response from Lollms.";
+                    }
+                }
                 addMessage(aiResponse, 'ai');
 
             } catch (error) {
@@ -1005,11 +1049,11 @@
             }
         }
 
-        // --- Event Listeners ---
+        // --- Event Listeners & UI Setup ---
         sendBtn.addEventListener('click', handleSendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Prevents newline in input
+                e.preventDefault();
                 handleSendMessage();
             }
         });
@@ -1019,21 +1063,18 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    currentImageBase64 = e.target.result;
-                    // Optionally, display a small preview or indicator
-                    // For now, just store it. It will be shown with the user message.
-                    // addMessage(`Selected image: ${file.name}`, 'user-info'); // Or some other way
+                    currentImageBase64 = e.target.result; 
+                    // User will see image when message is added to chat
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Modal Open/Close
         function setupModal(modal, openBtn, statusElement) {
             const closeBtn = modal.querySelector('.close-button');
             openBtn.onclick = () => {
                 modal.classList.add('active');
-                if (statusElement) statusElement.style.display = 'none'; // Hide status on open
+                if (statusElement) statusElement.style.display = 'none';
             }
             closeBtn.onclick = () => modal.classList.remove('active');
             window.onclick = (event) => {
@@ -1052,15 +1093,11 @@
             setTimeout(() => { element.style.display = 'none'; }, 3000);
         }
         
-        // Settings Modal Logic
         saveSettingsBtn.addEventListener('click', () => {
             saveSettings();
             showStatus(settingsStatus, i18next.t('statusSettingsSaved'), 'success');
-            // Do not close modal automatically, user might want to tweak more.
-            // settingsModal.classList.remove('active'); 
         });
         
-        // System Prompts Modal Logic
         promptListSelect.addEventListener('change', (e) => {
             const selectedName = e.target.value;
             if (selectedName && systemPrompts[selectedName]) {
@@ -1082,13 +1119,13 @@
                 return;
             }
             const oldName = promptListSelect.value;
-            if (oldName && oldName !== name) { // Renaming
+            if (oldName && oldName !== name && systemPrompts[oldName]) { 
                 delete systemPrompts[oldName];
             }
             systemPrompts[name] = text;
-            saveSystemPrompts();
-            promptListSelect.value = name; // Select the newly saved/renamed prompt
-            if (systemPromptSelector.value === oldName || !systemPromptSelector.value) { // Update main selector if it was the one being edited or none selected
+            saveSystemPrompts(); // This also calls populatePromptSelectors
+            promptListSelect.value = name; 
+            if (systemPromptSelector.value === oldName || !systemPromptSelector.value) {
                  systemPromptSelector.value = name;
                  settings.currentSystemPromptName = name;
                  saveSettings();
@@ -1103,14 +1140,14 @@
                 if (confirm(i18next.t('confirmDeletePrompt', { promptName: name }))) {
                     delete systemPrompts[name];
                     saveSystemPrompts();
-                    if (systemPromptSelector.value === name) { // If deleted prompt was active
-                        systemPromptSelector.value = ""; // Deselect
+                    if (systemPromptSelector.value === name) {
+                        systemPromptSelector.value = ""; 
                         settings.currentSystemPromptName = "";
                         saveSettings();
                     }
                     promptNameInput.value = '';
                     promptTextTextarea.value = '';
-                    promptListSelect.value = ''; // Go to "create new"
+                    promptListSelect.value = ''; 
                     deletePromptBtn.style.display = 'none';
                     showStatus(promptsStatus, i18next.t('statusPromptDeleted'), 'success');
                 }
@@ -1123,26 +1160,21 @@
             addMessage(i18next.t('chatCleared'), 'ai');
         });
 
-
         // --- Initialization ---
         async function initializeApp() {
-            loadSettings(); // Load settings first, esp. language
-            await initI18next(); // Then init i18n with correct language
-            loadSystemPrompts(); // Load prompts, which might use i18n for defaults
-            updateProviderSettingsVisibility(); // After settings are loaded
+            loadSettings();
+            await initI18next(); 
+            loadSystemPrompts(); // Now uses i18next for defaults
+            updateProviderSettingsVisibility();
             
-            // Populate selectors again if i18n changed their text
-            populatePromptSelectors();
+            populatePromptSelectors(); // Ensure selectors are up-to-date after all loading
             if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
                  systemPromptSelector.value = settings.currentSystemPromptName;
             }
 
-            // Initial check for modal button states
             if (!promptListSelect.value) {
                 deletePromptBtn.style.display = 'none';
             }
-
-            // Welcome message
             addMessage(i18next.t('welcomeMessage'), 'ai');
         }
 
