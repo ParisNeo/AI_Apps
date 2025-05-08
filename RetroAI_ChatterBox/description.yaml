@@ -1,0 +1,9 @@
+author: ParisNeo
+category: Utility/Games
+creation_date: 2024-05-27
+last_update_date: 2024-05-27
+description: A retro-themed multi-backend AI chat application with system prompt management, localization (FR/EN), image support, and settings persistence via localStorage. It connects to OpenAI, Gemini, and Ollama, aiming for a fun, engaging, and slightly educational 90s vibe.
+disclaimer: This application is for demonstration and educational purposes. Users are responsible for their own API keys and usage of AI services. Ensure your Ollama server is properly configured for CORS if accessing from a different origin. Data is stored locally in your browser.
+model: gemini 2.5 05-06 # As per user request, though the app itself will use specified models
+name: RetroAI_ChatterBox
+version: 1.0

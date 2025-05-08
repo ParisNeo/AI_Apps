@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroAI ChatterBox</title>
+    <!-- CDNs -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next/i18next.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend/i18nextHttpBackend.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script> -->
+
+    <style>
+        :root {
+            --primary-color: #00A8A8; /* Teal */
+            --secondary-color: #FF00FF; /* Magenta */
+            --accent-color: #FFFF00; /* Yellow */
+            --bg-color: #22223B; /* Dark Purple-Blue */
+            --text-color: #F2E9E4; /* Off-white */
+            --input-bg: #4A4E69;
+            --border-color: #9A8C98;
+            --error-color: #FF6B6B;
+            --success-color: #4CAF50;
+
+            --font-pixel: 'Press Start 2P', cursive;
+            --font-readable: 'VT323', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-readable);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .crt-scanlines::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 3px, 6px 100%;
+            z-index: 9999;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.25; }
+            50% { opacity: 0.5; }
+            100% { opacity: 0.25; }
+        }
+
+
+        header {
+            background-color: var(--input-bg);
+            padding: 10px 20px;
+            border-bottom: 3px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        header h1 {
+            font-family: var(--font-pixel);
+            font-size: 1.5em;
+            color: var(--accent-color);
+            text-shadow: 2px 2px var(--secondary-color);
+        }
+
+        .header-controls button, .header-controls select {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: 2px solid var(--secondary-color);
+            padding: 8px 12px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-family: var(--font-pixel);
+            font-size: 0.7em;
+            transition: all 0.2s ease-in-out;
+        }
+        .header-controls button:hover, .header-controls select:hover {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--bg-color),
+                var(--bg-color) 10px,
+                #2a2a4a 10px,
+                #2a2a4a 20px
+            );
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 3px 3px 5px rgba(0,0,0,0.2);
+            font-size: 1.1em;
+        }
+
+        .message.user {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            align-self: flex-end;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .message.ai {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            align-self: flex-start;
+            border: 2px solid var(--primary-color);
+        }
+        .message.ai strong { color: var(--accent-color); }
+        .message.ai a { color: var(--secondary-color); text-decoration: underline;}
+        .message.ai img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 2px solid var(--primary-color);
+        }
+        .message.ai pre {
+            background-color: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+        }
+        .message.ai code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+
+        #input-area {
+            display: flex;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-top: 3px solid var(--primary-color);
+            gap: 10px;
+            align-items: center;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-readable);
+            font-size: 1em;
+        }
+        #message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px var(--primary-color);
+        }
+
+        #input-area button, #input-area label.button-like {
+            padding: 12px 15px;
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: var(--font-pixel);
+            font-size: 0.8em;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        #input-area button:hover, #input-area label.button-like:hover {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+        }
+        #input-area button:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+        #image-upload-input { display: none; } /* Hide actual file input */
+
+        .system-prompt-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px; /* Space above input bar */
+            padding: 0 15px; /* Align with input-area padding */
+        }
+        .system-prompt-controls select, .system-prompt-controls button {
+            padding: 8px;
+            font-size: 0.9em;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: var(--font-readable);
+        }
+        .system-prompt-controls button {
+             background-color: var(--primary-color);
+             color: var(--bg-color);
+             font-family: var(--font-pixel);
+             font-size: 0.7em;
+        }
+
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background-color: var(--input-bg);
+            margin: auto;
+            padding: 25px;
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            color: var(--text-color);
+        }
+        .modal-content h2 {
+            font-family: var(--font-pixel);
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .modal-content input[type="text"],
+        .modal-content input[type="password"],
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-readable);
+        }
+        .modal-content textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .modal-content button {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: var(--font-pixel);
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+        .modal-content button:hover {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+        }
+        .modal-content button.danger {
+            background-color: var(--error-color);
+            border-color: #c0392b;
+        }
+        .modal-content button.danger:hover {
+            background-color: #c0392b;
+            color: var(--text-color);
+        }
+        .close-button {
+            color: var(--border-color);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover, .close-button:focus {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .status-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status-message.error { background-color: var(--error-color); color: var(--bg-color); }
+        .status-message.success { background-color: var(--success-color); color: var(--bg-color); }
+
+        .typing-indicator {
+            font-style: italic;
+            color: var(--accent-color);
+            padding: 5px 0;
+        }
+
+        /* Small screen adjustments */
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.2em; }
+            .header-controls button, .header-controls select { font-size: 0.6em; padding: 6px 8px;}
+            #input-area { flex-direction: column; gap: 5px; }
+            #message-input { width: 100%; margin-bottom: 5px; }
+            #input-area button, #input-area label.button-like { width: 100%; }
+            .message { max-width: 95%; font-size: 1em; }
+            .modal-content { width: 95%; padding: 15px; }
+            .system-prompt-controls { flex-direction: column; gap: 5px; align-items: stretch; }
+            .system-prompt-controls select, .system-prompt-controls button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="crt-scanlines"></div>
+
+    <header>
+        <h1 data-i18n="appTitle">RetroAI ChatterBox</h1>
+        <div class="header-controls">
+            <select id="language-switcher">
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+            </select>
+            <button id="system-prompt-manage-btn" data-i18n="managePrompts"><i class="fas fa-scroll"></i> Prompts</button>
+            <button id="settings-btn" data-i18n="settings"><i class="fas fa-cog"></i> Settings</button>
+        </div>
+    </header>
+
+    <div class="system-prompt-controls">
+        <select id="system-prompt-selector">
+            <option value="" data-i18n="noSystemPrompt">-- No System Prompt --</option>
+        </select>
+        <button id="clear-chat-btn" data-i18n="clearChat"><i class="fas fa-broom"></i> Clear</button>
+    </div>
+
+    <div id="chat-container">
+        <!-- Messages will appear here -->
+    </div>
+
+    <div id="input-area">
+        <input type="text" id="message-input" data-i18n-placeholder="typeMessagePlaceholder" placeholder="Type your message...">
+        <label for="image-upload-input" class="button-like" data-i18n="uploadImageBtn"><i class="fas fa-image"></i> Image</label>
+        <input type="file" id="image-upload-input" accept="image/*">
+        <button id="send-btn" data-i18n="send"><i class="fas fa-paper-plane"></i> Send</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <h2 data-i18n="settingsTitle">Settings</h2>
+            <div id="settings-status" class="status-message" style="display:none;"></div>
+            
+            <label for="ai-provider" data-i18n="aiProvider">AI Provider:</label>
+            <select id="ai-provider">
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="ollama">Ollama</option>
+            </select>
+
+            <div id="openai-settings">
+                <label for="openai-api-key" data-i18n="openaiApiKey">OpenAI API Key:</label>
+                <input type="password" id="openai-api-key" placeholder="sk-...">
+                <label for="openai-model" data-i18n="openaiModel">OpenAI Model:</label>
+                <input type="text" id="openai-model" placeholder="gpt-4-turbo">
+            </div>
+
+            <div id="gemini-settings">
+                <label for="gemini-api-key" data-i18n="geminiApiKey">Gemini API Key:</label>
+                <input type="password" id="gemini-api-key" placeholder="AIzaSy...">
+                <label for="gemini-model" data-i18n="geminiModel">Gemini Model:</label>
+                <input type="text" id="gemini-model" placeholder="gemini-1.5-flash-latest">
+            </div>
+
+            <div id="ollama-settings">
+                <label for="ollama-host" data-i18n="ollamaHost">Ollama Host Address:</label>
+                <input type="text" id="ollama-host" placeholder="http://localhost:11434">
+                <label for="ollama-model" data-i18n="ollamaModel">Ollama Model:</label>
+                <input type="text" id="ollama-model" placeholder="llama3">
+                 <small data-i18n="ollamaInfo">Ensure Ollama server is running and accessible. For cross-domain requests, Ollama needs to be configured for CORS (e.g., OLLAMA_ORIGINS='*').</small>
+            </div>
+            <br>
+            <button id="save-settings-btn" data-i18n="saveSettings">Save Settings</button>
+        </div>
+    </div>
+
+    <!-- System Prompts Modal -->
+    <div id="system-prompts-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <h2 data-i18n="managePromptsTitle">Manage System Prompts</h2>
+            <div id="prompts-status" class="status-message" style="display:none;"></div>
+
+            <label for="prompt-list" data-i18n="selectPromptEdit">Select Prompt to Edit/Delete:</label>
+            <select id="prompt-list">
+                <option value="" data-i18n="newPromptOption">-- Create New Prompt --</option>
+            </select>
+
+            <label for="prompt-name" data-i18n="promptName">Prompt Name:</label>
+            <input type="text" id="prompt-name" placeholder="e.g., Helpful Assistant">
+
+            <label for="prompt-text" data-i18n="promptText">Prompt Text:</label>
+            <textarea id="prompt-text" placeholder="You are a helpful AI assistant..."></textarea>
+            
+            <button id="save-prompt-btn" data-i18n="savePrompt">Save Prompt</button>
+            <button id="delete-prompt-btn" class="danger" data-i18n="deletePrompt">Delete Prompt</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration & State ---
+        const GITHUB_REPO_URL = "https://github.com/ParisNeo/RetroAI_ChatterBox"; // Placeholder
+
+        let settings = {
+            provider: 'ollama',
+            openaiApiKey: '',
+            openaiModel: 'gpt-4o-mini', // Updated model
+            geminiApiKey: '',
+            geminiModel: 'gemini-1.5-flash-latest',
+            ollamaHost: 'http://localhost:11434',
+            ollamaModel: 'llama3',
+            language: 'en',
+            currentSystemPromptName: ''
+        };
+
+        let systemPrompts = {};
+        let chatHistory = []; // To store conversation for API context
+        let currentImageBase64 = null; // For image uploads
+
+        // --- DOM Elements ---
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const aiProviderSelect = document.getElementById('ai-provider');
+        const openaiSettingsDiv = document.getElementById('openai-settings');
+        const geminiSettingsDiv = document.getElementById('gemini-settings');
+        const ollamaSettingsDiv = document.getElementById('ollama-settings');
+        const openaiApiKeyInput = document.getElementById('openai-api-key');
+        const openaiModelInput = document.getElementById('openai-model');
+        const geminiApiKeyInput = document.getElementById('gemini-api-key');
+        const geminiModelInput = document.getElementById('gemini-model');
+        const ollamaHostInput = document.getElementById('ollama-host');
+        const ollamaModelInput = document.getElementById('ollama-model');
+        const settingsStatus = document.getElementById('settings-status');
+
+        const systemPromptManageBtn = document.getElementById('system-prompt-manage-btn');
+        const systemPromptsModal = document.getElementById('system-prompts-modal');
+        const promptListSelect = document.getElementById('prompt-list');
+        const promptNameInput = document.getElementById('prompt-name');
+        const promptTextTextarea = document.getElementById('prompt-text');
+        const savePromptBtn = document.getElementById('save-prompt-btn');
+        const deletePromptBtn = document.getElementById('delete-prompt-btn');
+        const systemPromptSelector = document.getElementById('system-prompt-selector');
+        const promptsStatus = document.getElementById('prompts-status');
+
+        const languageSwitcher = document.getElementById('language-switcher');
+        const clearChatBtn = document.getElementById('clear-chat-btn');
+
+        // --- Localization ---
+        const translations = {
+            en: {
+                translation: {
+                    appTitle: "RetroAI ChatterBox",
+                    settings: "Settings",
+                    managePrompts: "Prompts",
+                    settingsTitle: "Settings",
+                    aiProvider: "AI Provider:",
+                    openaiApiKey: "OpenAI API Key:",
+                    openaiModel: "OpenAI Model:",
+                    geminiApiKey: "Gemini API Key:",
+                    geminiModel: "Gemini Model:",
+                    ollamaHost: "Ollama Host Address:",
+                    ollamaModel: "Ollama Model:",
+                    ollamaInfo: "Ensure Ollama server is running and accessible. For cross-domain requests, Ollama needs to be configured for CORS (e.g., OLLAMA_ORIGINS='*'). You can also use a local proxy.",
+                    saveSettings: "Save Settings",
+                    managePromptsTitle: "Manage System Prompts",
+                    selectPromptEdit: "Select Prompt to Edit/Delete:",
+                    newPromptOption: "-- Create New Prompt --",
+                    promptName: "Prompt Name:",
+                    promptText: "Prompt Text:",
+                    savePrompt: "Save Prompt",
+                    deletePrompt: "Delete Prompt",
+                    typeMessagePlaceholder: "Type your message... (Shift+Enter for newline)",
+                    send: "Send",
+                    uploadImageBtn: "Image",
+                    noSystemPrompt: "-- No System Prompt --",
+                    clearChat: "Clear Chat",
+                    statusSettingsSaved: "Settings saved successfully!",
+                    statusPromptSaved: "Prompt saved!",
+                    statusPromptDeleted: "Prompt deleted!",
+                    statusError: "Error: ",
+                    errorApiKeyMissing: "API Key for {provider} is missing.",
+                    errorOllamaHostMissing: "Ollama host address is missing.",
+                    errorOllamaModelMissing: "Ollama model name is missing.",
+                    errorOpenAIModelMissing: "OpenAI model name is missing.",
+                    errorGeminiModelMissing: "Gemini model name is missing.",
+                    confirmDeletePrompt: "Are you sure you want to delete prompt '{promptName}'?",
+                    defaultPromptPirate: "90s Pirate Captain",
+                    defaultPromptPirateText: "Ye be chattin' with Cap'n Bytebeard, a swashbucklin' pirate from the digital seas of the 1990s! I speak in pirate lingo, love talkin' 'bout old computers, retro games, and treasure. Ask me anythin', matey, but expect a hearty YARRR! and tales of adventure!",
+                    defaultPromptCyberPet: "CyberPet Assistant",
+                    defaultPromptCyberPetText: "Beep boop! I am CyberPet v2.3, your friendly digital companion from the 90s internet! I'm enthusiastic, use simple language, and love to help with facts, fun, and maybe a few digital glitches *bzzzt*. How can I assist you today?",
+                    aiTyping: "AI is typing...",
+                    welcomeMessage: "Welcome to RetroAI ChatterBox! Configure your AI provider in Settings to get started.",
+                    imagePreview: "Image to send:",
+                    chatCleared: "Chat cleared!",
+                    noModelForProvider: "No model specified for the selected provider in settings."
+                }
+            },
+            fr: {
+                translation: {
+                    appTitle: "RetroIA BoîteÀBavard",
+                    settings: "Options",
+                    managePrompts: "Prompts",
+                    settingsTitle: "Paramètres",
+                    aiProvider: "Fournisseur IA:",
+                    openaiApiKey: "Clé API OpenAI:",
+                    openaiModel: "Modèle OpenAI:",
+                    geminiApiKey: "Clé API Gemini:",
+                    geminiModel: "Modèle Gemini:",
+                    ollamaHost: "Adresse Hôte Ollama:",
+                    ollamaModel: "Modèle Ollama:",
+                    ollamaInfo: "Assurez-vous que le serveur Ollama est en cours d'exécution et accessible. Pour les requêtes interdomaines, Ollama doit être configuré pour CORS (ex: OLLAMA_ORIGINS='*'). Vous pouvez aussi utiliser un proxy local.",
+                    saveSettings: "Sauvegarder",
+                    managePromptsTitle: "Gérer les Prompts Système",
+                    selectPromptEdit: "Choisir Prompt à Éditer/Supprimer:",
+                    newPromptOption: "-- Créer Nouveau Prompt --",
+                    promptName: "Nom du Prompt:",
+                    promptText: "Texte du Prompt:",
+                    savePrompt: "Sauver Prompt",
+                    deletePrompt: "Supprimer Prompt",
+                    typeMessagePlaceholder: "Tapez votre message... (Maj+Entrée pour nouvelle ligne)",
+                    send: "Envoyer",
+                    uploadImageBtn: "Image",
+                    noSystemPrompt: "-- Aucun Prompt Système --",
+                    clearChat: "Vider Chat",
+                    statusSettingsSaved: "Paramètres sauvegardés avec succès !",
+                    statusPromptSaved: "Prompt sauvegardé !",
+                    statusPromptDeleted: "Prompt supprimé !",
+                    statusError: "Erreur : ",
+                    errorApiKeyMissing: "La clé API pour {provider} est manquante.",
+                    errorOllamaHostMissing: "L'adresse de l'hôte Ollama est manquante.",
+                    errorOllamaModelMissing: "Le nom du modèle Ollama est manquant.",
+                    errorOpenAIModelMissing: "Le nom du modèle OpenAI est manquant.",
+                    errorGeminiModelMissing: "Le nom du modèle Gemini est manquant.",
+                    confirmDeletePrompt: "Êtes-vous sûr de vouloir supprimer le prompt '{promptName}' ?",
+                    defaultPromptPirate: "Capitaine Pirate des années 90",
+                    defaultPromptPirateText: "Vous discutez avec Capitaine OctetBarbe, un pirate bourlingueur des mers numériques des années 1990 ! Je parle en jargon pirate, j'adore parler de vieux ordinateurs, de jeux rétro et de trésors. Demandez-moi n'importe quoi, moussaillon, mais attendez-vous à un YARRR ! chaleureux et à des récits d'aventure !",
+                    defaultPromptCyberPet: "CyberAnimal de Compagnie",
+                    defaultPromptCyberPetText: "Bip boup ! Je suis CyberPet v2.3, votre sympathique compagnon numérique de l'internet des années 90 ! Je suis enthousiaste, j'utilise un langage simple et j'adore aider avec des faits, du fun, et peut-être quelques pépins numériques *bzzzt*. Comment puis-je vous aider aujourd'hui ?",
+                    aiTyping: "L'IA écrit...",
+                    welcomeMessage: "Bienvenue sur RetroAI ChatterBox ! Configurez votre fournisseur IA dans les Options pour commencer.",
+                    imagePreview: "Image à envoyer :",
+                    chatCleared: "Chat vidé !",
+                    noModelForProvider: "Aucun modèle spécifié pour le fournisseur sélectionné dans les paramètres."
+                }
+            }
+        };
+
+        async function initI18next() {
+            await i18next.init({
+                lng: settings.language,
+                debug: false, // set to true for debugging
+                resources: translations
+            });
+            updateUIStrings();
+            languageSwitcher.value = settings.language;
+        }
+
+        function updateUIStrings() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerHTML = i18next.t(key);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = i18next.t(key);
+            });
+            // Update dynamic select options
+             if (promptListSelect.options[0] && promptListSelect.options[0].value === "") {
+                promptListSelect.options[0].textContent = i18next.t('newPromptOption');
+            }
+            if (systemPromptSelector.options[0] && systemPromptSelector.options[0].value === "") {
+                systemPromptSelector.options[0].textContent = i18next.t('noSystemPrompt');
+            }
+            document.title = i18next.t('appTitle');
+        }
+
+        languageSwitcher.addEventListener('change', (e) => {
+            const newLang = e.target.value;
+            i18next.changeLanguage(newLang).then(() => {
+                settings.language = newLang;
+                saveSettings(); // Save language preference
+                updateUIStrings();
+            });
+        });
+
+        // --- Settings Management ---
+        function loadSettings() {
+            const storedSettings = localStorage.getItem('retroAIChatterSettings');
+            if (storedSettings) {
+                Object.assign(settings, JSON.parse(storedSettings));
+            }
+            // Apply loaded settings to UI
+            aiProviderSelect.value = settings.provider;
+            openaiApiKeyInput.value = settings.openaiApiKey;
+            openaiModelInput.value = settings.openaiModel || 'gpt-4o-mini';
+            geminiApiKeyInput.value = settings.geminiApiKey;
+            geminiModelInput.value = settings.geminiModel || 'gemini-1.5-flash-latest';
+            ollamaHostInput.value = settings.ollamaHost || 'http://localhost:11434';
+            ollamaModelInput.value = settings.ollamaModel || 'llama3';
+            languageSwitcher.value = settings.language;
+            updateProviderSettingsVisibility();
+        }
+
+        function saveSettings() {
+            settings.provider = aiProviderSelect.value;
+            settings.openaiApiKey = openaiApiKeyInput.value;
+            settings.openaiModel = openaiModelInput.value;
+            settings.geminiApiKey = geminiApiKeyInput.value;
+            settings.geminiModel = geminiModelInput.value;
+            settings.ollamaHost = ollamaHostInput.value;
+            settings.ollamaModel = ollamaModelInput.value;
+            settings.language = languageSwitcher.value;
+            // currentSystemPromptName is saved when selected
+            localStorage.setItem('retroAIChatterSettings', JSON.stringify(settings));
+        }
+
+        function updateProviderSettingsVisibility() {
+            openaiSettingsDiv.style.display = aiProviderSelect.value === 'openai' ? 'block' : 'none';
+            geminiSettingsDiv.style.display = aiProviderSelect.value === 'gemini' ? 'block' : 'none';
+            ollamaSettingsDiv.style.display = aiProviderSelect.value === 'ollama' ? 'block' : 'none';
+        }
+
+        aiProviderSelect.addEventListener('change', updateProviderSettingsVisibility);
+
+        // --- System Prompts Management ---
+        function addDefaultSystemPrompts() {
+            const defaultPrompts = {
+                [i18next.t('defaultPromptPirate')]: i18next.t('defaultPromptPirateText'),
+                [i18next.t('defaultPromptCyberPet')]: i18next.t('defaultPromptCyberPetText'),
+            };
+            let promptsAdded = false;
+            for (const name in defaultPrompts) {
+                if (!systemPrompts[name]) {
+                    systemPrompts[name] = defaultPrompts[name];
+                    promptsAdded = true;
+                }
+            }
+            if (promptsAdded) saveSystemPrompts();
+        }
+
+
+        function loadSystemPrompts() {
+            const storedPrompts = localStorage.getItem('retroAISystemPrompts');
+            if (storedPrompts) {
+                systemPrompts = JSON.parse(storedPrompts);
+            }
+            addDefaultSystemPrompts(); // Add defaults if not present
+            populatePromptSelectors();
+            // Restore selected system prompt
+            if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
+                systemPromptSelector.value = settings.currentSystemPromptName;
+            } else {
+                 systemPromptSelector.value = ""; // Default to no prompt
+            }
+        }
+
+        function saveSystemPrompts() {
+            localStorage.setItem('retroAISystemPrompts', JSON.stringify(systemPrompts));
+            populatePromptSelectors();
+        }
+
+        function populatePromptSelectors() {
+            // Populate modal dropdown
+            promptListSelect.innerHTML = `<option value="">${i18next.t('newPromptOption')}</option>`;
+            Object.keys(systemPrompts).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                promptListSelect.appendChild(option);
+            });
+
+            // Populate main UI dropdown
+            const currentSelected = systemPromptSelector.value;
+            systemPromptSelector.innerHTML = `<option value="">${i18next.t('noSystemPrompt')}</option>`;
+            Object.keys(systemPrompts).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                systemPromptSelector.appendChild(option);
+            });
+             // Re-select if possible
+            if (systemPrompts[currentSelected]) {
+                systemPromptSelector.value = currentSelected;
+            } else if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
+                 systemPromptSelector.value = settings.currentSystemPromptName;
+            } else {
+                systemPromptSelector.value = "";
+            }
+        }
+        
+        systemPromptSelector.addEventListener('change', (e) => {
+            settings.currentSystemPromptName = e.target.value;
+            saveSettings(); // Save this preference
+        });
+
+
+        // --- Chat Logic ---
+        function addMessage(text, sender, imageUrl = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            
+            if (sender === 'ai') {
+                // Render Markdown for AI messages
+                // Sanitize basic HTML, allow only specific tags if needed (marked does some basic sanitization)
+                messageDiv.innerHTML = marked.parse(text);
+            } else {
+                // For user messages, just set textContent to prevent XSS from user input if it were ever displayed raw
+                messageDiv.textContent = text;
+            }
+
+            if (imageUrl) {
+                const p = document.createElement('p');
+                p.textContent = i18next.t('imagePreview');
+                messageDiv.appendChild(p);
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                img.style.marginTop = '5px';
+                img.style.borderRadius = '5px';
+                messageDiv.appendChild(img);
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Add to chat history for API context
+            if (sender === 'user') {
+                chatHistory.push({ role: 'user', content: text, ...(imageUrl && { image: currentImageBase64 }) });
+            } else if (sender === 'ai') {
+                 chatHistory.push({ role: 'assistant', content: text });
+            }
+        }
+        
+        function showTypingIndicator(isTyping) {
+            let indicator = document.getElementById('typing-indicator');
+            if (isTyping) {
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'typing-indicator';
+                    indicator.classList.add('message', 'ai', 'typing-indicator');
+                    indicator.textContent = i18next.t('aiTyping');
+                    chatContainer.appendChild(indicator);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            } else {
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+        }
+
+
+        async function handleSendMessage() {
+            const userInput = messageInput.value.trim();
+            if (!userInput && !currentImageBase64) return;
+
+            addMessage(userInput, 'user', currentImageBase64 ? currentImageBase64 : null); // Show image for user too
+            const userMessageForApi = userInput; // Store before clearing
+            
+            messageInput.value = '';
+            const uploadedImageBase64 = currentImageBase64; // Capture before clearing
+            currentImageBase64 = null; // Clear after sending
+            document.getElementById('image-upload-input').value = ''; // Clear file input
+
+            sendBtn.disabled = true;
+            showTypingIndicator(true);
+
+            try {
+                const systemPromptText = settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]
+                    ? systemPrompts[settings.currentSystemPromptName]
+                    : null;
+
+                let aiResponse = '';
+                const provider = settings.provider;
+                const currentModel = provider === 'openai' ? settings.openaiModel :
+                                     provider === 'gemini' ? settings.geminiModel :
+                                     settings.ollamaModel;
+                if (!currentModel) {
+                    throw new Error(i18next.t('noModelForProvider'));
+                }
+
+
+                // Construct messages for API
+                const messages = [];
+                if (systemPromptText) {
+                    messages.push({ role: "system", content: systemPromptText });
+                }
+                // Add recent chat history (simple approach: last N messages)
+                const historySlice = chatHistory.slice(-6); // e.g., last 3 user/AI pairs + current
+                historySlice.forEach(msg => {
+                    if (msg.role === 'user') {
+                        const contentParts = [{ type: "text", text: msg.content }];
+                        if (msg.image) {
+                            contentParts.push({ type: "image_url", image_url: { url: msg.image, detail: "auto" }});
+                        }
+                         messages.push({ role: "user", content: provider === 'gemini' ? contentParts.map(p => p.type === "text" ? {text:p.text} : {inline_data: {mime_type: 'image/jpeg', data: p.image_url.url.split(',')[1]}}) : contentParts });
+                    } else {
+                        messages.push({ role: "assistant", content: msg.content });
+                    }
+                });
+
+
+                if (provider === 'openai') {
+                    if (!settings.openaiApiKey) throw new Error(i18next.t('errorApiKeyMissing', {provider: "OpenAI"}));
+                    if (!settings.openaiModel) throw new Error(i18next.t('errorOpenAIModelMissing'));
+                    
+                    const OAIpayload = {
+                        model: settings.openaiModel,
+                        messages: messages.map(m => {
+                            if (m.role === 'user' && Array.isArray(m.content)) { // Handle multimodal content
+                                return { role: 'user', content: m.content };
+                            }
+                            return { role: m.role, content: m.content };
+                        })
+                    };
+                    // Add current user message (which is already in `messages` if logic correct)
+                    // If the last message in `messages` is not the current user input, this means it's not added yet.
+                    // The current user input is already added to chatHistory and then to messages.
+
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${settings.openaiApiKey}`
+                        },
+                        body: JSON.stringify(OAIpayload)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`OpenAI API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
+                    }
+                    const data = await response.json();
+                    aiResponse = data.choices[0]?.message?.content || "No response from OpenAI.";
+
+                } else if (provider === 'gemini') {
+                    if (!settings.geminiApiKey) throw new Error(i18next.t('errorApiKeyMissing', {provider: "Gemini"}));
+                     if (!settings.geminiModel) throw new Error(i18next.t('errorGeminiModelMissing'));
+
+                    // Gemini wants a specific format for contents
+                    const geminiContents = messages.map(msg => {
+                        let parts = [];
+                        if (msg.role === 'user') {
+                            if (Array.isArray(msg.content)) { // This is our structure for multimodal
+                                msg.content.forEach(part => {
+                                    if (part.type === 'text') parts.push({ text: part.text });
+                                    else if (part.type === 'image_url' || part.inline_data) { // Checking for both structures
+                                        const base64Data = (part.image_url?.url || part.inline_data?.data).split(',')[1];
+                                        parts.push({ inline_data: { mime_type: 'image/jpeg', data: base64Data } });
+                                    }
+                                });
+                            } else { // text only
+                                parts.push({ text: msg.content });
+                            }
+                            return { role: 'user', parts };
+                        } else if (msg.role === 'assistant') {
+                            return { role: 'model', parts: [{ text: msg.content }] };
+                        } else if (msg.role === 'system' && msg.content) { // Gemini does not have a direct "system" role in contents, prepend to user message or use specific system instruction field if available
+                            // For simplicity, we'll prepend system prompt to the first user message's text part if this message is the system prompt
+                            // This is a simplification. Real system instructions in Gemini are set differently.
+                            // A better way for Gemini system instructions:
+                            // Use the 'system_instruction' field at the top level of the request if using newer models.
+                            // For older models like gemini-pro, system instructions are often prepended to the user prompt.
+                            // Here we assume `messages` includes system prompt as first element.
+                            // If a proper system message exists, it should be handled differently.
+                            // Let's assume for gemini-pro-vision, it's part of the user's first message
+                            return null; // System prompt handled separately for gemini or prepended.
+                        }
+                        return null;
+                    }).filter(Boolean); // Remove nulls
+
+                    // If system prompt exists, and using a model that supports it, add it.
+                    // For gemini-1.5-flash-latest, system_instruction is supported.
+                    let geminiPayload = { contents: geminiContents };
+                    if (systemPromptText && (settings.geminiModel.includes("1.5") || settings.geminiModel.includes("gemini-pro"))) { // Newer models
+                         geminiPayload.system_instruction = { parts: [{ text: systemPromptText }] };
+                         // Remove system prompt from `contents` if it was added
+                         geminiPayload.contents = geminiPayload.contents.filter(c => c.role !== 'system');
+                    } else if (systemPromptText && geminiPayload.contents.length > 0 && geminiPayload.contents[0].role === 'user') {
+                        // Prepend to first user message for older models or if system_instruction not used
+                        geminiPayload.contents[0].parts.unshift({ text: systemPromptText + "\n\n" });
+                    }
+
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.geminiModel}:generateContent?key=${settings.geminiApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(geminiPayload)
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Gemini API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
+                    }
+                    const data = await response.json();
+                    aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini.";
+
+
+                } else if (provider === 'ollama') {
+                    if (!settings.ollamaHost) throw new Error(i18next.t('errorOllamaHostMissing'));
+                    if (!settings.ollamaModel) throw new Error(i18next.t('errorOllamaModelMissing'));
+
+                    // Ollama requires just the current prompt, but can take images
+                    // And system prompt goes into `system` field
+                    let ollamaPayload = {
+                        model: settings.ollamaModel,
+                        prompt: userMessageForApi, // Just the last user message text
+                        stream: false
+                    };
+                    if (systemPromptText) {
+                        ollamaPayload.system = systemPromptText;
+                    }
+                    if (uploadedImageBase64) {
+                        ollamaPayload.images = [uploadedImageBase64.split(',')[1]]; // Send only base64 part
+                    }
+                    // For Ollama, `chatHistory` isn't directly used in `/api/generate`.
+                    // If using `/api/chat`, then `messages` array similar to OpenAI is used.
+                    // For simplicity with `/api/generate` and images, we send current prompt + system.
+                    // A more advanced Ollama integration would use `/api/chat` for history.
+
+                    const response = await fetch(`${settings.ollamaHost}/api/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ollamaPayload)
+                    });
+                     if (!response.ok) {
+                        let errorText = `Ollama API Error: ${response.status} ${response.statusText}`;
+                        try {
+                            const errorData = await response.json();
+                            errorText += ` - ${errorData.error || ''}`;
+                        } catch (e) { /* ignore if not json */ }
+                        throw new Error(errorText);
+                    }
+                    const data = await response.json();
+                    aiResponse = data.response || "No response from Ollama.";
+                }
+
+                addMessage(aiResponse, 'ai');
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage(i18next.t('statusError') + error.message, 'ai');
+            } finally {
+                sendBtn.disabled = false;
+                showTypingIndicator(false);
+                messageInput.focus();
+            }
+        }
+
+        // --- Event Listeners ---
+        sendBtn.addEventListener('click', handleSendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevents newline in input
+                handleSendMessage();
+            }
+        });
+
+        imageUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentImageBase64 = e.target.result;
+                    // Optionally, display a small preview or indicator
+                    // For now, just store it. It will be shown with the user message.
+                    // addMessage(`Selected image: ${file.name}`, 'user-info'); // Or some other way
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Modal Open/Close
+        function setupModal(modal, openBtn, statusElement) {
+            const closeBtn = modal.querySelector('.close-button');
+            openBtn.onclick = () => {
+                modal.classList.add('active');
+                if (statusElement) statusElement.style.display = 'none'; // Hide status on open
+            }
+            closeBtn.onclick = () => modal.classList.remove('active');
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.classList.remove('active');
+                }
+            }
+        }
+        setupModal(settingsModal, settingsBtn, settingsStatus);
+        setupModal(systemPromptsModal, systemPromptManageBtn, promptsStatus);
+
+        function showStatus(element, message, type = 'success') {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.style.display = 'block';
+            setTimeout(() => { element.style.display = 'none'; }, 3000);
+        }
+        
+        // Settings Modal Logic
+        saveSettingsBtn.addEventListener('click', () => {
+            saveSettings();
+            showStatus(settingsStatus, i18next.t('statusSettingsSaved'), 'success');
+            // Do not close modal automatically, user might want to tweak more.
+            // settingsModal.classList.remove('active'); 
+        });
+        
+        // System Prompts Modal Logic
+        promptListSelect.addEventListener('change', (e) => {
+            const selectedName = e.target.value;
+            if (selectedName && systemPrompts[selectedName]) {
+                promptNameInput.value = selectedName;
+                promptTextTextarea.value = systemPrompts[selectedName];
+                deletePromptBtn.style.display = 'inline-block';
+            } else {
+                promptNameInput.value = '';
+                promptTextTextarea.value = '';
+                deletePromptBtn.style.display = 'none';
+            }
+        });
+
+        savePromptBtn.addEventListener('click', () => {
+            const name = promptNameInput.value.trim();
+            const text = promptTextTextarea.value.trim();
+            if (!name || !text) {
+                 showStatus(promptsStatus, i18next.t('statusError') + "Prompt name and text cannot be empty.", 'error');
+                return;
+            }
+            const oldName = promptListSelect.value;
+            if (oldName && oldName !== name) { // Renaming
+                delete systemPrompts[oldName];
+            }
+            systemPrompts[name] = text;
+            saveSystemPrompts();
+            promptListSelect.value = name; // Select the newly saved/renamed prompt
+            if (systemPromptSelector.value === oldName || !systemPromptSelector.value) { // Update main selector if it was the one being edited or none selected
+                 systemPromptSelector.value = name;
+                 settings.currentSystemPromptName = name;
+                 saveSettings();
+            }
+            showStatus(promptsStatus, i18next.t('statusPromptSaved'), 'success');
+            deletePromptBtn.style.display = 'inline-block';
+        });
+
+        deletePromptBtn.addEventListener('click', () => {
+            const name = promptListSelect.value;
+            if (name && systemPrompts[name]) {
+                if (confirm(i18next.t('confirmDeletePrompt', { promptName: name }))) {
+                    delete systemPrompts[name];
+                    saveSystemPrompts();
+                    if (systemPromptSelector.value === name) { // If deleted prompt was active
+                        systemPromptSelector.value = ""; // Deselect
+                        settings.currentSystemPromptName = "";
+                        saveSettings();
+                    }
+                    promptNameInput.value = '';
+                    promptTextTextarea.value = '';
+                    promptListSelect.value = ''; // Go to "create new"
+                    deletePromptBtn.style.display = 'none';
+                    showStatus(promptsStatus, i18next.t('statusPromptDeleted'), 'success');
+                }
+            }
+        });
+
+        clearChatBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = '';
+            chatHistory = [];
+            addMessage(i18next.t('chatCleared'), 'ai');
+        });
+
+
+        // --- Initialization ---
+        async function initializeApp() {
+            loadSettings(); // Load settings first, esp. language
+            await initI18next(); // Then init i18n with correct language
+            loadSystemPrompts(); // Load prompts, which might use i18n for defaults
+            updateProviderSettingsVisibility(); // After settings are loaded
+            
+            // Populate selectors again if i18n changed their text
+            populatePromptSelectors();
+            if (settings.currentSystemPromptName && systemPrompts[settings.currentSystemPromptName]) {
+                 systemPromptSelector.value = settings.currentSystemPromptName;
+            }
+
+            // Initial check for modal button states
+            if (!promptListSelect.value) {
+                deletePromptBtn.style.display = 'none';
+            }
+
+            // Welcome message
+            addMessage(i18next.t('welcomeMessage'), 'ai');
+        }
+
+        initializeApp();
+
+    </script>
+</body>
+</html>
