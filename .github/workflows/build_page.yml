@@ -1,0 +1,55 @@
+name: Build and Deploy index.html
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      # Trigger if the script or template changes
+      - 'build_index.py'
+      - 'index_template.html'
+      # Trigger if key files change in any direct subdirectory (potential app folder)
+      # This covers changes to existing apps and adding files to new app folders.
+      - '*/index.html'
+      - '*/icon.png'
+      - '*/manifest.json'
+      # If you want to trigger on *any* change in a subdirectory (e.g. new JS/CSS files in an app)
+      # you could use '*/LUMIX-MKIILT/**' but it might be too broad.
+      # The patterns above are a good balance.
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allow workflow to commit to the repository
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Use a recent Python 3 version
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install Jinja2
+
+    - name: Run index.html builder
+      run: python build_index.py # Script is at the root
+
+    - name: Commit and push if changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        # Check if index.html was actually modified or created
+        git add index.html # The output file is at the root
+        if ! git diff --staged --quiet; then
+          git commit -m "Automated: Regenerate index.html based on app updates"
+          git push
+        else
+          echo "No changes to index.html. Nothing to commit."
+        fi

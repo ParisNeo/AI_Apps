@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ... (all your head content remains the same) ... -->
+    <meta charset="UTF-8">
+    <!-- Make it viewport-fit=cover for notch/dynamic island areas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WebCraftorApps Zoo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ... (all your CSS styles remain the same) ... */
+        html {
+            scroll-behavior: smooth; /* Smooth scrolling */
+        }
+        body {
+            /* Gradient background */
+            background: linear-gradient(160deg, #2a3a4a 0%, #1a202c 100%);
+            color: #e2e8f0; /* Light text */
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            /* Prevent text selection */
+            user-select: none;
+            -webkit-user-select: none;
+            /* Allow padding for status bar and home button */
+            padding-top: env(safe-area-inset-top, 1.5rem); /* Adjust for notch */
+            padding-bottom: env(safe-area-inset-bottom, 5rem); /* Adjust for home indicator/button */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Status Bar Styling */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: env(safe-area-inset-left, 0); /* Respect safe area */
+            right: env(safe-area-inset-right, 0); /* Respect safe area */
+            height: env(safe-area-inset-top, 1.5rem); /* Adjust height dynamically */
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem; /* Add horizontal padding */
+            padding-top: env(safe-area-inset-top); /* Add padding only at the top within the bar */
+            box-sizing: content-box; /* Ensure padding doesn't increase height */
+            font-size: 0.8rem;
+            color: #f7fafc; /* Lighter text for status bar */
+            z-index: 100;
+            line-height: 1; /* Ensure text fits */
+        }
+        .status-bar > * {
+             min-height: 1.5rem; /* Ensure content doesn't collapse vertically */
+             display: flex;
+             align-items: center;
+        }
+
+        /* App Grid Styling */
+        .app-grid {
+            padding: 1.5rem 1rem; /* Padding below status bar */
+            display: grid;
+            /* More realistic app icon grid */
+            grid-template-columns: repeat(4, 1fr); /* Default 4 columns for mobile */
+            gap: 1.5rem 1rem; /* Adjust gap */
+            max-width: 900px; /* Max width for larger screens */
+            margin: 0 auto; /* Center the grid */
+        }
+        @media (min-width: 640px) { /* sm */
+            .app-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+        @media (min-width: 768px) { /* md */
+            .app-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        @media (min-width: 1024px) { /* lg */
+            .app-grid { grid-template-columns: repeat(7, 1fr); }
+        }
+
+        /* App Card Styling */
+        .app-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: #f7fafc; /* White text for app names */
+            transition: transform 0.1s ease-out;
+            touch-action: manipulation; /* Improve touch interaction */
+        }
+        .app-card:active {
+            transform: scale(0.95); /* Scale down on tap */
+        }
+        .app-icon-wrapper {
+            width: 60px; /* Standard icon size */
+            height: 60px;
+            margin-bottom: 0.5rem;
+            position: relative; /* For potential badges or effects */
+        }
+        .app-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 22.5%; /* iOS squircle-like radius */
+            background-color: #4a5568; /* Placeholder background */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex; /* Center placeholder text/icon */
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Placeholder icon size */
+        }
+        .app-name {
+            font-size: 0.75rem; /* Smaller font size */
+            line-height: 1.2;
+            /* Prevent long names from breaking layout */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        /* Home Button Styling */
+        .home-button {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(env(safe-area-inset-bottom, 0) + 50px); /* Height + safe area */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align button to bottom within the area */
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Padding above safe area */
+            pointer-events: none; /* Allow clicks through the container */
+            z-index: 100;
+        }
+        .home-button-inner {
+            width: 134px; /* iOS home indicator width */
+            height: 5px; /* iOS home indicator height */
+            border-radius: 2.5px;
+            background-color: rgba(255, 255, 255, 0.4); /* Semi-transparent white */
+            pointer-events: auto; /* Make the button clickable */
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .home-button-inner:active {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        /* Hide home bar on desktop */
+         @media (min-width: 768px) { /* md */
+            .home-button { display: none; }
+            body { padding-bottom: 1rem; } /* Reset bottom padding */
+        }
+
+        /* Title Animation */
+        .title-animation {
+            animation: titleGlow 2s ease-in-out infinite alternate;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(59, 130, 246, 0.7);
+        }
+        @keyframes titleGlow {
+            from { opacity: 0.8; }
+            to { opacity: 1; text-shadow: 0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(59, 130, 246, 0.9); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span id="time-indicator">9:41 AM</span>
+        <span id="browser-indicator">Device</span>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-bold my-6 md:my-8 text-center title-animation">
+        WebCraftorApps
+    </h1>
+
+    <div id="app-container" class="app-grid">
+        <!-- Apps will be dynamically inserted here -->
+    </div>
+
+    <!-- Home Button/Indicator -->
+    <div class="home-button">
+        <div class="home-button-inner" onclick="scrollToTop()"></div>
+    </div>
+
+    <script>
+        // Define all apps based on the folder structure
+        const apps = [
+            {% for app in apps %}
+            {
+                name: "{{ app.name }}",
+                path: "{{ app.path }}",
+                icon: "{{ app.icon }}",
+                desc: "{{ app.desc | escapejs }}",
+                color: "{{ app.color }}",
+                isDownload: {{ app.isDownload_js }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Placeholder Icon SVG Data URI (simple square with initial)
+        function createPlaceholderIcon(initial, color = '#555') {
+            const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22.5' fill='${color}'/><text x='50' y='50' font-size='50' font-family='sans-serif' fill='%23fff' text-anchor='middle' dy='.35em'>${initial}</text></svg>`;
+            return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+        }
+
+        function createAppCard(app) {
+            const card = document.createElement('a'); // Use anchor tag for navigation
+            card.href = app.isDownload ? 'javascript:void(0)' : app.path;
+            if (app.isDownload) {
+                card.onclick = () => downloadFile(app.path);
+            }
+            card.className = 'app-card';
+
+            const placeholder = createPlaceholderIcon(app.name.charAt(0), app.color || '#555');
+
+            card.innerHTML = `
+                <div class="app-icon-wrapper">
+                    <img src="${app.icon}" alt="${app.name}" class="app-icon"
+                         onerror="this.src='${placeholder}'; this.onerror=null;">
+                </div>
+                <span class="app-name">${app.name}${app.isDownload ? '*' : ''}</span>
+            `;
+            card.title = app.desc;
+            return card;
+        }
+
+        function renderApps() {
+            const container = document.getElementById('app-container');
+            container.innerHTML = ''; // Clear existing
+            // Apps are already sorted by the Python script if desired
+            apps.forEach(app => container.appendChild(createAppCard(app)));
+        }
+
+        function downloadFile(filePath) {
+            const link = document.createElement('a');
+            link.href = filePath;
+            link.download = filePath.split('/').pop(); // Extract filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert(`Attempting to download: ${link.download}.\nNote: Direct downloads might be blocked by browser security for local files.`);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Device/OS detection for status bar
+        const userAgent = navigator.userAgent.toLowerCase();
+        const platform = navigator.platform.toLowerCase();
+        const browserIndicator = document.getElementById('browser-indicator');
+        const body = document.body;
+
+        let os = 'OS';
+        if (platform.includes('mac') || platform.includes('iphone') || platform.includes('ipad')) os = 'Apple';
+        else if (platform.includes('win')) os = 'Windows';
+        else if (platform.includes('linux')) os = 'Linux';
+        else if (userAgent.includes('android')) os = 'Android';
+
+        let browser = 'Browser';
+        if (userAgent.includes('firefox')) browser = 'Firefox';
+        else if (userAgent.includes('edg')) browser = 'Edge'; // Edge before Chrome
+        else if (userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Chrome';
+        else if (userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Safari';
+
+        browserIndicator.textContent = `${os} / ${browser}`;
+
+        // Time display
+        function updateTime() {
+            const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            document.getElementById('time-indicator').textContent = time;
+        }
+        setInterval(updateTime, 1000 * 60); // Update every minute
+        updateTime();
+
+        // Initial render
+        renderApps();
+    </script>
+</body>
+</html>
