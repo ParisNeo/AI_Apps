@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ... (all your head content remains the same) ... -->
     <meta charset="UTF-8">
     <!-- Make it viewport-fit=cover for notch/dynamic island areas -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>WebCraftorApps Zoo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ... (all your CSS styles remain the same) ... */
         html {
             scroll-behavior: smooth; /* Smooth scrolling */
         }
@@ -163,6 +161,7 @@
     <!-- Status Bar -->
     <div class="status-bar">
         <span id="time-indicator">9:41 AM</span>
+        <!-- Add more status icons like Wifi, Battery if desired -->
         <span id="browser-indicator">Device</span>
     </div>
 
@@ -187,9 +186,9 @@
                 name: "{{ app.name }}",
                 path: "{{ app.path }}",
                 icon: "{{ app.icon }}",
-                desc: "{{ app.desc | escapejs }}",
+                desc: {{ app.desc_js | safe }},  // CORRECTED: Use pre-processed desc_js directly
                 color: "{{ app.color }}",
-                isDownload: {{ app.isDownload_js }}
+                isDownload: {{ app.isDownload_js }} // Use the pre-formatted JS boolean
             }{% if not loop.last %},{% endif %}
             {% endfor %}
         ];
@@ -217,7 +216,9 @@
                 </div>
                 <span class="app-name">${app.name}${app.isDownload ? '*' : ''}</span>
             `;
-            card.title = app.desc;
+            // Tooltip (optional, better for desktop)
+            card.title = app.desc; // app.desc here is the raw JS string, which is fine for title attribute
+
             return card;
         }
 
@@ -260,10 +261,16 @@
         else if (userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Chrome';
         else if (userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('chromium')) browser = 'Safari';
 
+
         browserIndicator.textContent = `${os} / ${browser}`;
+        // Add body classes if needed for more specific styling
+        // if (os === 'Apple') body.classList.add('os-apple');
+        // if (browser === 'Safari') body.classList.add('browser-safari');
+
 
         // Time display
         function updateTime() {
+            // More iOS-like time format
             const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
             document.getElementById('time-indicator').textContent = time;
         }
@@ -272,6 +279,7 @@
 
         // Initial render
         renderApps();
+
     </script>
 </body>
 </html>

@@ -181,22 +181,133 @@
     <script>
         // Define all apps based on the folder structure
         const apps = [
-            { name: "Audio Mix", path: "Audio_mixing_app/index.html", icon: "Audio_mixing_app/icon.png", desc: "Mix audio tracks", color: "#4CAF50" },
-            { name: "Baby Care", path: "baby_caring_app/index.html", icon: "baby_caring_app/icon.png", desc: "Infant tracker", color: "#e0f7fa"},
-            { name: "Cards", path: "cards_app/index.html", icon: "cards_app/icon.png", desc: "Loyalty cards", color: "#FFC107"},
-            { name: "Chess", path: "chess_game/index.html", icon: "chess_game/icon.png", desc: "Classic strategy", color: "#b58863"},
-            { name: "Hydration", path: "hydration_watcher/index.html", icon: "hydration_watcher/icon.png", desc: "Water intake", color: "#60A5FA" },
-            { name: "Image Crop", path: "images_cropper/index.html", icon: "images_cropper/icon.png", desc: "Crop photos", color: "#3b82f6" },
-            { name: "Level Tool", path: "level_app/index.html", icon: "level_app/icon.png", desc: "Mobile level", color: "#28a745" },
-            { name: "LoLLMS Chat", path: "lollms_chat/index.html", icon: "lollms_chat/icon.png", desc: "AI chat UI", color: "#4b5563" },
-            { name: "PillPal", path: "PillPal/index.html", icon: "PillPal/icon.png", desc: "Meds reminder", color: "#60a5fa" },
-            { name: "Simple Todo", path: "simple_todo_app/index.html", icon: "simple_todo_app/icon.png", desc: "Quick tasks", color: "#10b981"},
-            { name: "Snake", path: "snake_game/index.html", icon: "snake_game/icon.png", desc: "Retro arcade", color: "#4caf50" },
-            { name: "Vid Segment", path: "tensorflow_js_segmentation/index.html", icon: "tensorflow_js_segmentation/icon.png", desc: "TFjs segmentation", color: "#1f1f1f", isDownload: false }, // Assuming it's usable online
-            { name: "Todo Pro", path: "todo_app/index.html", icon: "todo_app/icon.png", desc: "Project tasks", color: "#3b82f6" },
-            { name: "Tower War", path: "tower_war/index.html", icon: "tower_war/icon.png", desc: "Strategy game", color: "#3498db" },
-            { name: "Weight Track", path: "weight_tracking_app/index.html", icon: "weight_tracking_app/icon.png", desc: "Track weight", color: "#ff69b4"},
-            { name: "Weight Watch", path: "Weight_Watcher_App/index.html", icon: "Weight_Watcher_App/icon.png", desc: "Weight & diet", color: "#60A5FA" }
+            
+            {
+                name: "Baby Caring App",
+                path: "baby_caring_app/index.html",
+                icon: "baby_caring_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Cards App",
+                path: "cards_app/index.html",
+                icon: "cards_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Chess Game",
+                path: "chess_game/index.html",
+                icon: "chess_game/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Level App",
+                path: "level_app/index.html",
+                icon: "level_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Lollms Chat",
+                path: "lollms_chat/index.html",
+                icon: "lollms_chat/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Pillpal",
+                path: "PillPal/index.html",
+                icon: "PillPal/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Pixel Defender Quest",
+                path: "Pixel Defender Quest/index.html",
+                icon: "Pixel Defender Quest/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Pixelpet Pal",
+                path: "PixelPet Pal/index.html",
+                icon: "PixelPet Pal/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Simple Todo App",
+                path: "simple_todo_app/index.html",
+                icon: "simple_todo_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Snake Game",
+                path: "snake_game/index.html",
+                icon: "snake_game/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Tensorflow Js Segmentation",
+                path: "tensorflow_js_segmentation/index.html",
+                icon: "tensorflow_js_segmentation/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Todo App",
+                path: "todo_app/index.html",
+                icon: "todo_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Weight Tracking App",
+                path: "weight_tracking_app/index.html",
+                icon: "weight_tracking_app/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            },
+            
+            {
+                name: "Weight Watcher App",
+                path: "Weight_Watcher_App/index.html",
+                icon: "Weight_Watcher_App/icon.png",
+                desc: "A cool web application.",  // CORRECTED: Use pre-processed desc_js directly
+                color: "#3B82F6",
+                isDownload: false // Use the pre-formatted JS boolean
+            }
+            
         ];
 
         // Placeholder Icon SVG Data URI (simple square with initial)
@@ -223,7 +334,7 @@
                 <span class="app-name">${app.name}${app.isDownload ? '*' : ''}</span>
             `;
             // Tooltip (optional, better for desktop)
-            card.title = app.desc;
+            card.title = app.desc; // app.desc here is the raw JS string, which is fine for title attribute
 
             return card;
         }
@@ -231,8 +342,7 @@
         function renderApps() {
             const container = document.getElementById('app-container');
             container.innerHTML = ''; // Clear existing
-            // Sort apps alphabetically by name for consistency
-            apps.sort((a, b) => a.name.localeCompare(b.name));
+            // Apps are already sorted by the Python script if desired
             apps.forEach(app => container.appendChild(createAppCard(app)));
         }
 
