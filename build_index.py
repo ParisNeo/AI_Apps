@@ -4,50 +4,36 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import re
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to show DEBUG messages for detailed path checking
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- Configuration ---
-SCAN_DIR = "."  # Scan the current directory (project root) for app subfolders
-OUTPUT_HTML_FILE = "index.html" # Output file at the project root
-TEMPLATE_FILE = "index_template.html" # Template file at the project root
+SCAN_DIR = "."
+OUTPUT_HTML_FILE = "index.html"
+TEMPLATE_FILE = "index_template.html"
 
 DEFAULT_APP_COLOR = "#3B82F6"
 DEFAULT_APP_DESC = "A cool web application."
 DEFAULT_IS_DOWNLOAD = False
 
-# List of folders/files to ignore at the root level when searching for apps
-# Important to prevent the script from trying to parse itself or .git as an app
 IGNORE_LIST = [
-    ".git",
-    ".github",
-    ".vscode",
-    "venv",
-    "__pycache__",
-    "node_modules",
-    os.path.basename(__file__),  # The script file itself
-    TEMPLATE_FILE,               # The template file
-    OUTPUT_HTML_FILE,            # The output file (to avoid re-parsing if it exists)
-    # Add any other specific root files/folders that aren't apps
-    "README.md",
-    "LICENSE",
-    ".gitignore",
+    ".git", ".github", ".vscode", "venv", "__pycache__", "node_modules",
+    os.path.basename(__file__), TEMPLATE_FILE, OUTPUT_HTML_FILE,
+    "README.md", "LICENSE", ".gitignore",
 ]
 
 def format_app_name(folder_name):
-    """Converts folder_name to a more readable App Name."""
     name = re.sub(r'[_-]', ' ', folder_name)
     name = name.title()
     return name
 
 def discover_apps(scan_directory):
-    """Discovers apps in the given directory, ignoring specified items."""
     discovered_apps = []
     if not os.path.isdir(scan_directory):
         logging.error(f"Scan directory '{scan_directory}' not found.")
         return []
 
     for item_name in os.listdir(scan_directory):
-        # Skip items in the IGNORE_LIST or hidden files/folders
         if item_name in IGNORE_LIST or item_name.startswith('.'):
             logging.debug(f"Ignoring '{item_name}' as per IGNORE_LIST or it's hidden.")
             continue
@@ -55,15 +41,18 @@ def discover_apps(scan_directory):
         item_path = os.path.join(scan_directory, item_name)
 
         if os.path.isdir(item_path):
-            app_folder_name = item_name # This is the potential app's folder name
+            app_folder_name = item_name
             index_html_path = os.path.join(item_path, "index.html")
             icon_png_path = os.path.join(item_path, "icon.png")
             manifest_path = os.path.join(item_path, "manifest.json")
 
+            logging.debug(f"Checking app folder: {item_path}")
+            logging.debug(f"  Expected index.html: {index_html_path} (Exists: {os.path.exists(index_html_path)})")
+            logging.debug(f"  Expected icon.png: {icon_png_path} (Exists: {os.path.exists(icon_png_path)})")
+
             if os.path.exists(index_html_path) and os.path.exists(icon_png_path):
                 app_data = {
                     "name": format_app_name(app_folder_name),
-                    # Paths are now relative to the root, e.g., "Audio_mixing_app/index.html"
                     "path": os.path.join(app_folder_name, "index.html").replace("\\", "/"),
                     "icon": os.path.join(app_folder_name, "icon.png").replace("\\", "/"),
                     "desc": DEFAULT_APP_DESC,
@@ -91,7 +80,7 @@ def discover_apps(scan_directory):
                 discovered_apps.append(app_data)
                 logging.info(f"Discovered app: {app_data['name']} in folder '{app_folder_name}'")
             else:
-                logging.warning(f"Skipping directory '{app_folder_name}': missing index.html or icon.png.")
+                logging.warning(f"Skipping directory '{app_folder_name}': missing index.html or icon.png based on checks above.")
         else:
             logging.debug(f"Skipping '{item_name}': it's not a directory.")
 
@@ -99,7 +88,6 @@ def discover_apps(scan_directory):
     return discovered_apps
 
 def generate_html(apps_data, template_filename, output_filepath):
-    """Generates the HTML file from a template and app data."""
     template_dir = os.path.dirname(template_filename) or "."
     actual_template_name = os.path.basename(template_filename)
 
@@ -117,11 +105,11 @@ def generate_html(apps_data, template_filename, output_filepath):
         logging.error(f"Error loading template '{actual_template_name}': {e}")
         return
 
-
     js_apps_list = []
     for app in apps_data:
         js_app = app.copy()
         js_app['isDownload_js'] = str(js_app['isDownload']).lower()
+        js_app['desc_js'] = json.dumps(app['desc']) # Use json.dumps for safe JS string
         js_apps_list.append(js_app)
 
     html_content = template.render(apps=js_apps_list)
@@ -135,9 +123,8 @@ def generate_html(apps_data, template_filename, output_filepath):
 
 if __name__ == "__main__":
     logging.info("Starting index.html builder...")
-    # Ensure paths are correct if script is not run from project root (though it should be)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    scan_path = os.path.join(script_dir, SCAN_DIR) # SCAN_DIR is ".", so effectively script_dir
+    scan_path = os.path.join(script_dir, SCAN_DIR)
     template_path = os.path.join(script_dir, TEMPLATE_FILE)
     output_path = os.path.join(script_dir, OUTPUT_HTML_FILE)
 
