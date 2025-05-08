@@ -2,34 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Defender Quest - Final Polish</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pixel Defender Quest - Mobile Touch</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scrollbars */
             background-color: #2c3e50;
             color: #ecf0f1;
             font-family: 'Press Start 2P', cursive;
+        }
+
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Align title to top */
-            min-height: 100vh;
-            margin: 0;
-            padding-top: 20px; /* Space for the title */
+            justify-content: flex-start; 
+            padding-top: 10px; 
             box-sizing: border-box;
-            overflow: hidden; 
         }
 
         .main-title {
             color: #f1c40f;
-            text-shadow: 3px 3px #e74c3c;
-            margin-bottom: 15px;
-            font-size: 1.8em;
+            text-shadow: 2px 2px #e74c3c; /* Adjusted shadow for smaller screens */
+            margin-bottom: 10px;
+            font-size: 1.5em; /* Responsive font size */
             text-align: center;
             width: 100%;
-            /* z-index will be lower than active screens */
+            flex-shrink: 0; /* Prevent title from shrinking too much */
         }
 
         .screen {
@@ -37,103 +42,160 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 95%;
+            width: 95vw; /* Use viewport width */
             max-width: 800px; 
-            padding: 15px;
+            padding: 10px; /* Reduced padding for smaller screens */
             box-sizing: border-box;
-            background-color: rgba(44, 62, 80, 0.95); /* Slightly more opaque */
-            border: 4px solid #bdc3c7; 
-            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            background-color: rgba(44, 62, 80, 0.95); 
+            border: 3px solid #bdc3c7; /* Thinner border */
+            box-shadow: 0 0 15px rgba(0,0,0,0.5); /* Reduced shadow */
             text-align: center;
-            position: fixed; /* Fixed to viewport for centering */
+            position: fixed; 
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             overflow-y: auto; 
-            max-height: 85vh; /* Max height to leave space for title */
-            z-index: 100; /* Default z-index for screens */
+            max-height: 80vh; /* Max height considering title */
+            z-index: 100; 
         }
         .screen.active {
             display: flex; 
-            z-index: 200; /* Active screen is on top */
+            z-index: 200; 
+        }
+
+        #game-ui-outer-container { /* New wrapper for scaling the game area */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1; /* Allow it to take available space */
         }
 
         #game-ui-container {
-            max-width: calc(15 * 40px + 200px + 15px + 40px + 20px); 
+            /* Max width determined by content, scaling will handle fit */
+            padding: 0; /* Padding handled by outer elements if needed */
+            border: none; /* Border handled by screen */
+            box-shadow: none; /* Shadow handled by screen */
+            position: relative; /* For scaling transform origin */
+            transform-origin: center center; /* For scaling */
+            background-color: transparent; /* Let screen background show */
+            max-width: initial; /* Override previous max-width */
+            max-height: initial;
+            overflow: visible; /* Allow scaled content to be seen */
         }
 
-        #game-area { display: flex; gap: 15px; align-items: flex-start; }
+
+        #game-area { 
+            display: flex; 
+            gap: 10px;  /* Reduced gap */
+            align-items: flex-start; 
+        }
         canvas {
-            border: 3px solid #ecf0f1; background-color: #76C7AF; cursor: crosshair;
+            border: 2px solid #ecf0f1; /* Thinner border */
+            background-color: #76C7AF; 
+            cursor: crosshair;
             image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;
+            touch-action: none; /* Prevent default touch actions like scroll/zoom */
+            display: block; /* Remove extra space below canvas */
         }
         #controls {
-            display: flex; flex-direction: column; gap: 10px; padding: 10px;
-            background-color: #2c3e50; border: 2px solid #7f8c8d;
-            min-width: 200px; max-height: calc(10 * 40px + 6px); overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px; padding: 8px;
+            background-color: #2c3e50; border: 1px solid #7f8c8d;
+            min-width: 180px; /* Slightly reduced min-width */
+            max-height: calc(10 * 40px + 4px); /* Adjust if TILE_SIZE changes */
+            overflow-y: auto;
+            flex-shrink: 0; /* Prevent controls from shrinking too much */
         }
         
-        .control-group { margin-bottom:10px; }
+        .control-group { margin-bottom:8px; }
         .control-group h3 {
-            font-size: 0.9em; margin-top: 0; margin-bottom: 5px;
-            color: #f1c40f; border-bottom: 1px solid #7f8c8d; padding-bottom: 3px;
+            font-size: 0.8em; margin-top: 0; margin-bottom: 4px;
+            color: #f1c40f; border-bottom: 1px solid #7f8c8d; padding-bottom: 2px;
         }
 
         button, .menu-button, .profile-button {
             font-family: 'Press Start 2P', cursive; background-color: #3498db; color: white;
-            border: 2px solid #2980b9; padding: 10px 15px; cursor: pointer;
-            text-transform: uppercase; font-size: 0.8em;
+            border: 2px solid #2980b9; padding: 12px 15px; /* Increased padding for touch */
+            cursor: pointer; text-transform: uppercase; font-size: 0.75em; 
             transition: background-color 0.2s, transform 0.1s;
-            display: block; width: 100%; max-width: 280px; 
-            margin: 6px auto; box-sizing: border-box;
+            display: block; width: 100%; max-width: 260px; 
+            margin: 5px auto; box-sizing: border-box;
+            touch-action: manipulation; /* Improve touch responsiveness */
         }
         button:hover, .menu-button:hover, .profile-button:hover { background-color: #2980b9; }
-        button:active, .menu-button:active, .profile-button:active { background-color: #1f6390; transform: scale(0.98); }
+        button:active, .menu-button:active, .profile-button:active { background-color: #1f6390; transform: scale(0.97); }
         button:disabled, .menu-button:disabled, .profile-button:disabled {
             background-color: #7f8c8d; border-color: #566573; cursor: not-allowed; opacity: 0.6;
         }
         
         button.tower-button {
-            text-align: left; margin-bottom: 5px; display: flex;
+            text-align: left; margin-bottom: 4px; display: flex;
             justify-content: space-between; align-items: center;
-            padding: 8px 12px; font-size: 0.75em; max-width: none; 
+            padding: 8px 10px; font-size: 0.7em; max-width: none; 
         }
         button.tower-button.selected { background-color: #e67e22; border-color: #d35400; }
         .tower-button .tower-name { flex-grow: 1; }
         .tower-button .tower-cost, .tower-button .tower-unlock { 
-            font-size: 0.9em; margin-left: 5px; white-space: nowrap;
+            font-size: 0.85em; margin-left: 4px; white-space: nowrap;
         }
         .tower-button .tower-unlock { color: #f1c40f; }
 
-        .info-bar { font-size: 0.85em; margin-bottom: 5px; }
+        .info-bar { font-size: 0.8em; margin-bottom: 4px; }
         .info-bar span { color: #f1c40f; }
 
-        .screen h2 { font-size: 1.4em; color: #f1c40f; margin-bottom: 15px; }
-        .screen p, .screen li { font-size: 0.75em; line-height: 1.6; text-align: left; margin-bottom: 8px; max-width: 500px; }
-        .screen ul { padding-left: 20px; }
+        .screen h2 { font-size: 1.2em; color: #f1c40f; margin-bottom: 10px; }
+        .screen p, .screen li { font-size: 0.7em; line-height: 1.5; text-align: left; margin-bottom: 6px; max-width: 90%; } /* Wider content */
+        .screen ul { padding-left: 15px; }
 
         input[type="text"] {
-            font-family: 'Press Start 2P', cursive; padding: 8px; margin: 5px;
+            font-family: 'Press Start 2P', cursive; padding: 10px; margin: 5px;
             background-color: #555; border: 1px solid #777; color: #fff; text-align: center;
-            font-size: 0.8em;
+            font-size: 0.75em; width: calc(100% - 10px); max-width: 200px;
         }
         
-        #profile-list button { margin: 4px auto; font-size: 0.7em; padding: 8px 10px; }
+        #profile-list button { margin: 3px auto; font-size: 0.65em; padding: 8px 10px; }
 
-        #highScoreInputArea, #newProfileArea { margin-bottom: 15px; }
-        #highScoreInputArea p, #newProfileArea p { text-align: center; font-size: 0.8em; }
+        #highScoreInputArea, #newProfileArea { margin-bottom: 10px; }
+        #highScoreInputArea p, #newProfileArea p { text-align: center; font-size: 0.75em; }
 
         #highscores-list-container, #profile-list {
-            font-size: 0.75em; text-align: center; width: 100%; max-width: 280px;
-            margin-bottom: 10px;
+            font-size: 0.7em; text-align: center; width: 100%; max-width: 260px; margin-bottom: 8px;
         }
-        #highscores-list-container h3, #profile-list h4 { margin-top:0; margin-bottom: 8px; font-size: 0.9em; color: #1abc9c; }
+        #highscores-list-container h3, #profile-list h4 { margin-top:0; margin-bottom: 6px; font-size: 0.85em; color: #1abc9c; }
         #highscores-list-container ol, #profile-list ul { padding-left: 0; margin:0; list-style: none; }
-        #highscores-list-container li, #profile-list li { margin-bottom: 4px; text-align: left; background-color: rgba(0,0,0,0.1); padding: 5px;}
+        #highscores-list-container li, #profile-list li { margin-bottom: 3px; text-align: left; background-color: rgba(0,0,0,0.1); padding: 4px;}
         #highscores-list-container li span { color: #f1c40f; float: right;}
         
-        #level-cleared-screen h2 { font-size: 1.6em; color: #2ecc71; }
-        #level-cleared-screen p { text-align: center; font-size: 1em; }
+        #level-cleared-screen h2 { font-size: 1.4em; color: #2ecc71; }
+        #level-cleared-screen p { text-align: center; font-size: 0.9em; }
+
+        /* Media Query for smaller screens (smartphones) */
+        @media (max-width: 700px) { /* Adjust breakpoint as needed */
+            .main-title { font-size: 1.2em; margin-bottom: 8px; }
+            .screen { padding: 8px; max-height: 90vh; }
+            .screen h2 { font-size: 1.1em; margin-bottom: 8px; }
+            .screen p, .screen li { font-size: 0.65em; }
+            button, .menu-button, .profile-button { font-size: 0.7em; padding: 10px 12px; }
+            input[type="text"] { font-size: 0.7em; padding: 8px;}
+
+            #game-area {
+                flex-direction: column; /* Stack canvas and controls */
+                align-items: center; /* Center them when stacked */
+                width: 100%;
+            }
+            #controls {
+                min-width: 90%; /* Controls take more width */
+                max-height: 150px; /* Limit height when stacked */
+                margin-top: 10px;
+            }
+             .info-bar { font-size: 0.7em;}
+             .control-group h3 {font-size: 0.75em;}
+             button.tower-button { font-size: 0.65em; padding: 6px 8px;}
+        }
+         @media (max-height: 450px) { /* For very short screens in landscape */
+            .main-title { font-size: 1em; margin-bottom: 5px; }
+            #controls { max-height: 120px; }
+        }
 
     </style>
 </head>
@@ -143,137 +205,60 @@
     <!-- Profile Screen -->
     <div id="profile-screen" class="screen">
         <h2>Player Profiles</h2>
-        <div id="profile-list">
-            <h4>Select Profile:</h4>
-            <ul></ul>
-        </div>
-        <div id="newProfileArea">
-            <p>Or Create New (3-8 Chars):</p>
-            <input type="text" id="newProfileNameInput" maxlength="8" minlength="3" placeholder="PROFILE NAME">
-            <button id="createProfileBtn" class="menu-button">Create & Select</button>
-        </div>
-        <!-- Removed "Back to Menu" from profile screen, as it's the first point of entry -->
+        <div id="profile-list"><h4>Select Profile:</h4><ul></ul></div>
+        <div id="newProfileArea"><p>Or Create New (3-8 Chars):</p><input type="text" id="newProfileNameInput" maxlength="8" minlength="3" placeholder="PROFILE NAME"><button id="createProfileBtn" class="menu-button">Create & Select</button></div>
     </div>
     
     <!-- Main Menu Screen -->
     <div id="main-menu" class="screen">
-        <h2>Main Menu</h2>
-        <p id="activeProfileDisplay" style="font-size:0.7em; margin-bottom:10px; color:#1abc9c;">No active profile</p>
-        <button id="playGameBtn" class="menu-button">Play</button> 
-        <button id="continueGameBtn" class="menu-button" style="display:none;">Continue Game</button>
-        <button id="startNewGameForProfileBtn" class="menu-button" style="display:none;">Start New Game</button>
-        <button id="changeProfileBtn" class="menu-button">Change Profile</button>
-        <button id="viewHighScoresBtn" class="menu-button">High Scores (Profile)</button>
-        <button id="helpBtn" class="menu-button">Help</button>
-        <button id="creditsBtn" class="menu-button">Credits</button>
+        <h2>Main Menu</h2><p id="activeProfileDisplay" style="font-size:0.7em; margin-bottom:10px; color:#1abc9c;">No active profile</p>
+        <button id="playGameBtn" class="menu-button">Play</button> <button id="continueGameBtn" class="menu-button" style="display:none;">Continue Game</button>
+        <button id="startNewGameForProfileBtn" class="menu-button" style="display:none;">Start New Game</button><button id="changeProfileBtn" class="menu-button">Change Profile</button>
+        <button id="viewHighScoresBtn" class="menu-button">High Scores (Profile)</button><button id="helpBtn" class="menu-button">Help</button><button id="creditsBtn" class="menu-button">Credits</button>
     </div>
 
-    <!-- Game UI Container (Canvas + Controls) -->
-    <div id="game-ui-container" class="screen">
-        <div id="game-area">
-            <canvas id="gameCanvas"></canvas>
-            <div id="controls">
-                <div class="control-group">
-                    <h3>Status</h3>
-                    <div class="info-bar">Gold: <span id="gold">100</span></div>
-                    <div class="info-bar">Lives: <span id="lives">20</span></div>
-                    <div class="info-bar">Level: <span id="level">1</span> / <span id="maxLevel">25</span></div>
-                    <div class="info-bar">Wave: <span id="wave">0</span> / <span id="maxWaveInLevel">0</span></div>
-                    <div class="info-bar">Score: <span id="score">0</span></div>
-                </div>
-                <div class="control-group">
-                    <h3>Towers</h3>
-                    <button class="tower-button" id="selectTurret" data-type="turret" data-cost="50">
-                        <span class="tower-name">Turret</span><span class="tower-cost">(50G)</span><span class="tower-unlock"></span>
-                    </button>
-                    <button class="tower-button" id="selectCannon" data-type="cannon" data-cost="120">
-                        <span class="tower-name">Cannon</span><span class="tower-cost">(120G)</span><span class="tower-unlock"></span>
-                    </button>
-                     <button class="tower-button" id="selectFreezer" data-type="freezer" data-cost="80">
-                        <span class="tower-name">Freezer</span><span class="tower-cost">(80G)</span><span class="tower-unlock"></span>
-                    </button>
-                </div>
-                <div class="control-group">
-                    <h3>Game</h3>
-                    <button id="startWaveButton">Start Wave</button>
-                    <p id="waveInfo" style="font-size:0.7em; margin-top:5px;"></p>
+    <!-- Game UI Container -->
+    <div id="game-ui-outer-container" class="screen"> <!-- This screen is special, it contains the scalable game UI -->
+        <div id="game-ui-container"> <!-- This div will be scaled -->
+            <div id="game-area">
+                <canvas id="gameCanvas"></canvas>
+                <div id="controls">
+                    <div class="control-group"><h3>Status</h3><div class="info-bar">Gold: <span id="gold">100</span></div><div class="info-bar">Lives: <span id="lives">20</span></div><div class="info-bar">Level: <span id="level">1</span> / <span id="maxLevel">25</span></div><div class="info-bar">Wave: <span id="wave">0</span> / <span id="maxWaveInLevel">0</span></div><div class="info-bar">Score: <span id="score">0</span></div></div>
+                    <div class="control-group"><h3>Towers</h3><button class="tower-button" id="selectTurret" data-type="turret" data-cost="50"><span class="tower-name">Turret</span><span class="tower-cost">(50G)</span><span class="tower-unlock"></span></button><button class="tower-button" id="selectCannon" data-type="cannon" data-cost="120"><span class="tower-name">Cannon</span><span class="tower-cost">(120G)</span><span class="tower-unlock"></span></button><button class="tower-button" id="selectFreezer" data-type="freezer" data-cost="80"><span class="tower-name">Freezer</span><span class="tower-cost">(80G)</span><span class="tower-unlock"></span></button></div>
+                    <div class="control-group"><h3>Game</h3><button id="startWaveButton">Start Wave</button><p id="waveInfo" style="font-size:0.7em; margin-top:5px;"></p></div>
                 </div>
             </div>
         </div>
     </div>
 
+
     <!-- Help Screen -->
-    <div id="help-screen" class="screen">
-        <h2>How to Play</h2>
-        <p>Stop invaders from reaching the end of the path!</p>
-        <ul>
-            <li><strong>Profiles:</strong> Create or select a profile to save your progress and high scores.</li>
-            <li><strong>Towers:</strong> Select towers from the panel, then click on empty green squares to place them. They cost gold.</li>
-            <li><strong>Gold:</strong> Earn by defeating invaders and clearing waves/levels.</li>
-            <li><strong>Lives:</strong> Start with 20. Lose one for each escaped invader. 0 lives = Game Over.</li>
-            <li><strong>Waves:</strong> Click "Start Wave" to begin. Survive all waves in a level to advance.</li>
-            <li><strong>Unlocks:</strong> Better towers unlock as you reach higher levels!</li>
-            <li><strong>Tower Types:</strong> Turret (Basic), Cannon (High Dmg, Lvl 4), Freezer (Slow, Lvl 7).</li>
-            <li><strong>Level Reset:</strong> At the start of each new level, existing towers are sold (full refund), letting you re-strategize!</li>
-            <li><strong>Progress:</strong> Your game (level, gold, lives, score) is saved automatically for the active profile after each wave and level.</li>
-        </ul>
-        <button id="helpBackBtn" class="menu-button">Back to Main Menu</button>
-    </div>
-
+    <div id="help-screen" class="screen"><h2>How to Play</h2><p>Stop invaders!</p><ul><li><strong>Profiles:</strong> Create/select to save progress.</li><li><strong>Towers:</strong> Select, then tap on grid to place. Cost gold.</li><li><strong>Gold:</strong> Earn from invaders & waves.</li><li><strong>Lives:</strong> Start 20. 0 = Game Over.</li><li><strong>Waves:</strong> Tap "Start Wave".</li><li><strong>Unlocks:</strong> Turret (Start), Cannon (Lvl 4), Freezer (Lvl 7).</li><li><strong>Level Reset:</strong> Towers sold (full refund).</li><li><strong>Progress:</strong> Saved per profile.</li></ul><button id="helpBackBtn" class="menu-button">Back to Main Menu</button></div>
     <!-- Credits Screen -->
-    <div id="credits-screen" class="screen">
-        <h2>Credits</h2>
-        <p><strong>Game Concept & Design:</strong> ParisNeo</p>
-        <p><strong>Core Engineering & AI Assistance:</strong> Gemini (Model by Google)</p>
-        <p><strong>Font:</strong> "Press Start 2P" by CodeMan38 (Google Fonts)</p>
-        <p>Thanks for playing!</p>
-        <button id="creditsBackBtn" class="menu-button">Back to Main Menu</button>
-    </div>
-
-    <!-- High Scores Screen (Profile Specific) -->
-    <div id="highscores-screen" class="screen">
-        <h2 id="highScoresTitle">High Scores</h2>
-        <div id="highscores-list-container">
-            <ol id="highScoreListDisplay"></ol>
-        </div>
-        <button id="highScoresBackBtn" class="menu-button">Back to Main Menu</button>
-    </div>
-
+    <div id="credits-screen" class="screen"><h2>Credits</h2><p><strong>Concept & Design:</strong> ParisNeo</p><p><strong>AI Assistance:</strong> Gemini (Google)</p><p><strong>Font:</strong> "Press Start 2P" by CodeMan38</p><p>Thanks for playing!</p><button id="creditsBackBtn" class="menu-button">Back to Main Menu</button></div>
+    <!-- High Scores Screen -->
+    <div id="highscores-screen" class="screen"><h2 id="highScoresTitle">High Scores</h2><div id="highscores-list-container"><ol id="highScoreListDisplay"></ol></div><button id="highScoresBackBtn" class="menu-button">Back to Main Menu</button></div>
     <!-- Level Cleared Screen -->
-    <div id="level-cleared-screen" class="screen">
-        <h2 id="levelClearedTitle">Level X Cleared!</h2>
-        <p id="levelClearedMessage">Bonus Gold: +Y</p>
-        <p>Preparing next level...</p>
-    </div>
-
+    <div id="level-cleared-screen" class="screen"><h2 id="levelClearedTitle">Level X Cleared!</h2><p id="levelClearedMessage">Bonus Gold: +Y</p><p>Next level...</p></div>
     <!-- End Game Message Overlay -->
-    <div id="end-game-overlay" class="screen">
-        <h2 id="message-title">Game Over!</h2>
-        <p id="message-text">You ran out of lives!</p>
-        <div id="highScoreInputArea" style="display:none;">
-            <p>New High Score! Enter 3 initials:</p>
-            <input type="text" id="playerNameInput" maxlength="3" size="3">
-            <button id="submitScoreButton">OK</button>
-        </div>
-        <button id="endGameToMainMenuBtn" class="menu-button">Back to Main Menu</button>
-    </div>
+    <div id="end-game-overlay" class="screen"><h2 id="message-title">Game Over!</h2><p id="message-text">Invaders broke through!</p><div id="highScoreInputArea" style="display:none;"><p>New High Score! 3 Initials:</p><input type="text" id="playerNameInput" maxlength="3" size="3"><button id="submitScoreButton">OK</button></div><button id="endGameToMainMenuBtn" class="menu-button">Back to Main Menu</button></div>
 
     <script>
         // --- DOM Elements ---
         const allScreens = document.querySelectorAll('.screen');
+        const gameUIOuterContainer = document.getElementById('game-ui-outer-container'); // For scaling
+        const gameUiContainer = document.getElementById('game-ui-container'); // The actual content to scale
+        // ... (all other DOM element selections remain the same)
         const profileScreen = document.getElementById('profile-screen');
         const mainMenuScreen = document.getElementById('main-menu');
-        const gameUiContainer = document.getElementById('game-ui-container');
         const helpScreen = document.getElementById('help-screen');
         const creditsScreen = document.getElementById('credits-screen');
         const highScoresScreen = document.getElementById('highscores-screen');
         const levelClearedScreen = document.getElementById('level-cleared-screen');
         const endGameOverlay = document.getElementById('end-game-overlay');
-
         const profileListUl = profileScreen.querySelector('#profile-list ul');
         const newProfileNameInput = document.getElementById('newProfileNameInput');
         const createProfileBtn = document.getElementById('createProfileBtn');
-        
         const activeProfileDisplay = document.getElementById('activeProfileDisplay');
         const playGameBtn = document.getElementById('playGameBtn');
         const continueGameBtn = document.getElementById('continueGameBtn');
@@ -282,16 +267,13 @@
         const viewHighScoresBtn = document.getElementById('viewHighScoresBtn');
         const helpBtn = document.getElementById('helpBtn');
         const creditsBtn = document.getElementById('creditsBtn');
-        
         const helpBackBtn = document.getElementById('helpBackBtn');
         const creditsBackBtn = document.getElementById('creditsBackBtn');
         const highScoresBackBtn = document.getElementById('highScoresBackBtn');
         const highScoresTitle = document.getElementById('highScoresTitle');
         const endGameToMainMenuBtn = document.getElementById('endGameToMainMenuBtn');
-        
         const levelClearedTitle = document.getElementById('levelClearedTitle');
         const levelClearedMessage = document.getElementById('levelClearedMessage');
-        
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const goldDisplay = document.getElementById('gold');
@@ -322,19 +304,46 @@
         let spawnInterval, spawnIntervalPlus, lastSpawnTime, lastSpawnTimePlus;
         let gameOver = false, gameWon = false;
         let path = [], currentLevelPrng, audioContext, gameLoopAnimationId = null, lastTime = 0;
+        let touchPlacementPreview = { x: -1, y: -1, active: false }; // For touch placement preview
         
-        // --- Profile & Game State Management ---
         let gameState = 'PROFILE_SELECT'; 
         let profiles = []; let activeProfileName = null;
         const LS_PROFILES_KEY = "pixelDefender_profiles";
         const LS_PROFILE_PROGRESS_PREFIX = "pixelDefender_profile_";
         const LS_PROFILE_HIGHSCORES_PREFIX = "pixelDefender_profile_";
 
+        function scaleGameArea() {
+            if (gameState !== 'PLAYING') { // Only scale when game screen is active
+                 gameUiContainer.style.transform = 'scale(1)'; // Reset scale if not playing
+                 return;
+            }
+            const gameAreaWidth = canvas.width + document.getElementById('controls').offsetWidth + 20; // Approx width with gap
+            const gameAreaHeight = canvas.height; // Dominated by canvas height
+
+            const viewportWidth = window.innerWidth * 0.90; // 90% of viewport for some padding
+            const viewportHeight = window.innerHeight * 0.80; // 80% to leave space for title & some bottom margin
+
+            let scale = Math.min(viewportWidth / gameAreaWidth, viewportHeight / gameAreaHeight);
+            scale = Math.min(scale, 1.2); // Max scale to prevent excessive largeness on big screens
+
+            gameUiContainer.style.transform = `scale(${scale})`;
+        }
+
+
         function switchScreen(targetScreenId) {
             allScreens.forEach(screen => screen.classList.remove('active'));
             const target = document.getElementById(targetScreenId);
-            if (target) { target.classList.add('active'); }
-            else { document.getElementById('profile-screen').classList.add('active'); gameState = 'PROFILE_SELECT'; return; }
+            
+            if (targetScreenId === 'game-ui-outer-container') { // Special handling for game screen
+                gameUIOuterContainer.classList.add('active');
+                scaleGameArea(); // Scale it when it becomes active
+            } else if (target) {
+                target.classList.add('active');
+                gameUiContainer.style.transform = 'scale(1)'; // Reset game area scale if not game screen
+            } else { 
+                document.getElementById('profile-screen').classList.add('active'); 
+                gameState = 'PROFILE_SELECT'; return; 
+            }
             
             if (targetScreenId === 'profile-screen') gameState = 'PROFILE_SELECT';
             else if (targetScreenId === 'main-menu') gameState = 'MENU';
@@ -386,7 +395,26 @@
             while(currentX < GRID_WIDTH - 1) { currentX++; if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; } else { let newY = currentY; if (currentY + 1 < GRID_HEIGHT && !tempGrid[currentY+1][currentX]) newY = currentY+1; else if (currentY - 1 >= 0 && !tempGrid[currentY-1][currentX]) newY = currentY-1; currentY = newY; if (!tempGrid[currentY][currentX]) { path.push({x: currentX, y: currentY}); tempGrid[currentY][currentX] = true; }}}
         }
         
-        function initAudio() { if (!audioContext && (window.AudioContext || window.webkitAudioContext)) { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } }
+        function initAudio() { 
+            if (audioContext) return; // Already initialized
+            if (window.AudioContext || window.webkitAudioContext) { 
+                audioContext = new (window.AudioContext || window.webkitAudioContext)(); 
+                 // Play a silent sound to unlock audio on iOS Safari, etc.
+                const buffer = audioContext.createBuffer(1, 1, 22050);
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+                console.log("AudioContext initialized.");
+            } else {
+                console.warn("Web Audio API not supported.");
+            }
+        }
+        // Add a general event listener to initialize audio on first user interaction
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+        document.body.addEventListener('click', initAudio, { once: true });
+
+
         function playSound(type, options = {}) { 
             if (!audioContext) return; const oscillator = audioContext.createOscillator(); const gainNode = audioContext.createGain(); oscillator.connect(gainNode); gainNode.connect(audioContext.destination); gainNode.gain.setValueAtTime(options.volume || 0.1, audioContext.currentTime);
             switch(type) {
@@ -404,13 +432,26 @@
         function drawTowers() { towers.forEach(tower => { ctx.fillStyle = tower.type.color; ctx.fillRect( tower.x * TILE_SIZE + TILE_SIZE * 0.15, tower.y * TILE_SIZE + TILE_SIZE * 0.15, TILE_SIZE * 0.7, TILE_SIZE * 0.7 ); ctx.save(); ctx.translate(tower.x * TILE_SIZE + TILE_SIZE / 2, tower.y * TILE_SIZE + TILE_SIZE / 2); ctx.rotate(tower.angle || 0); ctx.fillStyle = 'grey'; ctx.fillRect(-TILE_SIZE * 0.1, -TILE_SIZE * 0.35, TILE_SIZE * 0.2, TILE_SIZE * 0.35); ctx.restore(); }); }
         function drawEnemies() { enemies.forEach(enemy => { ctx.fillStyle = enemy.isSlowed ? '#ADD8E6' : enemy.currentStats.color; const size = enemy.currentStats.size * (enemy.isSlowed ? 0.8 : 1); ctx.beginPath(); ctx.arc(enemy.x, enemy.y, size, 0, Math.PI * 2); ctx.fill(); const healthBarWidth = TILE_SIZE * 0.6; const healthBarHeight = 5; ctx.fillStyle = 'red'; ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth, healthBarHeight); ctx.fillStyle = 'lime'; ctx.fillRect(enemy.x - healthBarWidth / 2, enemy.y - size - healthBarHeight - 2, healthBarWidth * (enemy.health / enemy.maxHealth), healthBarHeight); }); }
         function drawProjectiles() { projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }); }
-        function drawPlacementPreview(event) { 
-            if (!selectedTowerType) return; const towerData = towerTypes[selectedTowerType]; if (currentLevel < towerData.unlockLevel) return; 
-            const rect = canvas.getBoundingClientRect(); const mouseX = event.clientX - rect.left; const mouseY = event.clientY - rect.top;
-            const gridX = Math.floor(mouseX / TILE_SIZE); const gridY = Math.floor(mouseY / TILE_SIZE); if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) return;
-            let canPlace = true; const onPath = path.some(p => p.x === gridX && p.y === gridY); const occupied = towers.some(t => t.x === gridX && t.y === gridY); if (onPath || occupied || gold < towerData.cost) canPlace = false;
-            ctx.globalAlpha = 0.5; ctx.fillStyle = canPlace ? towerData.color : 'rgba(255,0,0,0.5)'; ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            ctx.beginPath(); ctx.arc(gridX * TILE_SIZE + TILE_SIZE / 2, gridY * TILE_SIZE + TILE_SIZE / 2, towerData.range, 0, Math.PI * 2); ctx.strokeStyle = canPlace ? 'rgba(255,255,255,0.8)' : 'rgba(200,0,0,0.8)'; ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1.0; ctx.lineWidth = 0.5; 
+        
+        function drawPlacementPreview(gridX, gridY) { // Now takes gridX, gridY
+            if (!selectedTowerType || gridX === -1) return; // gridX -1 means no active preview
+            const towerData = towerTypes[selectedTowerType]; if (currentLevel < towerData.unlockLevel) return; 
+            
+            let canPlace = true; const onPath = path.some(p => p.x === gridX && p.y === gridY);
+            const occupied = towers.some(t => t.x === gridX && t.y === gridY);
+            if (onPath || occupied || gold < towerData.cost) canPlace = false;
+            
+            ctx.globalAlpha = 0.5; ctx.fillStyle = canPlace ? towerData.color : 'rgba(255,0,0,0.5)';
+            ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            ctx.beginPath(); ctx.arc(gridX * TILE_SIZE + TILE_SIZE / 2, gridY * TILE_SIZE + TILE_SIZE / 2, towerData.range, 0, Math.PI * 2);
+            ctx.strokeStyle = canPlace ? 'rgba(255,255,255,0.8)' : 'rgba(200,0,0,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.globalAlpha = 1.0; ctx.lineWidth = 0.5; 
+        }
+        function clearTouchPlacementPreview() {
+            touchPlacementPreview.active = false;
+            touchPlacementPreview.x = -1;
+            touchPlacementPreview.y = -1;
+            // Redraw game state without preview (will happen in next gameLoop frame)
         }
 
         function updateControlsUI() { 
@@ -429,12 +470,10 @@
             else if (gameWon) { waveInfoDisplay.textContent = "ALL LEVELS CLEARED!"; } else { waveInfoDisplay.textContent = ""; }
         }
 
-        function placeTower(event) { 
-            if (!selectedTowerType || gameOver || gameWon) return; initAudio(); 
+        function placeTower(gridX, gridY) { // Now takes grid coords
+            if (!selectedTowerType || gameOver || gameWon) return; 
             const towerData = towerTypes[selectedTowerType]; if (currentLevel < towerData.unlockLevel) { playSound('error'); return; }
-            const rect = canvas.getBoundingClientRect(); const clickX = event.clientX - rect.left; const clickY = event.clientY - rect.top;
-            const gridX = Math.floor(clickX / TILE_SIZE); const gridY = Math.floor(clickY / TILE_SIZE);
-            if (gold >= towerData.cost) { const onPath = path.some(p => p.x === gridX && p.y === gridY); const occupied = towers.some(t => t.x === gridX && t.y === gridY); if (!onPath && !occupied && gridX < GRID_WIDTH && gridY < GRID_HEIGHT && gridX >=0 && gridY >=0) { towers.push({ x: gridX, y: gridY, type: towerData, lastShotTime: 0, angle: 0 }); gold -= towerData.cost; playSound('placeTower'); updateControlsUI(); } else { playSound('error'); } }
+            if (gold >= towerData.cost) { const onPath = path.some(p => p.x === gridX && p.y === gridY); const occupied = towers.some(t => t.x === gridX && t.y === gridY); if (!onPath && !occupied && gridX < GRID_WIDTH && gridY < GRID_HEIGHT && gridX >=0 && gridY >=0) { towers.push({ x: gridX, y: gridY, type: towerData, lastShotTime: 0, angle: 0 }); gold -= towerData.cost; playSound('placeTower'); updateControlsUI(); clearTouchPlacementPreview(); selectedTowerType = null; updateControlsUI(); /* Deselect tower */ } else { playSound('error'); } }
             else { playSound('error'); }
         }
         function spawnEnemy(waveInfo, isPlus = false) {
@@ -483,145 +522,66 @@
             if (enemiesSpawnedThisWave < enemiesThisWave && currentTime - lastSpawnTime > spawnInterval) { spawnEnemy(waveData); lastSpawnTime = currentTime; }
             if (waveData.plus && enemiesSpawnedThisWavePlus < enemiesThisWavePlus && currentTime - lastSpawnTimePlus > (waveData.plus.interval || spawnIntervalPlus)) { spawnEnemy(waveData.plus, true); lastSpawnTimePlus = currentTime; }
             if (enemiesSpawnedThisWave >= enemiesThisWave && (!waveData.plus || enemiesSpawnedThisWavePlus >= enemiesThisWavePlus) && enemies.length === 0) {
-                waveInProgress = false; 
-                const waveClearGoldBase = 25 + currentWaveInLevel * 5 + currentLevel * 5; gold += waveClearGoldBase; 
-                score += 50 + currentWaveInLevel * 10 + currentLevel * 10;
-                saveGameProgress(); 
-                if (currentWaveInLevel >= wavesForCurrentLevel.length) { handleLevelCleared(waveClearGoldBase); } 
-                else { updateControlsUI(); }
+                waveInProgress = false; const waveClearGoldBase = 25 + currentWaveInLevel * 5 + currentLevel * 5; gold += waveClearGoldBase; score += 50 + currentWaveInLevel * 10 + currentLevel * 10; saveGameProgress(); 
+                if (currentWaveInLevel >= wavesForCurrentLevel.length) { handleLevelCleared(); } else { updateControlsUI(); }
             }
         }
         function sellAllTowers() { let refund = 0; towers.forEach(tower => { refund += tower.type.cost; }); gold += refund; towers = []; if (refund > 0) playSound('sellTower', {volume: 0.15}); return refund; }
-        
         function showLevelClearedScreen(levelBonusGoldDisplay, towerRefundDisplay) {
-            gameState = 'LEVEL_CLEARED_TRANSITION'; // Set state during transition
-            levelClearedTitle.textContent = `Level ${currentLevel} Cleared!`;
-            levelClearedMessage.innerHTML = `Level Bonus: +${levelBonusGoldDisplay}G<br>Towers Sold: +${towerRefundDisplay}G`;
-            switchScreen('level-cleared-screen');
-            setTimeout(() => {
-                if (gameState === 'LEVEL_CLEARED_TRANSITION') { 
-                    currentLevel++; // Actual level increment happens *after* screen
-                    if (currentLevel > MAX_LEVELS) { handleEndGame(true); } 
-                    else { 
-                        setupNextLevel(); 
-                        switchScreen('game-ui-container'); // Go to game screen for next level
-                        updateControlsUI(); 
-                        saveGameProgress(); // Save state for the start of the new level
-                    }
-                }
-            }, 3000); 
+            gameState = 'LEVEL_CLEARED_TRANSITION'; levelClearedTitle.textContent = `Level ${currentLevel} Cleared!`; levelClearedMessage.innerHTML = `Level Bonus: +${levelBonusGoldDisplay}G<br>Towers Sold: +${towerRefundDisplay}G`; switchScreen('level-cleared-screen');
+            setTimeout(() => { if (gameState === 'LEVEL_CLEARED_TRANSITION') { currentLevel++; if (currentLevel > MAX_LEVELS) { handleEndGame(true); } else { setupNextLevel(); switchScreen('game-ui-outer-container'); updateControlsUI(); saveGameProgress();}}}, 3000); 
         }
-
-        function handleLevelCleared() { // Removed waveClearGold parameter, it's part of general gold update now
-            console.log(`Level ${currentLevel} ALL WAVES CLEARED!`);
-            const levelBonusForDisplay = 100 + currentLevel * 20; gold += levelBonusForDisplay; 
-            score += 200 + currentLevel * 50; 
-            const towerRefundForDisplay = sellAllTowers();
-            updateControlsUI(); 
-            saveGameProgress(); 
-            showLevelClearedScreen(levelBonusForDisplay, towerRefundForDisplay); 
-        }
-
-        function setupNextLevel() { // Called when proceeding to the actual next level
-            currentWaveInLevel = 0; 
-            gold += 50 + currentLevel * 5; // Bonus for starting the new level
-            projectiles = []; 
-            enemiesSpawnedThisWave = 0; // Reset wave specific counters
-            enemiesSpawnedThisWavePlus = 0;
-            lastSpawnTime = 0;
-            lastSpawnTimePlus = 0;
-            enemies = [];
-            generateLevelPath(currentLevel); 
-            wavesForCurrentLevel = getWavesForLevel(currentLevel); 
-        }
+        function handleLevelCleared() { const levelBonusForDisplay = 100 + currentLevel * 20; gold += levelBonusForDisplay; score += 200 + currentLevel * 50; const towerRefundForDisplay = sellAllTowers(); updateControlsUI(); saveGameProgress(); showLevelClearedScreen(levelBonusForDisplay, towerRefundForDisplay); }
+        function setupNextLevel() { currentWaveInLevel = 0; gold += 50 + currentLevel * 5; projectiles = []; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = []; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel); }
         
         function loadProfiles() { const storedProfiles = localStorage.getItem(LS_PROFILES_KEY); profiles = storedProfiles ? JSON.parse(storedProfiles) : []; populateProfileList(); }
         function saveProfiles() { localStorage.setItem(LS_PROFILES_KEY, JSON.stringify(profiles)); }
         function populateProfileList() {
-            profileListUl.innerHTML = '';
-            if (profiles.length === 0) { profileListUl.innerHTML = "<li>No profiles yet. Create one!</li>"; }
+            profileListUl.innerHTML = ''; if (profiles.length === 0) { profileListUl.innerHTML = "<li>No profiles yet. Create one!</li>"; }
             else { profiles.forEach(name => { const li = document.createElement('li'); const btn = document.createElement('button'); btn.textContent = name; btn.classList.add('profile-button'); btn.onclick = () => selectProfile(name); li.appendChild(btn); profileListUl.appendChild(li); }); }
         }
-        function createProfile() {
-            const newName = newProfileNameInput.value.trim().toUpperCase();
-            if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) { profiles.push(newName); saveProfiles(); populateProfileList(); selectProfile(newName); newProfileNameInput.value = ''; }
-            else { alert("Profile name must be unique, 3-8 chars long."); }
-        }
+        function createProfile() { const newName = newProfileNameInput.value.trim().toUpperCase(); if (newName.length >= 3 && newName.length <= 8 && !profiles.includes(newName)) { profiles.push(newName); saveProfiles(); populateProfileList(); selectProfile(newName); newProfileNameInput.value = ''; } else { alert("Profile name must be unique, 3-8 chars long."); } }
         function selectProfile(name) { activeProfileName = name; localStorage.setItem("pixelDefender_lastActiveProfile", name); activeProfileDisplay.textContent = `Profile: ${activeProfileName}`; updateMainMenuButtons(); switchScreen('main-menu'); }
         function updateMainMenuButtons() {
-            if (activeProfileName) {
-                playGameBtn.style.display = 'none'; changeProfileBtn.style.display = 'block';
-                const progress = loadGameProgress(true); 
-                if (progress && progress.currentLevel <= MAX_LEVELS) { // Only show continue if not past max levels
-                    continueGameBtn.style.display = 'block';
-                    startNewGameForProfileBtn.textContent = `Start New (Lvl 1)`;
-                } else { continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.textContent = `Start New Game`; }
-                startNewGameForProfileBtn.style.display = 'block';
-            } else { playGameBtn.style.display = 'block'; continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.style.display = 'none'; changeProfileBtn.style.display = 'none'; activeProfileDisplay.textContent = "No active profile"; }
+            if (activeProfileName) { playGameBtn.style.display = 'none'; changeProfileBtn.style.display = 'block'; const progress = loadGameProgress(true); 
+                if (progress && progress.currentLevel <= MAX_LEVELS) { continueGameBtn.style.display = 'block'; startNewGameForProfileBtn.textContent = `Start New (Lvl 1)`; }
+                else { continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.textContent = `Start New Game`; } startNewGameForProfileBtn.style.display = 'block'; }
+            else { playGameBtn.style.display = 'block'; continueGameBtn.style.display = 'none'; startNewGameForProfileBtn.style.display = 'none'; changeProfileBtn.style.display = 'none'; activeProfileDisplay.textContent = "No active profile"; }
         }
-        function saveGameProgress() {
-            if (!activeProfileName || (gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION' && gameState !== 'GAME_SETUP')) return; 
-            const progress = { currentLevel, gold, lives, score }; localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress)); console.log("Game saved for profile:", activeProfileName, progress);
-        }
-        function loadGameProgress(checkOnly = false) {
-            if (!activeProfileName) return null; const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress");
-            if (saved) { const progress = JSON.parse(saved); if (!checkOnly) { currentLevel = progress.currentLevel; gold = progress.gold; lives = progress.lives; score = progress.score; console.log("Game loaded for profile:", activeProfileName, progress); } return progress; } return null;
-        }
+        function saveGameProgress() { if (!activeProfileName || (gameState !== 'PLAYING' && gameState !== 'LEVEL_CLEARED_TRANSITION' && gameState !== 'GAME_SETUP')) return; const progress = { currentLevel, gold, lives, score }; localStorage.setItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress", JSON.stringify(progress)); console.log("Game saved for profile:", activeProfileName, progress); }
+        function loadGameProgress(checkOnly = false) { if (!activeProfileName) return null; const saved = localStorage.getItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); if (saved) { const progress = JSON.parse(saved); if (!checkOnly) { currentLevel = progress.currentLevel; gold = progress.gold; lives = progress.lives; score = progress.score; console.log("Game loaded for profile:", activeProfileName, progress); } return progress; } return null; }
         function getProfileHighScores() { if (!activeProfileName) return []; const scores = localStorage.getItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores"); return scores ? JSON.parse(scores) : []; }
         function saveProfileHighScores(scores) { if (!activeProfileName) return; scores.sort((a, b) => b.score - a.score); localStorage.setItem(LS_PROFILE_HIGHSCORES_PREFIX + activeProfileName + "_highScores", JSON.stringify(scores.slice(0, 5))); }
-        function displayProfileHighScores() {
-            if (!activeProfileName) { highScoreListDisplay.innerHTML = "<li>Select a profile to see scores.</li>"; highScoresTitle.textContent = "High Scores"; return; }
-            highScoresTitle.textContent = `High Scores: ${activeProfileName}`; const scores = getProfileHighScores(); highScoreListDisplay.innerHTML = '';
-            if (scores.length === 0) { highScoreListDisplay.innerHTML = "<li>No scores yet for this profile!</li>"; }
-            else { scores.forEach(scoreItem => { const li = document.createElement('li'); li.textContent = `${scoreItem.name}: `; const scoreSpan = document.createElement('span'); scoreSpan.textContent = scoreItem.score; li.appendChild(scoreSpan); highScoreListDisplay.appendChild(li); }); }
-        }
+        function displayProfileHighScores() { if (!activeProfileName) { highScoreListDisplay.innerHTML = "<li>Select a profile to see scores.</li>"; highScoresTitle.textContent = "High Scores"; return; } highScoresTitle.textContent = `High Scores: ${activeProfileName}`; const scores = getProfileHighScores(); highScoreListDisplay.innerHTML = ''; if (scores.length === 0) { highScoreListDisplay.innerHTML = "<li>No scores yet for this profile!</li>"; } else { scores.forEach(scoreItem => { const li = document.createElement('li'); li.textContent = `${scoreItem.name}: `; const scoreSpan = document.createElement('span'); scoreSpan.textContent = scoreItem.score; li.appendChild(scoreSpan); highScoreListDisplay.appendChild(li); }); } }
         let scoreSubmitted = false; 
-        function checkAndPromptForProfileHighScore() { 
-            scoreSubmitted = false; const highScores = getProfileHighScores();
-            if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { highScoreInputArea.style.display = 'block'; playerNameInput.value = activeProfileName ? activeProfileName.substring(0,3).toUpperCase() : "YOU"; playerNameInput.focus(); } /* Prefill with profile name */
-            else { highScoreInputArea.style.display = 'none'; }
-        }
-        submitScoreButton.addEventListener('click', () => {
-            if(scoreSubmitted) return; const name = playerNameInput.value.trim().toUpperCase().substring(0,3) || "AAA";
-            const currentProfileHighScores = getProfileHighScores(); currentProfileHighScores.push({ name, score });
-            saveProfileHighScores(currentProfileHighScores); highScoreInputArea.style.display = 'none'; scoreSubmitted = true;
-        });
+        function checkAndPromptForProfileHighScore() { scoreSubmitted = false; const highScores = getProfileHighScores(); if (score > 0 && (highScores.length < 5 || score > highScores[Math.min(highScores.length - 1, 4)].score )) { highScoreInputArea.style.display = 'block'; playerNameInput.value = activeProfileName ? activeProfileName.substring(0,3).toUpperCase() : "YOU"; playerNameInput.focus(); } else { highScoreInputArea.style.display = 'none'; } }
+        submitScoreButton.addEventListener('click', () => { if(scoreSubmitted) return; const name = playerNameInput.value.trim().toUpperCase().substring(0,3) || "AAA"; const currentProfileHighScores = getProfileHighScores(); currentProfileHighScores.push({ name, score }); saveProfileHighScores(currentProfileHighScores); highScoreInputArea.style.display = 'none'; scoreSubmitted = true; });
 
         function resetGameVariables(startFresh = true) { 
-            sellAllTowers(); towers = []; projectiles = []; selectedTowerType = null; waveInProgress = false;
-            gameOver = false; gameWon = false; scoreSubmitted = false; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = [];
-            gameState = 'GAME_SETUP'; // Temporary state for saving
-            if (startFresh) { currentLevel = 1; gold = 150; lives = 20; score = 0; }
-            else { const loadedProgress = loadGameProgress(); if (!loadedProgress) { currentLevel = 1; gold = 150; lives = 20; score = 0;}}
-            currentWaveInLevel = 0; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel);
-            updateControlsUI(); saveGameProgress(); 
+            sellAllTowers(); towers = []; projectiles = []; selectedTowerType = null; waveInProgress = false; gameOver = false; gameWon = false; scoreSubmitted = false; enemiesSpawnedThisWave = 0; enemiesSpawnedThisWavePlus = 0; lastSpawnTime = 0; lastSpawnTimePlus = 0; enemies = [];
+            gameState = 'GAME_SETUP'; if (startFresh) { currentLevel = 1; gold = 150; lives = 20; score = 0; } else { const loadedProgress = loadGameProgress(); if (!loadedProgress) { currentLevel = 1; gold = 150; lives = 20; score = 0;}}
+            currentWaveInLevel = 0; generateLevelPath(currentLevel); wavesForCurrentLevel = getWavesForLevel(currentLevel); updateControlsUI(); saveGameProgress(); 
         }
         function startGame(continuePreviousGame) {
             if (!activeProfileName) { alert("Please select or create a profile first!"); switchScreen('profile-screen'); return; }
-            initAudio(); 
-            resetGameVariables(!continuePreviousGame); 
-            gameState = 'PLAYING'; // Set to playing *after* reset and save
-            switchScreen('game-ui-container');
-            if (gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId);
-            lastTime = performance.now(); gameLoopAnimationId = requestAnimationFrame(gameLoop);
+            initAudio(); resetGameVariables(!continuePreviousGame); gameState = 'PLAYING'; switchScreen('game-ui-outer-container');
+            if (gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); lastTime = performance.now(); gameLoopAnimationId = requestAnimationFrame(gameLoop);
         }
         function handleEndGame(won) {
-            gameState = 'END_GAME'; gameOver = true; gameWon = won; 
-            if (gameLoopAnimationId) { cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; }
-            if (won) { messageTitle.textContent = "VICTORY!"; messageTitle.style.color = "#2ecc71"; messageText.textContent = `All ${MAX_LEVELS} levels cleared! Final Score: ${score}`; }
-            else { messageTitle.textContent = "Game Over!"; messageTitle.style.color = "#e74c3c"; messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`; }
+            gameState = 'END_GAME'; gameOver = true; gameWon = won; if (gameLoopAnimationId) { cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; }
+            if (won) { messageTitle.textContent = "VICTORY!"; messageTitle.style.color = "#2ecc71"; messageText.textContent = `All ${MAX_LEVELS} levels cleared! Final Score: ${score}`; } else { messageTitle.textContent = "Game Over!"; messageTitle.style.color = "#e74c3c"; messageText.textContent = `Invaders broke through at Level ${currentLevel}, Wave ${currentWaveInLevel}! Score: ${score}`; }
             checkAndPromptForProfileHighScore(); switchScreen('end-game-overlay');
-            // If lost, consider clearing progress for this profile to encourage restart
-            // if (!won) { localStorage.removeItem(LS_PROFILE_PROGRESS_PREFIX + activeProfileName + "_progress"); }
         }
 
         function gameLoop(currentTime) {
             if (gameState !== 'PLAYING' || gameOver) { if(gameLoopAnimationId) cancelAnimationFrame(gameLoopAnimationId); gameLoopAnimationId = null; return; }
             const deltaTime = currentTime - lastTime; lastTime = currentTime;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPath(); drawGrid();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); drawPath(); drawGrid();
             updateEnemies(deltaTime); updateTowers(currentTime, deltaTime); updateProjectiles(deltaTime); handleWaveSpawning(currentTime);
-            drawTowers(); drawEnemies(); drawProjectiles();
+            drawTowers(); drawEnemies(); drawProjectiles(); 
+            if (touchPlacementPreview.active) { // Draw touch preview if active
+                drawPlacementPreview(touchPlacementPreview.x, touchPlacementPreview.y);
+            }
             updateControlsUI();
             if (gameState === 'PLAYING' && !gameOver) { gameLoopAnimationId = requestAnimationFrame(gameLoop); }
         }
@@ -639,25 +599,133 @@
         highScoresBackBtn.addEventListener('click', () => switchScreen('main-menu'));
         endGameToMainMenuBtn.addEventListener('click', () => { if (highScoreInputArea.style.display === 'block' && !scoreSubmitted) { highScoreInputArea.style.display = 'none'; } updateMainMenuButtons(); switchScreen('main-menu'); });
 
-        canvas.addEventListener('click', (event) => { if (gameState === 'PLAYING' && !gameOver && !gameWon) placeTower(event); });
-        canvas.addEventListener('mousemove', (event) => { if (gameState === 'PLAYING' && selectedTowerType && !gameOver && !gameWon) { ctx.clearRect(0,0,canvas.width, canvas.height); drawPath(); drawGrid(); drawTowers(); drawEnemies(); drawProjectiles(); drawPlacementPreview(event); } });
-        canvas.addEventListener('mouseleave', () => { if (gameState === 'PLAYING' && selectedTowerType && !gameOver && !gameWon) { ctx.clearRect(0, 0, canvas.width, canvas.height); drawPath(); drawGrid(); drawTowers(); drawEnemies(); drawProjectiles(); } });
+        // --- Touch and Mouse Event Handling for Canvas ---
+        let lastTapTime = 0;
+        let lastTapGridX = -1, lastTapGridY = -1;
+        const DOUBLE_TAP_THRESHOLD = 300; // ms
+
+        canvas.addEventListener('click', (event) => { // For mouse users
+            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
+            initAudio();
+            const rect = canvas.getBoundingClientRect();
+            // Adjust click coordinates by the scale factor
+            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
+            const clickX = (event.clientX - rect.left) / scale;
+            const clickY = (event.clientY - rect.top) / scale;
+            const gridX = Math.floor(clickX / TILE_SIZE);
+            const gridY = Math.floor(clickY / TILE_SIZE);
+            
+            if (selectedTowerType) {
+                placeTower(gridX, gridY);
+            }
+        });
+
+        canvas.addEventListener('mousemove', (event) => { // Mouse preview
+            if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType || 'ontouchstart' in window) return; // Skip if touch device (simple check)
+            const rect = canvas.getBoundingClientRect();
+            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
+            const mouseX = (event.clientX - rect.left) / scale;
+            const mouseY = (event.clientY - rect.top) / scale;
+            const gridX = Math.floor(mouseX / TILE_SIZE);
+            const gridY = Math.floor(mouseY / TILE_SIZE);
+            
+            touchPlacementPreview.active = true;
+            touchPlacementPreview.x = gridX;
+            touchPlacementPreview.y = gridY;
+            // Game loop will pick this up for drawing
+        });
+         canvas.addEventListener('mouseleave', () => {
+             if ('ontouchstart' in window) return;
+             clearTouchPlacementPreview();
+         });
+
+
+        canvas.addEventListener('touchstart', (event) => {
+            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
+            event.preventDefault(); // Prevent scrolling/zooming on canvas
+            initAudio();
+            const rect = canvas.getBoundingClientRect();
+            const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
+            const touchX = (event.touches[0].clientX - rect.left) / scale;
+            const touchY = (event.touches[0].clientY - rect.top) / scale;
+            const gridX = Math.floor(touchX / TILE_SIZE);
+            const gridY = Math.floor(touchY / TILE_SIZE);
+
+            if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) {
+                clearTouchPlacementPreview();
+                return;
+            }
+
+            const currentTime = new Date().getTime();
+            if (selectedTowerType) {
+                if (touchPlacementPreview.active && touchPlacementPreview.x === gridX && touchPlacementPreview.y === gridY && (currentTime - lastTapTime < DOUBLE_TAP_THRESHOLD)) {
+                    // Second tap on the same previewed cell: Place tower
+                    placeTower(gridX, gridY);
+                    clearTouchPlacementPreview(); // Clear after placing
+                } else {
+                    // First tap or tap on a new cell: Show preview
+                    touchPlacementPreview.active = true;
+                    touchPlacementPreview.x = gridX;
+                    touchPlacementPreview.y = gridY;
+                    // Game loop will draw it
+                }
+            }
+            lastTapTime = currentTime;
+            lastTapGridX = gridX;
+            lastTapGridY = gridY;
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (event) => {
+            if (gameState !== 'PLAYING' || gameOver || gameWon || !selectedTowerType) return;
+            event.preventDefault();
+             if (touchPlacementPreview.active) { // If a preview was active from a tap
+                const rect = canvas.getBoundingClientRect();
+                const scale = parseFloat(gameUiContainer.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                const touchX = (event.touches[0].clientX - rect.left) / scale;
+                const touchY = (event.touches[0].clientY - rect.top) / scale;
+                const gridX = Math.floor(touchX / TILE_SIZE);
+                const gridY = Math.floor(touchY / TILE_SIZE);
+
+                if (gridX !== touchPlacementPreview.x || gridY !== touchPlacementPreview.y) {
+                    clearTouchPlacementPreview(); // Moved away, clear static preview
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (event) => {
+            if (gameState !== 'PLAYING' || gameOver || gameWon) return;
+            // If a preview is active and the finger lifts, it stays for the next tap to confirm.
+            // No specific action on touchend alone unless we want to clear preview if not placed.
+            // The current logic in touchstart handles the tap-preview, tap-again-to-place.
+        });
+
+
         towerButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                if (gameState === 'PLAYING' && !gameOver && !gameWon) { initAudio(); const type = button.dataset.type; const towerData = towerTypes[type];
-                    if (currentLevel >= towerData.unlockLevel) { selectedTowerType = (selectedTowerType === type) ? null : type; } else { selectedTowerType = null; playSound('error'); } updateControlsUI(); 
+            button.addEventListener('click', () => { // Works for mouse and simple taps
+                if (gameState === 'PLAYING' && !gameOver && !gameWon) { 
+                    initAudio(); const type = button.dataset.type; const towerData = towerTypes[type];
+                    if (currentLevel >= towerData.unlockLevel) { 
+                        selectedTowerType = (selectedTowerType === type && !touchPlacementPreview.active) ? null : type; // Allow re-selecting if preview is not for this
+                        if(selectedTowerType !== type) clearTouchPlacementPreview(); // Clear preview if deselecting or choosing another
+                    } 
+                    else { selectedTowerType = null; playSound('error'); clearTouchPlacementPreview(); } 
+                    updateControlsUI(); 
                 }
             });
         });
         startWaveButton.addEventListener('click', () => { if (gameState === 'PLAYING' && !gameOver && !gameWon) { initAudio(); startNextWave(); } });
 
+        window.addEventListener('resize', scaleGameArea); // Rescale on window resize
+
         window.onload = () => {
-            loadProfiles();
-            const lastActive = localStorage.getItem("pixelDefender_lastActiveProfile");
+            loadProfiles(); const lastActive = localStorage.getItem("pixelDefender_lastActiveProfile");
             if (lastActive && profiles.includes(lastActive)) { activeProfileName = lastActive; }
-            if (activeProfileName) { selectProfile(activeProfileName); } 
-            else { switchScreen('profile-screen'); }
+            if (activeProfileName) { selectProfile(activeProfileName); } else { switchScreen('profile-screen'); }
             updateMainMenuButtons(); 
+            // Initial scale if game screen is somehow active early (shouldn't be)
+             if (gameUIOuterContainer.classList.contains('active')) {
+                scaleGameArea();
+            }
         };
     </script>
 </body>
