@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptVault - Your AI Prompt Companion</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            transition: background-color 0.3s ease;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+        .navbar-brand .fa-brain {
+            margin-right: 10px;
+            animation: pulseBrain 2s infinite;
+        }
+        @keyframes pulseBrain {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .container-fluid {
+            padding-top: 20px;
+        }
+        .prompt-list-group .list-group-item {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease;
+            border-left-width: 5px;
+            border-left-color: transparent;
+        }
+        .prompt-list-group .list-group-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(3px);
+        }
+        .prompt-list-group .list-group-item.active {
+            background-color: #667eea;
+            border-color: #4a5fc4;
+            color: white;
+            font-weight: bold;
+        }
+        .prompt-content-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-height: 400px; /* Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+        }
+        .prompt-content-card .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .prompt-content-card .card-body {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .prompt-textarea {
+            white-space: pre-wrap; /* Preserve line breaks */
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #fdfdff;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            border-radius: 5px;
+            min-height: 150px;
+        }
+        .action-buttons button {
+            margin-right: 8px;
+        }
+        .add-prompt-btn {
+            background-color: #28a745;
+            border-color: #28a745;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .add-prompt-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+            transform: translateY(-2px);
+        }
+        .educational-tip {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9f5ff;
+            border-left: 3px solid #007bff;
+            border-radius: 4px;
+        }
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        .toast {
+            opacity: 0.95 !important;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        /* Dark mode toggle styles */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 50px;
+            margin-left: 10px;
+        }
+        .theme-switch input {
+            display:none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+        }
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        body.dark-mode {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        body.dark-mode .navbar {
+            background: linear-gradient(135deg, #1f2833 0%, #2c3e50 100%);
+        }
+        body.dark-mode .prompt-list-group .list-group-item {
+            background-color: #2c3e50;
+            color: #e0e0e0;
+            border-color: #455a64;
+        }
+        body.dark-mode .prompt-list-group .list-group-item:hover {
+            background-color: #3b4f63;
+        }
+        body.dark-mode .prompt-list-group .list-group-item.active {
+            background-color: #667eea;
+            border-color: #4a5fc4;
+            color: white;
+        }
+        body.dark-mode .prompt-content-card {
+            background-color: #1f2833;
+            border-color: #455a64;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .prompt-content-card .card-header {
+            background-color: #2c3e50;
+            border-bottom: 1px solid #455a64;
+            color: #e0e0e0;
+        }
+        body.dark-mode .prompt-textarea {
+            background-color: #2c3e50;
+            color: #e0e0e0;
+            border-color: #455a64;
+        }
+        body.dark-mode .educational-tip {
+            background-color: #2c3e50;
+            border-left-color: #667eea;
+            color: #c0c0c0;
+        }
+        body.dark-mode .modal-content {
+            background-color: #1f2833;
+            color: #e0e0e0;
+        }
+        body.dark-mode .modal-header {
+            background: linear-gradient(135deg, #1f2833 0%, #2c3e50 100%);
+        }
+         body.dark-mode .form-control {
+            background-color: #2c3e50;
+            color: #e0e0e0;
+            border-color: #455a64;
+        }
+        body.dark-mode .form-control::placeholder {
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-brain"></i> PromptVault
+            </a>
+            <div class="theme-switch-wrapper">
+                <span id="theme-icon" class="text-white me-2"><i class="fas fa-sun"></i></span>
+                <label class="theme-switch" for="theme-checkbox">
+                    <input type="checkbox" id="theme-checkbox" />
+                    <div class="slider round"></div>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Prompts List -->
+            <div class="col-md-4 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 id="promptListTitle">My Prompts</h4>
+                    <button class="btn btn-success add-prompt-btn btn-sm" id="addPromptBtn" data-bs-toggle="modal" data-bs-target="#promptModal">
+                        <i class="fas fa-plus"></i> New
+                    </button>
+                </div>
+                <div class="list-group prompt-list-group" id="promptList">
+                    <!-- Prompts will be loaded here by JavaScript -->
+                </div>
+                <div class="educational-tip mt-3">
+                    <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> Clearly define the AI's role, context, and desired output format in your prompts for better results!
+                </div>
+            </div>
+
+            <!-- Prompt Content -->
+            <div class="col-md-8">
+                <div class="prompt-content-card" id="promptDisplayCard" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" id="promptTitleDisplay"></h5>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline-primary btn-sm" id="copyPromptBtn"><i class="fas fa-copy"></i> Copy</button>
+                            <button class="btn btn-outline-warning btn-sm" id="editPromptBtn"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-outline-danger btn-sm" id="deletePromptBtn"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="prompt-textarea" id="promptContentDisplay"></p>
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Remember to replace placeholders like [YOUR TOPIC] with specific details.
+                    </div>
+                </div>
+                <div id="welcomeMessage" class="text-center p-5 prompt-content-card" style="align-items: center; justify-content: center;">
+                    <div>
+                        <i class="fas fa-magic fa-3x text-primary mb-3"></i>
+                        <h2>Welcome to PromptVault!</h2>
+                        <p class="lead">Select a prompt from the list or add a new one to get started.</p>
+                        <p>This tool helps you organize and quickly access your favorite AI prompts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt Modal (Add/Edit) -->
+    <div class="modal fade" id="promptModal" tabindex="-1" aria-labelledby="promptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="promptModalLabel">Add New Prompt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="promptForm">
+                        <input type="hidden" id="promptId">
+                        <div class="mb-3">
+                            <label for="promptTitleInput" class="form-label">Prompt Title</label>
+                            <input type="text" class="form-control" id="promptTitleInput" placeholder="e.g., Blog Post Idea Generator" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="promptContentInput" class="form-label">Prompt Content</label>
+                            <textarea class="form-control" id="promptContentInput" rows="10" placeholder="Enter your AI prompt here. Use placeholders like [TOPIC] or {{variable}} for easy customization." required></textarea>
+                        </div>
+                        <div class="educational-tip">
+                             <i class="fas fa-graduation-cap"></i> <strong>Writing Effective Prompts:</strong>
+                            <ul>
+                                <li>Be specific and clear.</li>
+                                <li>Define the AI's persona (e.g., "Act as an expert marketer...").</li>
+                                <li>Specify the desired output format (e.g., "Provide a list of 5 bullet points.").</li>
+                                <li>Include examples if necessary.</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="savePromptBtn">Save Prompt</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
+    </div>
+
+    <!-- Bootstrap JS Bundle (Popper.js included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <script>
+        const promptListEl = document.getElementById('promptList');
+        const promptTitleDisplayEl = document.getElementById('promptTitleDisplay');
+        const promptContentDisplayEl = document.getElementById('promptContentDisplay');
+        const promptDisplayCardEl = document.getElementById('promptDisplayCard');
+        const welcomeMessageEl = document.getElementById('welcomeMessage');
+        
+        const promptModalEl = new bootstrap.Modal(document.getElementById('promptModal'));
+        const promptFormEl = document.getElementById('promptForm');
+        const promptModalLabelEl = document.getElementById('promptModalLabel');
+        const promptIdInputEl = document.getElementById('promptId');
+        const promptTitleInputEl = document.getElementById('promptTitleInput');
+        const promptContentInputEl = document.getElementById('promptContentInput');
+
+        const addPromptBtn = document.getElementById('addPromptBtn');
+        const savePromptBtn = document.getElementById('savePromptBtn');
+        const copyPromptBtn = document.getElementById('copyPromptBtn');
+        const editPromptBtn = document.getElementById('editPromptBtn');
+        const deletePromptBtn = document.getElementById('deletePromptBtn');
+
+        const themeCheckbox = document.getElementById('theme-checkbox');
+        const themeIcon = document.getElementById('theme-icon');
+
+        let prompts = [];
+        let currentPromptId = null;
+
+        const defaultPrompts = [
+            {
+                id: `default-${Date.now() + 1}`,
+                title: "Brainstorm Blog Post Ideas",
+                content: "Brainstorm 10 unique and engaging blog post ideas for a website about [YOUR TOPIC/NICHE]. For each idea, provide a catchy title and a brief 1-2 sentence description."
+            },
+            {
+                id: `default-${Date.now() + 2}`,
+                title: "Summarize Text (ELI5)",
+                content: "Explain the following text like I'm 5 years old. Focus on the core concepts and use simple analogies:\n\n[PASTE TEXT HERE]"
+            },
+            {
+                id: `default-${Date.now() + 3}`,
+                title: "Python Code Generator",
+                content: "Write a Python function that [DESCRIBE FUNCTIONALITY, e.g., 'takes a list of numbers and returns the sum of all even numbers']. Include a docstring and a simple example of how to use it."
+            },
+            {
+                id: `default-${Date.now() + 4}`,
+                title: "Creative Story Starter",
+                content: "Write the opening paragraph (around 100-150 words) for a fantasy story about a young cartographer who discovers a map that shows islands that don't exist on any other chart."
+            },
+            {
+                id: `default-${Date.now() + 5}`,
+                title: "Act as a Debater",
+                content: "Act as an expert debater. I will provide you with a motion. Your task is to generate strong arguments for the affirmative side. Motion: [YOUR DEBATE MOTION]"
+            },
+            {
+                id: `default-${Date.now() + 6}`,
+                title: "Product Description Writer",
+                content: "Write a compelling product description (around 150 words) for a new [PRODUCT TYPE, e.g., 'eco-friendly water bottle']. Highlight 3 key benefits and include a call to action. Product Name: [PRODUCT NAME]"
+            },
+            {
+                id: `default-${Date.now() + 7}`,
+                title: "Email Drafter - Follow Up",
+                content: "Draft a polite and professional follow-up email. I previously contacted [RECIPIENT_NAME/COMPANY] on [DATE] regarding [ORIGINAL_SUBJECT]. I haven't heard back and would like to gently inquire about any updates. Keep it concise."
+            },
+            {
+                id: `default-${Date.now() + 8}`,
+                title: "Recipe Idea Generator",
+                content: "I have the following ingredients: [LIST INGREDIENTS, e.g., 'chicken breast, broccoli, rice, soy sauce']. Suggest 3 different meal ideas I can make, along with a brief outline of the cooking steps for one of them."
+            }
+        ];
+
+        function generateId() {
+            return `prompt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        function loadPrompts() {
+            const storedPrompts = localStorage.getItem('promptVaultPrompts');
+            if (storedPrompts) {
+                prompts = JSON.parse(storedPrompts);
+            } else {
+                prompts = [...defaultPrompts]; // Use a copy to avoid modifying defaults directly
+                savePrompts();
+            }
+            renderPromptList();
+        }
+
+        function savePrompts() {
+            localStorage.setItem('promptVaultPrompts', JSON.stringify(prompts));
+        }
+
+        function renderPromptList() {
+            promptListEl.innerHTML = '';
+            if (prompts.length === 0) {
+                promptListEl.innerHTML = '<p class="text-muted p-3">No prompts yet. Add your first one!</p>';
+                 if (promptDisplayCardEl) promptDisplayCardEl.style.display = 'none';
+                 if (welcomeMessageEl) welcomeMessageEl.style.display = 'flex';
+                return;
+            }
+            prompts.forEach(prompt => {
+                const listItem = document.createElement('a');
+                listItem.href = '#';
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.textContent = prompt.title;
+                listItem.dataset.id = prompt.id;
+                if (prompt.id === currentPromptId) {
+                    listItem.classList.add('active');
+                }
+                listItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    displayPromptDetails(prompt.id);
+                });
+                promptListEl.appendChild(listItem);
+            });
+        }
+
+        function displayPromptDetails(id) {
+            const prompt = prompts.find(p => p.id === id);
+            if (prompt) {
+                currentPromptId = id;
+                promptTitleDisplayEl.textContent = prompt.title;
+                promptContentDisplayEl.textContent = prompt.content;
+                promptDisplayCardEl.style.display = 'flex'; // Use flex for consistent height
+                welcomeMessageEl.style.display = 'none';
+                // Update active state in list
+                Array.from(promptListEl.children).forEach(item => {
+                    item.classList.toggle('active', item.dataset.id === id);
+                });
+            } else {
+                currentPromptId = null;
+                promptDisplayCardEl.style.display = 'none';
+                welcomeMessageEl.style.display = 'flex';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toastId = `toast-${Date.now()}`;
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>'}
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = new bootstrap.Toast(document.getElementById(toastId));
+            toastElement.show();
+            // Remove toast from DOM after it's hidden to prevent clutter
+            document.getElementById(toastId).addEventListener('hidden.bs.toast', function () {
+                this.remove();
+            });
+        }
+        
+        addPromptBtn.addEventListener('click', () => {
+            promptModalLabelEl.textContent = 'Add New Prompt';
+            promptFormEl.reset();
+            promptIdInputEl.value = ''; // Clear any existing ID for new prompt
+            promptModalEl.show();
+        });
+
+        savePromptBtn.addEventListener('click', () => {
+            const title = promptTitleInputEl.value.trim();
+            const content = promptContentInputEl.value.trim();
+            const id = promptIdInputEl.value;
+
+            if (!title || !content) {
+                showToast('Title and Content cannot be empty!', 'danger');
+                return;
+            }
+
+            if (id) { // Editing existing prompt
+                const index = prompts.findIndex(p => p.id === id);
+                if (index > -1) {
+                    prompts[index] = { ...prompts[index], title, content };
+                    showToast('Prompt updated successfully!');
+                }
+            } else { // Adding new prompt
+                const newPrompt = { id: generateId(), title, content };
+                prompts.unshift(newPrompt); // Add to the beginning of the array
+                currentPromptId = newPrompt.id; // Select the new prompt
+                showToast('Prompt added successfully!');
+            }
+            
+            savePrompts();
+            renderPromptList();
+            if (id || prompts.length === 1) { // If editing or it's the first prompt
+                 displayPromptDetails(currentPromptId || prompts[0].id);
+            } else if (currentPromptId) { // If adding new and an ID was set for the new one
+                displayPromptDetails(currentPromptId);
+            }
+
+            promptModalEl.hide();
+        });
+
+        editPromptBtn.addEventListener('click', () => {
+            if (!currentPromptId) return;
+            const prompt = prompts.find(p => p.id === currentPromptId);
+            if (prompt) {
+                promptModalLabelEl.textContent = 'Edit Prompt';
+                promptIdInputEl.value = prompt.id;
+                promptTitleInputEl.value = prompt.title;
+                promptContentInputEl.value = prompt.content;
+                promptModalEl.show();
+            }
+        });
+
+        deletePromptBtn.addEventListener('click', () => {
+            if (!currentPromptId) return;
+            const promptToDelete = prompts.find(p => p.id === currentPromptId);
+            if (confirm(`Are you sure you want to delete the prompt "${promptToDelete.title}"?`)) {
+                prompts = prompts.filter(p => p.id !== currentPromptId);
+                savePrompts();
+                const previousCurrentId = currentPromptId;
+                currentPromptId = null; // Reset current ID
+                renderPromptList();
+                // Try to select the next prompt, or the previous, or none
+                if (prompts.length > 0) {
+                    let nextPromptIndex = prompts.findIndex(p => p.id > previousCurrentId); // Simplistic next selection
+                    if (nextPromptIndex === -1 && prompts.length > 0) nextPromptIndex = 0; // or select first
+                    displayPromptDetails(prompts[nextPromptIndex].id);
+                } else {
+                    displayPromptDetails(null); // Show welcome message if no prompts left
+                }
+                showToast('Prompt deleted successfully!', 'warning');
+            }
+        });
+
+        copyPromptBtn.addEventListener('click', async () => {
+            if (!currentPromptId) return;
+            const prompt = prompts.find(p => p.id === currentPromptId);
+            if (prompt && navigator.clipboard) {
+                try {
+                    await navigator.clipboard.writeText(prompt.content);
+                    showToast('Prompt content copied to clipboard!');
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                    showToast('Failed to copy prompt.', 'danger');
+                }
+            } else if (prompt) {
+                // Fallback for older browsers (less secure, more intrusive)
+                const textArea = document.createElement("textarea");
+                textArea.value = prompt.content;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Prompt content copied to clipboard! (fallback)');
+                } catch (err) {
+                    console.error('Fallback copy failed: ', err);
+                    showToast('Failed to copy prompt. (fallback)', 'danger');
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+
+        // Theme Toggle Functionality
+        function setDarkTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                themeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('promptVaultTheme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('promptVaultTheme', 'light');
+            }
+        }
+
+        themeCheckbox.addEventListener('change', (event) => {
+            setDarkTheme(event.target.checked);
+        });
+
+        // Load initial theme
+        const currentTheme = localStorage.getItem('promptVaultTheme');
+        if (currentTheme === 'dark') {
+            themeCheckbox.checked = true;
+            setDarkTheme(true);
+        } else {
+            themeCheckbox.checked = false;
+            setDarkTheme(false); // Default to light
+        }
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPrompts();
+            if (prompts.length > 0) {
+                // Select the first prompt by default if none is current, or reselect current
+                if (!currentPromptId) currentPromptId = prompts[0].id;
+                displayPromptDetails(currentPromptId);
+            } else {
+                promptDisplayCardEl.style.display = 'none';
+                welcomeMessageEl.style.display = 'flex';
+            }
+        });
+
+    </script>
+</body>
+</html> 

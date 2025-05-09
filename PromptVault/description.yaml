@@ -1,0 +1,9 @@
+author: ParisNeo
+category: Productivity
+creation_date: 2023-10-27
+last_update_date: 2023-10-27
+description: A single-file web application to store, manage, and quickly copy AI prompts. Includes a set of useful default prompts for various tasks.
+disclaimer: Prompts are provided as examples. Effectiveness may vary depending on the AI model and specific use case. Use responsibly. Ensure you have the right to use and store any content you add.
+model: gemini 2.5 05-06
+name: PromptVault
+version: 1.0
