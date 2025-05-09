@@ -9,90 +9,371 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <style>
-        body { margin: 0; font-family: 'Press Start 2P', cursive; background: linear-gradient(45deg, #1a001a, #330033, #4d004d); color: #00ff00; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding-top: 10px; padding-bottom: 20px; }
-        .view { width: 95%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
-        #mainMenuView, #creditsView { text-align: center; padding: 20px; background-color: rgba(20, 0, 20, 0.9); border: 3px solid #00ffff; box-shadow: 0 0 15px #00ffff; border-radius: 10px; margin-top: 5vh; }
-        #mainMenuView h1, #creditsView h1 { color: #ffff00; text-shadow: 0 0 8px #ffff00; margin-bottom: 20px; }
-        .menu-button-group button { display: block; width: 80%; max-width: 300px; margin: 10px auto; font-size: 1em; padding: 12px 15px; }
-        #gameContainer { width: 80vw; max-width: 600px; height: 55vh; max-height: 450px; border: 5px solid #ff00ff; box-shadow: 0 0 20px #ff00ff, inset 0 0 15px #ff00ffaa; background-color: #0a000a; position: relative; margin-bottom:15px; }
-        #canvas { display: block; }
-        .controls-panel { background-color: rgba(20, 0, 20, 0.85); padding: 15px; border-radius: 10px; border: 3px solid #00ffff; box-shadow: 0 0 15px #00ffff; margin-top: 10px; text-align: center; width: 90%; max-width: 700px; }
-        .controls-panel h2, .controls-panel h3 { margin-top: 0; color: #ffff00; font-size: 1.2em; text-shadow: 0 0 5px #ffff00; }
-        .controls-panel h3 { font-size: 0.9em; margin-bottom: 5px; }
-        .button-group { margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
-        button { font-family: 'Press Start 2P', cursive; background-color: #333; color: #00ff00; border: 2px solid #00ff00; padding: 8px 12px; margin: 4px; cursor: pointer; border-radius: 5px; transition: all 0.2s ease; box-shadow: 0 0 5px #00ff0077; font-size: 0.75em; }
-        button:hover:not(:disabled) { background-color: #00ff00; color: #111; box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
-        button:active:not(:disabled) { transform: translateY(2px); }
-        button:disabled { background-color: #222; color: #555; border-color: #444; cursor: not-allowed; box-shadow: none; }
-        button.back-button { background-color: #ff3333; border-color: #ffaaaa; color: #fff; }
-        button.back-button:hover:not(:disabled) { background-color: #cc0000; box-shadow: 0 0 10px #ff0000; }
-        #messageArea { margin-top: 10px; padding: 8px; background-color: rgba(0,0,0,0.6); border: 1px dashed #00ffff; min-height: 36px; font-size: 0.75em; color: #00ffff; }
-        #learnModeSpecificControls { padding:10px; margin-top:10px; border: 1px solid #ff00ff; border-radius:5px;}
-        #learnModeSpecificControls select, #learnModeSpecificControls p { font-family: 'Press Start 2P', cursive; background-color: #222; color: #00ffaa; border: 1px solid #00ffaa; padding: 5px; margin: 5px; font-size: 0.7em; }
-        #algorithmDisplay { font-size: 0.8em; color: #ffff00; margin:5px 0; min-height: 1em; }
-        #timerDisplay { font-size: 1em; color: #ffff00; margin: 5px 0 10px 0; text-shadow: 0 0 3px #ffff00; }
-        #highScoresArea { margin-top:15px; padding: 10px; background-color: rgba(0,0,0,0.4); border: 1px solid #ff00ff; border-radius: 5px; }
-        #highScoresArea h3 { color: #ff00ff; font-size: 0.8em; margin-bottom: 8px; }
-        #highScoresList { list-style-type: decimal; padding-left: 25px; font-size: 0.7em; color: #00ffaa; text-align: left; }
-        #highScoresList li { margin-bottom: 3px; }
+        body {
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(45deg, #1a001a, #330033, #4d004d);
+            color: #00ff00;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+
+        .view {
+            width: 95%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #mainMenuView,
+        #creditsView {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(20, 0, 20, 0.9);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            border-radius: 10px;
+            margin-top: 5vh;
+        }
+
+        #mainMenuView h1,
+        #creditsView h1 {
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+            margin-bottom: 20px;
+        }
+
+        .menu-button-group button {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 10px auto;
+            font-size: 1em;
+            padding: 12px 15px;
+        }
+
+        #gameContainer {
+            width: 80vw;
+            max-width: 600px;
+            height: 55vh;
+            max-height: 450px;
+            border: 5px solid #ff00ff;
+            box-shadow: 0 0 20px #ff00ff, inset 0 0 15px #ff00ffaa;
+            background-color: #0a000a;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        #canvas {
+            display: block;
+        }
+
+        .controls-panel {
+            background-color: rgba(20, 0, 20, 0.85);
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            margin-top: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 700px;
+        }
+
+        .controls-panel h2,
+        .controls-panel h3 {
+            margin-top: 0;
+            color: #ffff00;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px #ffff00;
+        }
+
+        .controls-panel h3 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .button-group {
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #333;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 8px 12px;
+            margin: 4px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 5px #00ff0077;
+            font-size: 0.75em;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #00ff00;
+            color: #111;
+            box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(2px);
+        }
+
+        button:disabled {
+            background-color: #222;
+            color: #555;
+            border-color: #444;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button.back-button {
+            background-color: #ff3333;
+            border-color: #ffaaaa;
+            color: #fff;
+        }
+
+        button.back-button:hover:not(:disabled) {
+            background-color: #cc0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        #messageArea {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border: 1px dashed #00ffff;
+            min-height: 36px;
+            font-size: 0.75em;
+            color: #00ffff;
+        }
+
+        #learnModeSpecificControls {
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ff00ff;
+            border-radius: 5px;
+        }
+
+        #learnModeSpecificControls select,
+        #learnModeSpecificControls p {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #222;
+            color: #00ffaa;
+            border: 1px solid #00ffaa;
+            padding: 5px;
+            margin: 5px;
+            font-size: 0.7em;
+        }
+
+        #algorithmDisplay {
+            font-size: 0.8em;
+            color: #ffff00;
+            margin: 5px 0;
+            min-height: 1em;
+        }
+
+        #timerDisplay {
+            font-size: 1em;
+            color: #ffff00;
+            margin: 5px 0 10px 0;
+            text-shadow: 0 0 3px #ffff00;
+        }
+
+        #highScoresArea {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid #ff00ff;
+            border-radius: 5px;
+        }
+
+        #highScoresArea h3 {
+            color: #ff00ff;
+            font-size: 0.8em;
+            margin-bottom: 8px;
+        }
+
+        #highScoresList {
+            list-style-type: decimal;
+            padding-left: 25px;
+            font-size: 0.7em;
+            color: #00ffaa;
+            text-align: left;
+        }
+
+        #highScoresList li {
+            margin-bottom: 3px;
+        }
     </style>
 </head>
 <body>
-    <div id="mainMenuView" class="view"><h1>Retro Rubik's 3D</h1><div class="menu-button-group"><button id="menuPlayBtn">Play Mode</button><button id="menuAiBtn">AI Mode</button><button id="menuLearnBtn">Learn Mode</button><button id="menuCreditsBtn">Credits</button></div></div>
-    <div id="gameView" class="view" style="display:none;"><div id="gameContainer"><canvas id="canvas"></canvas></div><div class="controls-panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h2 id="gameModeTitle">Game Mode</h2><button id="backToMenuBtn" class="back-button">Back to Menu</button></div><div id="timerDisplay">Time: 0.00s</div><div class="button-group" id="actionButtons"><button id="scrambleBtn">Scramble</button><button id="startSolveBtn" style="display:none;">Start Solving!</button><button id="startAiDemoBtn" style="display:none;">Start AI Solver</button><button id="resetCubeBtn">Reset Cube</button></div><div id="messageArea">Welcome!</div><div id="learnModeSpecificControls" style="display:none;"><h3>Learn Algorithms</h3><select id="lessonSelect"><option value="">-- Select a Lesson --</option></select><p id="lessonDescription"></p><p>Algorithm: <span id="algorithmDisplay"></span></p><div class="button-group"><button id="setupLessonBtn" disabled>Set up for Lesson</button><button id="watchAlgorithmBtn" disabled>Watch AI Perform</button><button id="nextLessonMoveBtn" disabled>Next Move</button></div></div><div class="button-group" id="moveButtonsContainer" style="margin-top:10px;"><button class="moveBtn" data-move="F">F</button><button class="moveBtn" data-move="F'">F'</button><button class="moveBtn" data-move="B">B</button><button class="moveBtn" data-move="B'">B'</button><button class="moveBtn" data-move="U">U</button><button class="moveBtn" data-move="U'">U'</button><button class="moveBtn" data-move="D">D</button><button class="moveBtn" data-move="D'">D'</button><button class="moveBtn" data-move="R">R</button><button class="moveBtn" data-move="R'">R'</button><button class="moveBtn" data-move="L">L</button><button class="moveBtn" data-move="L'">L'</button></div><div id="highScoresArea"><h3>High Scores (Player - Top 5):</h3><ol id="highScoresList"></ol></div></div></div>
-    <div id="creditsView" class="view" style="display:none;"><h1>Credits</h1><p>Idea Builder: ParisNeo</p><p>Coder: Gemini (Large Language Model by Google)</p><p>Based on classic Rubik's Cube concepts.</p><button id="creditsBackToMenuBtn" class="back-button">Back to Menu</button></div>
+
+    <div id="mainMenuView" class="view">
+        <h1>Retro Rubik's 3D</h1>
+        <div class="menu-button-group">
+            <button id="menuPlayBtn">Play Mode</button>
+            <button id="menuAiBtn">AI Mode</button>
+            <button id="menuLearnBtn">Learn Mode</button>
+            <button id="menuCreditsBtn">Credits</button>
+        </div>
+    </div>
+
+    <div id="gameView" class="view" style="display:none;">
+        <div id="gameContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="controls-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 id="gameModeTitle">Game Mode</h2>
+                <button id="backToMenuBtn" class="back-button">Back to Menu</button>
+            </div>
+            <div id="timerDisplay">Time: 0.00s</div>
+            <div class="button-group" id="actionButtons">
+                <button id="scrambleBtn">Scramble</button>
+                <button id="startSolveBtn" style="display:none;">Start Solving!</button>
+                <button id="startAiDemoBtn" style="display:none;">Start AI Solver</button>
+                <button id="resetCubeBtn">Reset Cube</button>
+            </div>
+            <div id="messageArea">Welcome!</div>
+            <div id="learnModeSpecificControls" style="display:none;">
+                <h3>Learn Algorithms</h3>
+                <select id="lessonSelect">
+                    <option value="">-- Select a Lesson --</option>
+                </select>
+                <p id="lessonDescription"></p>
+                <p>Algorithm: <span id="algorithmDisplay"></span></p>
+                <div class="button-group">
+                    <button id="setupLessonBtn" disabled>Set up for Lesson</button>
+                    <button id="watchAlgorithmBtn" disabled>Watch AI Perform</button>
+                    <button id="nextLessonMoveBtn" disabled>Next Move</button>
+                </div>
+            </div>
+            <div class="button-group" id="moveButtonsContainer" style="margin-top:10px;">
+                <button class="moveBtn" data-move="F">F</button><button class="moveBtn" data-move="F'">F'</button>
+                <button class="moveBtn" data-move="B">B</button><button class="moveBtn" data-move="B'">B'</button>
+                <button class="moveBtn" data-move="U">U</button><button class="moveBtn" data-move="U'">U'</button>
+                <button class="moveBtn" data-move="D">D</button><button class="moveBtn" data-move="D'">D'</button>
+                <button class="moveBtn" data-move="R">R</button><button class="moveBtn" data-move="R'">R'</button>
+                <button class="moveBtn" data-move="L">L</button><button class="moveBtn" data-move="L'">L'</button>
+            </div>
+            <div id="highScoresArea">
+                <h3>High Scores (Player - Top 5):</h3>
+                <ol id="highScoresList"></ol>
+            </div>
+        </div>
+    </div>
+
+    <div id="creditsView" class="view" style="display:none;">
+        <h1>Credits</h1>
+        <p>Idea Builder: ParisNeo</p>
+        <p>Coder: Gemini (Large Language Model by Google)</p>
+        <p>Based on classic Rubik's Cube concepts.</p>
+        <button id="creditsBackToMenuBtn" class="back-button">Back to Menu</button>
+    </div>
 
     <script>
-        const CUBE_SIZE = 3; const CUBIE_SIZE = 1; const CUBIE_SPACING = 0.05;
+        const CUBE_SIZE = 3;
+        const CUBIE_SIZE = 1;
+        const CUBIE_SPACING = 0.05;
         const EFFECTIVE_CUBIE_SIZE = CUBIE_SIZE + CUBIE_SPACING;
-        const VISUAL_COLORS = { FRONT: 0xff0000, BACK: 0xffa500, UP: 0xffffff, DOWN: 0xffff00, RIGHT: 0x0000ff, LEFT: 0x00ff00, INTERNAL: 0x333333 };
+        const VISUAL_COLORS = {
+            FRONT: 0xff0000, BACK: 0xffa500, UP: 0xffffff,
+            DOWN: 0xffff00, RIGHT: 0x0000ff, LEFT: 0x00ff00,
+            INTERNAL: 0x333333
+        };
 
         let scene, camera, renderer, controls, pivot;
         let cubies = [];
-        let isAnimating = false, sequenceInProgress = false;
-        let activeView = 'menu', currentMode = '', playModeState = 'IDLE', aiModeState = 'IDLE';
-        let learnModeState = { currentLesson: null, algorithmMoves: [], currentMoveIndex: 0, isLessonSetup: false, isWatchingAll: false };
-        let lastScrambleSequence = []; // To allow AI to solve the same scramble
+        let isAnimating = false;
+        let sequenceInProgress = false;
+        let activeView = 'menu';
+        let currentMode = '';
+        let playModeState = 'IDLE';
+        let aiModeState = 'IDLE';
+        let learnModeState = {
+            currentLesson: null,
+            algorithmMoves: [],
+            currentMoveIndex: 0,
+            isLessonSetup: false,
+            isWatchingAll: false
+        };
+        let lastScrambleSequence = [];
 
-        const mainMenuView = document.getElementById('mainMenuView'), gameView = document.getElementById('gameView'), creditsView = document.getElementById('creditsView');
-        const gameModeTitle = document.getElementById('gameModeTitle'), messageArea = document.getElementById('messageArea');
-        const menuPlayBtn = document.getElementById('menuPlayBtn'), menuAiBtn = document.getElementById('menuAiBtn'), menuLearnBtn = document.getElementById('menuLearnBtn'), menuCreditsBtn = document.getElementById('menuCreditsBtn');
-        const backToMenuBtn = document.getElementById('backToMenuBtn'), creditsBackToMenuBtn = document.getElementById('creditsBackToMenuBtn');
-        const scrambleBtn = document.getElementById('scrambleBtn'), startSolveBtn = document.getElementById('startSolveBtn'), startAiDemoBtn = document.getElementById('startAiDemoBtn'), resetCubeBtn = document.getElementById('resetCubeBtn');
+        const mainMenuView = document.getElementById('mainMenuView');
+        const gameView = document.getElementById('gameView');
+        const creditsView = document.getElementById('creditsView');
+        const gameModeTitle = document.getElementById('gameModeTitle');
+        const messageArea = document.getElementById('messageArea');
+        const menuPlayBtn = document.getElementById('menuPlayBtn');
+        const menuAiBtn = document.getElementById('menuAiBtn');
+        const menuLearnBtn = document.getElementById('menuLearnBtn');
+        const menuCreditsBtn = document.getElementById('menuCreditsBtn');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const creditsBackToMenuBtn = document.getElementById('creditsBackToMenuBtn');
+        const scrambleBtn = document.getElementById('scrambleBtn');
+        const startSolveBtn = document.getElementById('startSolveBtn');
+        const startAiDemoBtn = document.getElementById('startAiDemoBtn');
+        const resetCubeBtn = document.getElementById('resetCubeBtn');
         const allMoveButtons = document.querySelectorAll('.moveBtn');
-        const timerDisplay = document.getElementById('timerDisplay'); let timerInterval, startTime, elapsedTime = 0;
-        const highScoresList = document.getElementById('highScoresList'); let highScores = []; const MAX_HIGH_SCORES = 5;
-        const learnModeSpecificControls = document.getElementById('learnModeSpecificControls'), lessonSelect = document.getElementById('lessonSelect'), lessonDescription = document.getElementById('lessonDescription'), algorithmDisplay = document.getElementById('algorithmDisplay');
-        const setupLessonBtn = document.getElementById('setupLessonBtn'), watchAlgorithmBtn = document.getElementById('watchAlgorithmBtn'), nextLessonMoveBtn = document.getElementById('nextLessonMoveBtn');
-        const lessons = [ { name: "Beginner: Sexy Move", description: "R U R' U'", initialScramble: [], algorithm: ["R", "U", "R'", "U'"], id: "sexy_move"}, { name: "Beginner: Sune", description: "R U R' U R U2 R'", initialScramble: ["F", "U'", "R", "U", "R'", "F'", "L", "U'", "L'", "U'", "L", "U2", "L'"], algorithm: ["R", "U", "R'", "U", "R", "U2", "R'"], id: "sune"}, { name: "Simple Face Turn (F)", description: "F F'", initialScramble: [], algorithm: ["F", "F'"], id: "face_turn_f"}];
-        let currentSequenceQueue = [], onCurrentSequenceCompleteCallback = null;
+        const timerDisplay = document.getElementById('timerDisplay');
+        let timerInterval, startTime, elapsedTime = 0;
+        const highScoresList = document.getElementById('highScoresList');
+        let highScores = [];
+        const MAX_HIGH_SCORES = 5;
+        const learnModeSpecificControls = document.getElementById('learnModeSpecificControls');
+        const lessonSelect = document.getElementById('lessonSelect');
+        const lessonDescription = document.getElementById('lessonDescription');
+        const algorithmDisplay = document.getElementById('algorithmDisplay');
+        const setupLessonBtn = document.getElementById('setupLessonBtn');
+        const watchAlgorithmBtn = document.getElementById('watchAlgorithmBtn');
+        const nextLessonMoveBtn = document.getElementById('nextLessonMoveBtn');
+        const lessons = [
+            { name: "Beginner: Sexy Move", description: "R U R' U'", initialScramble: [], algorithm: ["R", "U", "R'", "U'"], id: "sexy_move" },
+            { name: "Beginner: Sune", description: "R U R' U R U2 R'", initialScramble: ["F", "U'", "R", "U", "R'", "F'", "L", "U'", "L'", "U'", "L", "U2", "L'"], algorithm: ["R", "U", "R'", "U", "R", "U2", "R'"], id: "sune" },
+            { name: "Simple Face Turn (F)", description: "F F'", initialScramble: [], algorithm: ["F", "F'"], id: "face_turn_f" }
+        ];
+        let currentSequenceQueue = [];
+        let onCurrentSequenceCompleteCallback = null;
 
         // --- LOGICAL CUBE STATE AND SOLVER ---
-        const LGC_U = 'W', LGC_L = 'G', LGC_F = 'R', LGC_R = 'B', LGC_B = 'O', LGC_D = 'Y';
+        const LGC_U = 'W', LGC_L = 'G', LGC_F = 'R', LGC_R = 'B', LGC_B = 'O', LGC_D = 'Y'; // Logical Colors
         const LOGICAL_COLORS_MAP = { U: LGC_U, L: LGC_L, F: LGC_F, R: LGC_R, B: LGC_B, D: LGC_D };
-        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B'];
-        const FACE_IDX = { U:0, R:1, F:2, D:3, L:4, B:5 };
-        
-        // Edge Sticker Locations (Absolute Index in 54-sticker array, and the two faces they belong to)
-        // UF(0,1), UR(0,2), UB(0,3), UL(0,4)  -- U-face edges
-        // DF(3,1), DR(3,2), DB(3,3), DL(3,4)  -- D-face edges
-        // FR(2,2), FL(2,4), BR(5,2), BL(5,4)  -- E-slice edges (F/R, F/L, B/R, B/L views)
+        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B']; // URFDLB for 54-sticker array
+        const FACE_IDX = { U: 0, R: 1, F: 2, D: 3, L: 4, B: 5 }; // Index of face in FACES_ORDER
+
+        // Edge Sticker Locations (Absolute Index in 54-sticker array)
+        // Each key is an edge piece (e.g., UF), value is an array of [sticker1_idx, sticker2_idx]
         const EDGE_STICKERS = {
-            UF: [FACE_IDX.U*9+7, FACE_IDX.F*9+1], UR: [FACE_IDX.U*9+5, FACE_IDX.R*9+1], UB: [FACE_IDX.U*9+1, FACE_IDX.B*9+1], UL: [FACE_IDX.U*9+3, FACE_IDX.L*9+1],
-            DF: [FACE_IDX.D*9+1, FACE_IDX.F*9+7], DR: [FACE_IDX.D*9+5, FACE_IDX.R*9+7], DB: [FACE_IDX.D*9+7, FACE_IDX.B*9+7], DL: [FACE_IDX.D*9+3, FACE_IDX.L*9+7],
-            FR: [FACE_IDX.F*9+5, FACE_IDX.R*9+3], FL: [FACE_IDX.F*9+3, FACE_IDX.L*9+5], BR: [FACE_IDX.B*9+3, FACE_IDX.R*9+5], BL: [FACE_IDX.B*9+5, FACE_IDX.L*9+3]
+            UF: [FACE_IDX.U * 9 + 7, FACE_IDX.F * 9 + 1], UR: [FACE_IDX.U * 9 + 5, FACE_IDX.R * 9 + 1], UB: [FACE_IDX.U * 9 + 1, FACE_IDX.B * 9 + 1], UL: [FACE_IDX.U * 9 + 3, FACE_IDX.L * 9 + 1],
+            DF: [FACE_IDX.D * 9 + 1, FACE_IDX.F * 9 + 7], DR: [FACE_IDX.D * 9 + 5, FACE_IDX.R * 9 + 7], DB: [FACE_IDX.D * 9 + 7, FACE_IDX.B * 9 + 7], DL: [FACE_IDX.D * 9 + 3, FACE_IDX.L * 9 + 7],
+            FR: [FACE_IDX.F * 9 + 5, FACE_IDX.R * 9 + 3], FL: [FACE_IDX.F * 9 + 3, FACE_IDX.L * 9 + 5], BR: [FACE_IDX.B * 9 + 3, FACE_IDX.R * 9 + 5], BL: [FACE_IDX.B * 9 + 5, FACE_IDX.L * 9 + 3]
         };
-        const EDGE_KEYS = Object.keys(EDGE_STICKERS); // ["UF", "UR", ..., "BL"]
+        const EDGE_KEYS = Object.keys(EDGE_STICKERS);
 
         function getInitialLogicalState() {
             let state = [];
             FACES_ORDER.forEach(faceChar => {
-                for (let i = 0; i < 9; i++) state.push(LOGICAL_COLORS_MAP[faceChar]);
+                for (let i = 0; i < 9; i++) {
+                    state.push(LOGICAL_COLORS_MAP[faceChar]);
+                }
             });
             return state;
         }
 
-        // AI will solve the same scramble sequence applied to a fresh logical cube
         function getLogicalStateFromScramble(scrambleMoves) {
             let state = getInitialLogicalState();
             if (scrambleMoves && scrambleMoves.length > 0) {
@@ -102,182 +383,890 @@
             }
             return state;
         }
-        
+
         function applyMoveToLogicalState(notation, state) {
-            const prime = notation.includes("'"); const double = notation.includes("2");
+            const prime = notation.includes("'");
+            const double = notation.includes("2");
             const faceChar = notation.charAt(0);
             let numRotations = double ? 2 : (prime ? 3 : 1);
-            for (let i = 0; i < numRotations; i++) rotateFaceLogicallyCW(faceChar, state);
+            for (let i = 0; i < numRotations; i++) {
+                rotateFaceLogicallyCW(faceChar, state);
+            }
         }
 
         function rotateFaceLogicallyCW(faceChar, state) {
             const fBase = FACE_IDX[faceChar] * 9;
-            let onFace = [state[fBase+0],state[fBase+1],state[fBase+2],state[fBase+3],state[fBase+4],state[fBase+5],state[fBase+6],state[fBase+7],state[fBase+8]];
-            state[fBase+0]=onFace[6]; state[fBase+1]=onFace[3]; state[fBase+2]=onFace[0]; state[fBase+3]=onFace[7]; state[fBase+5]=onFace[1]; state[fBase+6]=onFace[8]; state[fBase+7]=onFace[5]; state[fBase+8]=onFace[2];
+            // Rotate facelets on the face itself (clockwise)
+            let onFace = [
+                state[fBase + 0], state[fBase + 1], state[fBase + 2],
+                state[fBase + 3], state[fBase + 4], state[fBase + 5],
+                state[fBase + 6], state[fBase + 7], state[fBase + 8]
+            ];
+            state[fBase + 0] = onFace[6]; state[fBase + 1] = onFace[3]; state[fBase + 2] = onFace[0];
+            state[fBase + 3] = onFace[7]; /* center */ state[fBase + 5] = onFace[1];
+            state[fBase + 6] = onFace[8]; state[fBase + 7] = onFace[5]; state[fBase + 8] = onFace[2];
+
             let t = []; // temp array for 3 stickers
             switch (faceChar) {
-                case 'U': t=[state[FACE_IDX.B*9+0],state[FACE_IDX.B*9+1],state[FACE_IDX.B*9+2]]; for(let i=0;i<3;i++){state[FACE_IDX.B*9+i]=state[FACE_IDX.L*9+i];state[FACE_IDX.L*9+i]=state[FACE_IDX.F*9+i];state[FACE_IDX.F*9+i]=state[FACE_IDX.R*9+i];state[FACE_IDX.R*9+i]=t[i];} break;
-                case 'D': t=[state[FACE_IDX.F*9+6],state[FACE_IDX.F*9+7],state[FACE_IDX.F*9+8]]; for(let i=0;i<3;i++){state[FACE_IDX.F*9+6+i]=state[FACE_IDX.L*9+6+i];state[FACE_IDX.L*9+6+i]=state[FACE_IDX.B*9+6+i];state[FACE_IDX.B*9+6+i]=state[FACE_IDX.R*9+6+i];state[FACE_IDX.R*9+6+i]=t[i];} break;
-                case 'F': t=[state[FACE_IDX.U*9+6],state[FACE_IDX.U*9+7],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+6]=state[FACE_IDX.L*9+8];state[FACE_IDX.U*9+7]=state[FACE_IDX.L*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.L*9+2]; state[FACE_IDX.L*9+8]=state[FACE_IDX.D*9+2];state[FACE_IDX.L*9+5]=state[FACE_IDX.D*9+1];state[FACE_IDX.L*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+2]=state[FACE_IDX.R*9+0];state[FACE_IDX.D*9+1]=state[FACE_IDX.R*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.R*9+6]; state[FACE_IDX.R*9+0]=t[0];state[FACE_IDX.R*9+3]=t[1];state[FACE_IDX.R*9+6]=t[2]; break;
-                case 'B': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+1],state[FACE_IDX.U*9+0]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.R*9+8];state[FACE_IDX.U*9+1]=state[FACE_IDX.R*9+5];state[FACE_IDX.U*9+0]=state[FACE_IDX.R*9+2]; state[FACE_IDX.R*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.R*9+5]=state[FACE_IDX.D*9+7];state[FACE_IDX.R*9+2]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+6]=state[FACE_IDX.L*9+0];state[FACE_IDX.D*9+7]=state[FACE_IDX.L*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.L*9+6]; state[FACE_IDX.L*9+0]=t[0];state[FACE_IDX.L*9+3]=t[1];state[FACE_IDX.L*9+6]=t[2]; break;
-                case 'R': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+5],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.F*9+2];state[FACE_IDX.U*9+5]=state[FACE_IDX.F*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.F*9+8]; state[FACE_IDX.F*9+2]=state[FACE_IDX.D*9+2];state[FACE_IDX.F*9+5]=state[FACE_IDX.D*9+5];state[FACE_IDX.F*9+8]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+2]=state[FACE_IDX.B*9+6];state[FACE_IDX.D*9+5]=state[FACE_IDX.B*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.B*9+0]; state[FACE_IDX.B*9+6]=t[0];state[FACE_IDX.B*9+3]=t[1];state[FACE_IDX.B*9+0]=t[2]; break;
-                case 'L': t=[state[FACE_IDX.U*9+0],state[FACE_IDX.U*9+3],state[FACE_IDX.U*9+6]]; state[FACE_IDX.U*9+0]=state[FACE_IDX.B*9+8];state[FACE_IDX.U*9+3]=state[FACE_IDX.B*9+5];state[FACE_IDX.U*9+6]=state[FACE_IDX.B*9+2]; state[FACE_IDX.B*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.B*9+5]=state[FACE_IDX.D*9+3];state[FACE_IDX.B*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+6]=state[FACE_IDX.F*9+0];state[FACE_IDX.D*9+3]=state[FACE_IDX.F*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.F*9+6]; state[FACE_IDX.F*9+0]=t[0];state[FACE_IDX.F*9+3]=t[1];state[FACE_IDX.F*9+6]=t[2]; break;
+                case 'U': // Affects B, R, F, L (top rows)
+                    t = [state[FACE_IDX.B*9+0], state[FACE_IDX.B*9+1], state[FACE_IDX.B*9+2]];
+                    for(let i=0; i<3; i++){ state[FACE_IDX.B*9+i] = state[FACE_IDX.L*9+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.L*9+i] = state[FACE_IDX.F*9+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.F*9+i] = state[FACE_IDX.R*9+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.R*9+i] = t[i]; }
+                    break;
+                case 'D': // Affects F, L, B, R (bottom rows)
+                    t = [state[FACE_IDX.F*9+6], state[FACE_IDX.F*9+7], state[FACE_IDX.F*9+8]];
+                    for(let i=0; i<3; i++){ state[FACE_IDX.F*9+6+i] = state[FACE_IDX.L*9+6+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.L*9+6+i] = state[FACE_IDX.B*9+6+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.B*9+6+i] = state[FACE_IDX.R*9+6+i]; }
+                    for(let i=0; i<3; i++){ state[FACE_IDX.R*9+6+i] = t[i]; }
+                    break;
+                case 'F': // Affects U (bottom row), L (right col), D (top row), R (left col)
+                    t = [state[FACE_IDX.U*9+6], state[FACE_IDX.U*9+7], state[FACE_IDX.U*9+8]]; // U_BL, U_BM, U_BR
+                    state[FACE_IDX.U*9+6]=state[FACE_IDX.L*9+8]; state[FACE_IDX.U*9+7]=state[FACE_IDX.L*9+5]; state[FACE_IDX.U*9+8]=state[FACE_IDX.L*9+2]; // L_BR,L_MR,L_TR -> U_bot
+                    state[FACE_IDX.L*9+8]=state[FACE_IDX.D*9+2]; state[FACE_IDX.L*9+5]=state[FACE_IDX.D*9+1]; state[FACE_IDX.L*9+2]=state[FACE_IDX.D*9+0]; // D_TR,D_TM,D_TL -> L_right
+                    state[FACE_IDX.D*9+2]=state[FACE_IDX.R*9+0]; state[FACE_IDX.D*9+1]=state[FACE_IDX.R*9+3]; state[FACE_IDX.D*9+0]=state[FACE_IDX.R*9+6]; // R_TL,R_ML,R_BL -> D_top
+                    state[FACE_IDX.R*9+0]=t[0]; state[FACE_IDX.R*9+3]=t[1]; state[FACE_IDX.R*9+6]=t[2]; // U_bot -> R_left
+                    break;
+                case 'B': // Affects U (top row), R (right col), D (bottom row), L (left col) - relative to B
+                    t = [state[FACE_IDX.U*9+2], state[FACE_IDX.U*9+1], state[FACE_IDX.U*9+0]]; // U_TR, U_TM, U_TL
+                    state[FACE_IDX.U*9+2]=state[FACE_IDX.R*9+8]; state[FACE_IDX.U*9+1]=state[FACE_IDX.R*9+5]; state[FACE_IDX.U*9+0]=state[FACE_IDX.R*9+2]; // R_BR,R_MR,R_TR -> U_top (from B)
+                    state[FACE_IDX.R*9+8]=state[FACE_IDX.D*9+6]; state[FACE_IDX.R*9+5]=state[FACE_IDX.D*9+7]; state[FACE_IDX.R*9+2]=state[FACE_IDX.D*9+8]; // D_BL,D_BM,D_BR -> R_right (from B)
+                    state[FACE_IDX.D*9+6]=state[FACE_IDX.L*9+0]; state[FACE_IDX.D*9+7]=state[FACE_IDX.L*9+3]; state[FACE_IDX.D*9+8]=state[FACE_IDX.L*9+6]; // L_TL,L_ML,L_BL -> D_bot (from B)
+                    state[FACE_IDX.L*9+0]=t[0]; state[FACE_IDX.L*9+3]=t[1]; state[FACE_IDX.L*9+6]=t[2]; // U_top -> L_left (from B)
+                    break;
+                case 'R': // Affects U (right col), B (left col - from R's persp), D (right col), F (right col)
+                    t = [state[FACE_IDX.U*9+2], state[FACE_IDX.U*9+5], state[FACE_IDX.U*9+8]]; // U_TR, U_MR, U_BR
+                    state[FACE_IDX.U*9+2]=state[FACE_IDX.F*9+2]; state[FACE_IDX.U*9+5]=state[FACE_IDX.F*9+5]; state[FACE_IDX.U*9+8]=state[FACE_IDX.F*9+8]; // F_rightcol -> U_rightcol
+                    state[FACE_IDX.F*9+2]=state[FACE_IDX.D*9+2]; state[FACE_IDX.F*9+5]=state[FACE_IDX.D*9+5]; state[FACE_IDX.F*9+8]=state[FACE_IDX.D*9+8]; // D_rightcol -> F_rightcol
+                    state[FACE_IDX.D*9+2]=state[FACE_IDX.B*9+6]; state[FACE_IDX.D*9+5]=state[FACE_IDX.B*9+3]; state[FACE_IDX.D*9+8]=state[FACE_IDX.B*9+0]; // B_leftcol(rev) -> D_rightcol
+                    state[FACE_IDX.B*9+6]=t[0]; state[FACE_IDX.B*9+3]=t[1]; state[FACE_IDX.B*9+0]=t[2]; // U_rightcol -> B_leftcol(rev)
+                    break;
+                case 'L': // Affects U (left col), F (left col), D (left col), B (right col - from L's persp)
+                    t = [state[FACE_IDX.U*9+0], state[FACE_IDX.U*9+3], state[FACE_IDX.U*9+6]]; // U_TL, U_ML, U_BL
+                    state[FACE_IDX.U*9+0]=state[FACE_IDX.B*9+8]; state[FACE_IDX.U*9+3]=state[FACE_IDX.B*9+5]; state[FACE_IDX.U*9+6]=state[FACE_IDX.B*9+2]; // B_rightcol(rev) -> U_leftcol
+                    state[FACE_IDX.B*9+8]=state[FACE_IDX.D*9+6]; state[FACE_IDX.B*9+5]=state[FACE_IDX.D*9+3]; state[FACE_IDX.B*9+2]=state[FACE_IDX.D*9+0]; // D_leftcol(rev) -> B_rightcol(rev)
+                    state[FACE_IDX.D*9+6]=state[FACE_IDX.F*9+0]; state[FACE_IDX.D*9+3]=state[FACE_IDX.F*9+3]; state[FACE_IDX.D*9+0]=state[FACE_IDX.F*9+6]; // F_leftcol -> D_leftcol(rev)
+                    state[FACE_IDX.F*9+0]=t[0]; state[FACE_IDX.F*9+3]=t[1]; state[FACE_IDX.F*9+6]=t[2]; // U_leftcol -> F_leftcol
+                    break;
             }
         }
         
-        function findEdge(state, color1, color2) { // Finds edge and returns its key ("UF", etc.) and orientation
+        function findEdge(state, color1, color2) {
             for (const edgeKey of EDGE_KEYS) {
-                const s1 = state[EDGE_STICKERS[edgeKey][0]];
-                const s2 = state[EDGE_STICKERS[edgeKey][1]];
-                if ((s1 === color1 && s2 === color2) || (s1 === color2 && s2 === color1)) {
-                    return { key: edgeKey, s1Color: s1, s2Color: s2 };
+                const s1Idx = EDGE_STICKERS[edgeKey][0];
+                const s2Idx = EDGE_STICKERS[edgeKey][1];
+                const s1Color = state[s1Idx];
+                const s2Color = state[s2Idx];
+                if ((s1Color === color1 && s2Color === color2) || (s1Color === color2 && s2Color === color1)) {
+                    // Return which sticker index holds color1
+                    return { key: edgeKey, color1StickerIdx: (s1Color === color1 ? s1Idx : s2Idx), color2StickerIdx: (s1Color === color2 ? s1Idx : s2Idx) };
                 }
             }
-            return null; // Should not happen on a valid cube
+            return null;
         }
 
         function solveCubeAI_WhiteCross(state, solutionMoves) {
-            const MAX_ITERATIONS = 20; // Safety break for this stage
-            let iterations = 0;
-            
-            // Target white edges: UF, UR, UB, UL
-            const targetWhiteEdges = [
-                { piece: "UF", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.F, sideFace: 'F'},
-                { piece: "UR", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.R, sideFace: 'R'},
-                { piece: "UB", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.B, sideFace: 'B'},
-                { piece: "UL", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.L, sideFace: 'L'}
+            const MAX_TOTAL_MOVES_CROSS = 40; // Safety overall limit
+            const MAX_MOVES_PER_EDGE = 10;  // Safety per edge attempt
+            let crossPiecesSolved = 0;
+
+            const targetWhiteEdgesData = [ // U-sticker-idx, Side-sticker-idx, U-color, Side-color, Side-face-char
+                { uSticker: EDGE_STICKERS.UF[0], sideSticker: EDGE_STICKERS.UF[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.F, sideFace: 'F', key: 'UF'},
+                { uSticker: EDGE_STICKERS.UR[0], sideSticker: EDGE_STICKERS.UR[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.R, sideFace: 'R', key: 'UR'},
+                { uSticker: EDGE_STICKERS.UB[0], sideSticker: EDGE_STICKERS.UB[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.B, sideFace: 'B', key: 'UB'},
+                { uSticker: EDGE_STICKERS.UL[0], sideSticker: EDGE_STICKERS.UL[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.L, sideFace: 'L', key: 'UL'}
             ];
-
-            for (const targetEdge of targetWhiteEdges) {
-                if (iterations++ > MAX_ITERATIONS) { console.warn("White Cross: Max iterations reached"); break; }
-
-                let edgeLocation = findEdge(state, targetEdge.uColor, targetEdge.sideColor);
-                if (!edgeLocation) continue; // Should not happen
-
-                // Check if already solved
-                if (edgeLocation.key === targetEdge.piece && 
-                    state[EDGE_STICKERS[targetEdge.piece][0]] === targetEdge.uColor &&
-                    state[EDGE_STICKERS[targetEdge.piece][1]] === targetEdge.sideColor) {
-                    continue; // This edge is solved
-                }
-                
-                messageArea.textContent = `AI: Targeting ${targetEdge.uColor}-${targetEdge.sideColor} edge (found at ${edgeLocation.key})`;
-                
-                // Logic to bring the edge to U layer and orient it
-                // This is still simplified and will need many more cases for a robust solver
-                
-                // Case 1: Edge is in D layer
-                if (edgeLocation.key.startsWith("D")) {
-                    let alg = [];
-                    if (edgeLocation.s1Color === targetEdge.uColor) { // White is on D-face part
-                        // Rotate D to align sideColor with its center
-                        if      (edgeLocation.key === "DF" && targetEdge.sideFace !== 'F') alg.push(targetEdge.sideFace === 'R' ? "D" : targetEdge.sideFace === 'B' ? "D2" : "D'");
-                        else if (edgeLocation.key === "DR" && targetEdge.sideFace !== 'R') alg.push(targetEdge.sideFace === 'B' ? "D" : targetEdge.sideFace === 'L' ? "D2" : "D'");
-                        else if (edgeLocation.key === "DB" && targetEdge.sideFace !== 'B') alg.push(targetEdge.sideFace === 'L' ? "D" : targetEdge.sideFace === 'F' ? "D2" : "D'");
-                        else if (edgeLocation.key === "DL" && targetEdge.sideFace !== 'L') alg.push(targetEdge.sideFace === 'F' ? "D" : targetEdge.sideFace === 'R' ? "D2" : "D'");
-                        alg.push(targetEdge.sideFace + "2"); // Double turn the aligned side
-                    } else { // White is on the side-face part of D-layer edge
-                        // Rotate D to bring the edge to the slot corresponding to targetEdge.sideFace, but on D layer
-                        // e.g. if target is UF (side F), bring piece to DF slot
-                        if      (edgeLocation.key === "DR" && targetEdge.sideFace === 'F') alg.push("D'");
-                        else if (edgeLocation.key === "DB" && targetEdge.sideFace === 'F') alg.push("D2");
-                        else if (edgeLocation.key === "DL" && targetEdge.sideFace === 'F') alg.push("D");
-                        // ... (similar D rotations if targetEdge.sideFace is R, B, or L)
-                        // This alignment needs to be more precise based on current edgeLocation.key vs targetEdge.sideFace
-                        // For simplicity, assume we align it to be under the 'F' face if we want to use F moves
-                        // A more general approach involves cube rotations or relative moves
-                        alg.push(targetEdge.sideFace + "'", "U'", targetEdge.sideFace); // e.g. F' U' F
+            
+            for (let attempt = 0; attempt < MAX_TOTAL_MOVES_CROSS && crossPiecesSolved < 4; attempt++) {
+                let currentEdgeSolvedThisLoop = false;
+                for (const targetEdge of targetWhiteEdgesData) {
+                    // Check if this target edge is already solved
+                    if (state[targetEdge.uSticker] === targetEdge.uColor && state[targetEdge.sideSticker] === targetEdge.sideColor) {
+                        continue; // Already solved, move to next target
                     }
-                    alg.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, state); });
-                    iterations = 0; // Restart checks for all edges after a move
-                    break; // Re-evaluate all edges
-                }
-                // Case 2: Edge is in E Slice (middle layer, e.g., FR, FL, BR, BL)
-                else if (["FR", "FL", "BR", "BL"].includes(edgeLocation.key)) {
-                    let alg = [];
-                    // Example: if white-red edge is at FR slot, and we want it at UF
-                    // Move to D layer first: R U R' (moves FR to DF if white was on R face)
-                    // Or: F' U F (moves FR to DR if white was on F face)
-                    // This needs to know orientation to pick the right alg to D layer
-                    if (edgeLocation.key === "FR") alg.push("R", "U'", "R'"); // Simplified: just get it to D layer
-                    else if (edgeLocation.key === "FL") alg.push("L'", "U", "L");
-                    else if (edgeLocation.key === "BR") alg.push("R'", "U", "R");
-                    else if (edgeLocation.key === "BL") alg.push("L", "U'", "L'");
 
-                    alg.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, state); });
-                    iterations = 0; break; // Re-evaluate
+                    let edgeInfo = findEdge(state, targetEdge.uColor, targetEdge.sideColor);
+                    if (!edgeInfo) continue; // Should not happen
+
+                    messageArea.textContent = `AI: Cross - Targeting ${targetEdge.uColor}-${targetEdge.sideColor} (found at ${edgeInfo.key})`;
+                    let movesForThisEdge = [];
+                    let currentEdgeKey = edgeInfo.key;
+
+                    // --- Logic to bring edge to U layer and orient/position it ---
+                    // This is a complex state machine. Here's a simplified version.
+                    
+                    // 1. If edge is in U layer but wrong
+                    if (currentEdgeKey.startsWith('U')) {
+                        // If oriented wrong (white on side), or in wrong U slot
+                        // Simplest: move it to D layer to be re-processed
+                        // e.g., if UF edge is at UR slot, or UF is flipped at UF slot
+                        let uFaceOfPiece = currentEdgeKey.charAt(0); // e.g., 'U'
+                        let sideFaceOfPiece = currentEdgeKey.charAt(1); // e.g., 'F' from "UF"
+                        movesForThisEdge.push(sideFaceOfPiece + "2"); // Example: F2 to move UF to DF
+                    }
+                    // 2. If edge is in E slice (FR, FL, BR, BL)
+                    else if (["FR", "FL", "BR", "BL"].includes(currentEdgeKey)) {
+                        // Move to D layer. This depends on orientation.
+                        // Example for FR edge:
+                        // If white is on F-face of FR: F' D' F (moves to DF, white on D)
+                        // If white is on R-face of FR: R D R' (moves to DF, white on F)
+                        // Simplified: just get it out of E-slice with a basic move
+                        if (currentEdgeKey === "FR") movesForThisEdge.push("R"); // Moves FR to UR, might need more
+                        else if (currentEdgeKey === "FL") movesForThisEdge.push("L'");
+                        else if (currentEdgeKey === "BR") movesForThisEdge.push("R'");
+                        else if (currentEdgeKey === "BL") movesForThisEdge.push("L");
+                        // This is very naive and will likely mess up other pieces. A real solver
+                        // would use algorithms that preserve solved pieces or set up for D layer.
+                    }
+                    // 3. If edge is in D layer
+                    else if (currentEdgeKey.startsWith('D')) {
+                        let whiteOnDSide = state[EDGE_STICKERS[currentEdgeKey][0]] === LGC_U; // White is on D-face sticker
+                        let whiteOnSideFace = state[EDGE_STICKERS[currentEdgeKey][1]] === LGC_U; // White is on the side sticker of D-edge
+                        
+                        // Rotate D to bring the *target slot* of the D-layer (e.g. DF for UF target) under the target sideFace
+                        let dRotations = 0;
+                        // Example: if target is UF (side F), and piece is at DR. Need D to bring DR to DF position.
+                        if (currentEdgeKey === "DR" && targetEdge.sideFace === 'F') dRotations = 1; // D
+                        else if (currentEdgeKey === "DB" && targetEdge.sideFace === 'F') dRotations = 2; // D2
+                        else if (currentEdgeKey === "DL" && targetEdge.sideFace === 'F') dRotations = 3; // D'
+                        // ... (add similar logic for target R, B, L sideFaces)
+                        // This needs to map currentEdgeKey to how many D turns to get it to the D-slot *below* targetEdge.sideFace
+                        
+                        if (dRotations === 1) movesForThisEdge.push("D");
+                        else if (dRotations === 2) movesForThisEdge.push("D2");
+                        else if (dRotations === 3) movesForThisEdge.push("D'");
+
+                        // After D alignment, the piece is at the D-slot of targetEdge.sideFace
+                        // Now, apply algorithm based on orientation
+                        if (whiteOnDSide) { // White was on D face, now aligned under its side center
+                            movesForThisEdge.push(targetEdge.sideFace + "2");
+                        } else if (whiteOnSideFace) { // White was on side face, now aligned
+                            // Alg like F' U' F (if sideFace is F) - this needs to be relative to sideFace
+                            // Example: If sideFace = R, it would be R' U' R
+                            movesForThisEdge.push(targetEdge.sideFace + "'", "U'", targetEdge.sideFace);
+                        }
+                    }
+
+                    if (movesForThisEdge.length > 0 && movesForThisEdge.length <= MAX_MOVES_PER_EDGE) {
+                        movesForThisEdge.forEach(m => {
+                            solutionMoves.push(m);
+                            applyMoveToLogicalState(m, state);
+                        });
+                        currentEdgeSolvedThisLoop = true; // A change was made
+                        break; // Re-evaluate all edges from the new state
+                    }
+                } // end for each targetEdge
+                
+                if (!currentEdgeSolvedThisLoop && attempt > 0) { // No progress made for any edge this iteration
+                    // Check if all cross pieces are actually solved to prevent infinite loop on "almost solved"
+                    let tempSolvedCount = 0;
+                    for (const te of targetWhiteEdgesData) {
+                        if (state[te.uSticker] === te.uColor && state[te.sideSticker] === te.sideColor) {
+                            tempSolvedCount++;
+                        }
+                    }
+                    if (tempSolvedCount === 4) { crossPiecesSolved = 4; break; } // All solved
+                    if (attempt > MAX_TOTAL_MOVES_CROSS / 2) { // If stuck for a while
+                         console.warn("AI Cross: Stuck, breaking early."); break;
+                    }
                 }
-                // Case 3: Edge is in U layer but wrong
-                else if (edgeLocation.key.startsWith("U")) {
-                    // If correctly oriented but wrong slot, or wrong orientation
-                    // Simplest: move to D layer, e.g. F2 (if at UF), then re-solve from D.
-                    if (edgeLocation.key === "UF") solutionMoves.push("F2"); // Moves UF to DF
-                    else if (edgeLocation.key === "UR") solutionMoves.push("R2");
-                    else if (edgeLocation.key === "UB") solutionMoves.push("B2");
-                    else if (edgeLocation.key === "UL") solutionMoves.push("L2");
-                    solutionMoves.forEach(m => applyMoveToLogicalState(m, state));
-                    iterations = 0; break; // Re-evaluate
+
+                // Update count of truly solved cross pieces for loop termination
+                crossPiecesSolved = 0;
+                for (const te of targetWhiteEdgesData) {
+                    if (state[te.uSticker] === te.uColor && state[te.sideSticker] === te.sideColor) {
+                        crossPiecesSolved++;
+                    }
                 }
+                if (crossPiecesSolved === 4) break;
+
+            } // end attempt loop
+
+            if (crossPiecesSolved < 4) {
+                console.warn(`AI: White cross only partially solved (${crossPiecesSolved}/4).`);
             }
-            // After attempting to place all 4, one final check/alignment pass might be needed with U turns
-            // This part is omitted for brevity but crucial for a perfect cross
         }
 
         function solveCubeAI(logicalState) {
             let solutionMoves = [];
-            let currentLogicalState = JSON.parse(JSON.stringify(logicalState));
+            let currentLogicalState = JSON.parse(JSON.stringify(logicalState)); // Work on a copy
             
             solveCubeAI_WhiteCross(currentLogicalState, solutionMoves);
             
-            // Future stages:
+            // TODO: Future stages:
             // solveCubeAI_FirstLayerCorners(currentLogicalState, solutionMoves);
             // solveCubeAI_SecondLayerEdges(currentLogicalState, solutionMoves);
             // ... etc.
 
             if (solutionMoves.length === 0) {
-                 messageArea.textContent = "AI: No moves found (solver is very basic).";
+                 messageArea.textContent = "AI: No moves generated (solver is basic).";
             } else {
-                 messageArea.textContent = `AI: Generated ${solutionMoves.length} moves.`;
+                 messageArea.textContent = `AI: Generated ${solutionMoves.length} moves for White Cross attempt.`;
             }
             return solutionMoves;
         }
         // --- END LOGICAL CUBE STATE AND SOLVER ---
 
-        initThreeJS(); initUI(); animate();
-        function initThreeJS(){const c=document.getElementById('gameContainer'),e=document.getElementById('canvas');scene=new THREE.Scene();scene.background=new THREE.Color(0x0a000a);camera=new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,0.1,1000);camera.position.set(CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*2.5);camera.lookAt(0,0,0);renderer=new THREE.WebGLRenderer({canvas:e,antialias:true});renderer.setSize(c.clientWidth,c.clientHeight);scene.add(new THREE.AmbientLight(0xcccccc,0.7));const d=new THREE.DirectionalLight(0xffffff,0.9);d.position.set(1,1.5,1).normalize();scene.add(d);controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.1;controls.screenSpacePanning=false;controls.minDistance=CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.5;controls.maxDistance=CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*5;controls.target.set(0,0,0);pivot=new THREE.Object3D();scene.add(pivot);createRubiksCube();}
-        function initUI(){loadHighScores();displayHighScores();populateLessonsDropdown();setupEventListeners();showView('menu');}
-        function populateLessonsDropdown(){lessons.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.name;lessonSelect.appendChild(o);});}
-        function showView(vId){activeView=vId;mainMenuView.style.display='none';gameView.style.display='none';creditsView.style.display='none';let e=vId==='menu'?mainMenuView:vId==='game'?gameView:creditsView;if(e)e.style.display='flex';if(vId==='game'){if(currentMode)gameModeTitle.textContent=`${currentMode[0].toUpperCase()+currentMode.slice(1)} Mode`;updateGameUI();if(!renderer)initThreeJS();onWindowResize();}else stopTimer();if(vId==='menu')resetCubeStateForNewGame();}
-        function resetCubeStateForNewGame(){playModeState='IDLE';aiModeState='IDLE';lastScrambleSequence=[];learnModeState={currentLesson:null,algorithmMoves:[],currentMoveIndex:0,isLessonSetup:false,isWatchingAll:false};resetCubeVisuals();elapsedTime=0;updateTimerDisplay();sequenceInProgress=false;isAnimating=false;}
-        function createRubiksCube(){while(pivot.children.length>0)pivot.remove(pivot.children[0]);cubies.forEach(c=>scene.remove(c));cubies=[];const g=new THREE.BoxGeometry(CUBIE_SIZE,CUBIE_SIZE,CUBIE_SIZE),o=(CUBE_SIZE-1)/2*EFFECTIVE_CUBIE_SIZE;for(let x=0;x<CUBE_SIZE;x++)for(let y=0;y<CUBE_SIZE;y++)for(let z=0;z<CUBE_SIZE;z++){if(CUBE_SIZE>2&&x>0&&x<CUBE_SIZE-1&&y>0&&y<CUBE_SIZE-1&&z>0&&z<CUBE_SIZE-1)continue;const m=[new THREE.MeshStandardMaterial({color:(x===CUBE_SIZE-1)?VISUAL_COLORS.RIGHT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(x===0)?VISUAL_COLORS.LEFT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===CUBE_SIZE-1)?VISUAL_COLORS.UP:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===0)?VISUAL_COLORS.DOWN:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===CUBE_SIZE-1)?VISUAL_COLORS.FRONT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===0)?VISUAL_COLORS.BACK:VISUAL_COLORS.INTERNAL})];m.forEach(i=>{i.roughness=0.3;i.metalness=0.1;});const c=new THREE.Mesh(g,m);const pX=x*EFFECTIVE_CUBIE_SIZE-o,pY=y*EFFECTIVE_CUBIE_SIZE-o,pZ=z*EFFECTIVE_CUBIE_SIZE-o;c.position.set(pX,pY,pZ);c.userData={initialLogicX:x,initialLogicY:y,initialLogicZ:z,initialWorldPos:new THREE.Vector3(pX,pY,pZ),initialQuaternion:c.quaternion.clone()};cubies.push(c);scene.add(c);}}
-        function setupEventListeners(){window.addEventListener('resize',onWindowResize,false);menuPlayBtn.addEventListener('click',()=>{currentMode='play';showView('game');});menuAiBtn.addEventListener('click',()=>{currentMode='ai';showView('game');});menuLearnBtn.addEventListener('click',()=>{currentMode='learn';showView('game');});menuCreditsBtn.addEventListener('click',()=>{showView('credits');});backToMenuBtn.addEventListener('click',()=>{showView('menu');});creditsBackToMenuBtn.addEventListener('click',()=>{showView('menu');});scrambleBtn.addEventListener('click',handleScramble);startSolveBtn.addEventListener('click',handleStartSolving);startAiDemoBtn.addEventListener('click',handleStartAiSolver);resetCubeBtn.addEventListener('click',handleResetCube);allMoveButtons.forEach(b=>{b.addEventListener('click',()=>{if(isAnimating||sequenceInProgress)return;if(currentMode==='play'&&playModeState!=='SOLVING')return;if(currentMode==='ai'||currentMode==='learn')return;performMove(b.dataset.move,s=>{if(currentMode==='play'&&playModeState==='SOLVING')checkIfSolved();});});});lessonSelect.addEventListener('change',handleLessonSelection);setupLessonBtn.addEventListener('click',handleSetupLesson);watchAlgorithmBtn.addEventListener('click',handleWatchAlgorithm);nextLessonMoveBtn.addEventListener('click',handleNextLessonMove);}
-        function updateGameUI(){if(activeView!=='game')return;const a=isAnimating||sequenceInProgress;controls.enabled=!a;scrambleBtn.style.display='inline-block';startSolveBtn.style.display='none';startAiDemoBtn.style.display='none';learnModeSpecificControls.style.display='none';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.disabled=a;resetCubeBtn.disabled=a;if(currentMode==='play'){allMoveButtons.forEach(b=>b.disabled=(playModeState!=='SOLVING'||a));scrambleBtn.disabled=(playModeState==='SOLVING'||a);if(playModeState==='IDLE')messageArea.textContent="Scramble to begin.";else if(playModeState==='SCRAMBLED'){messageArea.textContent="Scrambled! Press 'Start Solving!'";if(!a){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=false;}}else if(playModeState==='SOLVING'){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=true;messageArea.textContent="Timer on! Solve!";}}else if(currentMode==='ai'){startAiDemoBtn.style.display='inline-block';startAiDemoBtn.textContent="Start AI Solver";allMoveButtons.forEach(b=>b.disabled=true);startAiDemoBtn.disabled=(aiModeState==='DEMOING'||a||lastScrambleSequence.length===0);scrambleBtn.disabled=(aiModeState==='DEMOING'||a);if(aiModeState==='IDLE')messageArea.textContent=`AI: ${lastScrambleSequence.length > 0 ? "Scrambled. " : ""}Scramble or 'Start AI Solver'.`;else if(aiModeState==='SCRAMBLED')messageArea.textContent="Scrambled. Start AI Solver.";else if(aiModeState==='DEMOING')messageArea.textContent="AI attempting to solve...";}else if(currentMode==='learn'){learnModeSpecificControls.style.display='block';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.style.display='none';const l=!!learnModeState.currentLesson,c=learnModeState.isLessonSetup&&!a&&!learnModeState.isWatchingAll;setupLessonBtn.disabled=!l||a||learnModeState.isWatchingAll;watchAlgorithmBtn.disabled=!learnModeState.isLessonSetup||a||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0;nextLessonMoveBtn.disabled=!c||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length;resetCubeBtn.disabled=a||learnModeState.isWatchingAll;if(!l)messageArea.textContent="Select a lesson.";else if(!learnModeState.isLessonSetup)messageArea.textContent=`Lesson: ${learnModeState.currentLesson.name}. Press 'Set up'.`;else{if(learnModeState.isWatchingAll)messageArea.textContent=`AI showing: ${learnModeState.currentLesson.name} (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length})`;else messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}. Watch/step. (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;if(learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length&&learnModeState.algorithmMoves.length>0)messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;}}}
-        function onWindowResize(){if(activeView!=='game'||!renderer)return;const c=document.getElementById('gameContainer');camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix();renderer.setSize(c.clientWidth,c.clientHeight);}
-        function getCubiesInLayer(x,i){const l=[];const o=(CUBE_SIZE-1)/2;const t=(i-o)*EFFECTIVE_CUBIE_SIZE;cubies.forEach(c=>{let p=(x==='x')?c.position.x:(x==='y')?c.position.y:c.position.z;if(Math.abs(p-t)<EFFECTIVE_CUBIE_SIZE/2)l.push(c);});return l;}
-        function rotateLayerAroundAxis(ax,lIdx,ang,cb){isAnimating=true;controls.enabled=false;updateGameUI();pivot.rotation.set(0,0,0);pivot.position.set(0,0,0);const lCub=getCubiesInLayer(ax,lIdx);if(lCub.length===0){isAnimating=false;controls.enabled=true;updateGameUI();if(cb)cb(true);return;}lCub.forEach(c=>pivot.attach(c));letcA=0;const tA=ang;const spd=0.08;function anim(){let dA=tA*spd;if(Math.abs(cA+dA)>=Math.abs(tA))dA=tA-cA;if(ax==='x')pivot.rotation.x+=dA;else if(ax==='y')pivot.rotation.y+=dA;else pivot.rotation.z+=dA;cA+=dA;if(Math.abs(cA-tA)<0.001){if(ax==='x')pivot.rotation.x=tA;else if(ax==='y')pivot.rotation.y=tA;else pivot.rotation.z=tA;[...lCub].forEach(c=>scene.attach(c));cubies.forEach(c=>{c.position.x=Math.round(c.position.x/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;c.position.y=Math.round(c.position.y/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;c.position.z=Math.round(c.position.z/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;});isAnimating=false;controls.enabled=true;updateGameUI();if(cb)cb(true);}else requestAnimationFrame(anim);}anim();}
-        function performMove(mv,cb){if(isAnimating){if(cb)cb(false);return;}const P2=Math.PI/2;let a,l,d;switch(mv){case 'F':a='z';l=CUBE_SIZE-1;d=-1;break;case 'F\'':a='z';l=CUBE_SIZE-1;d=1;break;case 'B':a='z';l=0;d=1;break;case 'B\'':a='z';l=0;d=-1;break;case 'U':a='y';l=CUBE_SIZE-1;d=-1;break;case 'U\'':a='y';l=CUBE_SIZE-1;d=1;break;case 'D':a='y';l=0;d=1;break;case 'D\'':a='y';l=0;d=-1;break;case 'R':a='x';l=CUBE_SIZE-1;d=-1;break;case 'R\'':a='x';l=CUBE_SIZE-1;d=1;break;case 'L':a='x';l=0;d=1;break;case 'L\'':a='x';l=0;d=-1;break;default:console.warn("Unknown move:",mv);if(cb)cb(false);return;}rotateLayerAroundAxis(a,l,d*P2,cb);}
-        function startFullMoveSequence(mvs,onD){if(sequenceInProgress||isAnimating){if(onD)onD(false);return;}currentSequenceQueue=[...mvs];onCurrentSequenceCompleteCallback=onD;sequenceInProgress=true;updateGameUI();executeNextMoveInCurrentSequence();}
-        function executeNextMoveInCurrentSequence(){if(currentSequenceQueue.length>0){const m=currentSequenceQueue.shift();performMove(m,s=>{if(!s){sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(false);updateGameUI();return;}if(currentSequenceQueue.length>0)setTimeout(executeNextMoveInCurrentSequence,75);else{sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(true);onCurrentSequenceCompleteCallback=null;updateGameUI();}});}else{sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(true);onCurrentSequenceCompleteCallback=null;updateGameUI();}}
-        function resetCubeVisuals(){createRubiksCube();if(controls)controls.reset();camera.position.set(CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*2.5);camera.lookAt(0,0,0);if(controls)controls.target.set(0,0,0);}
-        function handleScramble(){if(sequenceInProgress||isAnimating)return;messageArea.textContent="Scrambling...";resetCubeVisuals();stopTimer();elapsedTime=0;updateTimerDisplay();const mvs=['F','F\'','B','B\'','U','U\'','D','D\'','R','R\'','L','L\''];lastScrambleSequence=[];let lM='',sLM='';for(let i=0;i<20+Math.floor(Math.random()*10);i++){let rM;do{rM=mvs[Math.floor(Math.random()*mvs.length)];}while(rM===lM||(rM[0]===lM[0]&&rM[0]===sLM[0]));lastScrambleSequence.push(rM);sLM=lM;lM=rM;}startFullMoveSequence([...lastScrambleSequence],s=>{if(s){if(currentMode==='play')playModeState='SCRAMBLED';else if(currentMode==='ai')aiModeState='SCRAMBLED';messageArea.textContent="Cube scrambled!";}else messageArea.textContent="Scramble fail.";updateGameUI();});}
-        function handleResetCube(){if(isAnimating||sequenceInProgress)return;learnModeState.isWatchingAll=false;stopTimer();elapsedTime=0;updateTimerDisplay();resetCubeVisuals();lastScrambleSequence=[];if(currentMode==='play')playModeState='IDLE';else if(currentMode==='ai')aiModeState='IDLE';else if(currentMode==='learn'){learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.algorithmMoves=learnModeState.currentLesson?[...learnModeState.currentLesson.algorithm]:[];}messageArea.textContent="Cube reset.";updateGameUI();}
-        function handleStartSolving(){if(currentMode!=='play'||playModeState!=='SCRAMBLED'||isAnimating||sequenceInProgress)return;playModeState='SOLVING';startTimer();updateGameUI();}
-        function handleStartAiSolver(){if(currentMode!=='ai'||isAnimating||sequenceInProgress||aiModeState==='DEMOING'||lastScrambleSequence.length===0)return;aiModeState='DEMOING';messageArea.textContent="AI applying current scramble to its logic...";startTimer();const lgSt=getLogicalStateFromScramble(lastScrambleSequence);const aiMvs=solveCubeAI(lgSt);if(aiMvs&&aiMvs.length>0){messageArea.textContent=`AI Solver found ${aiMvs.length} moves. Animating...`;startFullMoveSequence(aiMvs,s=>{stopTimer();if(s){messageArea.textContent=`AI Solver finished in ${elapsedTime.toFixed(2)}s. (Logical state in console)`;console.log("Logical state after AI attempt:",lgSt);}else messageArea.textContent=`AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;aiModeState='IDLE';updateGameUI();});}else{stopTimer();messageArea.textContent="AI Solver found no moves (solver still basic).";aiModeState='IDLE';updateGameUI();}}
-        function handleLessonSelection(){const lId=lessonSelect.value;learnModeState.currentLesson=lessons.find(l=>l.id===lId)||null;learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=false;if(learnModeState.currentLesson){lessonDescription.textContent=learnModeState.currentLesson.description;algorithmDisplay.textContent=learnModeState.currentLesson.algorithm.join(' ');learnModeState.algorithmMoves=[...learnModeState.currentLesson.algorithm];}else{lessonDescription.textContent="";algorithmDisplay.textContent="";learnModeState.algorithmMoves=[];}updateGameUI();}
-        function handleSetupLesson(){if(!learnModeState.currentLesson||isAnimating||sequenceInProgress||learnModeState.isWatchingAll)return;messageArea.textContent=`Setting up: ${learnModeState.currentLesson.name}`;resetCubeVisuals();learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;updateGameUI();startFullMoveSequence([...learnModeState.currentLesson.initialScramble],s=>{if(s){learnModeState.isLessonSetup=true;messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}.`;}else messageArea.textContent=`Setup for ${learnModeState.currentLesson.name} failed.`;updateGameUI();});}
-        function handleWatchAlgorithm(){if(!learnModeState.isLessonSetup||sequenceInProgress||isAnimating||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0)return;messageArea.textContent=`AI performing: ${learnModeState.currentLesson.name}`;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=true;updateGameUI();playNextLearnAlgorithmMove();}
-        function handleNextLessonMove(){if(!learnModeState.isLessonSetup||sequenceInProgress||isAnimating||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length)return;playNextLearnAlgorithmMove();}
-        function playNextLearnAlgorithmMove(){if(!learnModeState.isLessonSetup||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length){learnModeState.isWatchingAll=false;if(learnModeState.currentLesson&&learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length)messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;updateGameUI();return;}if(isAnimating){setTimeout(playNextLearnAlgorithmMove,50);return;}const m=learnModeState.algorithmMoves[learnModeState.currentMoveIndex];messageArea.textContent=`Learning ${learnModeState.currentMoveIndex+1}/${learnModeState.algorithmMoves.length}: ${m}`;performMove(m,s=>{if(!s){learnModeState.isWatchingAll=false;updateGameUI();return;}learnModeState.currentMoveIndex++;updateGameUI();if(learnModeState.isWatchingAll&&learnModeState.currentMoveIndex<learnModeState.algorithmMoves.length)setTimeout(playNextLearnAlgorithmMove,300);else if(learnModeState.isWatchingAll&&learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length){learnModeState.isWatchingAll=false;messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;updateGameUI();}});}
-        function startTimer(){if(timerInterval)clearInterval(timerInterval);startTime=Date.now()-(elapsedTime*1000);timerInterval=setInterval(()=>{elapsedTime=(Date.now()-startTime)/1000;updateTimerDisplay();},100);}
-        function stopTimer(){clearInterval(timerInterval);timerInterval=null;}
-        function updateTimerDisplay(){timerDisplay.textContent=`Time: ${elapsedTime.toFixed(2)}s`;}
-        function isSolved(){const e=0.01;for(const c of cubies){if(c.position.distanceTo(c.userData.initialWorldPos)>e)return false;if(Math.abs(Math.abs(c.quaternion.dot(c.userData.initialQuaternion))-1.0)>e)return false;}return true;}
-        function checkIfSolved(){if(currentMode==='play'&&isSolved()){stopTimer();messageArea.textContent=`CONGRATULATIONS! Solved in ${elapsedTime.toFixed(2)}s!`;addHighScore(elapsedTime);playModeState='IDLE';updateGameUI();}}
-        function loadHighScores(){const s=localStorage.getItem('retroRubiksHighScores');if(s)highScores=JSON.parse(s);}
-        function saveHighScores(){localStorage.setItem('retroRubiksHighScores',JSON.stringify(highScores));}
-        function addHighScore(t){const sc={time:parseFloat(t.toFixed(2))};highScores.push(sc);highScores.sort((a,b)=>a.time-b.time);highScores=highScores.slice(0,MAX_HIGH_SCORES);saveHighScores();displayHighScores();}
-        function displayHighScores(){highScoresList.innerHTML='';if(highScores.length===0)highScoresList.innerHTML="<li>No scores yet.</li>";else highScores.forEach(s=>highScoresList.innerHTML+=`<li>${s.time.toFixed(2)}s</li>`);}
-        function animate(){requestAnimationFrame(animate);if(controls&&controls.enabled)controls.update();if(renderer&&scene&&camera)renderer.render(scene,camera);}
+        // --- Initialize ---
+        initThreeJS();
+        initUI();
+        animate();
+
+        function initThreeJS() {
+            const container = document.getElementById('gameContainer');
+            const canvasEl = document.getElementById('canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a000a);
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0, 0, 0);
+            renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 0.7);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            directionalLight.position.set(1, 1.5, 1).normalize();
+            scene.add(directionalLight);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.screenSpacePanning = false;
+            controls.minDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.5;
+            controls.maxDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 5;
+            controls.target.set(0, 0, 0);
+            pivot = new THREE.Object3D();
+            scene.add(pivot);
+            createRubiksCube();
+        }
+
+        function initUI() {
+            loadHighScores();
+            displayHighScores();
+            populateLessonsDropdown();
+            setupEventListeners();
+            showView('menu');
+        }
+
+        function populateLessonsDropdown() {
+            lessons.forEach(lesson => {
+                const option = document.createElement('option');
+                option.value = lesson.id;
+                option.textContent = lesson.name;
+                lessonSelect.appendChild(option);
+            });
+        }
+
+        function showView(viewId) {
+            activeView = viewId;
+            mainMenuView.style.display = 'none';
+            gameView.style.display = 'none';
+            creditsView.style.display = 'none';
+
+            let elementToShow;
+            if (viewId === 'menu') elementToShow = mainMenuView;
+            else if (viewId === 'game') elementToShow = gameView;
+            else if (viewId === 'credits') elementToShow = creditsView;
+
+            if (elementToShow) elementToShow.style.display = 'flex';
+
+            if (viewId === 'game') {
+                if (currentMode) gameModeTitle.textContent = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode`;
+                else gameModeTitle.textContent = "Game Mode";
+                updateGameUI();
+                if (!renderer) initThreeJS(); // Should not happen if init order is correct
+                onWindowResize();
+            } else {
+                stopTimer();
+            }
+            if (viewId === 'menu') {
+                resetCubeStateForNewGame();
+            }
+        }
+        
+        function resetCubeStateForNewGame() {
+            playModeState = 'IDLE';
+            aiModeState = 'IDLE';
+            lastScrambleSequence = [];
+            learnModeState = { currentLesson: null, algorithmMoves: [], currentMoveIndex: 0, isLessonSetup: false, isWatchingAll: false };
+            resetCubeVisuals();
+            elapsedTime = 0;
+            updateTimerDisplay();
+            sequenceInProgress = false;
+            isAnimating = false;
+        }
+
+        function createRubiksCube() {
+            while (pivot.children.length > 0) {
+                pivot.remove(pivot.children[0]);
+            }
+            cubies.forEach(cubie => scene.remove(cubie));
+            cubies = [];
+
+            const geometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+            const offset = (CUBE_SIZE - 1) / 2 * EFFECTIVE_CUBIE_SIZE;
+
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        if (CUBE_SIZE > 2 && x > 0 && x < CUBE_SIZE - 1 && y > 0 && y < CUBE_SIZE - 1 && z > 0 && z < CUBE_SIZE - 1) {
+                            continue; // Skip internal cubie for CUBE_SIZE > 2
+                        }
+                        const materials = [
+                            new THREE.MeshStandardMaterial({ color: (x === CUBE_SIZE - 1) ? VISUAL_COLORS.RIGHT : VISUAL_COLORS.INTERNAL }),
+                            new THREE.MeshStandardMaterial({ color: (x === 0) ? VISUAL_COLORS.LEFT : VISUAL_COLORS.INTERNAL }),
+                            new THREE.MeshStandardMaterial({ color: (y === CUBE_SIZE - 1) ? VISUAL_COLORS.UP : VISUAL_COLORS.INTERNAL }),
+                            new THREE.MeshStandardMaterial({ color: (y === 0) ? VISUAL_COLORS.DOWN : VISUAL_COLORS.INTERNAL }),
+                            new THREE.MeshStandardMaterial({ color: (z === CUBE_SIZE - 1) ? VISUAL_COLORS.FRONT : VISUAL_COLORS.INTERNAL }),
+                            new THREE.MeshStandardMaterial({ color: (z === 0) ? VISUAL_COLORS.BACK : VISUAL_COLORS.INTERNAL })
+                        ];
+                        materials.forEach(mat => { mat.roughness = 0.3; mat.metalness = 0.1; });
+
+                        const cubie = new THREE.Mesh(geometry, materials);
+                        const posX = x * EFFECTIVE_CUBIE_SIZE - offset;
+                        const posY = y * EFFECTIVE_CUBIE_SIZE - offset;
+                        const posZ = z * EFFECTIVE_CUBIE_SIZE - offset;
+                        cubie.position.set(posX, posY, posZ);
+                        cubie.userData = {
+                            initialLogicX: x, initialLogicY: y, initialLogicZ: z,
+                            initialWorldPos: new THREE.Vector3(posX, posY, posZ),
+                            initialQuaternion: cubie.quaternion.clone()
+                        };
+                        cubies.push(cubie);
+                        scene.add(cubie);
+                    }
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            window.addEventListener('resize', onWindowResize, false);
+            menuPlayBtn.addEventListener('click', () => { currentMode = 'play'; showView('game'); });
+            menuAiBtn.addEventListener('click', () => { currentMode = 'ai'; showView('game'); });
+            menuLearnBtn.addEventListener('click', () => { currentMode = 'learn'; showView('game'); });
+            menuCreditsBtn.addEventListener('click', () => showView('credits'));
+            backToMenuBtn.addEventListener('click', () => showView('menu'));
+            creditsBackToMenuBtn.addEventListener('click', () => showView('menu'));
+            scrambleBtn.addEventListener('click', handleScramble);
+            startSolveBtn.addEventListener('click', handleStartSolving);
+            startAiDemoBtn.addEventListener('click', handleStartAiSolver);
+            resetCubeBtn.addEventListener('click', handleResetCube);
+            allMoveButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (isAnimating || sequenceInProgress) return;
+                    if (currentMode === 'play' && playModeState !== 'SOLVING') return;
+                    if (currentMode === 'ai' || currentMode === 'learn') return; // AI/Learn moves are triggered by their own logic
+                    const move = button.dataset.move;
+                    performMove(move, (success) => {
+                        if (success && currentMode === 'play' && playModeState === 'SOLVING') {
+                            checkIfSolved();
+                        }
+                    });
+                });
+            });
+            lessonSelect.addEventListener('change', handleLessonSelection);
+            setupLessonBtn.addEventListener('click', handleSetupLesson);
+            watchAlgorithmBtn.addEventListener('click', handleWatchAlgorithm);
+            nextLessonMoveBtn.addEventListener('click', handleNextLessonMove);
+        }
+
+        function updateGameUI() {
+            if (activeView !== 'game') return;
+            const anyAnimationRunning = isAnimating || sequenceInProgress;
+            controls.enabled = !anyAnimationRunning;
+
+            // Default states
+            scrambleBtn.style.display = 'inline-block';
+            startSolveBtn.style.display = 'none';
+            startAiDemoBtn.style.display = 'none';
+            learnModeSpecificControls.style.display = 'none';
+            allMoveButtons.forEach(btn => btn.disabled = true);
+            
+            scrambleBtn.disabled = anyAnimationRunning;
+            resetCubeBtn.disabled = anyAnimationRunning;
+
+            if (currentMode === 'play') {
+                allMoveButtons.forEach(btn => btn.disabled = (playModeState !== 'SOLVING' || anyAnimationRunning));
+                scrambleBtn.disabled = (playModeState === 'SOLVING' || anyAnimationRunning);
+
+                if (playModeState === 'IDLE') {
+                    messageArea.textContent = "Scramble the cube to begin.";
+                } else if (playModeState === 'SCRAMBLED') {
+                    messageArea.textContent = "Cube scrambled! Press 'Start Solving!'";
+                    if (!anyAnimationRunning) {
+                         startSolveBtn.style.display = 'inline-block';
+                         startSolveBtn.disabled = false;
+                    }
+                } else if (playModeState === 'SOLVING') {
+                    startSolveBtn.style.display = 'inline-block';
+                    startSolveBtn.disabled = true; 
+                    messageArea.textContent = "Timer started! Solve the cube!";
+                }
+            } else if (currentMode === 'ai') {
+                startAiDemoBtn.style.display = 'inline-block';
+                startAiDemoBtn.textContent = "Start AI Solver";
+                allMoveButtons.forEach(btn => btn.disabled = true);
+                startAiDemoBtn.disabled = (aiModeState === 'DEMOING' || anyAnimationRunning || lastScrambleSequence.length === 0);
+                scrambleBtn.disabled = (aiModeState === 'DEMOING' || anyAnimationRunning);
+
+                if (aiModeState === 'IDLE') messageArea.textContent = `AI Mode: ${lastScrambleSequence.length > 0 ? "Current scramble active. " : ""}Scramble cube then 'Start AI Solver'.`;
+                else if (aiModeState === 'SCRAMBLED') messageArea.textContent = "Cube scrambled. Press 'Start AI Solver'.";
+                else if (aiModeState === 'DEMOING') messageArea.textContent = "AI is attempting to solve...";
+            
+            } else if (currentMode === 'learn') {
+                learnModeSpecificControls.style.display = 'block';
+                allMoveButtons.forEach(btn => btn.disabled = true);
+                scrambleBtn.style.display = 'none';
+                
+                const lessonSelected = !!learnModeState.currentLesson;
+                const canInteractLesson = learnModeState.isLessonSetup && !anyAnimationRunning && !learnModeState.isWatchingAll;
+
+                setupLessonBtn.disabled = !lessonSelected || anyAnimationRunning || learnModeState.isWatchingAll;
+                watchAlgorithmBtn.disabled = !learnModeState.isLessonSetup || anyAnimationRunning || learnModeState.isWatchingAll || learnModeState.currentMoveIndex > 0;
+                nextLessonMoveBtn.disabled = !canInteractLesson || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length;
+                resetCubeBtn.disabled = anyAnimationRunning || learnModeState.isWatchingAll;
+
+                if (!lessonSelected) {
+                    messageArea.textContent = "Select a lesson from the dropdown.";
+                } else if (!learnModeState.isLessonSetup) {
+                    messageArea.textContent = `Lesson: ${learnModeState.currentLesson.name}. Press 'Set up for Lesson'.`;
+                } else {
+                    if (learnModeState.isWatchingAll) {
+                        messageArea.textContent = `AI showing: ${learnModeState.currentLesson.name} (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length})`;
+                    } else {
+                        messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. Watch or step through. (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;
+                    }
+                    if (learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length && learnModeState.algorithmMoves.length > 0) {
+                       messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete. Reset or choose another.`;
+                    }
+                }
+            }
+        }
+
+        function onWindowResize() {
+            if (activeView !== 'game' || !renderer) return;
+            const container = document.getElementById('gameContainer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function getCubiesInLayer(axis, layerIndex) {
+            const layerCubies = [];
+            const centerOffset = (CUBE_SIZE - 1) / 2;
+            const targetPos = (layerIndex - centerOffset) * EFFECTIVE_CUBIE_SIZE;
+            cubies.forEach(cubie => {
+                let cubiePosOnAxis = (axis === 'x') ? cubie.position.x : (axis === 'y') ? cubie.position.y : cubie.position.z;
+                if (Math.abs(cubiePosOnAxis - targetPos) < EFFECTIVE_CUBIE_SIZE / 2) {
+                    layerCubies.push(cubie);
+                }
+            });
+            return layerCubies;
+        }
+
+        function rotateLayerAroundAxis(axis, layerIndex, angle, onCompleteCallback) {
+            isAnimating = true;
+            controls.enabled = false;
+            updateGameUI();
+            pivot.rotation.set(0, 0, 0);
+            pivot.position.set(0, 0, 0);
+            const layerCubies = getCubiesInLayer(axis, layerIndex);
+
+            if (layerCubies.length === 0) {
+                isAnimating = false;
+                controls.enabled = true;
+                updateGameUI();
+                if (onCompleteCallback) onCompleteCallback(true);
+                return;
+            }
+            layerCubies.forEach(cubie => pivot.attach(cubie));
+            
+            let currentAngle = 0; // Fixed: was 'cA'
+            const targetAngle = angle;
+            const animationSpeed = 0.08; // Slower for clarity, adjust as needed
+
+            function animateRotationStep() {
+                let deltaAngle = targetAngle * animationSpeed;
+                if (Math.abs(currentAngle + deltaAngle) >= Math.abs(targetAngle)) {
+                    deltaAngle = targetAngle - currentAngle;
+                }
+                if (axis === 'x') pivot.rotation.x += deltaAngle;
+                else if (axis === 'y') pivot.rotation.y += deltaAngle;
+                else pivot.rotation.z += deltaAngle;
+                currentAngle += deltaAngle;
+
+                if (Math.abs(currentAngle - targetAngle) < 0.001) { // Animation complete
+                    if (axis === 'x') pivot.rotation.x = targetAngle;
+                    else if (axis === 'y') pivot.rotation.y = targetAngle;
+                    else pivot.rotation.z = targetAngle;
+                    
+                    [...layerCubies].forEach(cubie => scene.attach(cubie)); // Re-parent to scene
+                    
+                    cubies.forEach(c => { // Snap positions and orientations
+                        c.position.x = Math.round(c.position.x / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        c.position.y = Math.round(c.position.y / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        c.position.z = Math.round(c.position.z / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        // Snapping quaternion is harder, usually handled by attach/detach correctly.
+                        // If drift occurs, more complex normalization is needed or rounding Euler angles.
+                    });
+                    isAnimating = false;
+                    controls.enabled = true;
+                    updateGameUI();
+                    if (onCompleteCallback) onCompleteCallback(true); // Rotation succeeded
+                } else {
+                    requestAnimationFrame(animateRotationStep);
+                }
+            }
+            animateRotationStep();
+        }
+
+        function performMove(moveNotation, onCompleteCallback) {
+            if (isAnimating) {
+                if (onCompleteCallback) onCompleteCallback(false);
+                return;
+            }
+            const PI_2 = Math.PI / 2;
+            let axis, layer, direction;
+            switch (moveNotation) {
+                case 'F':  axis = 'z'; layer = CUBE_SIZE - 1; direction = -1; break; 
+                case 'F\'': axis = 'z'; layer = CUBE_SIZE - 1; direction = 1;  break; 
+                case 'B':  axis = 'z'; layer = 0; direction = 1;  break; 
+                case 'B\'': axis = 'z'; layer = 0; direction = -1; break;
+                case 'U':  axis = 'y'; layer = CUBE_SIZE - 1; direction = -1; break; 
+                case 'U\'': axis = 'y'; layer = CUBE_SIZE - 1; direction = 1;  break;
+                case 'D':  axis = 'y'; layer = 0; direction = 1;  break; 
+                case 'D\'': axis = 'y'; layer = 0; direction = -1; break;
+                case 'R':  axis = 'x'; layer = CUBE_SIZE - 1; direction = -1; break; 
+                case 'R\'': axis = 'x'; layer = CUBE_SIZE - 1; direction = 1;  break;
+                case 'L':  axis = 'x'; layer = 0; direction = 1;  break; 
+                case 'L\'': axis = 'x'; layer = 0; direction = -1; break;
+                default: 
+                    console.warn("Unknown move:", moveNotation);
+                    if (onCompleteCallback) onCompleteCallback(false);
+                    return;
+            }
+            rotateLayerAroundAxis(axis, layer, direction * PI_2, onCompleteCallback);
+        }
+
+        function startFullMoveSequence(moves, onCompleteAll) {
+            if (sequenceInProgress || isAnimating) {
+                console.warn("Cannot start new sequence, one is already in progress or a move is animating.");
+                if (onCompleteAll) onCompleteAll(false);
+                return;
+            }
+            currentSequenceQueue = [...moves]; // Use a copy
+            onCurrentSequenceCompleteCallback = onCompleteAll;
+            sequenceInProgress = true;
+            updateGameUI(); 
+            executeNextMoveInCurrentSequence();
+        }
+
+        function executeNextMoveInCurrentSequence() {
+            if (currentSequenceQueue.length > 0) {
+                const move = currentSequenceQueue.shift();
+                performMove(move, (success) => {
+                    if (!success) {
+                        console.warn(`Move ${move} in sequence failed or was skipped. Aborting sequence.`);
+                        sequenceInProgress = false;
+                        if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(false);
+                        updateGameUI();
+                        return;
+                    }
+                    // Move successful, isAnimating is now false from performMove's callback chain
+                    if (currentSequenceQueue.length > 0) {
+                        setTimeout(executeNextMoveInCurrentSequence, 75); // Visual pace between moves
+                    } else {
+                        // Sequence fully completed
+                        sequenceInProgress = false;
+                        if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(true);
+                        onCurrentSequenceCompleteCallback = null; // Clear callback once done
+                        updateGameUI(); 
+                    }
+                });
+            } else { // Should only happen if initial moves array was empty
+                sequenceInProgress = false;
+                if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(true);
+                onCurrentSequenceCompleteCallback = null;
+                updateGameUI();
+            }
+        }
+        
+        function resetCubeVisuals() {
+            createRubiksCube();
+            if (controls) controls.reset();
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0,0,0);
+            if (controls) controls.target.set(0,0,0);
+        }
+
+        function handleScramble() {
+            if (sequenceInProgress || isAnimating) return;
+            messageArea.textContent = "Scrambling...";
+            resetCubeVisuals(); 
+            stopTimer(); 
+            elapsedTime = 0; 
+            updateTimerDisplay();
+
+            const baseMoves = ['F', 'B', 'U', 'D', 'R', 'L'];
+            const modifiers = ['', "'", '2'];
+            lastScrambleSequence = []; // Clear previous scramble
+            let previousMoveFace = '';
+            let secondPreviousMoveFace = '';
+
+            const numScrambleMoves = 20 + Math.floor(Math.random() * 11); // 20-30 moves
+
+            for (let i = 0; i < numScrambleMoves; i++) {
+                let randomFace, randomModifier, move;
+                do {
+                    randomFace = baseMoves[Math.floor(Math.random() * baseMoves.length)];
+                } while (randomFace === previousMoveFace || (randomFace === secondPreviousMoveFace && areOppositeFaces(randomFace, previousMoveFace)));
+                // Avoid F F' F by not just repeating the face, but also not immediately undoing with F F'
+                // A simple way is to avoid F B F or F F F scenarios.
+                // More complex: avoid F B F if B is opposite of F, etc.
+
+                randomModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+                move = randomFace + randomModifier;
+                
+                lastScrambleSequence.push(move);
+                secondPreviousMoveFace = previousMoveFace;
+                previousMoveFace = randomFace;
+            }
+            
+            startFullMoveSequence([...lastScrambleSequence], (success) => { // Use a copy for the sequence
+                if (success) {
+                    if (currentMode === 'play') playModeState = 'SCRAMBLED';
+                    else if (currentMode === 'ai') aiModeState = 'SCRAMBLED'; // AI mode can also have a scrambled state
+                    messageArea.textContent = "Cube scrambled!";
+                } else {
+                    messageArea.textContent = "Scramble interrupted or failed.";
+                }
+                updateGameUI(); 
+            });
+        }
+        // Helper for scramble to avoid direct opposites if needed, though simple face check is often enough
+        function areOppositeFaces(face1, face2) {
+            const opposites = { 'F': 'B', 'B': 'F', 'U': 'D', 'D': 'U', 'R': 'L', 'L': 'R' };
+            return opposites[face1] === face2;
+        }
+
+
+        function handleResetCube() {
+            if (isAnimating || sequenceInProgress) return; // Don't reset if something is actively moving
+            learnModeState.isWatchingAll = false; // Stop any learn mode auto-play
+            stopTimer();
+            elapsedTime = 0;
+            updateTimerDisplay();
+            resetCubeVisuals();
+            lastScrambleSequence = []; // Clear the stored scramble
+
+            if (currentMode === 'play') playModeState = 'IDLE';
+            else if (currentMode === 'ai') aiModeState = 'IDLE';
+            else if (currentMode === 'learn') {
+                learnModeState.isLessonSetup = false;
+                learnModeState.currentMoveIndex = 0;
+                learnModeState.algorithmMoves = learnModeState.currentLesson ? [...learnModeState.currentLesson.algorithm] : [];
+            }
+            messageArea.textContent = "Cube reset.";
+            updateGameUI();
+        }
+
+        function handleStartSolving() { 
+            if (currentMode !== 'play' || playModeState !== 'SCRAMBLED' || isAnimating || sequenceInProgress) return;
+            playModeState = 'SOLVING';
+            startTimer();
+            updateGameUI();
+        }
+
+        function handleStartAiSolver() { 
+            if (currentMode !== 'ai' || isAnimating || sequenceInProgress || aiModeState === 'DEMOING' || lastScrambleSequence.length === 0) {
+                if(lastScrambleSequence.length === 0 && currentMode === 'ai') {
+                    messageArea.textContent = "AI needs a scrambled cube first. Press Scramble.";
+                }
+                return;
+            }
+            aiModeState = 'DEMOING';
+            messageArea.textContent = "AI applying current scramble to its internal logic...";
+            startTimer(); 
+            
+            const logicalStateForAI = getLogicalStateFromScramble(lastScrambleSequence); 
+            const aiGeneratedMoves = solveCubeAI(logicalStateForAI);
+
+            if (aiGeneratedMoves && aiGeneratedMoves.length > 0) {
+                messageArea.textContent = `AI Solver generated ${aiGeneratedMoves.length} moves. Animating...`;
+                startFullMoveSequence(aiGeneratedMoves, (success) => {
+                    stopTimer();
+                    if (success) {
+                        messageArea.textContent = `AI Solver finished its attempt in ${elapsedTime.toFixed(2)}s. (Logical state in console)`;
+                        console.log("Logical state after AI attempt:", logicalStateForAI); 
+                    } else {
+                        messageArea.textContent = `AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;
+                    }
+                    aiModeState = 'IDLE'; 
+                    updateGameUI();
+                });
+            } else {
+                stopTimer();
+                messageArea.textContent = "AI Solver found no moves (solver is still very basic).";
+                aiModeState = 'IDLE';
+                updateGameUI();
+            }
+        }
+
+        function handleLessonSelection() {
+            const lessonId = lessonSelect.value;
+            learnModeState.currentLesson = lessons.find(l => l.id === lessonId) || null;
+            learnModeState.isLessonSetup = false;
+            learnModeState.currentMoveIndex = 0;
+            learnModeState.isWatchingAll = false;
+            if (learnModeState.currentLesson) {
+                lessonDescription.textContent = learnModeState.currentLesson.description;
+                algorithmDisplay.textContent = learnModeState.currentLesson.algorithm.join(' ');
+                learnModeState.algorithmMoves = [...learnModeState.currentLesson.algorithm];
+            } else {
+                lessonDescription.textContent = "";
+                algorithmDisplay.textContent = "";
+                learnModeState.algorithmMoves = [];
+            }
+            updateGameUI();
+        }
+
+        function handleSetupLesson() {
+            if (!learnModeState.currentLesson || isAnimating || sequenceInProgress || learnModeState.isWatchingAll) return;
+            messageArea.textContent = `Setting up for: ${learnModeState.currentLesson.name}`;
+            resetCubeVisuals(); // Start lesson from a solved visual state
+            learnModeState.isLessonSetup = false; 
+            learnModeState.currentMoveIndex = 0;
+            updateGameUI(); 
+            startFullMoveSequence([...learnModeState.currentLesson.initialScramble], (success) => {
+                if (success) {
+                    learnModeState.isLessonSetup = true;
+                    messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. Watch or step through.`;
+                } else {
+                    messageArea.textContent = `Setup for ${learnModeState.currentLesson.name} failed or was interrupted.`;
+                }
+                updateGameUI();
+            });
+        }
+
+        function handleWatchAlgorithm() {
+            if (!learnModeState.isLessonSetup || sequenceInProgress || isAnimating || learnModeState.isWatchingAll || learnModeState.currentMoveIndex > 0) return;
+            messageArea.textContent = `AI performing: ${learnModeState.currentLesson.name}`;
+            learnModeState.currentMoveIndex = 0; // Reset index for full watch
+            learnModeState.isWatchingAll = true; 
+            updateGameUI(); 
+            playNextLearnAlgorithmMove();
+        }
+
+        function handleNextLessonMove() {
+            if (!learnModeState.isLessonSetup || sequenceInProgress || isAnimating || learnModeState.isWatchingAll ||
+                learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) return;
+            playNextLearnAlgorithmMove();
+        }
+
+        function playNextLearnAlgorithmMove() {
+            if (!learnModeState.isLessonSetup || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                learnModeState.isWatchingAll = false; 
+                if (learnModeState.currentLesson && learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                     messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                }
+                updateGameUI();
+                return;
+            }
+            if (isAnimating) { // Wait if a visual move is still in progress
+                setTimeout(playNextLearnAlgorithmMove, 50); 
+                return;
+            }
+
+            const moveToPerform = learnModeState.algorithmMoves[learnModeState.currentMoveIndex];
+            messageArea.textContent = `Learning move ${learnModeState.currentMoveIndex + 1}/${learnModeState.algorithmMoves.length}: ${moveToPerform}`;
+            
+            performMove(moveToPerform, (success) => {
+                if (!success) {
+                    console.warn("Learn mode: Move failed or was skipped. Stopping auto-play if active.");
+                    learnModeState.isWatchingAll = false;
+                    updateGameUI();
+                    return;
+                }
+                learnModeState.currentMoveIndex++;
+                updateGameUI(); 
+                if (learnModeState.isWatchingAll && learnModeState.currentMoveIndex < learnModeState.algorithmMoves.length) {
+                    setTimeout(playNextLearnAlgorithmMove, 300); // Auto-play next move with a delay
+                } else if (learnModeState.isWatchingAll && learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                    // Auto-watch finished
+                    learnModeState.isWatchingAll = false;
+                    messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                    updateGameUI();
+                }
+            });
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now() - (elapsedTime * 1000);
+            timerInterval = setInterval(() => {
+                elapsedTime = (Date.now() - startTime) / 1000;
+                updateTimerDisplay();
+            }, 100);
+        }
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        function updateTimerDisplay() {
+            timerDisplay.textContent = `Time: ${elapsedTime.toFixed(2)}s`;
+        }
+
+        function isSolved() {
+            const epsilon = 0.01;
+            for (const cubie of cubies) {
+                if (cubie.position.distanceTo(cubie.userData.initialWorldPos) > epsilon) return false;
+                if (Math.abs(Math.abs(cubie.quaternion.dot(cubie.userData.initialQuaternion)) - 1.0) > epsilon) return false;
+            }
+            return true;
+        }
+
+        function checkIfSolved() {
+            if (currentMode === 'play' && isSolved()) {
+                stopTimer();
+                messageArea.textContent = `CONGRATULATIONS! Solved in ${elapsedTime.toFixed(2)}s!`;
+                addHighScore(elapsedTime);
+                playModeState = 'IDLE';
+                updateGameUI();
+            }
+        }
+
+        function loadHighScores() {
+            const storedScores = localStorage.getItem('retroRubiksHighScores');
+            if (storedScores) highScores = JSON.parse(storedScores);
+        }
+        function saveHighScores() {
+            localStorage.setItem('retroRubiksHighScores', JSON.stringify(highScores));
+        }
+        function addHighScore(time) {
+            const score = { time: parseFloat(time.toFixed(2)) };
+            highScores.push(score);
+            highScores.sort((a, b) => a.time - b.time);
+            highScores = highScores.slice(0, MAX_HIGH_SCORES);
+            saveHighScores();
+            displayHighScores();
+        }
+        function displayHighScores() {
+            highScoresList.innerHTML = '';
+            if (highScores.length === 0) {
+                highScoresList.innerHTML = "<li>No scores yet. Be the first!</li>";
+            } else {
+                highScores.forEach(score => {
+                    highScoresList.innerHTML += `<li>${score.time.toFixed(2)}s</li>`;
+                });
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls && controls.enabled) controls.update(); // Only update if enabled
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
     </script>
 </body>
 </html>
