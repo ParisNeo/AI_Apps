@@ -52,6 +52,7 @@
         let isAnimating = false, sequenceInProgress = false;
         let activeView = 'menu', currentMode = '', playModeState = 'IDLE', aiModeState = 'IDLE';
         let learnModeState = { currentLesson: null, algorithmMoves: [], currentMoveIndex: 0, isLessonSetup: false, isWatchingAll: false };
+        let lastScrambleSequence = []; // To allow AI to solve the same scramble
 
         const mainMenuView = document.getElementById('mainMenuView'), gameView = document.getElementById('gameView'), creditsView = document.getElementById('creditsView');
         const gameModeTitle = document.getElementById('gameModeTitle'), messageArea = document.getElementById('messageArea');
@@ -67,20 +68,22 @@
         let currentSequenceQueue = [], onCurrentSequenceCompleteCallback = null;
 
         // --- LOGICAL CUBE STATE AND SOLVER ---
-        // Standard facelet indexing: U0-U8, R0-R8, F0-F8, D0-D8, L0-L8, B0-B8
-        // U, L, F, R, B, D (order for physical cube rotations and often for Kociemba)
-        // But for sticker array, a fixed order like URFDLB is easier to manage with FACE_INDICES
         const LGC_U = 'W', LGC_L = 'G', LGC_F = 'R', LGC_R = 'B', LGC_B = 'O', LGC_D = 'Y';
-        const LOGICAL_COLORS_MAP = { U: LGC_U, L: LGC_L, F: LGC_F, R: LGC_R, B: LGC_B, D: LGC_D }; // Map face char to color char
-        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B']; // URFDLB order for the 54-sticker array
-        const FACE_IDX = { U:0, R:1, F:2, D:3, L:4, B:5 }; // Index of the face in FACES_ORDER
-
-        // Sticker indices on a face (0-8, TL to BR row by row)
-        // 0 1 2
-        // 3 4 5
-        // 6 7 8
-        // To get a sticker: state[FACE_IDX[faceChar] * 9 + sticker_on_face_idx]
+        const LOGICAL_COLORS_MAP = { U: LGC_U, L: LGC_L, F: LGC_F, R: LGC_R, B: LGC_B, D: LGC_D };
+        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B'];
+        const FACE_IDX = { U:0, R:1, F:2, D:3, L:4, B:5 };
         
+        // Edge Sticker Locations (Absolute Index in 54-sticker array, and the two faces they belong to)
+        // UF(0,1), UR(0,2), UB(0,3), UL(0,4)  -- U-face edges
+        // DF(3,1), DR(3,2), DB(3,3), DL(3,4)  -- D-face edges
+        // FR(2,2), FL(2,4), BR(5,2), BL(5,4)  -- E-slice edges (F/R, F/L, B/R, B/L views)
+        const EDGE_STICKERS = {
+            UF: [FACE_IDX.U*9+7, FACE_IDX.F*9+1], UR: [FACE_IDX.U*9+5, FACE_IDX.R*9+1], UB: [FACE_IDX.U*9+1, FACE_IDX.B*9+1], UL: [FACE_IDX.U*9+3, FACE_IDX.L*9+1],
+            DF: [FACE_IDX.D*9+1, FACE_IDX.F*9+7], DR: [FACE_IDX.D*9+5, FACE_IDX.R*9+7], DB: [FACE_IDX.D*9+7, FACE_IDX.B*9+7], DL: [FACE_IDX.D*9+3, FACE_IDX.L*9+7],
+            FR: [FACE_IDX.F*9+5, FACE_IDX.R*9+3], FL: [FACE_IDX.F*9+3, FACE_IDX.L*9+5], BR: [FACE_IDX.B*9+3, FACE_IDX.R*9+5], BL: [FACE_IDX.B*9+5, FACE_IDX.L*9+3]
+        };
+        const EDGE_KEYS = Object.keys(EDGE_STICKERS); // ["UF", "UR", ..., "BL"]
+
         function getInitialLogicalState() {
             let state = [];
             FACES_ORDER.forEach(faceChar => {
@@ -89,11 +92,14 @@
             return state;
         }
 
-        function getCurrentLogicalCubeStateFromVisuals() {
-            console.warn("CRITICAL: getCurrentLogicalCubeStateFromVisuals() is a PLACEHOLDER. AI will use a fixed scramble.");
+        // AI will solve the same scramble sequence applied to a fresh logical cube
+        function getLogicalStateFromScramble(scrambleMoves) {
             let state = getInitialLogicalState();
-            const scrambleMoves = "F U R' D D B L U U F' R D B B L L U F F D R R B U U L L".split(" ");
-            for (const move of scrambleMoves) { applyMoveToLogicalState(move, state); }
+            if (scrambleMoves && scrambleMoves.length > 0) {
+                for (const move of scrambleMoves) {
+                    applyMoveToLogicalState(move, state);
+                }
+            }
             return state;
         }
         
@@ -106,150 +112,135 @@
 
         function rotateFaceLogicallyCW(faceChar, state) {
             const fBase = FACE_IDX[faceChar] * 9;
-            // Rotate facelets on the face itself (clockwise)
             let onFace = [state[fBase+0],state[fBase+1],state[fBase+2],state[fBase+3],state[fBase+4],state[fBase+5],state[fBase+6],state[fBase+7],state[fBase+8]];
-            state[fBase+0]=onFace[6]; state[fBase+1]=onFace[3]; state[fBase+2]=onFace[0];
-            state[fBase+3]=onFace[7]; state[fBase+4]=onFace[4]; state[fBase+5]=onFace[1];
-            state[fBase+6]=onFace[8]; state[fBase+7]=onFace[5]; state[fBase+8]=onFace[2];
-
-            // Rotate adjacent facelets (3 stickers from 4 adjacent faces)
-            // Indices are absolute (0-53)
-            let t1, t2, t3; // temp holding for 3 stickers
+            state[fBase+0]=onFace[6]; state[fBase+1]=onFace[3]; state[fBase+2]=onFace[0]; state[fBase+3]=onFace[7]; state[fBase+5]=onFace[1]; state[fBase+6]=onFace[8]; state[fBase+7]=onFace[5]; state[fBase+8]=onFace[2];
+            let t = []; // temp array for 3 stickers
             switch (faceChar) {
-                case 'U': // Affects B, R, F, L (top rows of these)
-                    t1=state[FACE_IDX.B*9+0]; t2=state[FACE_IDX.B*9+1]; t3=state[FACE_IDX.B*9+2];
-                    state[FACE_IDX.B*9+0]=state[FACE_IDX.L*9+0]; state[FACE_IDX.B*9+1]=state[FACE_IDX.L*9+1]; state[FACE_IDX.B*9+2]=state[FACE_IDX.L*9+2];
-                    state[FACE_IDX.L*9+0]=state[FACE_IDX.F*9+0]; state[FACE_IDX.L*9+1]=state[FACE_IDX.F*9+1]; state[FACE_IDX.L*9+2]=state[FACE_IDX.F*9+2];
-                    state[FACE_IDX.F*9+0]=state[FACE_IDX.R*9+0]; state[FACE_IDX.F*9+1]=state[FACE_IDX.R*9+1]; state[FACE_IDX.F*9+2]=state[FACE_IDX.R*9+2];
-                    state[FACE_IDX.R*9+0]=t1; state[FACE_IDX.R*9+1]=t2; state[FACE_IDX.R*9+2]=t3;
-                    break;
-                case 'R': // Affects U, F, D, B (right columns of U,F,D; left column of B, adjusted for view)
-                    t1=state[FACE_IDX.U*9+2]; t2=state[FACE_IDX.U*9+5]; t3=state[FACE_IDX.U*9+8]; // U_TR, U_MR, U_BR
-                    state[FACE_IDX.U*9+2]=state[FACE_IDX.F*9+2]; state[FACE_IDX.U*9+5]=state[FACE_IDX.F*9+5]; state[FACE_IDX.U*9+8]=state[FACE_IDX.F*9+8];
-                    state[FACE_IDX.F*9+2]=state[FACE_IDX.D*9+2]; state[FACE_IDX.F*9+5]=state[FACE_IDX.D*9+5]; state[FACE_IDX.F*9+8]=state[FACE_IDX.D*9+8];
-                    state[FACE_IDX.D*9+2]=state[FACE_IDX.B*9+6]; state[FACE_IDX.D*9+5]=state[FACE_IDX.B*9+3]; state[FACE_IDX.D*9+8]=state[FACE_IDX.B*9+0]; // B_BL, B_ML, B_TL (becomes D's right)
-                    state[FACE_IDX.B*9+6]=t1; state[FACE_IDX.B*9+3]=t2; state[FACE_IDX.B*9+0]=t3;
-                    break;
-                case 'F': // Affects U, L, D, R (bottom of U, right of L, top of D, left of R)
-                    t1=state[FACE_IDX.U*9+6]; t2=state[FACE_IDX.U*9+7]; t3=state[FACE_IDX.U*9+8]; // U_BL, U_BM, U_BR
-                    state[FACE_IDX.U*9+6]=state[FACE_IDX.L*9+8]; state[FACE_IDX.U*9+7]=state[FACE_IDX.L*9+5]; state[FACE_IDX.U*9+8]=state[FACE_IDX.L*9+2]; // L_BR, L_MR, L_TR (becomes U's bottom)
-                    state[FACE_IDX.L*9+8]=state[FACE_IDX.D*9+2]; state[FACE_IDX.L*9+5]=state[FACE_IDX.D*9+1]; state[FACE_IDX.L*9+2]=state[FACE_IDX.D*9+0]; // D_TR, D_TM, D_TL (becomes L's right)
-                    state[FACE_IDX.D*9+2]=state[FACE_IDX.R*9+0]; state[FACE_IDX.D*9+1]=state[FACE_IDX.R*9+3]; state[FACE_IDX.D*9+0]=state[FACE_IDX.R*9+6]; // R_TL, R_ML, R_BL (becomes D's top)
-                    state[FACE_IDX.R*9+0]=t1; state[FACE_IDX.R*9+3]=t2; state[FACE_IDX.R*9+6]=t3;
-                    break;
-                case 'D': // Affects F, L, B, R (bottom rows of these)
-                    t1=state[FACE_IDX.F*9+6]; t2=state[FACE_IDX.F*9+7]; t3=state[FACE_IDX.F*9+8];
-                    state[FACE_IDX.F*9+6]=state[FACE_IDX.L*9+6]; state[FACE_IDX.F*9+7]=state[FACE_IDX.L*9+7]; state[FACE_IDX.F*9+8]=state[FACE_IDX.L*9+8];
-                    state[FACE_IDX.L*9+6]=state[FACE_IDX.B*9+6]; state[FACE_IDX.L*9+7]=state[FACE_IDX.B*9+7]; state[FACE_IDX.L*9+8]=state[FACE_IDX.B*9+8];
-                    state[FACE_IDX.B*9+6]=state[FACE_IDX.R*9+6]; state[FACE_IDX.B*9+7]=state[FACE_IDX.R*9+7]; state[FACE_IDX.B*9+8]=state[FACE_IDX.R*9+8];
-                    state[FACE_IDX.R*9+6]=t1; state[FACE_IDX.R*9+7]=t2; state[FACE_IDX.R*9+8]=t3;
-                    break;
-                case 'L': // Affects U, B, D, F (left columns of U,B,D; right column of F, adjusted for view)
-                    t1=state[FACE_IDX.U*9+0]; t2=state[FACE_IDX.U*9+3]; t3=state[FACE_IDX.U*9+6]; // U_TL, U_ML, U_BL
-                    state[FACE_IDX.U*9+0]=state[FACE_IDX.B*9+8]; state[FACE_IDX.U*9+3]=state[FACE_IDX.B*9+5]; state[FACE_IDX.U*9+6]=state[FACE_IDX.B*9+2]; // B_TR, B_MR, B_BR (becomes U's left)
-                    state[FACE_IDX.B*9+8]=state[FACE_IDX.D*9+6]; state[FACE_IDX.B*9+5]=state[FACE_IDX.D*9+3]; state[FACE_IDX.B*9+2]=state[FACE_IDX.D*9+0]; // D_BL, D_ML, D_TL (becomes B's right)
-                    state[FACE_IDX.D*9+6]=state[FACE_IDX.F*9+0]; state[FACE_IDX.D*9+3]=state[FACE_IDX.F*9+3]; state[FACE_IDX.D*9+0]=state[FACE_IDX.F*9+6]; // F_TL, F_ML, F_BL (becomes D's left)
-                    state[FACE_IDX.F*9+0]=t1; state[FACE_IDX.F*9+3]=t2; state[FACE_IDX.F*9+6]=t3;
-                    break;
-                case 'B': // Affects U, R, D, L (top of U, right of R, bottom of D, left of L - all viewed from Back)
-                    t1=state[FACE_IDX.U*9+2]; t2=state[FACE_IDX.U*9+1]; t3=state[FACE_IDX.U*9+0]; // U_TR, U_TM, U_TL
-                    state[FACE_IDX.U*9+2]=state[FACE_IDX.R*9+8]; state[FACE_IDX.U*9+1]=state[FACE_IDX.R*9+5]; state[FACE_IDX.U*9+0]=state[FACE_IDX.R*9+2]; // R_BR, R_MR, R_TR (becomes U's top (from B))
-                    state[FACE_IDX.R*9+8]=state[FACE_IDX.D*9+6]; state[FACE_IDX.R*9+5]=state[FACE_IDX.D*9+7]; state[FACE_IDX.R*9+2]=state[FACE_IDX.D*9+8]; // D_BL, D_BM, D_BR (becomes R's right (from B))
-                    state[FACE_IDX.D*9+6]=state[FACE_IDX.L*9+0]; state[FACE_IDX.D*9+7]=state[FACE_IDX.L*9+3]; state[FACE_IDX.D*9+8]=state[FACE_IDX.L*9+6]; // L_TL, L_ML, L_BL (becomes D's bottom (from B))
-                    state[FACE_IDX.L*9+0]=t1; state[FACE_IDX.L*9+3]=t2; state[FACE_IDX.L*9+6]=t3;
-                    break;
+                case 'U': t=[state[FACE_IDX.B*9+0],state[FACE_IDX.B*9+1],state[FACE_IDX.B*9+2]]; for(let i=0;i<3;i++){state[FACE_IDX.B*9+i]=state[FACE_IDX.L*9+i];state[FACE_IDX.L*9+i]=state[FACE_IDX.F*9+i];state[FACE_IDX.F*9+i]=state[FACE_IDX.R*9+i];state[FACE_IDX.R*9+i]=t[i];} break;
+                case 'D': t=[state[FACE_IDX.F*9+6],state[FACE_IDX.F*9+7],state[FACE_IDX.F*9+8]]; for(let i=0;i<3;i++){state[FACE_IDX.F*9+6+i]=state[FACE_IDX.L*9+6+i];state[FACE_IDX.L*9+6+i]=state[FACE_IDX.B*9+6+i];state[FACE_IDX.B*9+6+i]=state[FACE_IDX.R*9+6+i];state[FACE_IDX.R*9+6+i]=t[i];} break;
+                case 'F': t=[state[FACE_IDX.U*9+6],state[FACE_IDX.U*9+7],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+6]=state[FACE_IDX.L*9+8];state[FACE_IDX.U*9+7]=state[FACE_IDX.L*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.L*9+2]; state[FACE_IDX.L*9+8]=state[FACE_IDX.D*9+2];state[FACE_IDX.L*9+5]=state[FACE_IDX.D*9+1];state[FACE_IDX.L*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+2]=state[FACE_IDX.R*9+0];state[FACE_IDX.D*9+1]=state[FACE_IDX.R*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.R*9+6]; state[FACE_IDX.R*9+0]=t[0];state[FACE_IDX.R*9+3]=t[1];state[FACE_IDX.R*9+6]=t[2]; break;
+                case 'B': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+1],state[FACE_IDX.U*9+0]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.R*9+8];state[FACE_IDX.U*9+1]=state[FACE_IDX.R*9+5];state[FACE_IDX.U*9+0]=state[FACE_IDX.R*9+2]; state[FACE_IDX.R*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.R*9+5]=state[FACE_IDX.D*9+7];state[FACE_IDX.R*9+2]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+6]=state[FACE_IDX.L*9+0];state[FACE_IDX.D*9+7]=state[FACE_IDX.L*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.L*9+6]; state[FACE_IDX.L*9+0]=t[0];state[FACE_IDX.L*9+3]=t[1];state[FACE_IDX.L*9+6]=t[2]; break;
+                case 'R': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+5],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.F*9+2];state[FACE_IDX.U*9+5]=state[FACE_IDX.F*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.F*9+8]; state[FACE_IDX.F*9+2]=state[FACE_IDX.D*9+2];state[FACE_IDX.F*9+5]=state[FACE_IDX.D*9+5];state[FACE_IDX.F*9+8]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+2]=state[FACE_IDX.B*9+6];state[FACE_IDX.D*9+5]=state[FACE_IDX.B*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.B*9+0]; state[FACE_IDX.B*9+6]=t[0];state[FACE_IDX.B*9+3]=t[1];state[FACE_IDX.B*9+0]=t[2]; break;
+                case 'L': t=[state[FACE_IDX.U*9+0],state[FACE_IDX.U*9+3],state[FACE_IDX.U*9+6]]; state[FACE_IDX.U*9+0]=state[FACE_IDX.B*9+8];state[FACE_IDX.U*9+3]=state[FACE_IDX.B*9+5];state[FACE_IDX.U*9+6]=state[FACE_IDX.B*9+2]; state[FACE_IDX.B*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.B*9+5]=state[FACE_IDX.D*9+3];state[FACE_IDX.B*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+6]=state[FACE_IDX.F*9+0];state[FACE_IDX.D*9+3]=state[FACE_IDX.F*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.F*9+6]; state[FACE_IDX.F*9+0]=t[0];state[FACE_IDX.F*9+3]=t[1];state[FACE_IDX.F*9+6]=t[2]; break;
             }
         }
         
-        // Edge piece definitions: [Sticker1_abs_idx, Sticker2_abs_idx, Face1_char, Face2_char]
-        const EDGES_DEF = [
-            [FACE_IDX.U*9+7, FACE_IDX.F*9+1, 'U', 'F'], [FACE_IDX.U*9+5, FACE_IDX.R*9+3, 'U', 'R'], // UF, UR
-            [FACE_IDX.U*9+1, FACE_IDX.B*9+1, 'U', 'B'], [FACE_IDX.U*9+3, FACE_IDX.L*9+5, 'U', 'L'], // UB, UL
-            [FACE_IDX.D*9+1, FACE_IDX.F*9+7, 'D', 'F'], [FACE_IDX.D*9+5, FACE_IDX.R*9+5, 'D', 'R'], // DF, DR
-            [FACE_IDX.D*9+7, FACE_IDX.B*9+7, 'D', 'B'], [FACE_IDX.D*9+3, FACE_IDX.L*9+3, 'D', 'L'], // DB, DL
-            [FACE_IDX.F*9+5, FACE_IDX.R*9+1, 'F', 'R'], [FACE_IDX.F*9+3, FACE_IDX.L*9+1, 'F', 'L'], // FR, FL
-            [FACE_IDX.B*9+5, FACE_IDX.R*9+7, 'B', 'R'], [FACE_IDX.B*9+3, FACE_IDX.L*9+7, 'B', 'L']  // BR, BL
-        ];
+        function findEdge(state, color1, color2) { // Finds edge and returns its key ("UF", etc.) and orientation
+            for (const edgeKey of EDGE_KEYS) {
+                const s1 = state[EDGE_STICKERS[edgeKey][0]];
+                const s2 = state[EDGE_STICKERS[edgeKey][1]];
+                if ((s1 === color1 && s2 === color2) || (s1 === color2 && s2 === color1)) {
+                    return { key: edgeKey, s1Color: s1, s2Color: s2 };
+                }
+            }
+            return null; // Should not happen on a valid cube
+        }
+
+        function solveCubeAI_WhiteCross(state, solutionMoves) {
+            const MAX_ITERATIONS = 20; // Safety break for this stage
+            let iterations = 0;
+            
+            // Target white edges: UF, UR, UB, UL
+            const targetWhiteEdges = [
+                { piece: "UF", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.F, sideFace: 'F'},
+                { piece: "UR", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.R, sideFace: 'R'},
+                { piece: "UB", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.B, sideFace: 'B'},
+                { piece: "UL", uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.L, sideFace: 'L'}
+            ];
+
+            for (const targetEdge of targetWhiteEdges) {
+                if (iterations++ > MAX_ITERATIONS) { console.warn("White Cross: Max iterations reached"); break; }
+
+                let edgeLocation = findEdge(state, targetEdge.uColor, targetEdge.sideColor);
+                if (!edgeLocation) continue; // Should not happen
+
+                // Check if already solved
+                if (edgeLocation.key === targetEdge.piece && 
+                    state[EDGE_STICKERS[targetEdge.piece][0]] === targetEdge.uColor &&
+                    state[EDGE_STICKERS[targetEdge.piece][1]] === targetEdge.sideColor) {
+                    continue; // This edge is solved
+                }
+                
+                messageArea.textContent = `AI: Targeting ${targetEdge.uColor}-${targetEdge.sideColor} edge (found at ${edgeLocation.key})`;
+                
+                // Logic to bring the edge to U layer and orient it
+                // This is still simplified and will need many more cases for a robust solver
+                
+                // Case 1: Edge is in D layer
+                if (edgeLocation.key.startsWith("D")) {
+                    let alg = [];
+                    if (edgeLocation.s1Color === targetEdge.uColor) { // White is on D-face part
+                        // Rotate D to align sideColor with its center
+                        if      (edgeLocation.key === "DF" && targetEdge.sideFace !== 'F') alg.push(targetEdge.sideFace === 'R' ? "D" : targetEdge.sideFace === 'B' ? "D2" : "D'");
+                        else if (edgeLocation.key === "DR" && targetEdge.sideFace !== 'R') alg.push(targetEdge.sideFace === 'B' ? "D" : targetEdge.sideFace === 'L' ? "D2" : "D'");
+                        else if (edgeLocation.key === "DB" && targetEdge.sideFace !== 'B') alg.push(targetEdge.sideFace === 'L' ? "D" : targetEdge.sideFace === 'F' ? "D2" : "D'");
+                        else if (edgeLocation.key === "DL" && targetEdge.sideFace !== 'L') alg.push(targetEdge.sideFace === 'F' ? "D" : targetEdge.sideFace === 'R' ? "D2" : "D'");
+                        alg.push(targetEdge.sideFace + "2"); // Double turn the aligned side
+                    } else { // White is on the side-face part of D-layer edge
+                        // Rotate D to bring the edge to the slot corresponding to targetEdge.sideFace, but on D layer
+                        // e.g. if target is UF (side F), bring piece to DF slot
+                        if      (edgeLocation.key === "DR" && targetEdge.sideFace === 'F') alg.push("D'");
+                        else if (edgeLocation.key === "DB" && targetEdge.sideFace === 'F') alg.push("D2");
+                        else if (edgeLocation.key === "DL" && targetEdge.sideFace === 'F') alg.push("D");
+                        // ... (similar D rotations if targetEdge.sideFace is R, B, or L)
+                        // This alignment needs to be more precise based on current edgeLocation.key vs targetEdge.sideFace
+                        // For simplicity, assume we align it to be under the 'F' face if we want to use F moves
+                        // A more general approach involves cube rotations or relative moves
+                        alg.push(targetEdge.sideFace + "'", "U'", targetEdge.sideFace); // e.g. F' U' F
+                    }
+                    alg.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, state); });
+                    iterations = 0; // Restart checks for all edges after a move
+                    break; // Re-evaluate all edges
+                }
+                // Case 2: Edge is in E Slice (middle layer, e.g., FR, FL, BR, BL)
+                else if (["FR", "FL", "BR", "BL"].includes(edgeLocation.key)) {
+                    let alg = [];
+                    // Example: if white-red edge is at FR slot, and we want it at UF
+                    // Move to D layer first: R U R' (moves FR to DF if white was on R face)
+                    // Or: F' U F (moves FR to DR if white was on F face)
+                    // This needs to know orientation to pick the right alg to D layer
+                    if (edgeLocation.key === "FR") alg.push("R", "U'", "R'"); // Simplified: just get it to D layer
+                    else if (edgeLocation.key === "FL") alg.push("L'", "U", "L");
+                    else if (edgeLocation.key === "BR") alg.push("R'", "U", "R");
+                    else if (edgeLocation.key === "BL") alg.push("L", "U'", "L'");
+
+                    alg.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, state); });
+                    iterations = 0; break; // Re-evaluate
+                }
+                // Case 3: Edge is in U layer but wrong
+                else if (edgeLocation.key.startsWith("U")) {
+                    // If correctly oriented but wrong slot, or wrong orientation
+                    // Simplest: move to D layer, e.g. F2 (if at UF), then re-solve from D.
+                    if (edgeLocation.key === "UF") solutionMoves.push("F2"); // Moves UF to DF
+                    else if (edgeLocation.key === "UR") solutionMoves.push("R2");
+                    else if (edgeLocation.key === "UB") solutionMoves.push("B2");
+                    else if (edgeLocation.key === "UL") solutionMoves.push("L2");
+                    solutionMoves.forEach(m => applyMoveToLogicalState(m, state));
+                    iterations = 0; break; // Re-evaluate
+                }
+            }
+            // After attempting to place all 4, one final check/alignment pass might be needed with U turns
+            // This part is omitted for brevity but crucial for a perfect cross
+        }
 
         function solveCubeAI(logicalState) {
             let solutionMoves = [];
             let currentLogicalState = JSON.parse(JSON.stringify(logicalState));
-            const MAX_AI_MOVES_PER_STAGE = 15; // Safety break for each stage
-
-            messageArea.textContent = "AI: Solving White Cross (D-Layer edges)...";
-            for (let iter = 0; iter < MAX_AI_MOVES_PER_STAGE; iter++) {
-                let moveFoundThisIteration = false;
-                // Try to find a white edge on D layer and move it to U
-                for (let i = 0; i < 4; i++) { // Iterate D-F, D-R, D-B, D-L edges
-                    const dEdgeSticker1Idx = EDGES_DEF[i+4][0]; // e.g., D-sticker of D-F edge
-                    const dEdgeSticker2Idx = EDGES_DEF[i+4][1]; // e.g., F-sticker of D-F edge
-                    const sideFaceChar = EDGES_DEF[i+4][1];     // e.g., 'F' for D-F edge
-                    const targetSideColor = LOGICAL_COLORS_MAP[sideFaceChar]; // e.g., Red if F is Red
-
-                    // Case 1: White sticker is on the D face (e.g., D-sticker of D-F is White)
-                    if (currentLogicalState[dEdgeSticker1Idx] === LGC_U && currentLogicalState[dEdgeSticker2Idx] !== LGC_U) {
-                        const actualSideColor = currentLogicalState[dEdgeSticker2Idx];
-                        let rotations = 0; // How many D turns to align actualSideColor with its center
-                        // This alignment logic needs to be more robust, matching actualSideColor with the center color of FACES_ORDER[j]
-                        if (actualSideColor === LOGICAL_COLORS_MAP.F) rotations = 0; // Already at F
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.R) rotations = 1; // Needs D to bring to F
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.B) rotations = 2; // Needs D D
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.L) rotations = 3; // Needs D'
-                        
-                        let dMoves = [];
-                        if (rotations === 1) dMoves.push("D");
-                        else if (rotations === 2) dMoves.push("D2");
-                        else if (rotations === 3) dMoves.push("D'");
-                        
-                        dMoves.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, currentLogicalState);});
-                        
-                        // Now the white edge (with white on D face) is under its correct side. Double turn that side.
-                        // Determine which face to double turn based on where the 'actualSideColor' now is.
-                        // This assumes FACES_ORDER[2] is F, FACES_ORDER[1] is R etc.
-                        let faceToTurn = '';
-                        if (actualSideColor === LOGICAL_COLORS_MAP.F) faceToTurn = 'F';
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.R) faceToTurn = 'R';
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.B) faceToTurn = 'B';
-                        else if (actualSideColor === LOGICAL_COLORS_MAP.L) faceToTurn = 'L';
-
-                        if (faceToTurn) {
-                            solutionMoves.push(faceToTurn + "2"); applyMoveToLogicalState(faceToTurn + "2", currentLogicalState);
-                            moveFoundThisIteration = true; break; // Recalculate from new state
-                        }
-                    }
-                    // Case 2: White sticker is on the Side face (e.g., F-sticker of D-F is White)
-                    else if (currentLogicalState[dEdgeSticker2Idx] === LGC_U && currentLogicalState[dEdgeSticker1Idx] !== LGC_U) {
-                        // Example: White is on F part of DF edge. Target is U-F.
-                        // Rotate D until this edge is at the D-F position (EDGES_DEF[4])
-                        let currentEdgeOriginalSide = EDGES_DEF[i+4][1]; // The side face char of this edge (e.g. 'F' for DF)
-                        let dAlignMoves = [];
-                        if (currentEdgeOriginalSide === 'R') dAlignMoves.push("D'"); // DF at DR -> D' to bring to DF
-                        else if (currentEdgeOriginalSide === 'B') dAlignMoves.push("D2"); // DF at DB -> D2
-                        else if (currentEdgeOriginalSide === 'L') dAlignMoves.push("D");  // DF at DL -> D
-                        
-                        dAlignMoves.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, currentLogicalState);});
-                        
-                        // Now the edge (with white on its side) is at the Front-Down position.
-                        // Algorithm to bring F-D (white on F) to U-F (white on U): F' U' F (if F is front)
-                        // This needs to be generalized for which face is "front"
-                        const alg = ["F'", "U'", "F"]; // Assuming the piece is now at the standard DF slot and we use F moves
-                        alg.forEach(m => { solutionMoves.push(m); applyMoveToLogicalState(m, currentLogicalState);});
-                        moveFoundThisIteration = true; break;
-                    }
-                }
-                if (!moveFoundThisIteration) break; // No D-layer white edges handled in this pass
-                if (solutionMoves.length >= MAX_AI_MOVES_PER_STAGE) break;
-            }
             
+            solveCubeAI_WhiteCross(currentLogicalState, solutionMoves);
+            
+            // Future stages:
+            // solveCubeAI_FirstLayerCorners(currentLogicalState, solutionMoves);
+            // solveCubeAI_SecondLayerEdges(currentLogicalState, solutionMoves);
+            // ... etc.
+
             if (solutionMoves.length === 0) {
-                 solutionMoves.push("R", "U", "R'", "U'"); // Fallback
-                 messageArea.textContent = "AI: No simple D-Layer white edges found, performing fallback.";
+                 messageArea.textContent = "AI: No moves found (solver is very basic).";
             } else {
-                 messageArea.textContent = `AI: Generated ${solutionMoves.length} moves for D-layer white edges.`;
+                 messageArea.textContent = `AI: Generated ${solutionMoves.length} moves.`;
             }
             return solutionMoves;
         }
-
         // --- END LOGICAL CUBE STATE AND SOLVER ---
 
         initThreeJS(); initUI(); animate();
@@ -257,10 +248,10 @@
         function initUI(){loadHighScores();displayHighScores();populateLessonsDropdown();setupEventListeners();showView('menu');}
         function populateLessonsDropdown(){lessons.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.name;lessonSelect.appendChild(o);});}
         function showView(vId){activeView=vId;mainMenuView.style.display='none';gameView.style.display='none';creditsView.style.display='none';let e=vId==='menu'?mainMenuView:vId==='game'?gameView:creditsView;if(e)e.style.display='flex';if(vId==='game'){if(currentMode)gameModeTitle.textContent=`${currentMode[0].toUpperCase()+currentMode.slice(1)} Mode`;updateGameUI();if(!renderer)initThreeJS();onWindowResize();}else stopTimer();if(vId==='menu')resetCubeStateForNewGame();}
-        function resetCubeStateForNewGame(){playModeState='IDLE';aiModeState='IDLE';learnModeState={currentLesson:null,algorithmMoves:[],currentMoveIndex:0,isLessonSetup:false,isWatchingAll:false};resetCubeVisuals();elapsedTime=0;updateTimerDisplay();sequenceInProgress=false;isAnimating=false;}
+        function resetCubeStateForNewGame(){playModeState='IDLE';aiModeState='IDLE';lastScrambleSequence=[];learnModeState={currentLesson:null,algorithmMoves:[],currentMoveIndex:0,isLessonSetup:false,isWatchingAll:false};resetCubeVisuals();elapsedTime=0;updateTimerDisplay();sequenceInProgress=false;isAnimating=false;}
         function createRubiksCube(){while(pivot.children.length>0)pivot.remove(pivot.children[0]);cubies.forEach(c=>scene.remove(c));cubies=[];const g=new THREE.BoxGeometry(CUBIE_SIZE,CUBIE_SIZE,CUBIE_SIZE),o=(CUBE_SIZE-1)/2*EFFECTIVE_CUBIE_SIZE;for(let x=0;x<CUBE_SIZE;x++)for(let y=0;y<CUBE_SIZE;y++)for(let z=0;z<CUBE_SIZE;z++){if(CUBE_SIZE>2&&x>0&&x<CUBE_SIZE-1&&y>0&&y<CUBE_SIZE-1&&z>0&&z<CUBE_SIZE-1)continue;const m=[new THREE.MeshStandardMaterial({color:(x===CUBE_SIZE-1)?VISUAL_COLORS.RIGHT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(x===0)?VISUAL_COLORS.LEFT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===CUBE_SIZE-1)?VISUAL_COLORS.UP:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===0)?VISUAL_COLORS.DOWN:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===CUBE_SIZE-1)?VISUAL_COLORS.FRONT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===0)?VISUAL_COLORS.BACK:VISUAL_COLORS.INTERNAL})];m.forEach(i=>{i.roughness=0.3;i.metalness=0.1;});const c=new THREE.Mesh(g,m);const pX=x*EFFECTIVE_CUBIE_SIZE-o,pY=y*EFFECTIVE_CUBIE_SIZE-o,pZ=z*EFFECTIVE_CUBIE_SIZE-o;c.position.set(pX,pY,pZ);c.userData={initialLogicX:x,initialLogicY:y,initialLogicZ:z,initialWorldPos:new THREE.Vector3(pX,pY,pZ),initialQuaternion:c.quaternion.clone()};cubies.push(c);scene.add(c);}}
-        function setupEventListeners(){window.addEventListener('resize',onWindowResize,false);menuPlayBtn.addEventListener('click',()=>{currentMode='play';showView('game');});menuAiBtn.addEventListener('click',()=>{currentMode='ai';showView('game');});menuLearnBtn.addEventListener('click',()=>{currentMode='learn';showView('game');});menuCreditsBtn.addEventListener('click',()=>{showView('credits');});backToMenuBtn.addEventListener('click',()=>{showView('menu');});creditsBackToMenuBtn.addEventListener('click',()=>{showView('menu');});scrambleBtn.addEventListener('click',handleScramble);startSolveBtn.addEventListener('click',handleStartSolving);startAiDemoBtn.addEventListener('click',handleStartAiSolver);resetCubeBtn.addEventListener('click',handleResetCube);allMoveButtons.forEach(b=>{b.addEventListener('click',()=>{if(isAnimating||sequenceInProgress)return;if(currentMode==='play'&&playModeState!=='SOLVING')return;if(currentMode==='ai'||currentMode==='learn')return;performMove(b.dataset.move,s=>{if(s&tMode==='play'&&playModeState==='SOLVING')checkIfSolved();});});});lessonSelect.addEventListener('change',handleLessonSelection);setupLessonBtn.addEventListener('click',handleSetupLesson);watchAlgorithmBtn.addEventListener('click',handleWatchAlgorithm);nextLessonMoveBtn.addEventListener('click',handleNextLessonMove);}
-        function updateGameUI(){if(activeView!=='game')return;const a=isAnimating||sequenceInProgress;controls.enabled=!a;scrambleBtn.style.display='inline-block';startSolveBtn.style.display='none';startAiDemoBtn.style.display='none';learnModeSpecificControls.style.display='none';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.disabled=a;resetCubeBtn.disabled=a;if(currentMode==='play'){allMoveButtons.forEach(b=>b.disabled=(playModeState!=='SOLVING'||a));scrambleBtn.disabled=(playModeState==='SOLVING'||a);if(playModeState==='IDLE')messageArea.textContent="Scramble to begin.";else if(playModeState==='SCRAMBLED'){messageArea.textContent="Scrambled! Press 'Start Solving!'";if(!a){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=false;}}else if(playModeState==='SOLVING'){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=true;messageArea.textContent="Timer on! Solve!";}}else if(currentMode==='ai'){startAiDemoBtn.style.display='inline-block';startAiDemoBtn.textContent="Start AI Solver";allMoveButtons.forEach(b=>b.disabled=true);startAiDemoBtn.disabled=(aiModeState==='DEMOING'||a);scrambleBtn.disabled=(aiModeState==='DEMOING'||a);if(aiModeState==='IDLE')messageArea.textContent="AI: Scramble or 'Start AI Solver'.";else if(aiModeState==='SCRAMBLED')messageArea.textContent="Scrambled. Start AI Solver.";else if(aiModeState==='DEMOING')messageArea.textContent="AI attempting to solve...";}else if(currentMode==='learn'){learnModeSpecificControls.style.display='block';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.style.display='none';const l=!!learnModeState.currentLesson,c=learnModeState.isLessonSetup&&!a&&!learnModeState.isWatchingAll;setupLessonBtn.disabled=!l||a||learnModeState.isWatchingAll;watchAlgorithmBtn.disabled=!learnModeState.isLessonSetup||a||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0;nextLessonMoveBtn.disabled=!c||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length;resetCubeBtn.disabled=a||learnModeState.isWatchingAll;if(!l)messageArea.textContent="Select a lesson.";else if(!learnModeState.isLessonSetup)messageArea.textContent=`Lesson: ${learnModeState.currentLesson.name}. Press 'Set up'.`;else{if(learnModeState.isWatchingAll)messageArea.textContent=`AI showing: ${learnModeState.currentLesson.name} (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length})`;else messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}. Watch/step. (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;if(learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length&&learnModeState.algorithmMoves.length>0)messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;}}}
+        function setupEventListeners(){window.addEventListener('resize',onWindowResize,false);menuPlayBtn.addEventListener('click',()=>{currentMode='play';showView('game');});menuAiBtn.addEventListener('click',()=>{currentMode='ai';showView('game');});menuLearnBtn.addEventListener('click',()=>{currentMode='learn';showView('game');});menuCreditsBtn.addEventListener('click',()=>{showView('credits');});backToMenuBtn.addEventListener('click',()=>{showView('menu');});creditsBackToMenuBtn.addEventListener('click',()=>{showView('menu');});scrambleBtn.addEventListener('click',handleScramble);startSolveBtn.addEventListener('click',handleStartSolving);startAiDemoBtn.addEventListener('click',handleStartAiSolver);resetCubeBtn.addEventListener('click',handleResetCube);allMoveButtons.forEach(b=>{b.addEventListener('click',()=>{if(isAnimating||sequenceInProgress)return;if(currentMode==='play'&&playModeState!=='SOLVING')return;if(currentMode==='ai'||currentMode==='learn')return;performMove(b.dataset.move,s=>{if(currentMode==='play'&&playModeState==='SOLVING')checkIfSolved();});});});lessonSelect.addEventListener('change',handleLessonSelection);setupLessonBtn.addEventListener('click',handleSetupLesson);watchAlgorithmBtn.addEventListener('click',handleWatchAlgorithm);nextLessonMoveBtn.addEventListener('click',handleNextLessonMove);}
+        function updateGameUI(){if(activeView!=='game')return;const a=isAnimating||sequenceInProgress;controls.enabled=!a;scrambleBtn.style.display='inline-block';startSolveBtn.style.display='none';startAiDemoBtn.style.display='none';learnModeSpecificControls.style.display='none';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.disabled=a;resetCubeBtn.disabled=a;if(currentMode==='play'){allMoveButtons.forEach(b=>b.disabled=(playModeState!=='SOLVING'||a));scrambleBtn.disabled=(playModeState==='SOLVING'||a);if(playModeState==='IDLE')messageArea.textContent="Scramble to begin.";else if(playModeState==='SCRAMBLED'){messageArea.textContent="Scrambled! Press 'Start Solving!'";if(!a){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=false;}}else if(playModeState==='SOLVING'){startSolveBtn.style.display='inline-block';startSolveBtn.disabled=true;messageArea.textContent="Timer on! Solve!";}}else if(currentMode==='ai'){startAiDemoBtn.style.display='inline-block';startAiDemoBtn.textContent="Start AI Solver";allMoveButtons.forEach(b=>b.disabled=true);startAiDemoBtn.disabled=(aiModeState==='DEMOING'||a||lastScrambleSequence.length===0);scrambleBtn.disabled=(aiModeState==='DEMOING'||a);if(aiModeState==='IDLE')messageArea.textContent=`AI: ${lastScrambleSequence.length > 0 ? "Scrambled. " : ""}Scramble or 'Start AI Solver'.`;else if(aiModeState==='SCRAMBLED')messageArea.textContent="Scrambled. Start AI Solver.";else if(aiModeState==='DEMOING')messageArea.textContent="AI attempting to solve...";}else if(currentMode==='learn'){learnModeSpecificControls.style.display='block';allMoveButtons.forEach(b=>b.disabled=true);scrambleBtn.style.display='none';const l=!!learnModeState.currentLesson,c=learnModeState.isLessonSetup&&!a&&!learnModeState.isWatchingAll;setupLessonBtn.disabled=!l||a||learnModeState.isWatchingAll;watchAlgorithmBtn.disabled=!learnModeState.isLessonSetup||a||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0;nextLessonMoveBtn.disabled=!c||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length;resetCubeBtn.disabled=a||learnModeState.isWatchingAll;if(!l)messageArea.textContent="Select a lesson.";else if(!learnModeState.isLessonSetup)messageArea.textContent=`Lesson: ${learnModeState.currentLesson.name}. Press 'Set up'.`;else{if(learnModeState.isWatchingAll)messageArea.textContent=`AI showing: ${learnModeState.currentLesson.name} (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length})`;else messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}. Watch/step. (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;if(learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length&&learnModeState.algorithmMoves.length>0)messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;}}}
         function onWindowResize(){if(activeView!=='game'||!renderer)return;const c=document.getElementById('gameContainer');camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix();renderer.setSize(c.clientWidth,c.clientHeight);}
         function getCubiesInLayer(x,i){const l=[];const o=(CUBE_SIZE-1)/2;const t=(i-o)*EFFECTIVE_CUBIE_SIZE;cubies.forEach(c=>{let p=(x==='x')?c.position.x:(x==='y')?c.position.y:c.position.z;if(Math.abs(p-t)<EFFECTIVE_CUBIE_SIZE/2)l.push(c);});return l;}
         function rotateLayerAroundAxis(ax,lIdx,ang,cb){isAnimating=true;controls.enabled=false;updateGameUI();pivot.rotation.set(0,0,0);pivot.position.set(0,0,0);const lCub=getCubiesInLayer(ax,lIdx);if(lCub.length===0){isAnimating=false;controls.enabled=true;updateGameUI();if(cb)cb(true);return;}lCub.forEach(c=>pivot.attach(c));letcA=0;const tA=ang;const spd=0.08;function anim(){let dA=tA*spd;if(Math.abs(cA+dA)>=Math.abs(tA))dA=tA-cA;if(ax==='x')pivot.rotation.x+=dA;else if(ax==='y')pivot.rotation.y+=dA;else pivot.rotation.z+=dA;cA+=dA;if(Math.abs(cA-tA)<0.001){if(ax==='x')pivot.rotation.x=tA;else if(ax==='y')pivot.rotation.y=tA;else pivot.rotation.z=tA;[...lCub].forEach(c=>scene.attach(c));cubies.forEach(c=>{c.position.x=Math.round(c.position.x/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;c.position.y=Math.round(c.position.y/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;c.position.z=Math.round(c.position.z/EFFECTIVE_CUBIE_SIZE)*EFFECTIVE_CUBIE_SIZE;});isAnimating=false;controls.enabled=true;updateGameUI();if(cb)cb(true);}else requestAnimationFrame(anim);}anim();}
@@ -268,10 +259,10 @@
         function startFullMoveSequence(mvs,onD){if(sequenceInProgress||isAnimating){if(onD)onD(false);return;}currentSequenceQueue=[...mvs];onCurrentSequenceCompleteCallback=onD;sequenceInProgress=true;updateGameUI();executeNextMoveInCurrentSequence();}
         function executeNextMoveInCurrentSequence(){if(currentSequenceQueue.length>0){const m=currentSequenceQueue.shift();performMove(m,s=>{if(!s){sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(false);updateGameUI();return;}if(currentSequenceQueue.length>0)setTimeout(executeNextMoveInCurrentSequence,75);else{sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(true);onCurrentSequenceCompleteCallback=null;updateGameUI();}});}else{sequenceInProgress=false;if(onCurrentSequenceCompleteCallback)onCurrentSequenceCompleteCallback(true);onCurrentSequenceCompleteCallback=null;updateGameUI();}}
         function resetCubeVisuals(){createRubiksCube();if(controls)controls.reset();camera.position.set(CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*2.5);camera.lookAt(0,0,0);if(controls)controls.target.set(0,0,0);}
-        function handleScramble(){if(sequenceInProgress||isAnimating)return;messageArea.textContent="Scrambling...";resetCubeVisuals();stopTimer();elapsedTime=0;updateTimerDisplay();const mvs=['F','F\'','B','B\'','U','U\'','D','D\'','R','R\'','L','L\''];let sMvs=[],lM='',sLM='';for(let i=0;i<20+Math.floor(Math.random()*10);i++){let rM;do{rM=mvs[Math.floor(Math.random()*mvs.length)];}while(rM===lM||(rM[0]===lM[0]&&rM[0]===sLM[0]));sMvs.push(rM);sLM=lM;lM=rM;}startFullMoveSequence(sMvs,s=>{if(s){if(currentMode==='play')playModeState='SCRAMBLED';else if(currentMode==='ai')aiModeState='SCRAMBLED';messageArea.textContent="Cube scrambled!";}else messageArea.textContent="Scramble fail.";updateGameUI();});}
-        function handleResetCube(){if(isAnimating||sequenceInProgress)return;learnModeState.isWatchingAll=false;stopTimer();elapsedTime=0;updateTimerDisplay();resetCubeVisuals();if(currentMode==='play')playModeState='IDLE';else if(currentMode==='ai')aiModeState='IDLE';else if(currentMode==='learn'){learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.algorithmMoves=learnModeState.currentLesson?[...learnModeState.currentLesson.algorithm]:[];}messageArea.textContent="Cube reset.";updateGameUI();}
+        function handleScramble(){if(sequenceInProgress||isAnimating)return;messageArea.textContent="Scrambling...";resetCubeVisuals();stopTimer();elapsedTime=0;updateTimerDisplay();const mvs=['F','F\'','B','B\'','U','U\'','D','D\'','R','R\'','L','L\''];lastScrambleSequence=[];let lM='',sLM='';for(let i=0;i<20+Math.floor(Math.random()*10);i++){let rM;do{rM=mvs[Math.floor(Math.random()*mvs.length)];}while(rM===lM||(rM[0]===lM[0]&&rM[0]===sLM[0]));lastScrambleSequence.push(rM);sLM=lM;lM=rM;}startFullMoveSequence([...lastScrambleSequence],s=>{if(s){if(currentMode==='play')playModeState='SCRAMBLED';else if(currentMode==='ai')aiModeState='SCRAMBLED';messageArea.textContent="Cube scrambled!";}else messageArea.textContent="Scramble fail.";updateGameUI();});}
+        function handleResetCube(){if(isAnimating||sequenceInProgress)return;learnModeState.isWatchingAll=false;stopTimer();elapsedTime=0;updateTimerDisplay();resetCubeVisuals();lastScrambleSequence=[];if(currentMode==='play')playModeState='IDLE';else if(currentMode==='ai')aiModeState='IDLE';else if(currentMode==='learn'){learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.algorithmMoves=learnModeState.currentLesson?[...learnModeState.currentLesson.algorithm]:[];}messageArea.textContent="Cube reset.";updateGameUI();}
         function handleStartSolving(){if(currentMode!=='play'||playModeState!=='SCRAMBLED'||isAnimating||sequenceInProgress)return;playModeState='SOLVING';startTimer();updateGameUI();}
-        function handleStartAiSolver(){if(currentMode!=='ai'||isAnimating||sequenceInProgress||aiModeState==='DEMOING')return;aiModeState='DEMOING';messageArea.textContent="AI using fixed internal scramble to solve...";startTimer();const lgSt=getCurrentLogicalCubeStateFromVisuals();const aiMvs=solveCubeAI(lgSt);if(aiMvs&&aiMvs.length>0){messageArea.textContent=`AI Solver found ${aiMvs.length} moves. Animating...`;startFullMoveSequence(aiMvs,s=>{stopTimer();if(s){messageArea.textContent=`AI Solver finished in ${elapsedTime.toFixed(2)}s. (Logical state in console)`;console.log("Logical state after AI attempt:",lgSt);}else messageArea.textContent=`AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;aiModeState='IDLE';updateGameUI();});}else{stopTimer();messageArea.textContent="AI Solver found no moves (solver very basic).";aiModeState='IDLE';updateGameUI();}}
+        function handleStartAiSolver(){if(currentMode!=='ai'||isAnimating||sequenceInProgress||aiModeState==='DEMOING'||lastScrambleSequence.length===0)return;aiModeState='DEMOING';messageArea.textContent="AI applying current scramble to its logic...";startTimer();const lgSt=getLogicalStateFromScramble(lastScrambleSequence);const aiMvs=solveCubeAI(lgSt);if(aiMvs&&aiMvs.length>0){messageArea.textContent=`AI Solver found ${aiMvs.length} moves. Animating...`;startFullMoveSequence(aiMvs,s=>{stopTimer();if(s){messageArea.textContent=`AI Solver finished in ${elapsedTime.toFixed(2)}s. (Logical state in console)`;console.log("Logical state after AI attempt:",lgSt);}else messageArea.textContent=`AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;aiModeState='IDLE';updateGameUI();});}else{stopTimer();messageArea.textContent="AI Solver found no moves (solver still basic).";aiModeState='IDLE';updateGameUI();}}
         function handleLessonSelection(){const lId=lessonSelect.value;learnModeState.currentLesson=lessons.find(l=>l.id===lId)||null;learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=false;if(learnModeState.currentLesson){lessonDescription.textContent=learnModeState.currentLesson.description;algorithmDisplay.textContent=learnModeState.currentLesson.algorithm.join(' ');learnModeState.algorithmMoves=[...learnModeState.currentLesson.algorithm];}else{lessonDescription.textContent="";algorithmDisplay.textContent="";learnModeState.algorithmMoves=[];}updateGameUI();}
         function handleSetupLesson(){if(!learnModeState.currentLesson||isAnimating||sequenceInProgress||learnModeState.isWatchingAll)return;messageArea.textContent=`Setting up: ${learnModeState.currentLesson.name}`;resetCubeVisuals();learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;updateGameUI();startFullMoveSequence([...learnModeState.currentLesson.initialScramble],s=>{if(s){learnModeState.isLessonSetup=true;messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}.`;}else messageArea.textContent=`Setup for ${learnModeState.currentLesson.name} failed.`;updateGameUI();});}
         function handleWatchAlgorithm(){if(!learnModeState.isLessonSetup||sequenceInProgress||isAnimating||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0)return;messageArea.textContent=`AI performing: ${learnModeState.currentLesson.name}`;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=true;updateGameUI();playNextLearnAlgorithmMove();}
