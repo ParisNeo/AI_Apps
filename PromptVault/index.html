@@ -76,8 +76,13 @@
             border-radius: 5px;
             min-height: 150px;
         }
+        .action-buttons { /* Parent for action buttons */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem; /* Bootstrap's gap-2 equivalent */
+        }
         .action-buttons button {
-            margin-right: 8px;
+            /* margin-right: 8px; */ /* Replaced by gap on parent */
         }
         .add-prompt-btn {
             background-color: #28a745;
@@ -102,7 +107,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            z-index: 1050;
+            z-index: 1060; /* Ensure toasts are above most elements, including modals */
         }
         .toast {
             opacity: 0.95 !important;
@@ -216,6 +221,51 @@
         body.dark-mode .form-control::placeholder {
             color: #999;
         }
+        body.dark-mode .btn-outline-secondary {
+            color: #adb5bd;
+            border-color: #adb5bd;
+        }
+        body.dark-mode .btn-outline-secondary:hover {
+            color: #1a1a2e;
+            background-color: #adb5bd;
+            border-color: #adb5bd;
+        }
+         body.dark-mode .btn-outline-primary {
+            color: #8999f0; /* Adjusted for dark mode visibility */
+            border-color: #8999f0;
+        }
+        body.dark-mode .btn-outline-primary:hover {
+            color: #fff;
+            background-color: #8999f0;
+            border-color: #8999f0;
+        }
+        body.dark-mode .btn-outline-warning {
+            color: #ffd54f; /* Adjusted for dark mode visibility */
+            border-color: #ffd54f;
+        }
+        body.dark-mode .btn-outline-warning:hover {
+            color: #000;
+            background-color: #ffd54f;
+            border-color: #ffd54f;
+        }
+        body.dark-mode .btn-outline-danger {
+            color: #ff8a80; /* Adjusted for dark mode visibility */
+            border-color: #ff8a80;
+        }
+        body.dark-mode .btn-outline-danger:hover {
+            color: #fff;
+            background-color: #ff8a80;
+            border-color: #ff8a80;
+        }
+        body.dark-mode .btn-outline-info {
+            color: #63a4ff;
+            border-color: #63a4ff;
+        }
+        body.dark-mode .btn-outline-info:hover {
+            color: #fff;
+            background-color: #63a4ff;
+            border-color: #63a4ff;
+        }
     </style>
 </head>
 <body>
@@ -238,11 +288,20 @@
         <div class="row">
             <!-- Prompts List -->
             <div class="col-md-4 mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h4 id="promptListTitle">My Prompts</h4>
-                    <button class="btn btn-success add-prompt-btn btn-sm" id="addPromptBtn" data-bs-toggle="modal" data-bs-target="#promptModal">
-                        <i class="fas fa-plus"></i> New
-                    </button>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <h4 id="promptListTitle" class="mb-2 me-auto">My Prompts</h4>
+                    <div class="d-flex flex-wrap gap-2" id="promptListActions">
+                        <button class="btn btn-success add-prompt-btn btn-sm" id="addPromptBtn" data-bs-toggle="modal" data-bs-target="#promptModal">
+                            <i class="fas fa-plus"></i> New
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="importPromptsBtn" title="Import Prompts">
+                            <i class="fas fa-file-import"></i> Import
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button class="btn btn-outline-secondary btn-sm" id="exportAllBtn" title="Export All Prompts">
+                            <i class="fas fa-file-export"></i> Export All
+                        </button>
+                    </div>
                 </div>
                 <div class="list-group prompt-list-group" id="promptList">
                     <!-- Prompts will be loaded here by JavaScript -->
@@ -260,6 +319,8 @@
                         <div class="action-buttons">
                             <button class="btn btn-outline-primary btn-sm" id="copyPromptBtn"><i class="fas fa-copy"></i> Copy</button>
                             <button class="btn btn-outline-warning btn-sm" id="editPromptBtn"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-outline-info btn-sm" id="sharePromptBtn"><i class="fas fa-share-alt"></i> Share</button>
+                            <button class="btn btn-outline-secondary btn-sm" id="exportCurrentPromptBtn"><i class="fas fa-file-download"></i> Export Current</button>
                             <button class="btn btn-outline-danger btn-sm" id="deletePromptBtn"><i class="fas fa-trash"></i> Delete</button>
                         </div>
                     </div>
@@ -346,6 +407,12 @@
         const copyPromptBtn = document.getElementById('copyPromptBtn');
         const editPromptBtn = document.getElementById('editPromptBtn');
         const deletePromptBtn = document.getElementById('deletePromptBtn');
+        const sharePromptBtn = document.getElementById('sharePromptBtn');
+        const exportCurrentPromptBtn = document.getElementById('exportCurrentPromptBtn');
+        const exportAllBtn = document.getElementById('exportAllBtn');
+        const importPromptsBtn = document.getElementById('importPromptsBtn');
+        const importFileEl = document.getElementById('importFile');
+
 
         const themeCheckbox = document.getElementById('theme-checkbox');
         const themeIcon = document.getElementById('theme-icon');
@@ -354,46 +421,14 @@
         let currentPromptId = null;
 
         const defaultPrompts = [
-            {
-                id: `default-${Date.now() + 1}`,
-                title: "Brainstorm Blog Post Ideas",
-                content: "Brainstorm 10 unique and engaging blog post ideas for a website about [YOUR TOPIC/NICHE]. For each idea, provide a catchy title and a brief 1-2 sentence description."
-            },
-            {
-                id: `default-${Date.now() + 2}`,
-                title: "Summarize Text (ELI5)",
-                content: "Explain the following text like I'm 5 years old. Focus on the core concepts and use simple analogies:\n\n[PASTE TEXT HERE]"
-            },
-            {
-                id: `default-${Date.now() + 3}`,
-                title: "Python Code Generator",
-                content: "Write a Python function that [DESCRIBE FUNCTIONALITY, e.g., 'takes a list of numbers and returns the sum of all even numbers']. Include a docstring and a simple example of how to use it."
-            },
-            {
-                id: `default-${Date.now() + 4}`,
-                title: "Creative Story Starter",
-                content: "Write the opening paragraph (around 100-150 words) for a fantasy story about a young cartographer who discovers a map that shows islands that don't exist on any other chart."
-            },
-            {
-                id: `default-${Date.now() + 5}`,
-                title: "Act as a Debater",
-                content: "Act as an expert debater. I will provide you with a motion. Your task is to generate strong arguments for the affirmative side. Motion: [YOUR DEBATE MOTION]"
-            },
-            {
-                id: `default-${Date.now() + 6}`,
-                title: "Product Description Writer",
-                content: "Write a compelling product description (around 150 words) for a new [PRODUCT TYPE, e.g., 'eco-friendly water bottle']. Highlight 3 key benefits and include a call to action. Product Name: [PRODUCT NAME]"
-            },
-            {
-                id: `default-${Date.now() + 7}`,
-                title: "Email Drafter - Follow Up",
-                content: "Draft a polite and professional follow-up email. I previously contacted [RECIPIENT_NAME/COMPANY] on [DATE] regarding [ORIGINAL_SUBJECT]. I haven't heard back and would like to gently inquire about any updates. Keep it concise."
-            },
-            {
-                id: `default-${Date.now() + 8}`,
-                title: "Recipe Idea Generator",
-                content: "I have the following ingredients: [LIST INGREDIENTS, e.g., 'chicken breast, broccoli, rice, soy sauce']. Suggest 3 different meal ideas I can make, along with a brief outline of the cooking steps for one of them."
-            }
+            { id: `default-${Date.now() + 1}`, title: "Brainstorm Blog Post Ideas", content: "Brainstorm 10 unique and engaging blog post ideas for a website about [YOUR TOPIC/NICHE]. For each idea, provide a catchy title and a brief 1-2 sentence description." },
+            { id: `default-${Date.now() + 2}`, title: "Summarize Text (ELI5)", content: "Explain the following text like I'm 5 years old. Focus on the core concepts and use simple analogies:\n\n[PASTE TEXT HERE]" },
+            { id: `default-${Date.now() + 3}`, title: "Python Code Generator", content: "Write a Python function that [DESCRIBE FUNCTIONALITY, e.g., 'takes a list of numbers and returns the sum of all even numbers']. Include a docstring and a simple example of how to use it." },
+            { id: `default-${Date.now() + 4}`, title: "Creative Story Starter", content: "Write the opening paragraph (around 100-150 words) for a fantasy story about a young cartographer who discovers a map that shows islands that don't exist on any other chart." },
+            { id: `default-${Date.now() + 5}`, title: "Act as a Debater", content: "Act as an expert debater. I will provide you with a motion. Your task is to generate strong arguments for the affirmative side. Motion: [YOUR DEBATE MOTION]" },
+            { id: `default-${Date.now() + 6}`, title: "Product Description Writer", content: "Write a compelling product description (around 150 words) for a new [PRODUCT TYPE, e.g., 'eco-friendly water bottle']. Highlight 3 key benefits and include a call to action. Product Name: [PRODUCT NAME]" },
+            { id: `default-${Date.now() + 7}`, title: "Email Drafter - Follow Up", content: "Draft a polite and professional follow-up email. I previously contacted [RECIPIENT_NAME/COMPANY] on [DATE] regarding [ORIGINAL_SUBJECT]. I haven't heard back and would like to gently inquire about any updates. Keep it concise." },
+            { id: `default-${Date.now() + 8}`, title: "Recipe Idea Generator", content: "I have the following ingredients: [LIST INGREDIENTS, e.g., 'chicken breast, broccoli, rice, soy sauce']. Suggest 3 different meal ideas I can make, along with a brief outline of the cooking steps for one of them." }
         ];
 
         function generateId() {
@@ -405,7 +440,7 @@
             if (storedPrompts) {
                 prompts = JSON.parse(storedPrompts);
             } else {
-                prompts = [...defaultPrompts]; // Use a copy to avoid modifying defaults directly
+                prompts = [...defaultPrompts.map(p => ({...p, id: generateId()}))]; // Ensure defaults also have unique IDs on first load
                 savePrompts();
             }
             renderPromptList();
@@ -419,8 +454,8 @@
             promptListEl.innerHTML = '';
             if (prompts.length === 0) {
                 promptListEl.innerHTML = '<p class="text-muted p-3">No prompts yet. Add your first one!</p>';
-                 if (promptDisplayCardEl) promptDisplayCardEl.style.display = 'none';
-                 if (welcomeMessageEl) welcomeMessageEl.style.display = 'flex';
+                if (promptDisplayCardEl) promptDisplayCardEl.style.display = 'none';
+                if (welcomeMessageEl) welcomeMessageEl.style.display = 'flex';
                 return;
             }
             prompts.forEach(prompt => {
@@ -446,16 +481,18 @@
                 currentPromptId = id;
                 promptTitleDisplayEl.textContent = prompt.title;
                 promptContentDisplayEl.textContent = prompt.content;
-                promptDisplayCardEl.style.display = 'flex'; // Use flex for consistent height
+                promptDisplayCardEl.style.display = 'flex';
                 welcomeMessageEl.style.display = 'none';
-                // Update active state in list
                 Array.from(promptListEl.children).forEach(item => {
-                    item.classList.toggle('active', item.dataset.id === id);
+                    if (item.dataset) item.classList.toggle('active', item.dataset.id === id);
                 });
             } else {
                 currentPromptId = null;
                 promptDisplayCardEl.style.display = 'none';
                 welcomeMessageEl.style.display = 'flex';
+                 Array.from(promptListEl.children).forEach(item => {
+                    if (item.dataset) item.classList.remove('active');
+                });
             }
         }
 
@@ -465,7 +502,7 @@
                 <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
                     <div class="d-flex">
                         <div class="toast-body">
-                            ${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>'}
+                            ${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : (type === 'danger' ? '<i class="fas fa-exclamation-triangle me-2"></i>' : (type === 'warning' ? '<i class="fas fa-exclamation-circle me-2"></i>' : '<i class="fas fa-info-circle me-2"></i>'))}
                             ${message}
                         </div>
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
@@ -475,7 +512,6 @@
             document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
             const toastElement = new bootstrap.Toast(document.getElementById(toastId));
             toastElement.show();
-            // Remove toast from DOM after it's hidden to prevent clutter
             document.getElementById(toastId).addEventListener('hidden.bs.toast', function () {
                 this.remove();
             });
@@ -484,7 +520,7 @@
         addPromptBtn.addEventListener('click', () => {
             promptModalLabelEl.textContent = 'Add New Prompt';
             promptFormEl.reset();
-            promptIdInputEl.value = ''; // Clear any existing ID for new prompt
+            promptIdInputEl.value = ''; 
             promptModalEl.show();
         });
 
@@ -498,27 +534,23 @@
                 return;
             }
 
-            if (id) { // Editing existing prompt
+            if (id) { 
                 const index = prompts.findIndex(p => p.id === id);
                 if (index > -1) {
                     prompts[index] = { ...prompts[index], title, content };
+                    currentPromptId = id; // Ensure current ID remains set to the edited one
                     showToast('Prompt updated successfully!');
                 }
-            } else { // Adding new prompt
+            } else { 
                 const newPrompt = { id: generateId(), title, content };
-                prompts.unshift(newPrompt); // Add to the beginning of the array
-                currentPromptId = newPrompt.id; // Select the new prompt
+                prompts.unshift(newPrompt); 
+                currentPromptId = newPrompt.id; 
                 showToast('Prompt added successfully!');
             }
             
             savePrompts();
             renderPromptList();
-            if (id || prompts.length === 1) { // If editing or it's the first prompt
-                 displayPromptDetails(currentPromptId || prompts[0].id);
-            } else if (currentPromptId) { // If adding new and an ID was set for the new one
-                displayPromptDetails(currentPromptId);
-            }
-
+            displayPromptDetails(currentPromptId);
             promptModalEl.hide();
         });
 
@@ -538,18 +570,23 @@
             if (!currentPromptId) return;
             const promptToDelete = prompts.find(p => p.id === currentPromptId);
             if (confirm(`Are you sure you want to delete the prompt "${promptToDelete.title}"?`)) {
+                const deletedPromptIndex = prompts.findIndex(p => p.id === currentPromptId);
                 prompts = prompts.filter(p => p.id !== currentPromptId);
                 savePrompts();
-                const previousCurrentId = currentPromptId;
-                currentPromptId = null; // Reset current ID
+                currentPromptId = null; 
                 renderPromptList();
-                // Try to select the next prompt, or the previous, or none
+
                 if (prompts.length > 0) {
-                    let nextPromptIndex = prompts.findIndex(p => p.id > previousCurrentId); // Simplistic next selection
-                    if (nextPromptIndex === -1 && prompts.length > 0) nextPromptIndex = 0; // or select first
-                    displayPromptDetails(prompts[nextPromptIndex].id);
+                    let newIndexToSelect = deletedPromptIndex;
+                    if (newIndexToSelect >= prompts.length) { 
+                        newIndexToSelect = prompts.length - 1;
+                    }
+                     if (newIndexToSelect < 0 && prompts.length > 0) { // Should only happen if list was empty and somehow this ran
+                         newIndexToSelect = 0;
+                    }
+                    displayPromptDetails(prompts[newIndexToSelect].id);
                 } else {
-                    displayPromptDetails(null); // Show welcome message if no prompts left
+                    displayPromptDetails(null); 
                 }
                 showToast('Prompt deleted successfully!', 'warning');
             }
@@ -567,22 +604,155 @@
                     showToast('Failed to copy prompt.', 'danger');
                 }
             } else if (prompt) {
-                // Fallback for older browsers (less secure, more intrusive)
                 const textArea = document.createElement("textarea");
                 textArea.value = prompt.content;
                 document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
+                textArea.focus(); textArea.select();
                 try {
                     document.execCommand('copy');
                     showToast('Prompt content copied to clipboard! (fallback)');
                 } catch (err) {
-                    console.error('Fallback copy failed: ', err);
                     showToast('Failed to copy prompt. (fallback)', 'danger');
                 }
                 document.body.removeChild(textArea);
             }
         });
+
+        sharePromptBtn.addEventListener('click', async () => {
+            if (!currentPromptId) return;
+            const prompt = prompts.find(p => p.id === currentPromptId);
+            if (prompt) {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: `PromptVault: ${prompt.title}`,
+                            text: prompt.content,
+                        });
+                        showToast('Prompt shared successfully!');
+                    } catch (err) {
+                        console.error('Error sharing:', err);
+                        if (err.name !== 'AbortError') {
+                           showToast('Could not share prompt.', 'warning');
+                        }
+                    }
+                } else {
+                    try {
+                        await navigator.clipboard.writeText(prompt.content);
+                        showToast('Sharing not supported. Prompt content copied to clipboard. Please paste to share.', 'info');
+                    } catch (err) {
+                        showToast('Could not copy prompt for sharing.', 'danger');
+                    }
+                }
+            }
+        });
+
+        function downloadJSON(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        exportCurrentPromptBtn.addEventListener('click', () => {
+            if (!currentPromptId) {
+                showToast('No prompt selected to export.', 'warning');
+                return;
+            }
+            const prompt = prompts.find(p => p.id === currentPromptId);
+            if (prompt) {
+                const filename = `${prompt.title.replace(/[^a-z0-9_]/gi, '_').toLowerCase() || 'prompt'}.json`;
+                downloadJSON(prompt, filename);
+                showToast('Current prompt exported!');
+            }
+        });
+
+        exportAllBtn.addEventListener('click', () => {
+            if (prompts.length === 0) {
+                showToast('No prompts to export.', 'warning');
+                return;
+            }
+            downloadJSON(prompts, 'promptvault_all_prompts.json');
+            showToast('All prompts exported!');
+        });
+        
+        importPromptsBtn.addEventListener('click', () => {
+            importFileEl.click(); 
+        });
+
+        importFileEl.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.type !== "application/json") {
+                showToast("Please select a valid JSON file (.json).", "danger");
+                importFileEl.value = ''; 
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    let importedPromptsArray = [];
+                    let count = 0;
+
+                    if (Array.isArray(importedData)) {
+                        importedPromptsArray = importedData;
+                    } else if (typeof importedData === 'object' && importedData !== null && importedData.title && importedData.content) {
+                        importedPromptsArray = [importedData]; 
+                    } else {
+                        showToast('Invalid data structure in JSON. Expected an array of prompts or a single prompt object.', 'danger');
+                        importFileEl.value = '';
+                        return;
+                    }
+
+                    importedPromptsArray.forEach(item => {
+                        if (item && typeof item.title === 'string' && typeof item.content === 'string') {
+                            const newPrompt = {
+                                id: generateId(), 
+                                title: item.title,
+                                content: item.content
+                            };
+                            prompts.unshift(newPrompt); 
+                            count++;
+                        } else {
+                            console.warn("Skipping invalid prompt item during import:", item);
+                        }
+                    });
+
+                    if (count > 0) {
+                        savePrompts();
+                        renderPromptList();
+                         // Select the first newly imported prompt or maintain current selection
+                        if (count > 0 && prompts.length > 0) {
+                           currentPromptId = prompts[0].id; // Select the first of the (newly augmented) list
+                           displayPromptDetails(currentPromptId);
+                        }
+                        showToast(`${count} prompt(s) imported successfully!`, 'success');
+                    } else {
+                        showToast('No valid prompts found in the file to import.', 'warning');
+                    }
+
+                } catch (error) {
+                    console.error('Error parsing JSON file:', error);
+                    showToast('Error importing prompts: Invalid JSON content.', 'danger');
+                } finally {
+                     importFileEl.value = ''; 
+                }
+            };
+            reader.onerror = () => {
+                showToast('Error reading file.', 'danger');
+                importFileEl.value = ''; 
+            };
+            reader.readAsText(file);
+        });
+
 
         // Theme Toggle Functionality
         function setDarkTheme(isDark) {
@@ -608,22 +778,22 @@
             setDarkTheme(true);
         } else {
             themeCheckbox.checked = false;
-            setDarkTheme(false); // Default to light
+            setDarkTheme(false); 
         }
 
         // Initial Load
         document.addEventListener('DOMContentLoaded', () => {
             loadPrompts();
             if (prompts.length > 0) {
-                // Select the first prompt by default if none is current, or reselect current
-                if (!currentPromptId) currentPromptId = prompts[0].id;
+                if (!currentPromptId || !prompts.find(p => p.id === currentPromptId)) { // If no current ID or current ID not in list
+                     currentPromptId = prompts[0].id;
+                }
                 displayPromptDetails(currentPromptId);
             } else {
-                promptDisplayCardEl.style.display = 'none';
-                welcomeMessageEl.style.display = 'flex';
+                displayPromptDetails(null);
             }
         });
 
     </script>
 </body>
-</html> 
+</html>
