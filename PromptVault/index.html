@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PromptVault Pro - Your AI Prompt Companion</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
     <!-- Bootstrap CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- Font Awesome CDN -->
@@ -62,7 +63,7 @@
         }
 
         .main-content {
-            padding-left: 20px; /* Space from sidebar */
+            /* padding-left: 20px; /* Space from sidebar */ /* Handled by Bootstrap col padding */
         }
         @media (max-width: 767.98px) {
             .main-content {
@@ -97,14 +98,14 @@
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            min-height: 400px; 
+            min-height: 400px;
             display: flex;
             flex-direction: column;
         }
         .prompt-content-card .card-header { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
         .prompt-content-card .card-body { flex-grow: 1; overflow-y: auto; }
         .prompt-textarea {
-            white-space: pre-wrap; 
+            white-space: pre-wrap;
             font-family: 'Courier New', Courier, monospace;
             background-color: #fdfdff;
             border: 1px solid #ced4da;
@@ -122,7 +123,7 @@
         .toast { opacity: 0.95 !important; }
         .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
         .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
-        
+       
         /* Theme Toggle */
         .theme-switch-wrapper { display: flex; align-items: center; }
         .theme-switch { display: inline-block; height: 24px; position: relative; width: 50px; margin-left: 10px; }
@@ -140,10 +141,11 @@
         body.dark-mode .sidebar { background-color: #1f2833; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         body.dark-mode .sidebar-header { color: #e0e0e0; }
         body.dark-mode .category-list .list-group-item { background-color: #2c3e50; color: #adb5bd; border-color: #455a64; }
-        body.dark-mode .category-list .list-group-item:hover, body.dark-mode .category-list .list-group-item.active {
+        body.dark-mode .category-list .list-group-item:hover {
             background-color: #3b4f63; border-left-color: #8999f0; color: #8999f0;
         }
-        body.dark-mode .category-list .list-group-item.active { background-color: #667eea; color: white; }
+        body.dark-mode .category-list .list-group-item.active { background-color: #667eea; color: white; border-left-color: #667eea;}
+
         body.dark-mode .prompt-item-card { background-color: #2c3e50; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         body.dark-mode .prompt-item-card .card-title { color: #87cefa; }
         body.dark-mode .prompt-item-card .card-text { color: #adb5bd; }
@@ -156,15 +158,27 @@
         body.dark-mode .modal-header { background: linear-gradient(135deg, #1f2833 0%, #2c3e50 100%); }
         body.dark-mode .form-control, body.dark-mode .form-select { background-color: #2c3e50; color: #e0e0e0; border-color: #455a64; }
         body.dark-mode .form-control::placeholder, body.dark-mode .form-select::placeholder { color: #999; }
+        body.dark-mode .form-control:disabled, body.dark-mode .form-control[readonly] { background-color: #354655; opacity: 0.7; }
+        body.dark-mode .form-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");}
+
+
         body.dark-mode .btn-outline-secondary { color: #adb5bd; border-color: #adb5bd; }
         body.dark-mode .btn-outline-secondary:hover { color: #1a1a2e; background-color: #adb5bd; border-color: #adb5bd; }
-        /* ... other dark mode button outline styles ... */
+        body.dark-mode .btn-outline-primary { color: #8999f0; border-color: #8999f0; }
+        body.dark-mode .btn-outline-primary:hover { color: #fff; background-color: #8999f0; border-color: #8999f0; }
+        body.dark-mode .btn-outline-warning { color: #ffd54f; border-color: #ffd54f; }
+        body.dark-mode .btn-outline-warning:hover { color: #000; background-color: #ffd54f; border-color: #ffd54f; }
+        body.dark-mode .btn-outline-danger { color: #ff8a80; border-color: #ff8a80; }
+        body.dark-mode .btn-outline-danger:hover { color: #fff; background-color: #ff8a80; border-color: #ff8a80; }
+        body.dark-mode .btn-outline-info { color: #63a4ff; border-color: #63a4ff; }
+        body.dark-mode .btn-outline-info:hover { color: #fff; background-color: #63a4ff; border-color: #63a4ff; }
+        body.dark-mode .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#" onclick="showWelcomeView()"><i class="fas fa-brain"></i> PromptVault Pro</a>
+            <a class="navbar-brand" href="#" id="navbarBrandLink"><i class="fas fa-brain"></i> PromptVault Pro</a>
             <div class="theme-switch-wrapper">
                 <span id="theme-icon" class="text-white me-2"><i class="fas fa-sun"></i></span>
                 <label class="theme-switch" for="theme-checkbox">
@@ -181,7 +195,7 @@
             <div class="col-md-3">
                 <div class="sidebar">
                     <div class="d-grid gap-2 mb-3">
-                        <button class="btn btn-success btn-sm" id="addPromptBtnSidebar" data-bs-toggle="modal" data-bs-target="#promptModal">
+                        <button class="btn btn-success btn-sm" id="addPromptBtnSidebar">
                             <i class="fas fa-plus"></i> Add New Prompt
                         </button>
                     </div>
@@ -194,7 +208,7 @@
                             <i class="fas fa-file-export"></i> Export All
                         </button>
                     </div>
-                     <button class="btn btn-outline-primary btn-sm w-100 mb-3" id="manageCategoriesBtn" data-bs-toggle="modal" data-bs-target="#categoryManagementModal">
+                     <button class="btn btn-outline-primary btn-sm w-100 mb-3" id="manageCategoriesBtn">
                         <i class="fas fa-tags"></i> Manage Categories
                     </button>
 
@@ -212,8 +226,8 @@
             <div class="col-md-9 main-content">
                 <!-- Prompt List View -->
                 <div id="promptListView">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 id="promptListHeader">All Prompts</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h4 id="promptListHeader" class="mb-0">All Prompts</h4>
                          <button class="btn btn-primary btn-sm" id="exportSelectedBtn" style="display: none;">
                             <i class="fas fa-download"></i> Export Selected
                         </button>
@@ -234,7 +248,7 @@
                         <i class="fas fa-arrow-left"></i> Back to List
                     </button>
                     <div class="prompt-content-card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h5 class="mb-0" id="promptTitleDisplay"></h5>
                             <div class="action-buttons">
                                 <button class="btn btn-outline-primary btn-sm" id="copyPromptBtn"><i class="fas fa-copy"></i> Copy</button>
@@ -253,9 +267,9 @@
                         </div>
                     </div>
                 </div>
-                
+               
                 <!-- Welcome Message -->
-                <div id="welcomeMessage" class="text-center p-5 prompt-content-card" style="align-items: center; justify-content: center; display: none;">
+                <div id="welcomeMessageView" class="text-center p-5 prompt-content-card" style="align-items: center; justify-content: center; display: none;">
                     <div>
                         <i class="fas fa-magic fa-3x text-primary mb-3"></i>
                         <h2>Welcome to PromptVault Pro!</h2>
@@ -282,7 +296,7 @@
                             <input type="text" class="form-control" id="promptTitleInput" placeholder="e.g., Blog Post Idea Generator" required>
                         </div>
                         <div class="mb-3">
-                            <label for="promptCategoryInput" class="form-label">Category</label>
+                            <label for="promptCategorySelect" class="form-label">Category</label>
                             <div class="input-group">
                                 <select class="form-select" id="promptCategorySelect">
                                     <!-- Options will be populated by JavaScript -->
@@ -323,6 +337,7 @@
                         <input type="text" class="form-control" id="newCategoryNameInput" placeholder="New category name">
                         <button class="btn btn-outline-success" type="button" id="addNewCategoryBtnManagement">Add Category</button>
                     </div>
+                    <div class="form-text mt-1">A new category is formally created when you assign it to a prompt.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -331,626 +346,651 @@
         </div>
     </div>
 
-
     <!-- Toast Container for Notifications -->
-    <div id="toast-container"></div>
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
+    <!-- Bootstrap JS Bundle (Popper.js included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script>
-        // DOM Elements
-        const categoryListEl = document.getElementById('categoryList');
-        const promptCardsContainerEl = document.getElementById('promptCardsContainer');
-        const promptListHeaderEl = document.getElementById('promptListHeader');
-        const noPromptsInViewMessageEl = document.getElementById('noPromptsInViewMessage');
-        
-        const promptListViewEl = document.getElementById('promptListView');
-        const promptDetailViewEl = document.getElementById('promptDetailView');
-        const welcomeMessageEl = document.getElementById('welcomeMessage');
-        
-        const promptTitleDisplayEl = document.getElementById('promptTitleDisplay');
-        const promptContentDisplayEl = document.getElementById('promptContentDisplay');
-        const promptCategoryDisplayEl = document.getElementById('promptCategoryDisplay');
-        const backToPromptListBtn = document.getElementById('backToPromptListBtn');
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const categoryListEl = document.getElementById('categoryList');
+            const promptCardsContainerEl = document.getElementById('promptCardsContainer');
+            const promptListHeaderEl = document.getElementById('promptListHeader');
+            const noPromptsInViewMessageEl = document.getElementById('noPromptsInViewMessage');
+           
+            const promptListViewEl = document.getElementById('promptListView');
+            const promptDetailViewEl = document.getElementById('promptDetailView');
+            const welcomeMessageViewEl = document.getElementById('welcomeMessageView'); // Corrected ID
+           
+            const promptTitleDisplayEl = document.getElementById('promptTitleDisplay');
+            const promptContentDisplayEl = document.getElementById('promptContentDisplay');
+            const promptCategoryDisplayEl = document.getElementById('promptCategoryDisplay');
+            const backToPromptListBtn = document.getElementById('backToPromptListBtn');
 
-        const promptModalEl = new bootstrap.Modal(document.getElementById('promptModal'));
-        const promptFormEl = document.getElementById('promptForm');
-        const promptModalLabelEl = document.getElementById('promptModalLabel');
-        const promptIdInputEl = document.getElementById('promptId');
-        const promptTitleInputEl = document.getElementById('promptTitleInput');
-        const promptCategorySelectEl = document.getElementById('promptCategorySelect');
-        const promptNewCategoryInputEl = document.getElementById('promptNewCategoryInput');
-        const promptContentInputEl = document.getElementById('promptContentInput');
-        const savePromptBtn = document.getElementById('savePromptBtn');
-        
-        const addPromptBtnSidebar = document.getElementById('addPromptBtnSidebar');
-        const copyPromptBtn = document.getElementById('copyPromptBtn');
-        const editPromptBtnDetail = document.getElementById('editPromptBtnDetail');
-        const deletePromptBtn = document.getElementById('deletePromptBtn');
-        const sharePromptBtn = document.getElementById('sharePromptBtn');
-        const exportCurrentPromptBtn = document.getElementById('exportCurrentPromptBtn');
-        const exportAllBtn = document.getElementById('exportAllBtn');
-        const importPromptsBtn = document.getElementById('importPromptsBtn');
-        const importFileEl = document.getElementById('importFile');
-        const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+            // Bootstrap Modal Instances (must be initialized after Bootstrap JS is loaded)
+            const promptModalInstance = new bootstrap.Modal(document.getElementById('promptModal'));
+            const categoryManagementModalInstance = new bootstrap.Modal(document.getElementById('categoryManagementModal'));
 
-        const categoryManagementModalEl = new bootstrap.Modal(document.getElementById('categoryManagementModal'));
-        const existingCategoriesListEl = document.getElementById('existingCategoriesList');
-        const newCategoryNameInputEl = document.getElementById('newCategoryNameInput');
-        const addNewCategoryBtnManagement = document.getElementById('addNewCategoryBtnManagement');
-        
-        const themeCheckbox = document.getElementById('theme-checkbox');
-        const themeIcon = document.getElementById('theme-icon');
+            const promptFormEl = document.getElementById('promptForm');
+            const promptModalLabelEl = document.getElementById('promptModalLabel');
+            const promptIdInputEl = document.getElementById('promptId');
+            const promptTitleInputEl = document.getElementById('promptTitleInput');
+            const promptCategorySelectEl = document.getElementById('promptCategorySelect');
+            const promptNewCategoryInputEl = document.getElementById('promptNewCategoryInput');
+            const promptContentInputEl = document.getElementById('promptContentInput');
+            const savePromptBtn = document.getElementById('savePromptBtn');
+           
+            const addPromptBtnSidebar = document.getElementById('addPromptBtnSidebar');
+            const copyPromptBtn = document.getElementById('copyPromptBtn');
+            const editPromptBtnDetail = document.getElementById('editPromptBtnDetail');
+            const deletePromptBtn = document.getElementById('deletePromptBtn');
+            const sharePromptBtn = document.getElementById('sharePromptBtn');
+            const exportCurrentPromptBtn = document.getElementById('exportCurrentPromptBtn');
+            const exportAllBtn = document.getElementById('exportAllBtn');
+            const importPromptsBtn = document.getElementById('importPromptsBtn');
+            const importFileEl = document.getElementById('importFile');
+            const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+            const manageCategoriesBtn = document.getElementById('manageCategoriesBtn'); // Added this
+            const navbarBrandLink = document.getElementById('navbarBrandLink'); // Added this
 
-        // State
-        let prompts = [];
-        let currentPromptId = null;
-        let selectedCategoryFilter = 'ALL_PROMPTS'; // 'ALL_PROMPTS' or category name
-        const UNCATEGORIZED_DEFAULT = "Uncategorized";
-        let previouslySelectedCategory = 'ALL_PROMPTS';
+            const existingCategoriesListEl = document.getElementById('existingCategoriesList');
+            const newCategoryNameInputEl = document.getElementById('newCategoryNameInput');
+            const addNewCategoryBtnManagement = document.getElementById('addNewCategoryBtnManagement');
+           
+            const themeCheckbox = document.getElementById('theme-checkbox');
+            const themeIcon = document.getElementById('theme-icon');
 
-        const defaultPrompts = [
-            // Content Creation
-            { title: "Brainstorm Blog Post Ideas", content: "Generate 10 unique and engaging blog post titles and a brief (1-2 sentence) concept for each, related to the topic of [YOUR TOPIC/NICHE]. Ensure variety in angles (e.g., listicles, how-to, case studies, opinion pieces).", category: "Content Creation" },
-            { title: "Create a Viral Tweet Thread", content: "Draft a 5-tweet thread to explain the concept of [COMPLEX IDEA] in a simple, engaging, and shareable way. Start with a strong hook and end with a call to action or thought-provoking question.", category: "Content Creation" },
-            { title: "YouTube Video Script Outline", content: "Create a detailed script outline for a 5-7 minute YouTube video about [VIDEO TOPIC]. Include sections for: Hook, Introduction, Main Content Points (3-4 with sub-points), Visual/B-roll suggestions, Call to Action, and Outro.", category: "Content Creation" },
-            { title: "SEO-Optimized Article Intro", content: "Write an engaging 150-word introduction for an article titled \"[ARTICLE TITLE]\". The primary keyword is \"[PRIMARY KEYWORD]\" and secondary keywords are \"[SECONDARY KEYWORD 1]\", \"[SECONDARY KEYWORD 2]\". Ensure the intro is captivating and naturally incorporates the keywords.", category: "Content Creation" },
-            { title: "Podcast Episode Ideas", content: "Generate 5 podcast episode ideas for a show about [PODCAST THEME/NICHE]. For each idea, suggest a catchy title, a brief synopsis, and potential guest type (if applicable).", category: "Content Creation" },
+            // State
+            let prompts = [];
+            let currentPromptId = null;
+            let selectedCategoryFilter = 'ALL_PROMPTS'; 
+            const UNCATEGORIZED_DEFAULT = "Uncategorized";
+            let previouslySelectedCategory = 'ALL_PROMPTS';
 
-            // Business & Marketing
-            { title: "Craft a Compelling Elevator Pitch", content: "Develop a 30-second elevator pitch for a [COMPANY/PRODUCT/SERVICE] that solves [PROBLEM] for [TARGET AUDIENCE] by providing [UNIQUE SOLUTION/BENEFIT].", category: "Business & Marketing" },
-            { title: "SWOT Analysis Generator", content: "Perform a SWOT analysis (Strengths, Weaknesses, Opportunities, Threats) for a [BUSINESS TYPE OR SPECIFIC COMPANY] in the [INDUSTRY] market. Provide 3-4 bullet points for each section.", category: "Business & Marketing" },
-            { title: "Marketing Campaign Slogan Ideas", content: "Generate 10 catchy and memorable slogans for a marketing campaign promoting [PRODUCT/SERVICE/BRAND]. The target audience is [TARGET AUDIENCE DESCRIPTION] and the key message is [KEY MESSAGE].", category: "Business & Marketing" },
-            { title: "Customer Persona Development", content: "Create a detailed customer persona for a user of [PRODUCT/SERVICE]. Include: Name, Age, Occupation, Goals, Frustrations (Pain Points), Tech Savviness, Preferred Communication Channels, and a brief bio.", category: "Business & Marketing" },
-            { title: "Value Proposition Statement", content: "Help me articulate a clear and concise value proposition for [MY PRODUCT/SERVICE]. It should highlight: 1. Who is the target customer? 2. What problem does it solve? 3. What is the unique benefit/solution? 4. What makes it different from competitors?", category: "Business & Marketing"},
+            const defaultPrompts = [
+                // Content Creation
+                { title: "Brainstorm Blog Post Ideas", content: "Generate 10 unique and engaging blog post titles and a brief (1-2 sentence) concept for each, related to the topic of [YOUR TOPIC/NICHE]. Ensure variety in angles (e.g., listicles, how-to, case studies, opinion pieces).", category: "Content Creation" },
+                { title: "Create a Viral Tweet Thread", content: "Draft a 5-tweet thread to explain the concept of [COMPLEX IDEA] in a simple, engaging, and shareable way. Start with a strong hook and end with a call to action or thought-provoking question.", category: "Content Creation" },
+                { title: "YouTube Video Script Outline", content: "Create a detailed script outline for a 5-7 minute YouTube video about [VIDEO TOPIC]. Include sections for: Hook, Introduction, Main Content Points (3-4 with sub-points), Visual/B-roll suggestions, Call to Action, and Outro.", category: "Content Creation" },
+                { title: "SEO-Optimized Article Intro", content: "Write an engaging 150-word introduction for an article titled \"[ARTICLE TITLE]\". The primary keyword is \"[PRIMARY KEYWORD]\" and secondary keywords are \"[SECONDARY KEYWORD 1]\", \"[SECONDARY KEYWORD 2]\". Ensure the intro is captivating and naturally incorporates the keywords.", category: "Content Creation" },
+                { title: "Podcast Episode Ideas", content: "Generate 5 podcast episode ideas for a show about [PODCAST THEME/NICHE]. For each idea, suggest a catchy title, a brief synopsis, and potential guest type (if applicable).", category: "Content Creation" },
 
-            // Development & Code
-            { title: "Python Function for Data Cleaning", content: "Write a Python function using Pandas that takes a DataFrame and performs the following cleaning operations: 1. Removes duplicate rows. 2. Fills missing numerical values with the mean of their column. 3. Fills missing categorical values with the mode of their column. 4. Converts column names to lowercase and replaces spaces with underscores. Return the cleaned DataFrame.", category: "Development & Code" },
-            { title: "Explain JavaScript ES6 Feature", content: "Explain the JavaScript ES6 feature: [SPECIFIC ES6 FEATURE, e.g., 'Arrow Functions', 'Destructuring Assignment', 'Promises', 'Async/Await'] with a clear definition, syntax example, and a use case showing its benefits over older JavaScript syntax.", category: "Development & Code" },
-            { title: "Generate SQL Schema", content: "Design an SQL schema for a simple [APPLICATION TYPE, e.g., 'blogging platform', 'e-commerce site - products & orders', 'task management tool']. Define at least 3-4 related tables with appropriate columns, data types, primary keys, and foreign key relationships. Provide the `CREATE TABLE` statements.", category: "Development & Code" },
-            { title: "Code Refactoring Suggestions", content: "Analyze the following code snippet and suggest potential refactorings to improve its readability, efficiency, or maintainability. Explain the reasoning behind each suggestion.\n\n[PASTE CODE SNIPPET HERE]", category: "Development & Code" },
-            { title: "API Endpoint Design", content: "Design REST API endpoints for managing [RESOURCE, e.g., 'users', 'products', 'articles']. Include endpoints for CRUD operations (Create, Read, Update, Delete - including list all and get single). Specify HTTP methods, URL paths, expected request bodies (if any), and example success/error responses (status codes and JSON structure).", category: "Development & Code"},
+                // Business & Marketing
+                { title: "Craft a Compelling Elevator Pitch", content: "Develop a 30-second elevator pitch for a [COMPANY/PRODUCT/SERVICE] that solves [PROBLEM] for [TARGET AUDIENCE] by providing [UNIQUE SOLUTION/BENEFIT].", category: "Business & Marketing" },
+                { title: "SWOT Analysis Generator", content: "Perform a SWOT analysis (Strengths, Weaknesses, Opportunities, Threats) for a [BUSINESS TYPE OR SPECIFIC COMPANY] in the [INDUSTRY] market. Provide 3-4 bullet points for each section.", category: "Business & Marketing" },
+                { title: "Marketing Campaign Slogan Ideas", content: "Generate 10 catchy and memorable slogans for a marketing campaign promoting [PRODUCT/SERVICE/BRAND]. The target audience is [TARGET AUDIENCE DESCRIPTION] and the key message is [KEY MESSAGE].", category: "Business & Marketing" },
+                { title: "Customer Persona Development", content: "Create a detailed customer persona for a user of [PRODUCT/SERVICE]. Include: Name, Age, Occupation, Goals, Frustrations (Pain Points), Tech Savviness, Preferred Communication Channels, and a brief bio.", category: "Business & Marketing" },
+                { title: "Value Proposition Statement", content: "Help me articulate a clear and concise value proposition for [MY PRODUCT/SERVICE]. It should highlight: 1. Who is the target customer? 2. What problem does it solve? 3. What is the unique benefit/solution? 4. What makes it different from competitors?", category: "Business & Marketing"},
 
-            // Learning & Education
-            { title: "Explain Complex Concept Simply (ELI5)", content: "Explain the concept of [COMPLEX SCIENTIFIC/TECHNICAL CONCEPT, e.g., 'General Relativity', 'Machine Learning Bias', 'Photosynthesis'] as if you were explaining it to a 5-year-old. Use simple language and analogies.", category: "Learning & Education" },
-            { title: "Create a Study Guide Outline", content: "Generate a comprehensive study guide outline for the topic of [ACADEMIC SUBJECT/EXAM TOPIC]. Break it down into major sections and sub-topics. Suggest key terms to define and types of practice questions to include for each section.", category: "Learning & Education" },
-            { title: "Historical Event Summary", content: "Provide a concise summary (approx. 250 words) of the historical event: [HISTORICAL EVENT NAME]. Include key dates, main figures involved, causes, and significant outcomes/impact.", category: "Learning & Education" },
-            { title: "Language Learning: Dialogue Practice", content: "Create a short dialogue in [TARGET LANGUAGE, e.g., Spanish, French, German] between two people discussing [SCENARIO, e.g., 'ordering food at a restaurant', 'asking for directions', 'making plans for the weekend']. Provide the dialogue in the target language and its English translation.", category: "Learning & Education" },
-            { title: "Book Summary and Key Takeaways", content: "Provide a summary of the book \"[BOOK TITLE]\" by [AUTHOR]. Highlight 3-5 key takeaways or main arguments from the book.", category: "Learning & Education"},
+                // Development & Code
+                { title: "Python Function for Data Cleaning", content: "Write a Python function using Pandas that takes a DataFrame and performs the following cleaning operations: 1. Removes duplicate rows. 2. Fills missing numerical values with the mean of their column. 3. Fills missing categorical values with the mode of their column. 4. Converts column names to lowercase and replaces spaces with underscores. Return the cleaned DataFrame.", category: "Development & Code" },
+                { title: "Explain JavaScript ES6 Feature", content: "Explain the JavaScript ES6 feature: [SPECIFIC ES6 FEATURE, e.g., 'Arrow Functions', 'Destructuring Assignment', 'Promises', 'Async/Await'] with a clear definition, syntax example, and a use case showing its benefits over older JavaScript syntax.", category: "Development & Code" },
+                { title: "Generate SQL Schema", content: "Design an SQL schema for a simple [APPLICATION TYPE, e.g., 'blogging platform', 'e-commerce site - products & orders', 'task management tool']. Define at least 3-4 related tables with appropriate columns, data types, primary keys, and foreign key relationships. Provide the `CREATE TABLE` statements.", category: "Development & Code" },
+                { title: "Code Refactoring Suggestions", content: "Analyze the following code snippet and suggest potential refactorings to improve its readability, efficiency, or maintainability. Explain the reasoning behind each suggestion.\n\n[PASTE CODE SNIPPET HERE]", category: "Development & Code" },
+                { title: "API Endpoint Design", content: "Design REST API endpoints for managing [RESOURCE, e.g., 'users', 'products', 'articles']. Include endpoints for CRUD operations (Create, Read, Update, Delete - including list all and get single). Specify HTTP methods, URL paths, expected request bodies (if any), and example success/error responses (status codes and JSON structure).", category: "Development & Code"},
 
-            // Productivity & Tools
-            { title: "Meeting Agenda Generator", content: "Create a structured meeting agenda for a [DURATION, e.g., 60-minute] [MEETING TYPE, e.g., 'Project Kickoff', 'Weekly Sync', 'Brainstorming Session'] about [MEETING TOPIC]. Include: Attendees, Objectives, Agenda Items with time allocation, Presenter/Lead for each item, and any Pre-reading/Preparation required.", category: "Productivity & Tools" },
-            { title: "Email Template for [Purpose]", content: "Draft a professional email template for [PURPOSE, e.g., 'Requesting a Meeting', 'Following Up After a Networking Event', 'Declining an Invitation Politely', 'Thank You Note After Interview']. Include placeholders for personalization.", category: "Productivity & Tools" },
-            { title: "Time Management Strategy", content: "Outline a time management strategy for someone who [DESCRIBE SITUATION, e.g., 'works from home and gets easily distracted', 'is a student juggling multiple assignments', 'is a manager with many meetings']. Suggest 3-5 actionable techniques (e.g., Pomodoro, Time Blocking, Eisenhower Matrix).", category: "Productivity & Tools" },
-            { title: "Project Plan Outline", content: "Create a high-level project plan outline for [PROJECT DESCRIPTION]. Include sections for: Project Goal, Scope, Key Deliverables, Major Milestones with target dates, Stakeholders, and Potential Risks.", category: "Productivity & Tools" },
-            { title: "Decision-Making Framework (Pros/Cons)", content: "Help me make a decision about [DECISION TO BE MADE]. List at least 5 potential pros and 5 potential cons. Then, assign a weight (1-5, 5 being most important) to each pro and con, and suggest a way to evaluate the options.", category: "Productivity & Tools"},
-            
-            // Creative & Fun
-            { title: "Short Story Starter", content: "Write the opening three paragraphs (approx. 200-250 words) of a [GENRE, e.g., 'Sci-Fi', 'Fantasy', 'Mystery', 'Horror'] story based on the following premise: [ONE-SENTENCE PREMISE, e.g., 'A lone astronaut discovers a mysterious signal originating from an unexplored moon of Jupiter.']. Establish the setting, introduce a character, and hint at the central conflict.", category: "Creative & Fun" },
-            { title: "Character Profile Generator", content: "Create a detailed character profile for a [CHARACTER ARCHETYPE, e.g., 'Reluctant Hero', 'Wise Mentor', 'Eccentric Inventor', 'Charming Antagonist']. Include: Name, Age, Physical Description, Personality Traits (3 positive, 3 negative), Motivations, Fears, and a defining quirk.", category: "Creative & Fun" },
-            { title: "Write a Poem (Sonnet)", content: "Compose a sonnet (14 lines, specific rhyme scheme like ABAB CDCD EFEF GG, in iambic pentameter if possible) on the theme of [THEME, e.g., 'The Changing Seasons', 'The Power of Dreams', 'A Moment of Solitude'].", category: "Creative & Fun" },
-            { title: "Recipe Generator (Unusual Ingredients)", content: "Create an imaginative recipe for a [DISH TYPE, e.g., 'dessert', 'main course', 'appetizer'] that must include the following three unusual (or seemingly clashing) ingredients: [INGREDIENT 1], [INGREDIENT 2], [INGREDIENT 3]. Provide a name for the dish, ingredient list, and step-by-step instructions.", category: "Creative & Fun" },
-            { title: "Imagine a Future Technology", content: "Describe a futuristic technology that could exist in 50 years. What problem does it solve? How does it work (in layman's terms)? What are its potential benefits and drawbacks for society?", category: "Creative & Fun"},
-            { title: "Travel Itinerary - Dream Destination", content: "Plan a 7-day dream itinerary for a trip to [DESTINATION]. Include daily activities, suggested sights, types of accommodation, and local culinary experiences to try.", category: "Creative & Fun"}
-        ];
+                // Learning & Education
+                { title: "Explain Complex Concept Simply (ELI5)", content: "Explain the concept of [COMPLEX SCIENTIFIC/TECHNICAL CONCEPT, e.g., 'General Relativity', 'Machine Learning Bias', 'Photosynthesis'] as if you were explaining it to a 5-year-old. Use simple language and analogies.", category: "Learning & Education" },
+                { title: "Create a Study Guide Outline", content: "Generate a comprehensive study guide outline for the topic of [ACADEMIC SUBJECT/EXAM TOPIC]. Break it down into major sections and sub-topics. Suggest key terms to define and types of practice questions to include for each section.", category: "Learning & Education" },
+                { title: "Historical Event Summary", content: "Provide a concise summary (approx. 250 words) of the historical event: [HISTORICAL EVENT NAME]. Include key dates, main figures involved, causes, and significant outcomes/impact.", category: "Learning & Education" },
+                { title: "Language Learning: Dialogue Practice", content: "Create a short dialogue in [TARGET LANGUAGE, e.g., Spanish, French, German] between two people discussing [SCENARIO, e.g., 'ordering food at a restaurant', 'asking for directions', 'making plans for the weekend']. Provide the dialogue in the target language and its English translation.", category: "Learning & Education" },
+                { title: "Book Summary and Key Takeaways", content: "Provide a summary of the book \"[BOOK TITLE]\" by [AUTHOR]. Highlight 3-5 key takeaways or main arguments from the book.", category: "Learning & Education"},
 
-        // --- Core Logic ---
-        function generateId() {
-            return `prompt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        }
+                // Productivity & Tools
+                { title: "Meeting Agenda Generator", content: "Create a structured meeting agenda for a [DURATION, e.g., 60-minute] [MEETING TYPE, e.g., 'Project Kickoff', 'Weekly Sync', 'Brainstorming Session'] about [MEETING TOPIC]. Include: Attendees, Objectives, Agenda Items with time allocation, Presenter/Lead for each item, and any Pre-reading/Preparation required.", category: "Productivity & Tools" },
+                { title: "Email Template for [Purpose]", content: "Draft a professional email template for [PURPOSE, e.g., 'Requesting a Meeting', 'Following Up After a Networking Event', 'Declining an Invitation Politely', 'Thank You Note After Interview']. Include placeholders for personalization.", category: "Productivity & Tools" },
+                { title: "Time Management Strategy", content: "Outline a time management strategy for someone who [DESCRIBE SITUATION, e.g., 'works from home and gets easily distracted', 'is a student juggling multiple assignments', 'is a manager with many meetings']. Suggest 3-5 actionable techniques (e.g., Pomodoro, Time Blocking, Eisenhower Matrix).", category: "Productivity & Tools" },
+                { title: "Project Plan Outline", content: "Create a high-level project plan outline for [PROJECT DESCRIPTION]. Include sections for: Project Goal, Scope, Key Deliverables, Major Milestones with target dates, Stakeholders, and Potential Risks.", category: "Productivity & Tools" },
+                { title: "Decision-Making Framework (Pros/Cons)", content: "Help me make a decision about [DECISION TO BE MADE]. List at least 5 potential pros and 5 potential cons. Then, assign a weight (1-5, 5 being most important) to each pro and con, and suggest a way to evaluate the options.", category: "Productivity & Tools"},
+                
+                // Creative & Fun
+                { title: "Short Story Starter", content: "Write the opening three paragraphs (approx. 200-250 words) of a [GENRE, e.g., 'Sci-Fi', 'Fantasy', 'Mystery', 'Horror'] story based on the following premise: [ONE-SENTENCE PREMISE, e.g., 'A lone astronaut discovers a mysterious signal originating from an unexplored moon of Jupiter.']. Establish the setting, introduce a character, and hint at the central conflict.", category: "Creative & Fun" },
+                { title: "Character Profile Generator", content: "Create a detailed character profile for a [CHARACTER ARCHETYPE, e.g., 'Reluctant Hero', 'Wise Mentor', 'Eccentric Inventor', 'Charming Antagonist']. Include: Name, Age, Physical Description, Personality Traits (3 positive, 3 negative), Motivations, Fears, and a defining quirk.", category: "Creative & Fun" },
+                { title: "Write a Poem (Sonnet)", content: "Compose a sonnet (14 lines, specific rhyme scheme like ABAB CDCD EFEF GG, in iambic pentameter if possible) on the theme of [THEME, e.g., 'The Changing Seasons', 'The Power of Dreams', 'A Moment of Solitude'].", category: "Creative & Fun" },
+                { title: "Recipe Generator (Unusual Ingredients)", content: "Create an imaginative recipe for a [DISH TYPE, e.g., 'dessert', 'main course', 'appetizer'] that must include the following three unusual (or seemingly clashing) ingredients: [INGREDIENT 1], [INGREDIENT 2], [INGREDIENT 3]. Provide a name for the dish, ingredient list, and step-by-step instructions.", category: "Creative & Fun" },
+                { title: "Imagine a Future Technology", content: "Describe a futuristic technology that could exist in 50 years. What problem does it solve? How does it work (in layman's terms)? What are its potential benefits and drawbacks for society?", category: "Creative & Fun"},
+                { title: "Travel Itinerary - Dream Destination", content: "Plan a 7-day dream itinerary for a trip to [DESTINATION]. Include daily activities, suggested sights, types of accommodation, and local culinary experiences to try.", category: "Creative & Fun"}
+            ];
 
-        function sanitizeCategoryName(name) {
-            if (!name || typeof name !== 'string') return UNCATEGORIZED_DEFAULT;
-            let newName = name.trim();
-            if (!newName) return UNCATEGORIZED_DEFAULT;
-            // Capitalize first letter of each word
-            return newName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-        }
-
-        function getUniqueCategories() {
-            const categories = new Set(prompts.map(p => p.category || UNCATEGORIZED_DEFAULT));
-            return Array.from(categories).sort((a, b) => {
-                if (a === UNCATEGORIZED_DEFAULT) return 1;
-                if (b === UNCATEGORIZED_DEFAULT) return -1;
-                return a.localeCompare(b);
-            });
-        }
-
-        function loadPrompts() {
-            const storedPrompts = localStorage.getItem('promptVaultProPrompts');
-            if (storedPrompts) {
-                prompts = JSON.parse(storedPrompts);
-            } else {
-                prompts = defaultPrompts.map(p => ({
-                    ...p,
-                    id: generateId(),
-                    category: sanitizeCategoryName(p.category) 
-                }));
+            // --- Core Logic ---
+            function generateId() {
+                return `prompt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             }
-            // Ensure all loaded prompts have a valid, sanitized category
-            prompts = prompts.map(p => ({...p, category: sanitizeCategoryName(p.category)}));
-            savePrompts();
-            renderApp();
-        }
 
-        function savePrompts() {
-            localStorage.setItem('promptVaultProPrompts', JSON.stringify(prompts));
-        }
-
-        // --- Rendering ---
-        function renderApp() {
-            renderCategoryList();
-            updateMainContentView();
-            populatePromptCategorySelect(); // For modal
-        }
-
-        function renderCategoryList() {
-            categoryListEl.innerHTML = '';
-            const uniqueCategories = getUniqueCategories();
-
-            const allPromptsItem = document.createElement('a');
-            allPromptsItem.href = '#';
-            allPromptsItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-            allPromptsItem.textContent = 'All Prompts';
-            allPromptsItem.dataset.category = 'ALL_PROMPTS';
-            if (selectedCategoryFilter === 'ALL_PROMPTS') {
-                allPromptsItem.classList.add('active');
+            function sanitizeCategoryName(name) {
+                if (!name || typeof name !== 'string') return UNCATEGORIZED_DEFAULT;
+                let newName = name.trim();
+                if (!newName) return UNCATEGORIZED_DEFAULT;
+                // Capitalize first letter of each word
+                return newName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
             }
-            allPromptsItem.addEventListener('click', (e) => {
-                e.preventDefault();
-                selectedCategoryFilter = 'ALL_PROMPTS';
-                previouslySelectedCategory = 'ALL_PROMPTS';
-                currentPromptId = null; // Clear specific prompt selection
-                renderApp();
-            });
-            categoryListEl.appendChild(allPromptsItem);
 
-            uniqueCategories.forEach(category => {
-                const listItem = document.createElement('a');
-                listItem.href = '#';
-                listItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-                listItem.textContent = category;
-                listItem.dataset.category = category;
-                 if (selectedCategoryFilter === category) {
-                    listItem.classList.add('active');
+            function getUniqueCategories() {
+                const categories = new Set(prompts.map(p => p.category || UNCATEGORIZED_DEFAULT));
+                return Array.from(categories).sort((a, b) => {
+                    if (a === UNCATEGORIZED_DEFAULT) return 1;
+                    if (b === UNCATEGORIZED_DEFAULT) return -1;
+                    return a.localeCompare(b);
+                });
+            }
+
+            function loadPrompts() {
+                const storedPrompts = localStorage.getItem('promptVaultProPrompts');
+                if (storedPrompts) {
+                    prompts = JSON.parse(storedPrompts);
+                } else {
+                    prompts = defaultPrompts.map(p => ({
+                        ...p,
+                        id: generateId(),
+                        category: sanitizeCategoryName(p.category)
+                    }));
                 }
-                listItem.addEventListener('click', (e) => {
+                prompts = prompts.map(p => ({...p, category: sanitizeCategoryName(p.category)}));
+                savePrompts();
+                renderApp();
+            }
+
+            function savePrompts() {
+                localStorage.setItem('promptVaultProPrompts', JSON.stringify(prompts));
+            }
+
+            // --- Rendering ---
+            function renderApp() {
+                renderCategoryList();
+                updateMainContentView();
+                populatePromptCategorySelect(); 
+            }
+
+            function renderCategoryList() {
+                categoryListEl.innerHTML = '';
+                const uniqueCategories = getUniqueCategories();
+
+                const allPromptsItem = document.createElement('a');
+                allPromptsItem.href = '#';
+                allPromptsItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                allPromptsItem.textContent = 'All Prompts';
+                allPromptsItem.dataset.category = 'ALL_PROMPTS';
+                if (selectedCategoryFilter === 'ALL_PROMPTS') {
+                    allPromptsItem.classList.add('active');
+                }
+                allPromptsItem.addEventListener('click', (e) => {
                     e.preventDefault();
-                    selectedCategoryFilter = category;
-                    previouslySelectedCategory = category;
-                    currentPromptId = null; // Clear specific prompt selection
+                    selectedCategoryFilter = 'ALL_PROMPTS';
+                    previouslySelectedCategory = 'ALL_PROMPTS';
+                    currentPromptId = null; 
                     renderApp();
                 });
-                categoryListEl.appendChild(listItem);
-            });
-        }
-        
-        function updateMainContentView() {
-            if (currentPromptId) {
-                showPromptDetailView(currentPromptId);
-            } else if (selectedCategoryFilter) {
-                showPromptListView(selectedCategoryFilter);
-            } else {
-                showWelcomeView();
-            }
-        }
+                categoryListEl.appendChild(allPromptsItem);
 
-        function showWelcomeView() {
-            promptListViewEl.style.display = 'none';
-            promptDetailViewEl.style.display = 'none';
-            welcomeMessageEl.style.display = 'flex';
-            selectedCategoryFilter = null;
-            currentPromptId = null;
-            // Deactivate category list items
-            Array.from(categoryListEl.children).forEach(item => item.classList.remove('active'));
-        }
-
-        function showPromptListView(categoryToShow) {
-            promptListViewEl.style.display = 'block';
-            promptDetailViewEl.style.display = 'none';
-            welcomeMessageEl.style.display = 'none';
-
-            promptListHeaderEl.textContent = categoryToShow === 'ALL_PROMPTS' ? 'All Prompts' : `Category: ${categoryToShow}`;
-            
-            let promptsToDisplay;
-            if (categoryToShow === 'ALL_PROMPTS') {
-                promptsToDisplay = [...prompts];
-            } else {
-                promptsToDisplay = prompts.filter(p => p.category === categoryToShow);
-            }
-            promptsToDisplay.sort((a,b) => a.title.localeCompare(b.title));
-
-            promptCardsContainerEl.innerHTML = '';
-            if (promptsToDisplay.length === 0) {
-                noPromptsInViewMessageEl.style.display = 'block';
-                exportSelectedBtn.style.display = 'none';
-            } else {
-                noPromptsInViewMessageEl.style.display = 'none';
-                 promptsToDisplay.forEach(prompt => {
-                    const card = `
-                        <div class="col">
-                            <div class="prompt-item-card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-start align-items-center mb-2">
-                                        <input type="checkbox" class="form-check-input me-2 prompt-select-checkbox" data-prompt-id="${prompt.id}">
-                                        <h5 class="card-title mb-0" data-id="${prompt.id}">${prompt.title}</h5>
-                                    </div>
-                                    <p class="card-text small text-muted">${prompt.content.substring(0, 100)}${prompt.content.length > 100 ? '...' : ''}</p>
-                                    ${categoryToShow === 'ALL_PROMPTS' ? `<span class="badge bg-secondary">${prompt.category}</span>` : ''}
-                                </div>
-                            </div>
-                        </div>`;
-                    promptCardsContainerEl.insertAdjacentHTML('beforeend', card);
-                });
-                // Add event listeners to new card titles
-                promptCardsContainerEl.querySelectorAll('.card-title').forEach(titleEl => {
-                    titleEl.addEventListener('click', () => {
-                        currentPromptId = titleEl.dataset.id;
-                        previouslySelectedCategory = selectedCategoryFilter; // Store current filter before showing detail
-                        updateMainContentView();
+                uniqueCategories.forEach(category => {
+                    const listItem = document.createElement('a');
+                    listItem.href = '#';
+                    listItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                    listItem.textContent = category;
+                    listItem.dataset.category = category;
+                    if (selectedCategoryFilter === category) {
+                        listItem.classList.add('active');
+                    }
+                    listItem.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        selectedCategoryFilter = category;
+                        previouslySelectedCategory = category;
+                        currentPromptId = null; 
+                        renderApp();
                     });
+                    categoryListEl.appendChild(listItem);
                 });
-                // Add event listeners to checkboxes
-                promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', toggleExportSelectedButton);
-                });
-                toggleExportSelectedButton(); // Initial check
             }
-        }
-
-        function toggleExportSelectedButton() {
-            const anyChecked = Array.from(promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox:checked')).length > 0;
-            exportSelectedBtn.style.display = anyChecked ? 'block' : 'none';
-        }
-        
-        function showPromptDetailView(promptId) {
-            const prompt = prompts.find(p => p.id === promptId);
-            if (!prompt) {
-                currentPromptId = null; // Reset if prompt not found
-                updateMainContentView(); // Go back to list or welcome
-                return;
-            }
-            promptListViewEl.style.display = 'none';
-            promptDetailViewEl.style.display = 'block';
-            welcomeMessageEl.style.display = 'none';
-
-            promptTitleDisplayEl.textContent = prompt.title;
-            promptContentDisplayEl.textContent = prompt.content;
-            promptCategoryDisplayEl.textContent = `Category: ${prompt.category}`;
-        }
-        
-        backToPromptListBtn.addEventListener('click', () => {
-            currentPromptId = null;
-            selectedCategoryFilter = previouslySelectedCategory; // Restore previous filter
-            renderApp(); // Re-render category list to set active item and update main view
-        });
-
-        // --- Prompt CRUD ---
-        function populatePromptCategorySelect() {
-            promptCategorySelectEl.innerHTML = '<option value="">-- Select Existing or Type New --</option>';
-            const uniqueCategories = getUniqueCategories().filter(cat => cat !== UNCATEGORIZED_DEFAULT); // Don't list Uncategorized as default choice here
-
-            uniqueCategories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
-                promptCategorySelectEl.appendChild(option);
-            });
-            // Add Uncategorized at the end if it's not empty and desired. For now, handled by sanitizeCategoryName.
-        }
-
-        addPromptBtnSidebar.addEventListener('click', () => {
-            promptModalLabelEl.textContent = 'Add New Prompt';
-            promptFormEl.reset();
-            promptIdInputEl.value = '';
-            promptNewCategoryInputEl.value = '';
-            populatePromptCategorySelect(); // Ensure fresh categories
-            // If a specific category is selected, pre-fill it
-            if (selectedCategoryFilter && selectedCategoryFilter !== 'ALL_PROMPTS' && selectedCategoryFilter !== UNCATEGORIZED_DEFAULT) {
-                promptCategorySelectEl.value = selectedCategoryFilter;
-            } else {
-                 promptCategorySelectEl.value = ""; // Default to no selection
-            }
-            promptModalEl.show();
-        });
-
-        editPromptBtnDetail.addEventListener('click', () => {
-            if (!currentPromptId) return;
-            const prompt = prompts.find(p => p.id === currentPromptId);
-            if (prompt) {
-                promptModalLabelEl.textContent = 'Edit Prompt';
-                promptIdInputEl.value = prompt.id;
-                promptTitleInputEl.value = prompt.title;
-                promptContentInputEl.value = prompt.content;
-                populatePromptCategorySelect();
-                promptCategorySelectEl.value = prompt.category;
-                promptNewCategoryInputEl.value = ''; // Clear new category input
-                promptModalEl.show();
-            }
-        });
-
-        savePromptBtn.addEventListener('click', () => {
-            const title = promptTitleInputEl.value.trim();
-            const content = promptContentInputEl.value.trim();
-            const id = promptIdInputEl.value;
-            
-            let category = promptNewCategoryInputEl.value.trim();
-            if (!category && promptCategorySelectEl.value) {
-                category = promptCategorySelectEl.value;
-            }
-            category = sanitizeCategoryName(category); // Sanitize and default if needed
-
-            if (!title || !content) {
-                showToast('Title and Content cannot be empty!', 'danger');
-                return;
-            }
-
-            if (id) { // Editing
-                const index = prompts.findIndex(p => p.id === id);
-                if (index > -1) {
-                    prompts[index] = { ...prompts[index], title, content, category };
-                    showToast('Prompt updated successfully!');
-                    currentPromptId = id; // Keep viewing the edited prompt
+           
+            function updateMainContentView() {
+                if (currentPromptId) {
+                    showPromptDetailView(currentPromptId);
+                } else if (selectedCategoryFilter) {
+                    showPromptListView(selectedCategoryFilter);
+                } else {
+                    showWelcomeMessageView();
                 }
-            } else { // Adding new
-                const newPrompt = { id: generateId(), title, content, category };
-                prompts.unshift(newPrompt);
-                showToast('Prompt added successfully!');
-                currentPromptId = newPrompt.id; // View the new prompt
-                selectedCategoryFilter = category; // Switch view to the new prompt's category
-                previouslySelectedCategory = category;
             }
-            
-            savePrompts();
-            renderApp(); // Full re-render
-            promptModalEl.hide();
-        });
 
-        deletePromptBtn.addEventListener('click', () => {
-            if (!currentPromptId) return;
-            const promptToDelete = prompts.find(p => p.id === currentPromptId);
-            if (confirm(`Are you sure you want to delete the prompt "${promptToDelete.title}"?`)) {
-                prompts = prompts.filter(p => p.id !== currentPromptId);
+            function showWelcomeMessageView() { // Renamed function
+                promptListViewEl.style.display = 'none';
+                promptDetailViewEl.style.display = 'none';
+                welcomeMessageViewEl.style.display = 'flex'; // Use correct welcome element
+                selectedCategoryFilter = null;
+                currentPromptId = null;
+                Array.from(categoryListEl.children).forEach(item => item.classList.remove('active'));
+            }
+
+            navbarBrandLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showWelcomeMessageView();
+            });
+
+
+            function showPromptListView(categoryToShow) {
+                promptListViewEl.style.display = 'block';
+                promptDetailViewEl.style.display = 'none';
+                welcomeMessageViewEl.style.display = 'none'; // Use correct welcome element
+
+                promptListHeaderEl.textContent = categoryToShow === 'ALL_PROMPTS' ? 'All Prompts' : `Category: ${categoryToShow}`;
+               
+                let promptsToDisplay;
+                if (categoryToShow === 'ALL_PROMPTS') {
+                    promptsToDisplay = [...prompts];
+                } else {
+                    promptsToDisplay = prompts.filter(p => p.category === categoryToShow);
+                }
+                promptsToDisplay.sort((a,b) => a.title.localeCompare(b.title));
+
+                promptCardsContainerEl.innerHTML = '';
+                if (promptsToDisplay.length === 0) {
+                    noPromptsInViewMessageEl.style.display = 'block';
+                    exportSelectedBtn.style.display = 'none';
+                } else {
+                    noPromptsInViewMessageEl.style.display = 'none';
+                    promptsToDisplay.forEach(prompt => {
+                        const card = `
+                            <div class="col">
+                                <div class="prompt-item-card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-start align-items-center mb-2">
+                                            <input type="checkbox" class="form-check-input me-2 prompt-select-checkbox" data-prompt-id="${prompt.id}">
+                                            <h5 class="card-title mb-0" data-id="${prompt.id}">${prompt.title}</h5>
+                                        </div>
+                                        <p class="card-text small text-muted">${prompt.content.substring(0, 100)}${prompt.content.length > 100 ? '...' : ''}</p>
+                                        ${categoryToShow === 'ALL_PROMPTS' ? `<span class="badge bg-secondary">${prompt.category}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>`;
+                        promptCardsContainerEl.insertAdjacentHTML('beforeend', card);
+                    });
+                    promptCardsContainerEl.querySelectorAll('.card-title').forEach(titleEl => {
+                        titleEl.addEventListener('click', () => {
+                            currentPromptId = titleEl.dataset.id;
+                            previouslySelectedCategory = selectedCategoryFilter; 
+                            updateMainContentView();
+                        });
+                    });
+                    promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', toggleExportSelectedButton);
+                    });
+                    toggleExportSelectedButton(); 
+                }
+            }
+
+            function toggleExportSelectedButton() {
+                const anyChecked = Array.from(promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox:checked')).length > 0;
+                exportSelectedBtn.style.display = anyChecked ? 'block' : 'none';
+            }
+           
+            function showPromptDetailView(promptId) {
+                const prompt = prompts.find(p => p.id === promptId);
+                if (!prompt) {
+                    currentPromptId = null; 
+                    updateMainContentView(); 
+                    return;
+                }
+                promptListViewEl.style.display = 'none';
+                promptDetailViewEl.style.display = 'block';
+                welcomeMessageViewEl.style.display = 'none'; // Use correct welcome element
+
+                promptTitleDisplayEl.textContent = prompt.title;
+                promptContentDisplayEl.textContent = prompt.content;
+                promptCategoryDisplayEl.textContent = `Category: ${prompt.category}`;
+            }
+           
+            backToPromptListBtn.addEventListener('click', () => {
+                currentPromptId = null;
+                selectedCategoryFilter = previouslySelectedCategory; 
+                renderApp(); 
+            });
+
+            // --- Prompt CRUD ---
+            function populatePromptCategorySelect() {
+                promptCategorySelectEl.innerHTML = '<option value="">-- Select Existing or Type New --</option>';
+                const uniqueCategories = getUniqueCategories().filter(cat => cat !== UNCATEGORIZED_DEFAULT); 
+
+                uniqueCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    promptCategorySelectEl.appendChild(option);
+                });
+            }
+
+            addPromptBtnSidebar.addEventListener('click', () => {
+                promptModalLabelEl.textContent = 'Add New Prompt';
+                promptFormEl.reset();
+                promptIdInputEl.value = '';
+                promptNewCategoryInputEl.value = '';
+                populatePromptCategorySelect(); 
+                if (selectedCategoryFilter && selectedCategoryFilter !== 'ALL_PROMPTS' && selectedCategoryFilter !== UNCATEGORIZED_DEFAULT) {
+                    promptCategorySelectEl.value = selectedCategoryFilter;
+                } else {
+                    promptCategorySelectEl.value = ""; 
+                }
+                promptModalInstance.show();
+            });
+
+            editPromptBtnDetail.addEventListener('click', () => {
+                if (!currentPromptId) return;
+                const prompt = prompts.find(p => p.id === currentPromptId);
+                if (prompt) {
+                    promptModalLabelEl.textContent = 'Edit Prompt';
+                    promptIdInputEl.value = prompt.id;
+                    promptTitleInputEl.value = prompt.title;
+                    promptContentInputEl.value = prompt.content;
+                    populatePromptCategorySelect();
+                    promptCategorySelectEl.value = prompt.category === UNCATEGORIZED_DEFAULT ? "" : prompt.category;
+                    promptNewCategoryInputEl.value = ''; 
+                    promptModalInstance.show();
+                }
+            });
+
+            savePromptBtn.addEventListener('click', () => {
+                const title = promptTitleInputEl.value.trim();
+                const content = promptContentInputEl.value.trim();
+                const id = promptIdInputEl.value;
+               
+                let category = promptNewCategoryInputEl.value.trim();
+                if (!category && promptCategorySelectEl.value) {
+                    category = promptCategorySelectEl.value;
+                }
+                category = sanitizeCategoryName(category); 
+
+                if (!title || !content) {
+                    showToast('Title and Content cannot be empty!', 'danger');
+                    return;
+                }
+
+                if (id) { 
+                    const index = prompts.findIndex(p => p.id === id);
+                    if (index > -1) {
+                        prompts[index] = { ...prompts[index], title, content, category };
+                        showToast('Prompt updated successfully!');
+                        currentPromptId = id; 
+                    }
+                } else { 
+                    const newPrompt = { id: generateId(), title, content, category };
+                    prompts.unshift(newPrompt);
+                    showToast('Prompt added successfully!');
+                    currentPromptId = newPrompt.id; 
+                    selectedCategoryFilter = category; 
+                    previouslySelectedCategory = category;
+                }
+               
                 savePrompts();
-                showToast('Prompt deleted successfully!', 'warning');
-                currentPromptId = null; // Go back to list view
-                // selectedCategoryFilter remains the same as `previouslySelectedCategory`
-                renderApp();
-            }
-        });
-        
-        // --- Category Management ---
-        document.getElementById('manageCategoriesBtn').addEventListener('click', renderCategoryManagementModal);
-
-        function renderCategoryManagementModal() {
-            existingCategoriesListEl.innerHTML = '';
-            const uniqueCategories = getUniqueCategories();
-
-            uniqueCategories.forEach(category => {
-                if (category === UNCATEGORIZED_DEFAULT) return; // Don't allow managing "Uncategorized" directly
-
-                const li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.textContent = category;
-
-                const buttonsDiv = document.createElement('div');
-                const renameBtn = document.createElement('button');
-                renameBtn.className = 'btn btn-outline-warning btn-sm me-2';
-                renameBtn.innerHTML = '<i class="fas fa-edit"></i> Rename';
-                renameBtn.onclick = () => renameCategory(category);
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-outline-danger btn-sm';
-                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
-                deleteBtn.onclick = () => deleteCategory(category);
-
-                buttonsDiv.appendChild(renameBtn);
-                buttonsDiv.appendChild(deleteBtn);
-                li.appendChild(buttonsDiv);
-                existingCategoriesListEl.appendChild(li);
+                renderApp(); 
+                promptModalInstance.hide();
             });
-        }
 
-        addNewCategoryBtnManagement.addEventListener('click', () => {
-            const newCatNameRaw = newCategoryNameInputEl.value.trim();
-            if (!newCatNameRaw) {
-                showToast("Category name cannot be empty.", "warning");
-                return;
-            }
-            const newCatName = sanitizeCategoryName(newCatNameRaw);
-            const existingCategories = getUniqueCategories();
-            if (existingCategories.map(c => c.toLowerCase()).includes(newCatName.toLowerCase())) {
-                showToast(`Category "${newCatName}" already exists.`, "warning");
-                return;
-            }
-            // To "add" a category, we don't directly add to a list. It's derived from prompts.
-            // So, this button is more for user guidance. A category is truly "added" when a prompt uses it.
-            // For this UI, we can simulate it by adding it to the datalist/select.
-            // Or, better, just inform the user.
-            showToast(`To use "${newCatName}", assign it to a new or existing prompt.`, "info");
-            newCategoryNameInputEl.value = '';
-            // No actual data change here, categories are dynamic. Re-render modal for visual feedback if needed.
-            renderCategoryManagementModal();
-        });
-
-        function renameCategory(oldCategoryName) {
-            const newCategoryNameRaw = prompt(`Enter new name for category "${oldCategoryName}":`, oldCategoryName);
-            if (!newCategoryNameRaw || newCategoryNameRaw.trim() === "") return;
-
-            const newCategoryName = sanitizeCategoryName(newCategoryNameRaw);
-            if (newCategoryName === oldCategoryName) return;
-
-            const existingCategories = getUniqueCategories();
-            if (existingCategories.map(c => c.toLowerCase()).includes(newCategoryName.toLowerCase()) && newCategoryName.toLowerCase() !== oldCategoryName.toLowerCase()) {
-                showToast(`Category "${newCategoryName}" already exists. Cannot rename.`, "danger");
-                return;
-            }
-
-            prompts.forEach(prompt => {
-                if (prompt.category === oldCategoryName) {
-                    prompt.category = newCategoryName;
+            deletePromptBtn.addEventListener('click', () => {
+                if (!currentPromptId) return;
+                const promptToDelete = prompts.find(p => p.id === currentPromptId);
+                if (confirm(`Are you sure you want to delete the prompt "${promptToDelete.title}"?`)) {
+                    prompts = prompts.filter(p => p.id !== currentPromptId);
+                    savePrompts();
+                    showToast('Prompt deleted successfully!', 'warning');
+                    currentPromptId = null; 
+                    renderApp();
                 }
             });
-            savePrompts();
-            if (selectedCategoryFilter === oldCategoryName) {
-                selectedCategoryFilter = newCategoryName;
-                previouslySelectedCategory = newCategoryName;
-            }
-            renderApp();
-            renderCategoryManagementModal(); // Refresh modal list
-            showToast(`Category "${oldCategoryName}" renamed to "${newCategoryName}".`, "success");
-        }
+           
+            // --- Category Management ---
+            manageCategoriesBtn.addEventListener('click', () => {
+                renderCategoryManagementModal();
+                categoryManagementModalInstance.show();
+            });
 
-        function deleteCategory(categoryName) {
-            if (categoryName === UNCATEGORIZED_DEFAULT) {
-                showToast("Cannot delete the 'Uncategorized' category.", "warning");
-                return;
+
+            function renderCategoryManagementModal() {
+                existingCategoriesListEl.innerHTML = '';
+                const uniqueCategories = getUniqueCategories();
+
+                uniqueCategories.forEach(category => {
+                    if (category === UNCATEGORIZED_DEFAULT) return; 
+
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.textContent = category;
+
+                    const buttonsDiv = document.createElement('div');
+                    const renameBtn = document.createElement('button');
+                    renameBtn.className = 'btn btn-outline-warning btn-sm me-2';
+                    renameBtn.innerHTML = '<i class="fas fa-edit"></i> Rename';
+                    renameBtn.onclick = () => renameCategory(category);
+                   
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-outline-danger btn-sm';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                    deleteBtn.onclick = () => deleteCategory(category);
+
+                    buttonsDiv.appendChild(renameBtn);
+                    buttonsDiv.appendChild(deleteBtn);
+                    li.appendChild(buttonsDiv);
+                    existingCategoriesListEl.appendChild(li);
+                });
             }
-            if (confirm(`Are you sure you want to delete category "${categoryName}"? All prompts in this category will be moved to '${UNCATEGORIZED_DEFAULT}'.`)) {
+
+            addNewCategoryBtnManagement.addEventListener('click', () => {
+                const newCatNameRaw = newCategoryNameInputEl.value.trim();
+                if (!newCatNameRaw) {
+                    showToast("Category name cannot be empty.", "warning");
+                    return;
+                }
+                const newCatName = sanitizeCategoryName(newCatNameRaw);
+                const existingCategories = getUniqueCategories();
+                if (existingCategories.map(c => c.toLowerCase()).includes(newCatName.toLowerCase())) {
+                    showToast(`Category "${newCatName}" already exists.`, "warning");
+                    return;
+                }
+                showToast(`To use "${newCatName}", assign it to a new or existing prompt. It will appear once used.`, "info");
+                newCategoryNameInputEl.value = '';
+                renderCategoryManagementModal();
+            });
+
+            function renameCategory(oldCategoryName) {
+                const newCategoryNameRaw = prompt(`Enter new name for category "${oldCategoryName}":`, oldCategoryName);
+                if (!newCategoryNameRaw || newCategoryNameRaw.trim() === "") return;
+
+                const newCategoryName = sanitizeCategoryName(newCategoryNameRaw);
+                if (newCategoryName === oldCategoryName) return;
+
+                const existingCategories = getUniqueCategories();
+                if (existingCategories.map(c => c.toLowerCase()).includes(newCategoryName.toLowerCase()) && newCategoryName.toLowerCase() !== oldCategoryName.toLowerCase()) {
+                    showToast(`Category "${newCategoryName}" already exists. Cannot rename.`, "danger");
+                    return;
+                }
+
                 prompts.forEach(prompt => {
-                    if (prompt.category === categoryName) {
-                        prompt.category = UNCATEGORIZED_DEFAULT;
+                    if (prompt.category === oldCategoryName) {
+                        prompt.category = newCategoryName;
                     }
                 });
                 savePrompts();
-                if (selectedCategoryFilter === categoryName) {
-                    selectedCategoryFilter = UNCATEGORIZED_DEFAULT;
-                    previouslySelectedCategory = UNCATEGORIZED_DEFAULT;
+                if (selectedCategoryFilter === oldCategoryName) {
+                    selectedCategoryFilter = newCategoryName;
+                    previouslySelectedCategory = newCategoryName;
                 }
                 renderApp();
-                renderCategoryManagementModal(); // Refresh modal list
-                showToast(`Category "${categoryName}" deleted. Prompts moved to '${UNCATEGORIZED_DEFAULT}'.`, "success");
+                renderCategoryManagementModal(); 
+                showToast(`Category "${oldCategoryName}" renamed to "${newCategoryName}".`, "success");
             }
-        }
 
-        // --- Import/Export & Other Actions ---
-        copyPromptBtn.addEventListener('click', async () => { /* ... (no structural changes needed for this logic) ... */
-            if (!currentPromptId) return;
-            const prompt = prompts.find(p => p.id === currentPromptId);
-            if (prompt && navigator.clipboard) {
-                try {
-                    await navigator.clipboard.writeText(prompt.content);
-                    showToast('Prompt content copied to clipboard!');
-                } catch (err) { showToast('Failed to copy prompt.', 'danger'); }
-            } // ... (fallback logic remains same)
-        });
-        sharePromptBtn.addEventListener('click', async () => { /* ... (no structural changes) ... */
-            if (!currentPromptId) return;
-            const prompt = prompts.find(p => p.id === currentPromptId);
-            if (prompt) {
-                const shareData = {
-                    title: `PromptVault: ${prompt.title}`,
-                    text: `Category: ${prompt.category}\n\n${prompt.content}`,
-                };
-                if (navigator.share) {
-                    try {
-                        await navigator.share(shareData);
-                        showToast('Prompt shared!');
-                    } catch (err) { if(err.name !== 'AbortError') showToast('Could not share.', 'warning');}
-                } else { /* fallback copy */ 
-                    try { await navigator.clipboard.writeText(shareData.text); showToast('Share API not supported. Content copied.', 'info');}
-                    catch(e){ showToast('Could not copy for sharing.','danger'); }
+            function deleteCategory(categoryName) {
+                if (categoryName === UNCATEGORIZED_DEFAULT) {
+                    showToast("Cannot delete the 'Uncategorized' category.", "warning");
+                    return;
                 }
-            }
-        });
-        exportCurrentPromptBtn.addEventListener('click', () => { /* ... (no structural changes) ... */
-            if (!currentPromptId) { showToast('No prompt selected.', 'warning'); return; }
-            const prompt = prompts.find(p => p.id === currentPromptId);
-            if (prompt) downloadJSON(prompt, `${prompt.title.replace(/[^a-z0-9]/gi, '_')}.json`);
-        });
-        exportAllBtn.addEventListener('click', () => { /* ... (no structural changes) ... */
-            if (prompts.length === 0) { showToast('No prompts to export.', 'warning'); return; }
-            downloadJSON(prompts, 'promptvault_pro_all.json');
-        });
-
-        exportSelectedBtn.addEventListener('click', () => {
-            const selectedPromptIds = Array.from(promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox:checked'))
-                                         .map(cb => cb.dataset.promptId);
-            if (selectedPromptIds.length === 0) {
-                showToast('No prompts selected for export.', 'warning');
-                return;
-            }
-            const promptsToExport = prompts.filter(p => selectedPromptIds.includes(p.id));
-            downloadJSON(promptsToExport, 'promptvault_pro_selected.json');
-            showToast(`${promptsToExport.length} prompts exported!`);
-        });
-
-
-        importPromptsBtn.addEventListener('click', () => importFileEl.click());
-        importFileEl.addEventListener('change', (event) => { /* ... (ensure category is sanitized on import) ... */
-            const file = event.target.files[0];
-            if (!file || file.type !== "application/json") { /* ... */ return; }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    let dataToProcess = Array.isArray(importedData) ? importedData : [importedData];
-                    let count = 0;
-                    dataToProcess.forEach(item => {
-                        if (item && item.title && item.content) {
-                            prompts.unshift({
-                                id: generateId(),
-                                title: item.title,
-                                content: item.content,
-                                category: sanitizeCategoryName(item.category) // Sanitize here
-                            });
-                            count++;
+                if (confirm(`Are you sure you want to delete category "${categoryName}"? All prompts in this category will be moved to '${UNCATEGORIZED_DEFAULT}'.`)) {
+                    prompts.forEach(prompt => {
+                        if (prompt.category === categoryName) {
+                            prompt.category = UNCATEGORIZED_DEFAULT;
                         }
                     });
-                    if (count > 0) {
-                        savePrompts();
-                        selectedCategoryFilter = 'ALL_PROMPTS'; // Show all after import
-                        previouslySelectedCategory = 'ALL_PROMPTS';
-                        currentPromptId = null;
-                        renderApp();
-                        showToast(`${count} prompt(s) imported!`, 'success');
-                    } else { showToast('No valid prompts found in file.', 'warning'); }
-                } catch (err) { showToast('Error importing: Invalid JSON.', 'danger'); }
-                finally { importFileEl.value = ''; }
-            };
-            reader.readAsText(file);
-        });
+                    savePrompts();
+                    if (selectedCategoryFilter === categoryName) {
+                        selectedCategoryFilter = UNCATEGORIZED_DEFAULT;
+                        previouslySelectedCategory = UNCATEGORIZED_DEFAULT;
+                    }
+                    renderApp();
+                    renderCategoryManagementModal(); 
+                    showToast(`Category "${categoryName}" deleted. Prompts moved to '${UNCATEGORIZED_DEFAULT}'.`, "success");
+                }
+            }
 
-        function downloadJSON(data, filename) { /* ... (no changes) ... */
-            const jsonStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+            // --- Import/Export & Other Actions ---
+            copyPromptBtn.addEventListener('click', async () => {
+                if (!currentPromptId) return;
+                const prompt = prompts.find(p => p.id === currentPromptId);
+                if (prompt && navigator.clipboard) {
+                    try {
+                        await navigator.clipboard.writeText(prompt.content);
+                        showToast('Prompt content copied to clipboard!');
+                    } catch (err) { showToast('Failed to copy prompt.', 'danger'); }
+                } else if (prompt) { // Fallback
+                    const textArea = document.createElement("textarea");
+                    textArea.value = prompt.content;
+                    document.body.appendChild(textArea);
+                    textArea.focus(); textArea.select();
+                    try { document.execCommand('copy'); showToast('Prompt content copied! (fallback)'); }
+                    catch (err) { showToast('Failed to copy. (fallback)', 'danger'); }
+                    document.body.removeChild(textArea);
+                }
+            });
+            sharePromptBtn.addEventListener('click', async () => {
+                if (!currentPromptId) return;
+                const prompt = prompts.find(p => p.id === currentPromptId);
+                if (prompt) {
+                    const shareData = {
+                        title: `PromptVault: ${prompt.title}`,
+                        text: `Category: ${prompt.category}\n\n${prompt.content}`,
+                    };
+                    if (navigator.share) {
+                        try {
+                            await navigator.share(shareData);
+                            showToast('Prompt shared!');
+                        } catch (err) { if(err.name !== 'AbortError') showToast('Could not share.', 'warning');}
+                    } else { 
+                        try { await navigator.clipboard.writeText(shareData.text); showToast('Share API not supported. Content copied.', 'info');}
+                        catch(e){ showToast('Could not copy for sharing.','danger'); }
+                    }
+                }
+            });
+            exportCurrentPromptBtn.addEventListener('click', () => {
+                if (!currentPromptId) { showToast('No prompt selected.', 'warning'); return; }
+                const prompt = prompts.find(p => p.id === currentPromptId);
+                if (prompt) downloadJSON(prompt, `${prompt.title.replace(/[^a-z0-9]/gi, '_')}.json`);
+            });
+            exportAllBtn.addEventListener('click', () => {
+                if (prompts.length === 0) { showToast('No prompts to export.', 'warning'); return; }
+                downloadJSON(prompts, 'promptvault_pro_all.json');
+            });
 
-        function showToast(message, type = 'success') { /* ... (no changes) ... */
-            const toastId = `toast-${Date.now()}`;
-            const iconClass = { success: 'fa-check-circle', danger: 'fa-exclamation-triangle', warning: 'fa-exclamation-circle', info: 'fa-info-circle'}[type] || 'fa-info-circle';
-            const toastHTML = `<div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body"><i class="fas ${iconClass} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
-            document.getElementById('toast-container').insertAdjacentHTML('beforeend', toastHTML);
-            const toastElement = new bootstrap.Toast(document.getElementById(toastId));
-            toastElement.show();
-            document.getElementById(toastId).addEventListener('hidden.bs.toast', function () { this.remove(); });
-        }
-
-        // Theme Toggle
-        function setDarkTheme(isDark) { /* ... (no changes) ... */
-            document.body.classList.toggle('dark-mode', isDark);
-            themeIcon.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-            localStorage.setItem('promptVaultTheme', isDark ? 'dark' : 'light');
-        }
-        themeCheckbox.addEventListener('change', (event) => setDarkTheme(event.target.checked));
-        const currentTheme = localStorage.getItem('promptVaultTheme');
-        if (currentTheme === 'dark') { themeCheckbox.checked = true; setDarkTheme(true); } 
-        else { setDarkTheme(false); }
+            exportSelectedBtn.addEventListener('click', () => {
+                const selectedPromptIds = Array.from(promptCardsContainerEl.querySelectorAll('.prompt-select-checkbox:checked'))
+                                            .map(cb => cb.dataset.promptId);
+                if (selectedPromptIds.length === 0) {
+                    showToast('No prompts selected for export.', 'warning');
+                    return;
+                }
+                const promptsToExport = prompts.filter(p => selectedPromptIds.includes(p.id));
+                downloadJSON(promptsToExport, 'promptvault_pro_selected.json');
+                showToast(`${promptsToExport.length} prompts exported!`);
+            });
 
 
-        // Initial Load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadPrompts(); // This will call renderApp internally
+            importPromptsBtn.addEventListener('click', () => importFileEl.click());
+            importFileEl.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                if (file.type !== "application/json") {
+                    showToast("Please select a valid JSON file (.json).", "danger");
+                    importFileEl.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        let dataToProcess = Array.isArray(importedData) ? importedData : [importedData];
+                        let count = 0;
+                        dataToProcess.forEach(item => {
+                            if (item && item.title && item.content) {
+                                prompts.unshift({
+                                    id: generateId(),
+                                    title: item.title,
+                                    content: item.content,
+                                    category: sanitizeCategoryName(item.category) 
+                                });
+                                count++;
+                            }
+                        });
+                        if (count > 0) {
+                            savePrompts();
+                            selectedCategoryFilter = 'ALL_PROMPTS'; 
+                            previouslySelectedCategory = 'ALL_PROMPTS';
+                            currentPromptId = null;
+                            renderApp();
+                            showToast(`${count} prompt(s) imported!`, 'success');
+                        } else { showToast('No valid prompts found in file.', 'warning'); }
+                    } catch (err) { 
+                        console.error("Import error:", err);
+                        showToast('Error importing: Invalid JSON.', 'danger'); 
+                    }
+                    finally { importFileEl.value = ''; }
+                };
+                 reader.onerror = () => {
+                    showToast('Error reading file.', 'danger');
+                    importFileEl.value = '';
+                };
+                reader.readAsText(file);
+            });
+
+            function downloadJSON(data, filename) {
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function showToast(message, type = 'success') {
+                const toastId = `toast-${Date.now()}`;
+                const toastContainerEl = document.getElementById('toast-container');
+                const iconClass = { success: 'fa-check-circle', danger: 'fa-exclamation-triangle', warning: 'fa-exclamation-circle', info: 'fa-info-circle'}[type] || 'fa-info-circle';
+                const toastHTML = `<div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body"><i class="fas ${iconClass} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+                toastContainerEl.insertAdjacentHTML('beforeend', toastHTML);
+                const toastElement = document.getElementById(toastId);
+                const toastInstance = new bootstrap.Toast(toastElement, { delay: 3000 });
+                toastInstance.show();
+                toastElement.addEventListener('hidden.bs.toast', function () { this.remove(); });
+            }
+
+            // Theme Toggle
+            function setDarkTheme(isDark) {
+                document.body.classList.toggle('dark-mode', isDark);
+                if (themeIcon) themeIcon.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+                localStorage.setItem('promptVaultTheme', isDark ? 'dark' : 'light');
+            }
+            if (themeCheckbox) {
+                 themeCheckbox.addEventListener('change', (event) => setDarkTheme(event.target.checked));
+                const currentTheme = localStorage.getItem('promptVaultTheme');
+                if (currentTheme === 'dark') { themeCheckbox.checked = true; setDarkTheme(true); }
+                else { setDarkTheme(false); }
+            }
+
+            // Initial Load
+            loadPrompts(); 
             if (prompts.length === 0) {
-                showWelcomeView();
+                showWelcomeMessageView();
             } else {
-                // Default to "All Prompts" view, no specific prompt selected initially
                 selectedCategoryFilter = 'ALL_PROMPTS';
                 previouslySelectedCategory = 'ALL_PROMPTS';
                 currentPromptId = null;
