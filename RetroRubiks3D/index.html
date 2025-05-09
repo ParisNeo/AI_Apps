@@ -14,37 +14,69 @@
             font-family: 'Press Start 2P', cursive;
             background: linear-gradient(45deg, #1a001a, #330033, #4d004d);
             color: #00ff00; /* Neon green */
-            overflow-y: auto; /* Allow scrolling for more controls */
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; 
+            justify-content: flex-start;
             min-height: 100vh;
             padding-top: 10px;
-            padding-bottom: 20px; /* Space for controls at bottom */
+            padding-bottom: 20px;
         }
+
+        .view {
+            width: 95%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #mainMenuView, #creditsView {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(20, 0, 20, 0.9);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            border-radius: 10px;
+            margin-top: 5vh;
+        }
+        #mainMenuView h1, #creditsView h1 {
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+            margin-bottom: 20px;
+        }
+        .menu-button-group button {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 10px auto;
+            font-size: 1em;
+            padding: 12px 15px;
+        }
+
 
         #gameContainer {
             width: 80vw;
             max-width: 600px;
-            height: 55vh; /* Adjusted height */
+            height: 55vh;
             max-height: 450px;
-            border: 5px solid #ff00ff; 
+            border: 5px solid #ff00ff;
             box-shadow: 0 0 20px #ff00ff, inset 0 0 15px #ff00ffaa;
-            background-color: #0a000a; 
+            background-color: #0a000a;
             position: relative;
             margin-bottom:15px;
         }
 
         #canvas {
-            display: block; 
+            display: block;
         }
-        
+
         .controls-panel {
             background-color: rgba(20, 0, 20, 0.85);
             padding: 15px;
             border-radius: 10px;
-            border: 3px solid #00ffff; 
+            border: 3px solid #00ffff;
             box-shadow: 0 0 15px #00ffff;
             margin-top: 10px;
             text-align: center;
@@ -54,7 +86,7 @@
 
         .controls-panel h2, .controls-panel h3 {
             margin-top: 0;
-            color: #ffff00; 
+            color: #ffff00;
             font-size: 1.2em;
             text-shadow: 0 0 5px #ffff00;
         }
@@ -62,7 +94,7 @@
             font-size: 0.9em;
             margin-bottom: 5px;
         }
-        
+
         .button-group {
             margin-bottom: 10px;
             display: flex;
@@ -76,13 +108,13 @@
             background-color: #333;
             color: #00ff00;
             border: 2px solid #00ff00;
-            padding: 8px 12px; /* Slightly smaller */
+            padding: 8px 12px;
             margin: 4px;
             cursor: pointer;
             border-radius: 5px;
             transition: all 0.2s ease;
             box-shadow: 0 0 5px #00ff0077;
-            font-size: 0.75em; /* Smaller font for more buttons */
+            font-size: 0.75em;
         }
 
         button:hover:not(:disabled) {
@@ -90,11 +122,11 @@
             color: #111;
             box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
         }
-        
+
         button:active:not(:disabled) {
             transform: translateY(2px);
         }
-        
+
         button:disabled {
             background-color: #222;
             color: #555;
@@ -103,13 +135,24 @@
             box-shadow: none;
         }
 
-        button.active-mode {
+        button.active-mode-indicator { /* For indicating active game mode within game view */
             background-color: #00cc00;
             color: #000;
             border-color: #ffff00;
             box-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+            cursor: default;
         }
-        
+         button.back-button {
+            background-color: #ff3333;
+            border-color: #ffaaaa;
+            color: #fff;
+        }
+        button.back-button:hover:not(:disabled) {
+            background-color: #cc0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+
         #messageArea {
             margin-top: 10px;
             padding: 8px;
@@ -117,14 +160,31 @@
             border: 1px dashed #00ffff;
             min-height: 18px;
             font-size: 0.75em;
-            color: #00ffff; 
+            color: #00ffff;
         }
 
-        #learnInstructions {
-            font-size: 0.7em;
-            color: #ff00ff; 
-            width:100%; text-align:center; margin-bottom:5px;
+        #learnModeSpecificControls {
+            padding:10px;
+            margin-top:10px;
+            border: 1px solid #ff00ff;
+            border-radius:5px;
         }
+        #learnModeSpecificControls select, #learnModeSpecificControls p {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #222;
+            color: #00ffaa;
+            border: 1px solid #00ffaa;
+            padding: 5px;
+            margin: 5px;
+            font-size: 0.7em;
+        }
+        #algorithmDisplay {
+            font-size: 0.8em;
+            color: #ffff00;
+            margin:5px 0;
+            min-height: 1em;
+        }
+
 
         #timerDisplay {
             font-size: 1em;
@@ -132,7 +192,7 @@
             margin: 5px 0 10px 0;
             text-shadow: 0 0 3px #ffff00;
         }
-        
+
         #highScoresArea {
             margin-top:15px;
             padding: 10px;
@@ -155,103 +215,190 @@
         #highScoresList li {
             margin-bottom: 3px;
         }
-
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="canvas"></canvas>
-    </div>
 
-    <div class="controls-panel">
-        <h2>Retro Rubik's 3D</h2>
-        
-        <div class="button-group" id="modeButtons">
-            <button id="playModeBtn">Play Mode</button>
-            <button id="aiModeBtn">AI Mode</button>
-            <button id="learnModeBtn">Learn Mode</button>
-        </div>
-
-        <div id="timerDisplay">Time: 0.00s</div>
-
-        <div class="button-group" id="actionButtons">
-            <button id="scrambleBtn">Scramble</button>
-            <button id="startSolveBtn" style="display:none;">Start Solving!</button>
-            <button id="resetBtn">Reset Cube</button>
-        </div>
-        
-        <div id="messageArea">Welcome! Select a mode.</div>
-
-        <div class="button-group" id="moveButtonsContainer" style="display:none;">
-            <p id="learnInstructions" style="display:none;">Click to see move animation:</p>
-            <button class="moveBtn" data-move="F">F</button> <button class="moveBtn" data-move="F'">F'</button>
-            <button class="moveBtn" data-move="B">B</button> <button class="moveBtn" data-move="B'">B'</button>
-            <button class="moveBtn" data-move="U">U</button> <button class="moveBtn" data-move="U'">U'</button>
-            <button class="moveBtn" data-move="D">D</button> <button class="moveBtn" data-move="D'">D'</button>
-            <button class="moveBtn" data-move="R">R</button> <button class="moveBtn" data-move="R'">R'</button>
-            <button class="moveBtn" data-move="L">L</button> <button class="moveBtn" data-move="L'">L'</button>
-        </div>
-        
-        <div id="highScoresArea">
-            <h3>High Scores (Top 5):</h3>
-            <ol id="highScoresList"></ol>
+    <div id="mainMenuView" class="view">
+        <h1>Retro Rubik's 3D</h1>
+        <div class="menu-button-group">
+            <button id="menuPlayBtn">Play Mode</button>
+            <button id="menuAiBtn">AI Mode</button>
+            <button id="menuLearnBtn">Learn Mode</button>
+            <button id="menuCreditsBtn">Credits</button>
         </div>
     </div>
+
+    <div id="gameView" class="view" style="display:none;">
+        <div id="gameContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="controls-panel">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:10px;">
+                 <h2 id="gameModeTitle">Game Mode</h2>
+                 <button id="backToMenuBtn" class="back-button">Back to Menu</button>
+            </div>
+
+
+            <div id="timerDisplay">Time: 0.00s</div>
+
+            <div class="button-group" id="actionButtons">
+                <button id="scrambleBtn">Scramble</button>
+                <button id="startSolveBtn" style="display:none;">Start Solving!</button>
+                <button id="startAiDemoBtn" style="display:none;">Start AI Demo</button>
+                <button id="resetCubeBtn">Reset Cube</button>
+            </div>
+
+            <div id="messageArea">Welcome!</div>
+
+            <div id="learnModeSpecificControls" style="display:none;">
+                <h3>Learn Algorithms</h3>
+                <select id="lessonSelect">
+                    <option value="">-- Select a Lesson --</option>
+                </select>
+                <p id="lessonDescription"></p>
+                <p>Algorithm: <span id="algorithmDisplay"></span></p>
+                <div class="button-group">
+                    <button id="setupLessonBtn" disabled>Set up for Lesson</button>
+                    <button id="watchAlgorithmBtn" disabled>Watch AI Perform</button>
+                    <button id="nextLessonMoveBtn" disabled>Next Move</button>
+                </div>
+            </div>
+
+            <div class="button-group" id="moveButtonsContainer" style="margin-top:10px;">
+                <!-- Populated by JS if needed, or always visible but disabled -->
+                 <button class="moveBtn" data-move="F">F</button> <button class="moveBtn" data-move="F'">F'</button>
+                 <button class="moveBtn" data-move="B">B</button> <button class="moveBtn" data-move="B'">B'</button>
+                 <button class="moveBtn" data-move="U">U</button> <button class="moveBtn" data-move="U'">U'</button>
+                 <button class="moveBtn" data-move="D">D</button> <button class="moveBtn" data-move="D'">D'</button>
+                 <button class="moveBtn" data-move="R">R</button> <button class="moveBtn" data-move="R'">R'</button>
+                 <button class="moveBtn" data-move="L">L</button> <button class="moveBtn" data-move="L'">L'</button>
+            </div>
+
+            <div id="highScoresArea">
+                <h3>High Scores (Player - Top 5):</h3>
+                <ol id="highScoresList"></ol>
+            </div>
+        </div>
+    </div>
+
+    <div id="creditsView" class="view" style="display:none;">
+        <h1>Credits</h1>
+        <p>Idea Builder: ParisNeo</p>
+        <p>Coder: Gemini (Large Language Model by Google)</p>
+        <p>Based on classic Rubik's Cube concepts.</p>
+        <button id="creditsBackToMenuBtn" class="back-button">Back to Menu</button>
+    </div>
+
 
     <script>
-        const CUBE_SIZE = 3; 
+        const CUBE_SIZE = 3;
         const CUBIE_SIZE = 1;
-        const CUBIE_SPACING = 0.05; 
+        const CUBIE_SPACING = 0.05;
         const EFFECTIVE_CUBIE_SIZE = CUBIE_SIZE + CUBIE_SPACING;
 
         const COLORS = {
-            FRONT:  0xff0000, BACK:   0xffa500, UP:     0xffffff, 
-            DOWN:   0xffff00, RIGHT:  0x0000ff, LEFT:   0x00ff00, 
-            INTERNAL: 0x333333 
+            FRONT:  0xff0000, BACK:   0xffa500, UP:     0xffffff,
+            DOWN:   0xffff00, RIGHT:  0x0000ff, LEFT:   0x00ff00,
+            INTERNAL: 0x333333
         };
 
         let scene, camera, renderer, controls;
         let cubies = [];
-        let pivot; 
+        let pivot;
         let isAnimating = false;
-        let currentMode = 'play'; 
-        let playModeState = 'IDLE'; // IDLE, SCRAMBLED, SOLVING
 
+        let activeView = 'menu'; // 'menu', 'game', 'credits'
+        let currentMode = ''; // 'play', 'ai', 'learn' (when activeView is 'game')
+        let playModeState = 'IDLE'; // IDLE, SCRAMBLED, SOLVING (for 'play' mode)
+        let aiModeState = 'IDLE'; // IDLE, SCRAMBLED, DEMOING (for 'ai' mode)
+        let learnModeState = {
+            currentLesson: null,
+            algorithmMoves: [],
+            currentMoveIndex: 0,
+            isLessonSetup: false
+        };
+
+        // --- DOM Elements ---
+        const mainMenuView = document.getElementById('mainMenuView');
+        const gameView = document.getElementById('gameView');
+        const creditsView = document.getElementById('creditsView');
+
+        const gameModeTitle = document.getElementById('gameModeTitle');
         const messageArea = document.getElementById('messageArea');
         const moveButtonsContainer = document.getElementById('moveButtonsContainer');
-        const learnInstructions = document.getElementById('learnInstructions');
-        
-        const playModeBtn = document.getElementById('playModeBtn');
-        const aiModeBtn = document.getElementById('aiModeBtn');
-        const learnModeBtn = document.getElementById('learnModeBtn');
-        const modeButtons = [playModeBtn, aiModeBtn, learnModeBtn];
+
+        const menuPlayBtn = document.getElementById('menuPlayBtn');
+        const menuAiBtn = document.getElementById('menuAiBtn');
+        const menuLearnBtn = document.getElementById('menuLearnBtn');
+        const menuCreditsBtn = document.getElementById('menuCreditsBtn');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const creditsBackToMenuBtn = document.getElementById('creditsBackToMenuBtn');
 
         const scrambleBtn = document.getElementById('scrambleBtn');
         const startSolveBtn = document.getElementById('startSolveBtn');
-        const resetBtn = document.getElementById('resetBtn');
+        const startAiDemoBtn = document.getElementById('startAiDemoBtn');
+        const resetCubeBtn = document.getElementById('resetCubeBtn');
         const allMoveButtons = document.querySelectorAll('.moveBtn');
 
-        // Timer variables
+        // Timer
         const timerDisplay = document.getElementById('timerDisplay');
         let timerInterval;
         let startTime;
         let elapsedTime = 0;
 
-        // High score variables
+        // High Scores
         const highScoresList = document.getElementById('highScoresList');
         let highScores = [];
         const MAX_HIGH_SCORES = 5;
 
+        // Learn Mode
+        const learnModeSpecificControls = document.getElementById('learnModeSpecificControls');
+        const lessonSelect = document.getElementById('lessonSelect');
+        const lessonDescription = document.getElementById('lessonDescription');
+        const algorithmDisplay = document.getElementById('algorithmDisplay');
+        const setupLessonBtn = document.getElementById('setupLessonBtn');
+        const watchAlgorithmBtn = document.getElementById('watchAlgorithmBtn');
+        const nextLessonMoveBtn = document.getElementById('nextLessonMoveBtn');
+        
+        const lessons = [
+            {
+              name: "Beginner: Sexy Move",
+              description: "A fundamental 4-move sequence (R U R' U'). Often used in algorithms.",
+              initialScramble: [], // Start from solved
+              algorithm: ["R", "U", "R'", "U'"],
+              id: "sexy_move"
+            },
+            {
+              name: "Beginner: Sune",
+              description: "Orients one corner while preserving others (R U R' U R U2 R').",
+              initialScramble: ["L", "U'", "L'", "U'", "L", "U2", "L'"], // A setup for Sune to solve a yellow corner on top
+              algorithm: ["R", "U", "R'", "U", "R", "U2", "R'"],
+              id: "sune"
+            },
+            {
+              name: "Simple Face Turn",
+              description: "Basic front face turn and its reverse.",
+              initialScramble: [],
+              algorithm: ["F", "F'"],
+              id: "face_turn"
+            }
+        ];
+        let currentLessonAlgorithmQueue = [];
 
-        init();
+
+        // --- Initialization ---
+        initThreeJS();
+        initUI();
         animate();
 
-        function init() {
+        function initThreeJS() {
             const container = document.getElementById('gameContainer');
             const canvasEl = document.getElementById('canvas');
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a000a); 
+            scene.background = new THREE.Color(0x0a000a);
 
             camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
             camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
@@ -259,7 +406,7 @@
 
             renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            
+
             const ambientLight = new THREE.AmbientLight(0xcccccc, 0.7);
             scene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -272,23 +419,69 @@
             controls.screenSpacePanning = false;
             controls.minDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.5;
             controls.maxDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 5;
-            controls.target.set(0,0,0); 
+            controls.target.set(0,0,0);
 
             pivot = new THREE.Object3D();
             scene.add(pivot);
 
             createRubiksCube();
-            setupEventListeners();
-            loadHighScores();
-            displayHighScores();
-            updateModeUI(); // Initial UI setup
         }
 
+        function initUI() {
+            loadHighScores();
+            displayHighScores();
+            populateLessonsDropdown();
+            setupEventListeners();
+            showView('menu'); // Start with the main menu
+        }
+
+        function populateLessonsDropdown() {
+            lessons.forEach(lesson => {
+                const option = document.createElement('option');
+                option.value = lesson.id;
+                option.textContent = lesson.name;
+                lessonSelect.appendChild(option);
+            });
+        }
+
+        function showView(viewId) {
+            activeView = viewId;
+            mainMenuView.style.display = 'none';
+            gameView.style.display = 'none';
+            creditsView.style.display = 'none';
+
+            document.getElementById(viewId + 'View').style.display = 'flex'; // Assuming views are flex containers
+
+            if (viewId === 'game') {
+                updateGameUI();
+                 if (!renderer) initThreeJS(); // Ensure ThreeJS is init if coming back to game
+                onWindowResize(); // Adjust canvas size
+            } else {
+                stopTimer(); // Stop timer if navigating away from game
+            }
+             if (viewId === 'menu') {
+                resetCubeStateForNewGame(); // Reset game state variables when returning to menu
+             }
+        }
+        
+        function resetCubeStateForNewGame() {
+            playModeState = 'IDLE';
+            aiModeState = 'IDLE';
+            learnModeState = { currentLesson: null, algorithmMoves: [], currentMoveIndex: 0, isLessonSetup: false };
+            currentLessonAlgorithmQueue = [];
+            resetCubeVisuals(); // Reset the 3D cube to solved state
+            elapsedTime = 0;
+            updateTimerDisplay();
+        }
+
+
         function createRubiksCube() {
+            // ... (same as original, ensure it clears old cubies)
+            while(pivot.children.length > 0) pivot.remove(pivot.children[0]); // Clear pivot if re-attaching
             cubies.forEach(cubie => scene.remove(cubie));
             cubies = [];
             const geometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
-            const offset = (CUBE_SIZE - 1) / 2 * EFFECTIVE_CUBIE_SIZE; 
+            const offset = (CUBE_SIZE - 1) / 2 * EFFECTIVE_CUBIE_SIZE;
 
             for (let x = 0; x < CUBE_SIZE; x++) {
                 for (let y = 0; y < CUBE_SIZE; y++) {
@@ -298,26 +491,25 @@
                         }
                         const materials = [
                             new THREE.MeshStandardMaterial({ color: (x === CUBE_SIZE - 1) ? COLORS.RIGHT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),
-                            new THREE.MeshStandardMaterial({ color: (x === 0) ? COLORS.LEFT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),      
-                            new THREE.MeshStandardMaterial({ color: (y === CUBE_SIZE - 1) ? COLORS.UP : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),    
-                            new THREE.MeshStandardMaterial({ color: (y === 0) ? COLORS.DOWN : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),  
-                            new THREE.MeshStandardMaterial({ color: (z === CUBE_SIZE - 1) ? COLORS.FRONT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }), 
-                            new THREE.MeshStandardMaterial({ color: (z === 0) ? COLORS.BACK : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 })   
+                            new THREE.MeshStandardMaterial({ color: (x === 0) ? COLORS.LEFT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),
+                            new THREE.MeshStandardMaterial({ color: (y === CUBE_SIZE - 1) ? COLORS.UP : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),
+                            new THREE.MeshStandardMaterial({ color: (y === 0) ? COLORS.DOWN : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),
+                            new THREE.MeshStandardMaterial({ color: (z === CUBE_SIZE - 1) ? COLORS.FRONT : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 }),
+                            new THREE.MeshStandardMaterial({ color: (z === 0) ? COLORS.BACK : COLORS.INTERNAL, roughness: 0.3, metalness: 0.1 })
                         ];
-                        
+
                         const cubie = new THREE.Mesh(geometry, materials);
                         const posX = x * EFFECTIVE_CUBIE_SIZE - offset;
                         const posY = y * EFFECTIVE_CUBIE_SIZE - offset;
                         const posZ = z * EFFECTIVE_CUBIE_SIZE - offset;
                         cubie.position.set(posX, posY, posZ);
-                        
-                        // Store initial logical position and world position for solve check
+
                         cubie.userData.initialLogicX = x;
                         cubie.userData.initialLogicY = y;
                         cubie.userData.initialLogicZ = z;
                         cubie.userData.initialWorldPos = new THREE.Vector3(posX, posY, posZ);
-                        cubie.userData.initialQuaternion = cubie.quaternion.clone(); // Store initial orientation
-                        
+                        cubie.userData.initialQuaternion = cubie.quaternion.clone();
+
                         cubies.push(cubie);
                         scene.add(cubie);
                     }
@@ -328,96 +520,132 @@
         function setupEventListeners() {
             window.addEventListener('resize', onWindowResize, false);
 
-            playModeBtn.addEventListener('click', () => setMode('play'));
-            aiModeBtn.addEventListener('click', () => setMode('ai'));
-            learnModeBtn.addEventListener('click', () => setMode('learn'));
+            // Menu Buttons
+            menuPlayBtn.addEventListener('click', () => { currentMode = 'play'; showView('game'); });
+            menuAiBtn.addEventListener('click', () => { currentMode = 'ai'; showView('game'); });
+            menuLearnBtn.addEventListener('click', () => { currentMode = 'learn'; showView('game'); });
+            menuCreditsBtn.addEventListener('click', () => showView('credits'));
 
-            scrambleBtn.addEventListener('click', scrambleCube);
+            // Back to Menu Buttons
+            backToMenuBtn.addEventListener('click', () => showView('menu'));
+            creditsBackToMenuBtn.addEventListener('click', () => showView('menu'));
+
+            // Game Action Buttons
+            scrambleBtn.addEventListener('click', handleScramble);
             startSolveBtn.addEventListener('click', handleStartSolving);
-            resetBtn.addEventListener('click', resetCube);
+            startAiDemoBtn.addEventListener('click', handleStartAiDemo);
+            resetCubeBtn.addEventListener('click', handleResetCube);
 
+            // Move Buttons
             allMoveButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    if (isAnimating || (currentMode === 'play' && playModeState !== 'SOLVING')) return;
+                    if (isAnimating) return;
+                    if (currentMode === 'play' && playModeState !== 'SOLVING') return;
+                    if (currentMode === 'ai' || currentMode === 'learn') return; // AI/Learn moves are triggered differently
+
                     const move = button.dataset.move;
                     performMove(move, () => {
                         if (currentMode === 'play' && playModeState === 'SOLVING') {
                             checkIfSolved();
                         }
                     });
-                    if (currentMode === 'learn') {
-                         messageArea.textContent = `Performing move: ${move}`;
-                    }
                 });
             });
-        }
-        
-        function setMode(mode) {
-            currentMode = mode;
-            resetCube(); // Reset cube and game state on mode switch
-            updateModeUI();
-            messageArea.textContent = `Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode.`;
-            if (mode === 'ai') {
-                messageArea.textContent += " AI will make some moves...";
-                setTimeout(aiPlay, 1000); 
-            }
+
+            // Learn Mode Controls
+            lessonSelect.addEventListener('change', handleLessonSelection);
+            setupLessonBtn.addEventListener('click', handleSetupLesson);
+            watchAlgorithmBtn.addEventListener('click', handleWatchAlgorithm);
+            nextLessonMoveBtn.addEventListener('click', handleNextLessonMove);
         }
 
-        function updateModeUI() {
-            modeButtons.forEach(btn => btn.classList.remove('active-mode'));
-            allMoveButtons.forEach(btn => btn.disabled = true); // Disable all moves by default
-            scrambleBtn.disabled = false;
+        function updateGameUI() {
+            if (activeView !== 'game') return;
+
+            // Reset all to default/hidden
+            scrambleBtn.style.display = 'inline-block';
             startSolveBtn.style.display = 'none';
-            learnInstructions.style.display = 'none';
-            moveButtonsContainer.style.display = 'none';
-            controls.enabled = true;
+            startAiDemoBtn.style.display = 'none';
+            resetCubeBtn.style.display = 'inline-block';
+            learnModeSpecificControls.style.display = 'none';
+            allMoveButtons.forEach(btn => btn.disabled = true);
+            controls.enabled = true; // Orbit controls generally enabled unless animating
 
+            gameModeTitle.textContent = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode`;
 
             if (currentMode === 'play') {
-                playModeBtn.classList.add('active-mode');
-                moveButtonsContainer.style.display = 'flex'; // Use flex for button group
-                
+                allMoveButtons.forEach(btn => btn.disabled = (playModeState !== 'SOLVING' || isAnimating));
+                scrambleBtn.disabled = (playModeState === 'SOLVING' || isAnimating);
+                resetCubeBtn.disabled = isAnimating;
+
                 if (playModeState === 'IDLE') {
-                    scrambleBtn.disabled = false;
-                    startSolveBtn.style.display = 'none';
-                    allMoveButtons.forEach(btn => btn.disabled = true);
+                    messageArea.textContent = "Scramble the cube to begin.";
                 } else if (playModeState === 'SCRAMBLED') {
-                    scrambleBtn.disabled = true;
                     startSolveBtn.style.display = 'inline-block';
-                    startSolveBtn.disabled = false;
-                    allMoveButtons.forEach(btn => btn.disabled = true);
+                    startSolveBtn.disabled = isAnimating;
+                    messageArea.textContent = "Cube scrambled! Press 'Start Solving!'";
                 } else if (playModeState === 'SOLVING') {
-                    scrambleBtn.disabled = true;
-                    startSolveBtn.style.display = 'inline-block'; // Keep it visible but disabled
-                    startSolveBtn.disabled = true;
-                    allMoveButtons.forEach(btn => btn.disabled = false);
-                    modeButtons.forEach(btn => btn.disabled = true); // Disable mode switching while solving
+                    startSolveBtn.style.display = 'inline-block';
+                    startSolveBtn.disabled = true; // Can't start again while solving
+                    messageArea.textContent = "Timer started! Solve the cube!";
+                }
+            } else if (currentMode === 'ai') {
+                allMoveButtons.forEach(btn => btn.disabled = true); // User doesn't control moves directly
+                startAiDemoBtn.style.display = 'inline-block';
+                scrambleBtn.disabled = (aiModeState === 'DEMOING' || isAnimating);
+                startAiDemoBtn.disabled = (aiModeState === 'DEMOING' || isAnimating);
+                resetCubeBtn.disabled = isAnimating;
+
+                if (aiModeState === 'IDLE') {
+                    messageArea.textContent = "Scramble cube or Start AI Demo (AI will use a fixed sequence).";
+                } else if (aiModeState === 'SCRAMBLED') {
+                     messageArea.textContent = "Cube scrambled. Start AI Demo to see it move.";
+                } else if (aiModeState === 'DEMOING') {
+                    messageArea.textContent = "AI is performing its demonstration sequence...";
                 }
 
-            } else if (currentMode === 'ai') {
-                aiModeBtn.classList.add('active-mode');
-                // AI mode doesn't use Start Solve or player moves
-                scrambleBtn.disabled = false; // AI can scramble too
             } else if (currentMode === 'learn') {
-                learnModeBtn.classList.add('active-mode');
-                moveButtonsContainer.style.display = 'flex';
-                learnInstructions.style.display = 'block';
-                allMoveButtons.forEach(btn => btn.disabled = false);
+                learnModeSpecificControls.style.display = 'block';
+                allMoveButtons.forEach(btn => btn.disabled = true); // Moves are controlled by lesson logic
+                scrambleBtn.style.display = 'none'; // Scramble via lesson setup
+                startSolveBtn.style.display = 'none';
+                startAiDemoBtn.style.display = 'none';
+                resetCubeBtn.disabled = isAnimating || (learnModeState.algorithmMoves.length > 0 && learnModeState.currentMoveIndex < learnModeState.algorithmMoves.length);
+
+
+                const lessonSelected = !!learnModeState.currentLesson;
+                setupLessonBtn.disabled = !lessonSelected || isAnimating;
+                watchAlgorithmBtn.disabled = !learnModeState.isLessonSetup || isAnimating || (learnModeState.algorithmMoves.length > 0 && learnModeState.currentMoveIndex > 0);
+                nextLessonMoveBtn.disabled = !learnModeState.isLessonSetup || isAnimating || (learnModeState.algorithmMoves.length > 0 && learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length);
+
+                if (!lessonSelected) {
+                    messageArea.textContent = "Select a lesson from the dropdown.";
+                } else if (!learnModeState.isLessonSetup) {
+                    messageArea.textContent = `Lesson: ${learnModeState.currentLesson.name}. Press 'Set up for Lesson'.`;
+                } else {
+                    messageArea.textContent = `Watching: ${learnModeState.currentLesson.name}. ${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} moves shown.`;
+                     if (learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length && learnModeState.algorithmMoves.length > 0) {
+                        messageArea.textContent += " Algorithm complete!";
+                     }
+                }
             }
         }
 
+
         function onWindowResize() {
+            if (activeView !== 'game' || !renderer) return;
             const container = document.getElementById('gameContainer');
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
-        
-        function getCubiesInLayer(axis, layerIndex) {
+
+        // --- Cube Operations ---
+        function getCubiesInLayer(axis, layerIndex) { /* ... same as original ... */
             const layerCubies = [];
             const centerOffset = (CUBE_SIZE - 1) / 2;
             const targetPos = (layerIndex - centerOffset) * EFFECTIVE_CUBIE_SIZE;
-            
+
             cubies.forEach(cubie => {
                 let cubiePosOnAxis;
                 if (axis === 'x') cubiePosOnAxis = cubie.position.x;
@@ -431,64 +659,70 @@
             return layerCubies;
         }
 
-        function rotateLayerAroundAxis(axis, layerIndex, angle, onCompleteCallback) {
+        function rotateLayerAroundAxis(axis, layerIndex, angle, onCompleteCallback) { /* ... same as original, but check currentMode for AI/Learn continuations ... */
             if (isAnimating) return;
             isAnimating = true;
-            controls.enabled = false; 
+            controls.enabled = false;
+            if(updateGameUI) updateGameUI(); // Update button disabled states during animation
 
-            pivot.rotation.set(0, 0, 0); 
-            pivot.position.set(0,0,0); 
-            
+
+            pivot.rotation.set(0, 0, 0);
+            pivot.position.set(0,0,0);
+
             const layerCubies = getCubiesInLayer(axis, layerIndex);
-            
+
             if (layerCubies.length === 0) {
                 isAnimating = false;
                 controls.enabled = true;
+                 if(updateGameUI) updateGameUI();
                 if (onCompleteCallback) onCompleteCallback();
                 return;
             }
 
             layerCubies.forEach(cubie => pivot.attach(cubie));
-            
+
             let currentAngle = 0;
             const targetAngle = angle;
-            const animationSpeed = 0.12; // Slightly faster
+            const animationSpeed = (currentMode === 'learn' || currentMode === 'ai') ? 0.08 : 0.12; // Slower for AI/Learn
 
             function animateRotation() {
                 let deltaAngle = targetAngle * animationSpeed;
                 if (Math.abs(currentAngle + deltaAngle) >= Math.abs(targetAngle)) {
-                    deltaAngle = targetAngle - currentAngle; 
+                    deltaAngle = targetAngle - currentAngle;
                 }
-                
+
                 if (axis === 'x') pivot.rotation.x += deltaAngle;
                 else if (axis === 'y') pivot.rotation.y += deltaAngle;
                 else if (axis === 'z') pivot.rotation.z += deltaAngle;
-                
+
                 currentAngle += deltaAngle;
 
-                if (Math.abs(currentAngle - targetAngle) < 0.001) { 
+                if (Math.abs(currentAngle - targetAngle) < 0.001) {
                     if (axis === 'x') pivot.rotation.x = targetAngle;
                     else if (axis === 'y') pivot.rotation.y = targetAngle;
                     else if (axis === 'z') pivot.rotation.z = targetAngle;
 
-                    [...layerCubies].forEach(cubie => scene.attach(cubie));
-                    
-                    cubies.forEach(c => {
+                    [...layerCubies].forEach(cubie => scene.attach(cubie)); // Use spread for a copy
+
+                    cubies.forEach(c => { // Snap positions
                         c.position.x = Math.round(c.position.x / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
                         c.position.y = Math.round(c.position.y / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
                         c.position.z = Math.round(c.position.z / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
-                        
-                        // Normalize quaternion to avoid drift if needed, though attach should handle it.
-                        // c.quaternion.normalize(); 
                     });
 
+
                     isAnimating = false;
-                    controls.enabled = true; 
-                    
-                    if (currentMode === 'ai' && aiMoveQueue.length > 0 && !isSolved()) { // AI continues if not solved
-                        aiPlayTimeoutId = setTimeout(aiPlay, 150); 
-                    }
+                    controls.enabled = true;
+                    if(updateGameUI) updateGameUI();
+
+
                     if (onCompleteCallback) onCompleteCallback();
+
+                    // AI/Learn continuation logic
+                    if (!isAnimating && currentLessonAlgorithmQueue.length > 0) {
+                         setTimeout(processNextMoveInQueue, 100); // Slight delay
+                    }
+
 
                 } else {
                     requestAnimationFrame(animateRotation);
@@ -497,193 +731,283 @@
             animateRotation();
         }
 
-        function performMove(moveNotation, onCompleteCallback) {
+
+        function performMove(moveNotation, onCompleteCallback) { /* ... same as original ... */
             if (isAnimating) return;
             const PI_2 = Math.PI / 2;
             let axis, layer, direction;
 
             switch (moveNotation) {
-                case 'F':  axis = 'z'; layer = CUBE_SIZE - 1; direction = -1; break; 
-                case 'F\'': axis = 'z'; layer = CUBE_SIZE - 1; direction = 1;  break; 
-                case 'B':  axis = 'z'; layer = 0; direction = 1;  break; 
+                case 'F':  axis = 'z'; layer = CUBE_SIZE - 1; direction = -1; break;
+                case 'F\'': axis = 'z'; layer = CUBE_SIZE - 1; direction = 1;  break;
+                case 'B':  axis = 'z'; layer = 0; direction = 1;  break;
                 case 'B\'': axis = 'z'; layer = 0; direction = -1; break;
-                case 'U':  axis = 'y'; layer = CUBE_SIZE - 1; direction = -1; break; 
+                case 'U':  axis = 'y'; layer = CUBE_SIZE - 1; direction = -1; break;
                 case 'U\'': axis = 'y'; layer = CUBE_SIZE - 1; direction = 1;  break;
-                case 'D':  axis = 'y'; layer = 0; direction = 1;  break; 
+                case 'D':  axis = 'y'; layer = 0; direction = 1;  break;
                 case 'D\'': axis = 'y'; layer = 0; direction = -1; break;
-                case 'R':  axis = 'x'; layer = CUBE_SIZE - 1; direction = -1; break; 
+                case 'R':  axis = 'x'; layer = CUBE_SIZE - 1; direction = -1; break;
                 case 'R\'': axis = 'x'; layer = CUBE_SIZE - 1; direction = 1;  break;
-                case 'L':  axis = 'x'; layer = 0; direction = 1;  break; 
+                case 'L':  axis = 'x'; layer = 0; direction = 1;  break;
                 case 'L\'': axis = 'x'; layer = 0; direction = -1; break;
                 default: console.warn("Unknown move:", moveNotation); if (onCompleteCallback) onCompleteCallback(); return;
             }
             rotateLayerAroundAxis(axis, layer, direction * PI_2, onCompleteCallback);
         }
-
-        function scrambleCube() {
-            if (isAnimating) return;
-            messageArea.textContent = "Scrambling...";
-            playModeState = 'IDLE'; // Ensure clean state before scramble
-            resetCubeVisuals(); // Resets visuals but not timer/state for scramble itself
-            
-            const moves = ['F', 'F\'', 'B', 'B\'', 'U', 'U\'', 'D', 'D\'', 'R', 'R\'', 'L', 'L\''];
-            const numScrambleMoves = 20 + Math.floor(Math.random() * 10); 
-            let moveCount = 0;
-            let lastMove = '';
-            let secondLastMove = '';
-
-            function applyRandomMove() {
-                if (moveCount >= numScrambleMoves) {
-                    isAnimating = false; // Ensure flag is cleared
-                     messageArea.textContent = "Cube scrambled! Press 'Start Solving' in Play Mode.";
-                     if (currentMode === 'play') {
-                        playModeState = 'SCRAMBLED';
-                     }
-                     updateModeUI();
-                    return;
-                }
-                
-                let randomMove;
-                // Avoid redundant moves like F F' or F F F (F')
-                do {
-                    randomMove = moves[Math.floor(Math.random() * moves.length)];
-                } while (randomMove === lastMove || (randomMove[0] === lastMove[0] && randomMove[0] === secondLastMove[0]));
-
-                secondLastMove = lastMove;
-                lastMove = randomMove;
-
-                performMove(randomMove, () => { // Pass callback to continue scrambling
-                    moveCount++;
-                    // The setTimeout is now implicitly handled by the animation ending and calling applyRandomMove
-                    // if the performMove -> rotateLayerAroundAxis structure calls its onComplete
-                    // However, for sequential non-overlapping calls, a slight delay helps.
-                    setTimeout(applyRandomMove, 50); // Short delay for visual separation
-                });
-            }
-            isAnimating = true; // Set animating true for the whole scramble sequence
-            applyRandomMove();
+        
+        function processMoveSequence(moves, onCompleteAll) {
+            if (isAnimating) return; // Should not happen if called correctly
+            currentLessonAlgorithmQueue = [...moves]; // Copy the array
+            processNextMoveInQueue(onCompleteAll);
         }
 
-        function resetCubeVisuals() {
-            createRubiksCube(); // Recreates the cube in its solved state
-            controls.reset(); 
+        function processNextMoveInQueue(onCompleteAll) {
+            if (isAnimating) { // A move is still in progress, wait.
+                setTimeout(() => processNextMoveInQueue(onCompleteAll), 50);
+                return;
+            }
+            if (currentLessonAlgorithmQueue.length > 0) {
+                const move = currentLessonAlgorithmQueue.shift();
+                performMove(move, () => {
+                    if (currentMode === 'learn' && learnModeState.isLessonSetup) {
+                        learnModeState.currentMoveIndex++;
+                        updateGameUI(); // Update progress
+                    }
+                    // The rotateLayerAroundAxis onComplete will trigger the next check via its callback structure
+                    // if (currentLessonAlgorithmQueue.length > 0) {
+                    //    processNextMoveInQueue(onCompleteAll); // Process next directly
+                    // } else if (onCompleteAll) {
+                    //    onCompleteAll();
+                    // }
+                });
+            } else if (onCompleteAll) {
+                onCompleteAll();
+            }
+        }
+
+
+        function resetCubeVisuals() { /* ... same as original ... */
+            createRubiksCube();
+            if (controls) controls.reset();
             camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
             camera.lookAt(0,0,0);
-            controls.target.set(0,0,0);
+            if (controls) controls.target.set(0,0,0);
         }
 
-        function resetCube() {
-            if (isAnimating && playModeState !== 'SOLVING') { // Allow reset if solved and animation is victory
-                 return;
-            }
-            clearTimeout(aiPlayTimeoutId);
-            aiMoveQueue = [];
+        // --- Mode Specific Handlers ---
+        function handleScramble() {
+            if (isAnimating) return;
+            if (currentMode === 'play' && playModeState === 'SOLVING') return;
+            if (currentMode === 'ai' && aiModeState === 'DEMOING') return;
+
+            messageArea.textContent = "Scrambling...";
+            resetCubeVisuals(); // Reset to solved before scramble for consistency
             stopTimer();
             elapsedTime = 0;
             updateTimerDisplay();
-            
-            resetCubeVisuals();
 
-            playModeState = 'IDLE';
-            messageArea.textContent = "Cube reset. Select mode or scramble.";
-            modeButtons.forEach(btn => btn.disabled = false); // Re-enable mode buttons
-            updateModeUI();
+            const moves = ['F', 'F\'', 'B', 'B\'', 'U', 'U\'', 'D', 'D\'', 'R', 'R\'', 'L', 'L\''];
+            const numScrambleMoves = 20 + Math.floor(Math.random() * 10);
+            let scrambleSequence = [];
+            let lastMove = '';
+            let secondLastMove = '';
+
+            for (let i = 0; i < numScrambleMoves; i++) {
+                 let randomMove;
+                do {
+                    randomMove = moves[Math.floor(Math.random() * moves.length)];
+                } while (randomMove === lastMove || (randomMove[0] === lastMove[0] && randomMove[0] === secondLastMove[0]));
+                scrambleSequence.push(randomMove);
+                secondLastMove = lastMove;
+                lastMove = randomMove;
+            }
+
+            processMoveSequence(scrambleSequence, () => {
+                if (currentMode === 'play') {
+                    playModeState = 'SCRAMBLED';
+                } else if (currentMode === 'ai') {
+                    aiModeState = 'SCRAMBLED';
+                }
+                messageArea.textContent = "Cube scrambled!";
+                updateGameUI();
+            });
         }
 
-        function handleStartSolving() {
-            if (currentMode !== 'play' || playModeState !== 'SCRAMBLED') return;
+        function handleResetCube() {
+            if (isAnimating && !(currentMode === 'play' && playModeState === 'SOLVING' && isSolved())) { // Allow reset if solved and animation is victory (though victory anim not here)
+                 return;
+            }
+            currentLessonAlgorithmQueue = []; // Clear any pending moves
+            stopTimer();
+            elapsedTime = 0;
+            updateTimerDisplay();
+            resetCubeVisuals();
+
+            if (currentMode === 'play') playModeState = 'IDLE';
+            else if (currentMode === 'ai') aiModeState = 'IDLE';
+            else if (currentMode === 'learn') {
+                learnModeState.isLessonSetup = false;
+                learnModeState.currentMoveIndex = 0;
+                learnModeState.algorithmMoves = [];
+                // lessonSelect.value = ""; // Optionally reset dropdown
+                // algorithmDisplay.textContent = "";
+                // lessonDescription.textContent = "";
+            }
+            messageArea.textContent = "Cube reset.";
+            updateGameUI();
+        }
+
+        function handleStartSolving() { // Play Mode
+            if (currentMode !== 'play' || playModeState !== 'SCRAMBLED' || isAnimating) return;
             playModeState = 'SOLVING';
-            messageArea.textContent = "Timer started! Solve the cube!";
             startTimer();
-            updateModeUI();
+            updateGameUI();
+        }
+
+        function handleStartAiDemo() { // AI Mode
+            if (currentMode !== 'ai' || isAnimating || aiModeState === 'DEMOING') return;
+            aiModeState = 'DEMOING';
+            messageArea.textContent = "AI starting demonstration...";
+            startTimer(); // Timer for AI demo
+
+            // AI "Solves" - For now, a fixed sequence of moves.
+            // In a real app, this would be a solver algorithm.
+            const aiDemoMoves = ["R", "U", "R'", "U'", "F", "U", "F'", "L", "U2", "L'", "U2", "F2", "R2"];
+            
+            processMoveSequence(aiDemoMoves, () => {
+                stopTimer();
+                messageArea.textContent = `AI demo complete in ${elapsedTime.toFixed(2)}s.`;
+                aiModeState = 'IDLE'; // Or SCRAMBLED if you want it to stay that way
+                if (isSolved()) { // Unlikely with random scramble and fixed demo
+                     messageArea.textContent += " Miraculously, it's solved!";
+                }
+                updateGameUI();
+            });
+        }
+
+        // --- Learn Mode Handlers ---
+        function handleLessonSelection() {
+            const lessonId = lessonSelect.value;
+            learnModeState.currentLesson = lessons.find(l => l.id === lessonId) || null;
+            learnModeState.isLessonSetup = false;
+            learnModeState.currentMoveIndex = 0;
+            currentLessonAlgorithmQueue = []; // Clear any pending visualization
+
+            if (learnModeState.currentLesson) {
+                lessonDescription.textContent = learnModeState.currentLesson.description;
+                algorithmDisplay.textContent = learnModeState.currentLesson.algorithm.join(' ');
+                learnModeState.algorithmMoves = [...learnModeState.currentLesson.algorithm];
+            } else {
+                lessonDescription.textContent = "";
+                algorithmDisplay.textContent = "";
+                learnModeState.algorithmMoves = [];
+            }
+            updateGameUI();
+        }
+
+        function handleSetupLesson() {
+            if (!learnModeState.currentLesson || isAnimating) return;
+            messageArea.textContent = `Setting up for: ${learnModeState.currentLesson.name}`;
+            resetCubeVisuals(); // Start from solved state
+            
+            learnModeState.isLessonSetup = false; // Mark as not fully setup until scramble done
+            learnModeState.currentMoveIndex = 0;
+            updateGameUI(); // Disable buttons during setup
+
+            processMoveSequence([...learnModeState.currentLesson.initialScramble], () => {
+                learnModeState.isLessonSetup = true;
+                messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. Watch or step through.`;
+                updateGameUI();
+            });
+        }
+
+        function handleWatchAlgorithm() {
+            if (!learnModeState.isLessonSetup || isAnimating || learnModeState.currentMoveIndex > 0) return;
+            messageArea.textContent = `AI performing: ${learnModeState.currentLesson.name}`;
+            learnModeState.currentMoveIndex = 0; // Reset index for full watch
+            
+            processMoveSequence([...learnModeState.algorithmMoves], () => {
+                messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                // learnModeState.currentMoveIndex will be at the end
+                updateGameUI();
+            });
+        }
+
+        function handleNextLessonMove() {
+            if (!learnModeState.isLessonSetup || isAnimating || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) return;
+            
+            const moveToPerform = learnModeState.algorithmMoves[learnModeState.currentMoveIndex];
+            messageArea.textContent = `Performing move ${learnModeState.currentMoveIndex + 1}: ${moveToPerform}`;
+            
+            performMove(moveToPerform, () => {
+                learnModeState.currentMoveIndex++;
+                if (learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                    messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                }
+                updateGameUI();
+            });
         }
 
         // --- Timer Functions ---
-        function startTimer() {
+        function startTimer() { /* ... same as original ... */
             if (timerInterval) clearInterval(timerInterval);
-            startTime = Date.now() - (elapsedTime * 1000); // Resume from paused time if any
+            startTime = Date.now() - (elapsedTime * 1000);
             timerInterval = setInterval(() => {
                 elapsedTime = (Date.now() - startTime) / 1000;
                 updateTimerDisplay();
-            }, 100); // Update display 10 times/sec for smoother ms
+            }, 100);
         }
-
-        function stopTimer() {
+        function stopTimer() { /* ... same as original ... */
             clearInterval(timerInterval);
             timerInterval = null;
         }
-
-        function updateTimerDisplay() {
+        function updateTimerDisplay() { /* ... same as original ... */
             timerDisplay.textContent = `Time: ${elapsedTime.toFixed(2)}s`;
         }
 
-        // --- Solve Detection ---
-        function isSolved() {
-            const epsilon = 0.01; // For float comparisons
-            const identityQuaternion = new THREE.Quaternion(); // (0,0,0,1)
-
+        // --- Solve Detection & High Scores ---
+        function isSolved() { /* ... same as original ... */
+            const epsilon = 0.01;
             for (const cubie of cubies) {
-                // 1. Check if cubie is in its original slot
                 const expectedPos = cubie.userData.initialWorldPos;
-                if (cubie.position.distanceTo(expectedPos) > epsilon) {
-                    // console.log("Cubie wrong position:", cubie.userData, cubie.position, expectedPos);
-                    return false;
-                }
-
-                // 2. Check if cubie's orientation is its original orientation
-                // Comparing quaternions for equality is tricky due to q and -q representing the same rotation.
-                // A simple dot product check: q1.dot(q2) should be close to 1 or -1.
-                // Or, check if cubie.quaternion is close to its initialQuaternion
+                if (cubie.position.distanceTo(expectedPos) > epsilon) return false;
                 const dotProduct = cubie.quaternion.dot(cubie.userData.initialQuaternion);
-                if (Math.abs(Math.abs(dotProduct) - 1.0) > epsilon) {
-                    // console.log("Cubie wrong orientation:", cubie.userData, cubie.quaternion, cubie.userData.initialQuaternion, dotProduct);
-                    return false; 
-                }
+                if (Math.abs(Math.abs(dotProduct) - 1.0) > epsilon) return false;
             }
             return true;
         }
-
-        function checkIfSolved() {
-            if (isSolved()) {
+        function checkIfSolved() { /* ... same as original, but ensure it's play mode ... */
+            if (currentMode === 'play' && isSolved()) {
                 stopTimer();
-                playModeState = 'IDLE'; // Or a 'SOLVED' state then to 'IDLE'
                 messageArea.textContent = `CONGRATULATIONS! Solved in ${elapsedTime.toFixed(2)}s!`;
                 addHighScore(elapsedTime);
-                modeButtons.forEach(btn => btn.disabled = false); // Re-enable mode buttons
-                updateModeUI(); // This will disable move buttons, enable scramble
-                // Could add a little victory animation/effect here
+                playModeState = 'IDLE'; // Or a 'SOLVED' state
+                updateGameUI();
             }
         }
-
-        // --- High Score Functions ---
-        function loadHighScores() {
+        function loadHighScores() { /* ... same as original ... */
             const storedScores = localStorage.getItem('retroRubiksHighScores');
-            if (storedScores) {
-                highScores = JSON.parse(storedScores);
-            }
+            if (storedScores) highScores = JSON.parse(storedScores);
         }
-
-        function saveHighScores() {
+        function saveHighScores() { /* ... same as original ... */
             localStorage.setItem('retroRubiksHighScores', JSON.stringify(highScores));
         }
-
-        function addHighScore(time) {
-            const score = { time: parseFloat(time.toFixed(2)) }; // No name for simplicity
+        function addHighScore(time) { /* ... same as original ... */
+            const score = { time: parseFloat(time.toFixed(2)) };
             highScores.push(score);
-            highScores.sort((a, b) => a.time - b.time); // Sort ascending
-            highScores = highScores.slice(0, MAX_HIGH_SCORES); // Keep only top N
+            highScores.sort((a, b) => a.time - b.time);
+            highScores = highScores.slice(0, MAX_HIGH_SCORES);
             saveHighScores();
             displayHighScores();
         }
-
-        function displayHighScores() {
-            highScoresList.innerHTML = ''; // Clear previous list
+        function displayHighScores() { /* ... same as original ... */
+            highScoresList.innerHTML = '';
             if (highScores.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = "No scores yet. Be the first!";
                 highScoresList.appendChild(li);
             } else {
-                highScores.forEach((score, index) => {
+                highScores.forEach((score) => {
                     const li = document.createElement('li');
                     li.textContent = `${score.time.toFixed(2)}s`;
                     highScoresList.appendChild(li);
@@ -691,44 +1015,12 @@
             }
         }
 
-        // --- AI Mode ---
-        let aiMoveQueue = [];
-        let aiPlayTimeoutId;
-
-        function aiPlay() {
-            if (currentMode !== 'ai' || isAnimating || isSolved()) {
-                if (isSolved() && currentMode === 'ai') messageArea.textContent = "AI solved it conceptually!";
-                return;
-            }
-
-            if (aiMoveQueue.length === 0) {
-                const moves = ['F', 'R', 'U', 'B', 'L', 'D', 'F\'', 'R\'', 'U\'', 'B\'', 'L\'', 'D\''];
-                const numAiMoves = 3 + Math.floor(Math.random() * 4); 
-                for (let i = 0; i < numAiMoves; i++) {
-                    aiMoveQueue.push(moves[Math.floor(Math.random() * moves.length)]);
-                }
-                if (numAiMoves > 0) messageArea.textContent = "AI is 'playing' with " + numAiMoves + " moves.";
-            }
-
-            if (aiMoveQueue.length > 0) {
-                const move = aiMoveQueue.shift();
-                // messageArea.textContent = `AI performs: ${move}`; // Can be too chatty
-                performMove(move, () => {
-                    if (currentMode === 'ai' && aiMoveQueue.length === 0 && !isSolved()) {
-                         messageArea.textContent = "AI finished its sequence.";
-                    }
-                    // The animation complete callback in rotateLayerAroundAxis will call aiPlay again if needed
-                }); 
-            } else if (!isSolved()) { // Only show if not solved by the sequence
-                 messageArea.textContent = "AI finished its sequence. Scramble or Reset.";
-            }
-        }
-
+        // --- Animation Loop ---
         function animate() {
             requestAnimationFrame(animate);
-            controls.update(); 
-            renderer.render(scene, camera);
+            if (controls && controls.enabled) controls.update(); // Only update if enabled
+            if (renderer && scene && camera) renderer.render(scene, camera);
         }
-
-    </script></body>
+    </script>
+</body>
 </html>
