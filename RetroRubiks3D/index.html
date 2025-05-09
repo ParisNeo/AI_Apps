@@ -444,24 +444,56 @@
             });
         }
 
-        function showView(viewId) {
-            activeView = viewId;
+        function showView(viewToShowId) { // Renamed parameter for clarity
+            activeView = viewToShowId; // 'menu', 'game', 'credits'
+
+            // Hide all views first
             mainMenuView.style.display = 'none';
             gameView.style.display = 'none';
             creditsView.style.display = 'none';
 
-            document.getElementById(viewId + 'View').style.display = 'flex'; // Assuming views are flex containers
+            // Determine the actual DOM element to show
+            let elementToShow;
+            if (viewToShowId === 'menu') {
+                elementToShow = mainMenuView;
+            } else if (viewToShowId === 'game') {
+                elementToShow = gameView;
+            } else if (viewToShowId === 'credits') {
+                elementToShow = creditsView;
+            }
 
-            if (viewId === 'game') {
-                updateGameUI();
-                 if (!renderer) initThreeJS(); // Ensure ThreeJS is init if coming back to game
+            if (elementToShow) {
+                elementToShow.style.display = 'flex'; // Assuming all views are flex containers
+            } else {
+                console.error("Could not find view element for ID:", viewToShowId);
+                // Optionally, default to showing the main menu if something goes wrong
+                // mainMenuView.style.display = 'flex';
+                // activeView = 'menu';
+                return;
+            }
+
+            // Specific logic for when the game view is shown
+            if (viewToShowId === 'game') {
+                // currentMode should have been set *before* calling showView('game')
+                if (currentMode) { // Ensure currentMode is set
+                    gameModeTitle.textContent = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode`;
+                } else {
+                    console.warn("showView('game') called but currentMode is not set. Defaulting title.");
+                    gameModeTitle.textContent = "Game Mode";
+                }
+                updateGameUI(); // updateGameUI will handle UI based on currentMode
+                if (!renderer) {
+                    console.warn("Renderer not initialized when showing game view. Attempting to init ThreeJS.");
+                    initThreeJS(); // This should ideally not be needed if init order is correct
+                }
                 onWindowResize(); // Adjust canvas size
             } else {
-                stopTimer(); // Stop timer if navigating away from game
+                stopTimer(); // Stop timer if navigating away from game view
             }
-             if (viewId === 'menu') {
-                resetCubeStateForNewGame(); // Reset game state variables when returning to menu
-             }
+
+            if (viewToShowId === 'menu') {
+                resetCubeStateForNewGame(); // Reset game states when returning to menu
+            }
         }
         
         function resetCubeStateForNewGame() {
