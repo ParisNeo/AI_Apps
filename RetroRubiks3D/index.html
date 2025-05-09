@@ -23,7 +23,6 @@
             padding-top: 10px;
             padding-bottom: 20px;
         }
-
         .view {
             width: 95%;
             max-width: 800px;
@@ -31,9 +30,7 @@
             flex-direction: column;
             align-items: center;
         }
-
-        #mainMenuView,
-        #creditsView {
+        #mainMenuView, #creditsView {
             text-align: center;
             padding: 20px;
             background-color: rgba(20, 0, 20, 0.9);
@@ -42,14 +39,11 @@
             border-radius: 10px;
             margin-top: 5vh;
         }
-
-        #mainMenuView h1,
-        #creditsView h1 {
+        #mainMenuView h1, #creditsView h1 {
             color: #ffff00;
             text-shadow: 0 0 8px #ffff00;
             margin-bottom: 20px;
         }
-
         .menu-button-group button {
             display: block;
             width: 80%;
@@ -58,7 +52,6 @@
             font-size: 1em;
             padding: 12px 15px;
         }
-
         #gameContainer {
             width: 80vw;
             max-width: 600px;
@@ -70,11 +63,11 @@
             position: relative;
             margin-bottom: 15px;
         }
-
         #canvas {
             display: block;
+            width: 100%; /* Ensure canvas fills container */
+            height: 100%;
         }
-
         .controls-panel {
             background-color: rgba(20, 0, 20, 0.85);
             padding: 15px;
@@ -86,20 +79,16 @@
             width: 90%;
             max-width: 700px;
         }
-
-        .controls-panel h2,
-        .controls-panel h3 {
+        .controls-panel h2, .controls-panel h3 {
             margin-top: 0;
             color: #ffff00;
             font-size: 1.2em;
             text-shadow: 0 0 5px #ffff00;
         }
-
         .controls-panel h3 {
             font-size: 0.9em;
             margin-bottom: 5px;
         }
-
         .button-group {
             margin-bottom: 10px;
             display: flex;
@@ -107,7 +96,6 @@
             justify-content: center;
             align-items: center;
         }
-
         button {
             font-family: 'Press Start 2P', cursive;
             background-color: #333;
@@ -121,17 +109,14 @@
             box-shadow: 0 0 5px #00ff0077;
             font-size: 0.75em;
         }
-
         button:hover:not(:disabled) {
             background-color: #00ff00;
             color: #111;
             box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
         }
-
         button:active:not(:disabled) {
             transform: translateY(2px);
         }
-
         button:disabled {
             background-color: #222;
             color: #555;
@@ -139,37 +124,32 @@
             cursor: not-allowed;
             box-shadow: none;
         }
-
         button.back-button {
             background-color: #ff3333;
             border-color: #ffaaaa;
             color: #fff;
         }
-
         button.back-button:hover:not(:disabled) {
             background-color: #cc0000;
             box-shadow: 0 0 10px #ff0000;
         }
-
         #messageArea {
             margin-top: 10px;
             padding: 8px;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0,0,0,0.6);
             border: 1px dashed #00ffff;
             min-height: 36px;
             font-size: 0.75em;
             color: #00ffff;
+            line-height: 1.4;
         }
-
         #learnModeSpecificControls {
-            padding: 10px;
-            margin-top: 10px;
+            padding:10px;
+            margin-top:10px;
             border: 1px solid #ff00ff;
-            border-radius: 5px;
+            border-radius:5px;
         }
-
-        #learnModeSpecificControls select,
-        #learnModeSpecificControls p {
+        #learnModeSpecificControls select, #learnModeSpecificControls p {
             font-family: 'Press Start 2P', cursive;
             background-color: #222;
             color: #00ffaa;
@@ -178,35 +158,31 @@
             margin: 5px;
             font-size: 0.7em;
         }
-
         #algorithmDisplay {
             font-size: 0.8em;
             color: #ffff00;
-            margin: 5px 0;
+            margin:5px 0;
             min-height: 1em;
+            word-break: break-all;
         }
-
         #timerDisplay {
             font-size: 1em;
             color: #ffff00;
             margin: 5px 0 10px 0;
             text-shadow: 0 0 3px #ffff00;
         }
-
         #highScoresArea {
-            margin-top: 15px;
+            margin-top:15px;
             padding: 10px;
-            background-color: rgba(0, 0, 0, 0.4);
+            background-color: rgba(0,0,0,0.4);
             border: 1px solid #ff00ff;
             border-radius: 5px;
         }
-
         #highScoresArea h3 {
             color: #ff00ff;
             font-size: 0.8em;
             margin-bottom: 8px;
         }
-
         #highScoresList {
             list-style-type: decimal;
             padding-left: 25px;
@@ -214,14 +190,12 @@
             color: #00ffaa;
             text-align: left;
         }
-
         #highScoresList li {
             margin-bottom: 3px;
         }
     </style>
 </head>
 <body>
-
     <div id="mainMenuView" class="view">
         <h1>Retro Rubik's 3D</h1>
         <div class="menu-button-group">
@@ -280,42 +254,54 @@
     <div id="creditsView" class="view" style="display:none;">
         <h1>Credits</h1>
         <p>Idea Builder: ParisNeo</p>
-        <p>Coder: Gemini (Large Language Model by Google)</p>
+        <p>Coder: Gemini (Large Language Model by Google) & Human Refinement</p>
         <p>Based on classic Rubik's Cube concepts.</p>
         <button id="creditsBackToMenuBtn" class="back-button">Back to Menu</button>
     </div>
 
     <script>
+        // --- Constants ---
         const CUBE_SIZE = 3;
         const CUBIE_SIZE = 1;
         const CUBIE_SPACING = 0.05;
         const EFFECTIVE_CUBIE_SIZE = CUBIE_SIZE + CUBIE_SPACING;
         const VISUAL_COLORS = {
-            FRONT: 0xff0000, BACK: 0xffa500, UP: 0xffffff,
-            DOWN: 0xffff00, RIGHT: 0x0000ff, LEFT: 0x00ff00,
-            INTERNAL: 0x333333
+            FRONT: 0xff0000, BACK: 0xffa500, UP: 0xffffff, DOWN: 0xffff00,
+            RIGHT: 0x0000ff, LEFT: 0x00ff00, INTERNAL: 0x333333
         };
+        const ANIMATION_SPEED_FACTOR = 0.08; // Smaller is faster for the pivot rotation logic
+        const SEQUENCE_MOVE_DELAY = 75; // ms between moves in a sequence
+        const LESSON_AUTO_PLAY_DELAY = 300; // ms between moves in "Watch AI Perform"
+        const MAX_HIGH_SCORES = 5;
+        const SCRAMBLE_MOVES_COUNT_MIN = 20;
+        const SCRAMBLE_MOVES_COUNT_RANGE = 11; // Max additional moves: 20 + (0 to 10)
 
+        // --- Three.js Variables ---
         let scene, camera, renderer, controls, pivot;
-        let cubies = [];
-        let isAnimating = false;
-        let sequenceInProgress = false;
-        let activeView = 'menu';
-        let currentMode = '';
-        let playModeState = 'IDLE';
-        let aiModeState = 'IDLE';
+        let cubies = []; // Array to hold the individual cubie meshes
+
+        // --- Game State Variables ---
+        let isAnimating = false;          // True if a layer rotation animation is in progress
+        let sequenceInProgress = false;   // True if a sequence of moves (scramble, AI solve, lesson) is running
+        let activeView = 'menu';        // Current visible view ('menu', 'game', 'credits')
+        let currentMode = '';           // Current game mode ('play', 'ai', 'learn')
+        let playModeState = 'IDLE';     // 'IDLE', 'SCRAMBLED', 'SOLVING'
+        let aiModeState = 'IDLE';       // 'IDLE', 'SCRAMBLED', 'DEMOING'
         let learnModeState = {
             currentLesson: null,
             algorithmMoves: [],
             currentMoveIndex: 0,
             isLessonSetup: false,
-            isWatchingAll: false
+            isWatchingAll: false // True if AI is auto-playing the lesson algorithm
         };
-        let lastScrambleSequence = [];
+        let lastScrambleSequence = [];    // Stores the last sequence of moves used for scrambling
 
+        // --- UI Elements ---
         const mainMenuView = document.getElementById('mainMenuView');
         const gameView = document.getElementById('gameView');
         const creditsView = document.getElementById('creditsView');
+        const gameContainerEl = document.getElementById('gameContainer');
+        const canvasEl = document.getElementById('canvas');
         const gameModeTitle = document.getElementById('gameModeTitle');
         const messageArea = document.getElementById('messageArea');
         const menuPlayBtn = document.getElementById('menuPlayBtn');
@@ -330,10 +316,7 @@
         const resetCubeBtn = document.getElementById('resetCubeBtn');
         const allMoveButtons = document.querySelectorAll('.moveBtn');
         const timerDisplay = document.getElementById('timerDisplay');
-        let timerInterval, startTime, elapsedTime = 0;
-        const highScoresList = document.getElementById('highScoresList');
-        let highScores = [];
-        const MAX_HIGH_SCORES = 5;
+        const highScoresListEl = document.getElementById('highScoresList');
         const learnModeSpecificControls = document.getElementById('learnModeSpecificControls');
         const lessonSelect = document.getElementById('lessonSelect');
         const lessonDescription = document.getElementById('lessonDescription');
@@ -341,37 +324,140 @@
         const setupLessonBtn = document.getElementById('setupLessonBtn');
         const watchAlgorithmBtn = document.getElementById('watchAlgorithmBtn');
         const nextLessonMoveBtn = document.getElementById('nextLessonMoveBtn');
+
+        // --- Timer Variables ---
+        let timerInterval;
+        let startTime;
+        let elapsedTime = 0; // in seconds
+
+        // --- High Scores ---
+        let highScores = [];
+
+        // --- Lessons Data ---
         const lessons = [
-            { name: "Beginner: Sexy Move", description: "R U R' U'", initialScramble: [], algorithm: ["R", "U", "R'", "U'"], id: "sexy_move" },
-            { name: "Beginner: Sune", description: "R U R' U R U2 R'", initialScramble: ["F", "U'", "R", "U", "R'", "F'", "L", "U'", "L'", "U'", "L", "U2", "L'"], algorithm: ["R", "U", "R'", "U", "R", "U2", "R'"], id: "sune" },
-            { name: "Simple Face Turn (F)", description: "F F'", initialScramble: [], algorithm: ["F", "F'"], id: "face_turn_f" }
+            { name: "Beginner: Sexy Move", description: "A common short algorithm: R U R' U'", initialScramble: [], algorithm: ["R", "U", "R'", "U'"], id: "sexy_move"},
+            { name: "Beginner: Sune", description: "A useful OLL algorithm: R U R' U R U2 R'", initialScramble: ["F", "U'", "R", "U", "R'", "F'", "L", "U'", "L'", "U'", "L", "U2", "L'"], algorithm: ["R", "U", "R'", "U", "R", "U2", "R'"], id: "sune"},
+            { name: "Simple Face Turn (F)", description: "Basic front face clockwise and counter-clockwise turns.", initialScramble: [], algorithm: ["F", "F'"], id: "face_turn_f"}
         ];
+
+        // --- Move Sequence Queue ---
         let currentSequenceQueue = [];
         let onCurrentSequenceCompleteCallback = null;
 
-        // --- LOGICAL CUBE STATE AND SOLVER ---
-        const LGC_U = 'W', LGC_L = 'G', LGC_F = 'R', LGC_R = 'B', LGC_B = 'O', LGC_D = 'Y'; // Logical Colors
-        const LOGICAL_COLORS_MAP = { U: LGC_U, L: LGC_L, F: LGC_F, R: LGC_R, B: LGC_B, D: LGC_D };
-        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B']; // URFDLB for 54-sticker array
-        const FACE_IDX = { U: 0, R: 1, F: 2, D: 3, L: 4, B: 5 }; // Index of face in FACES_ORDER
+        // --- Logical Cube State and Solver Constants ---
+        const LGC_U = 'W'; // White (Up)
+        const LGC_L = 'G'; // Green (Left)
+        const LGC_F = 'R'; // Red (Front)
+        const LGC_R = 'B'; // Blue (Right)
+        const LGC_B = 'O'; // Orange (Back)
+        const LGC_D = 'Y'; // Yellow (Down)
 
+        const LOGICAL_COLORS_MAP = { U: LGC_U, L: LGC_L, F: LGC_F, R: LGC_R, B: LGC_B, D: LGC_D };
+        const FACES_ORDER = ['U', 'R', 'F', 'D', 'L', 'B']; // Standard order for Kociemba
+        const FACE_IDX = { U: 0, R: 1, F: 2, D: 3, L: 4, B: 5 };
+
+        // Sticker indices for edges [stickerOnFace1_index, stickerOnFace2_index]
+        // Each face has 9 stickers, 0-8. U:0-8, R:9-17, F:18-26, D:27-35, L:36-44, B:45-53
+        // U-face stickers: 0(ULB) 1(UB) 2(URB) 3(UL) 4(U) 5(UR) 6(ULF) 7(UF) 8(URF)
+        // F-face stickers: 0(FUL) 1(FU) 2(FUR) 3(FL) 4(F) 5(FR) 6(FDL) 7(FD) 8(FDR)
+        // (Indices are based on a common representation, e.g. Kociemba's solver)
         const EDGE_STICKERS = {
-            UF: [FACE_IDX.U * 9 + 7, FACE_IDX.F * 9 + 1], UR: [FACE_IDX.U * 9 + 5, FACE_IDX.R * 9 + 1], UB: [FACE_IDX.U * 9 + 1, FACE_IDX.B * 9 + 1], UL: [FACE_IDX.U * 9 + 3, FACE_IDX.L * 9 + 1],
-            DF: [FACE_IDX.D * 9 + 1, FACE_IDX.F * 9 + 7], DR: [FACE_IDX.D * 9 + 5, FACE_IDX.R * 9 + 7], DB: [FACE_IDX.D * 9 + 7, FACE_IDX.B * 9 + 7], DL: [FACE_IDX.D * 9 + 3, FACE_IDX.L * 9 + 7],
-            FR: [FACE_IDX.F * 9 + 5, FACE_IDX.R * 9 + 3], FL: [FACE_IDX.F * 9 + 3, FACE_IDX.L * 9 + 5], BR: [FACE_IDX.B * 9 + 3, FACE_IDX.R * 9 + 5], BL: [FACE_IDX.B * 9 + 5, FACE_IDX.L * 9 + 3]
+            UF: [FACE_IDX.U * 9 + 7, FACE_IDX.F * 9 + 1], UR: [FACE_IDX.U * 9 + 5, FACE_IDX.R * 9 + 1],
+            UB: [FACE_IDX.U * 9 + 1, FACE_IDX.B * 9 + 1], UL: [FACE_IDX.U * 9 + 3, FACE_IDX.L * 9 + 1],
+            DF: [FACE_IDX.D * 9 + 1, FACE_IDX.F * 9 + 7], DR: [FACE_IDX.D * 9 + 5, FACE_IDX.R * 9 + 7],
+            DB: [FACE_IDX.D * 9 + 7, FACE_IDX.B * 9 + 7], DL: [FACE_IDX.D * 9 + 3, FACE_IDX.L * 9 + 7],
+            FR: [FACE_IDX.F * 9 + 5, FACE_IDX.R * 9 + 3], FL: [FACE_IDX.F * 9 + 3, FACE_IDX.L * 9 + 5],
+            BR: [FACE_IDX.B * 9 + 3, FACE_IDX.R * 9 + 5], BL: [FACE_IDX.B * 9 + 5, FACE_IDX.L * 9 + 3]
         };
         const EDGE_KEYS = Object.keys(EDGE_STICKERS);
+        // Relative face character for an edge piece (e.g. for UF edge, U is Face1, F is Face2)
+        const EDGE_FACES_CHARS = {
+            UF: ['U','F'], UR: ['U','R'], UB: ['U','B'], UL: ['U','L'],
+            DF: ['D','F'], DR: ['D','R'], DB: ['D','B'], DL: ['D','L'],
+            FR: ['F','R'], FL: ['F','L'], BR: ['B','R'], BL: ['B','L']
+        };
+        // Maps a face char to its adjacent faces in CW order (used for complex algs if needed)
+        const ADJACENT_FACES_CW = {
+            U: ['B', 'R', 'F', 'L'], D: ['F', 'R', 'B', 'L'],
+            F: ['U', 'R', 'D', 'L'], B: ['U', 'L', 'D', 'R'],
+            R: ['U', 'B', 'D', 'F'], L: ['U', 'F', 'D', 'B']
+        };
 
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            initUI();
+            animate();
+        });
+
+        /**
+         * Initializes the Three.js scene, camera, renderer, and controls.
+         */
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(VISUAL_COLORS.INTERNAL); // Darker than body
+
+            camera = new THREE.PerspectiveCamera(50, gameContainerEl.clientWidth / gameContainerEl.clientHeight, 0.1, 1000);
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
+            renderer.setSize(gameContainerEl.clientWidth, gameContainerEl.clientHeight);
+
+            // Lighting
+            scene.add(new THREE.AmbientLight(0xcccccc, 0.7));
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            directionalLight.position.set(1, 1.5, 1).normalize();
+            scene.add(directionalLight);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.screenSpacePanning = false;
+            controls.minDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.5;
+            controls.maxDistance = CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 5;
+            controls.target.set(0, 0, 0);
+
+            pivot = new THREE.Object3D(); // Used for rotating layers
+            scene.add(pivot);
+
+            createRubiksCubeVisuals();
+        }
+
+        /**
+         * Initializes UI elements, loads data, and sets up event listeners.
+         */
+        function initUI() {
+            loadHighScores();
+            displayHighScores();
+            populateLessonsDropdown();
+            setupEventListeners();
+            showView('menu'); // Start at the main menu
+        }
+
+        // --- Logical Cube State Functions ---
+
+        /**
+         * Creates the initial solved state of the logical cube.
+         * @returns {string[]} Array of 54 characters representing sticker colors.
+         */
         function getInitialLogicalState() {
-            let state = [];
-            FACES_ORDER.forEach(faceChar => {
+            let state = Array(54);
+            FACES_ORDER.forEach((faceChar, faceIndex) => {
                 for (let i = 0; i < 9; i++) {
-                    state.push(LOGICAL_COLORS_MAP[faceChar]);
+                    state[faceIndex * 9 + i] = LOGICAL_COLORS_MAP[faceChar];
                 }
             });
             return state;
         }
 
+        /**
+         * Applies a scramble sequence to an initial logical state.
+         * @param {string[]} scrambleMoves - Array of move notations (e.g., ["F", "R'", "U2"]).
+         * @returns {string[]} The scrambled logical state.
+         */
         function getLogicalStateFromScramble(scrambleMoves) {
             let state = getInitialLogicalState();
             if (scrambleMoves && scrambleMoves.length > 0) {
@@ -382,301 +468,718 @@
             return state;
         }
 
+        /**
+         * Applies a single move notation to the logical cube state.
+         * @param {string} notation - The move notation (e.g., "F", "R'", "U2").
+         * @param {string[]} state - The current logical state array (mutated directly).
+         */
         function applyMoveToLogicalState(notation, state) {
-            const prime = notation.includes("'");
-            const double = notation.includes("2");
+            const isPrime = notation.includes("'");
+            const isDouble = notation.includes("2");
             const faceChar = notation.charAt(0);
-            let numRotations = double ? 2 : (prime ? 3 : 1);
+
+            let numRotations = isDouble ? 2 : (isPrime ? 3 : 1); // 3 for prime (CCW) is like 1 CW for the inverse face
             for (let i = 0; i < numRotations; i++) {
                 rotateFaceLogicallyCW(faceChar, state);
             }
         }
 
+        /**
+         * Rotates a single face of the logical cube clockwise by 90 degrees.
+         * This function directly mutates the `state` array.
+         * @param {string} faceChar - The character of the face to rotate ('U', 'D', 'F', 'B', 'L', 'R').
+         * @param {string[]} state - The logical cube state array.
+         */
         function rotateFaceLogicallyCW(faceChar, state) {
             const fBase = FACE_IDX[faceChar] * 9;
-            let onFace = [
+            // Rotate stickers on the face itself
+            let onFaceStickers = [
                 state[fBase + 0], state[fBase + 1], state[fBase + 2],
                 state[fBase + 3], state[fBase + 4], state[fBase + 5],
                 state[fBase + 6], state[fBase + 7], state[fBase + 8]
             ];
-            state[fBase + 0] = onFace[6]; state[fBase + 1] = onFace[3]; state[fBase + 2] = onFace[0];
-            state[fBase + 3] = onFace[7]; /* center */ state[fBase + 5] = onFace[1];
-            state[fBase + 6] = onFace[8]; state[fBase + 7] = onFace[5]; state[fBase + 8] = onFace[2];
+            state[fBase + 0] = onFaceStickers[6]; state[fBase + 1] = onFaceStickers[3]; state[fBase + 2] = onFaceStickers[0];
+            state[fBase + 3] = onFaceStickers[7]; /* Center [4] unchanged */ state[fBase + 5] = onFaceStickers[1];
+            state[fBase + 6] = onFaceStickers[8]; state[fBase + 7] = onFaceStickers[5]; state[fBase + 8] = onFaceStickers[2];
 
-            let t = []; 
+            // Rotate adjacent side stickers
+            let tempStickers = [];
             switch (faceChar) {
-                case 'U': t=[state[FACE_IDX.B*9+0],state[FACE_IDX.B*9+1],state[FACE_IDX.B*9+2]]; for(let i=0;i<3;i++){state[FACE_IDX.B*9+i]=state[FACE_IDX.L*9+i];state[FACE_IDX.L*9+i]=state[FACE_IDX.F*9+i];state[FACE_IDX.F*9+i]=state[FACE_IDX.R*9+i];state[FACE_IDX.R*9+i]=t[i];} break;
-                case 'D': t=[state[FACE_IDX.F*9+6],state[FACE_IDX.F*9+7],state[FACE_IDX.F*9+8]]; for(let i=0;i<3;i++){state[FACE_IDX.F*9+6+i]=state[FACE_IDX.L*9+6+i];state[FACE_IDX.L*9+6+i]=state[FACE_IDX.B*9+6+i];state[FACE_IDX.B*9+6+i]=state[FACE_IDX.R*9+6+i];state[FACE_IDX.R*9+6+i]=t[i];} break;
-                case 'F': t=[state[FACE_IDX.U*9+6],state[FACE_IDX.U*9+7],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+6]=state[FACE_IDX.L*9+8];state[FACE_IDX.U*9+7]=state[FACE_IDX.L*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.L*9+2]; state[FACE_IDX.L*9+8]=state[FACE_IDX.D*9+2];state[FACE_IDX.L*9+5]=state[FACE_IDX.D*9+1];state[FACE_IDX.L*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+2]=state[FACE_IDX.R*9+0];state[FACE_IDX.D*9+1]=state[FACE_IDX.R*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.R*9+6]; state[FACE_IDX.R*9+0]=t[0];state[FACE_IDX.R*9+3]=t[1];state[FACE_IDX.R*9+6]=t[2]; break;
-                case 'B': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+1],state[FACE_IDX.U*9+0]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.R*9+8];state[FACE_IDX.U*9+1]=state[FACE_IDX.R*9+5];state[FACE_IDX.U*9+0]=state[FACE_IDX.R*9+2]; state[FACE_IDX.R*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.R*9+5]=state[FACE_IDX.D*9+7];state[FACE_IDX.R*9+2]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+6]=state[FACE_IDX.L*9+0];state[FACE_IDX.D*9+7]=state[FACE_IDX.L*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.L*9+6]; state[FACE_IDX.L*9+0]=t[0];state[FACE_IDX.L*9+3]=t[1];state[FACE_IDX.L*9+6]=t[2]; break;
-                case 'R': t=[state[FACE_IDX.U*9+2],state[FACE_IDX.U*9+5],state[FACE_IDX.U*9+8]]; state[FACE_IDX.U*9+2]=state[FACE_IDX.F*9+2];state[FACE_IDX.U*9+5]=state[FACE_IDX.F*9+5];state[FACE_IDX.U*9+8]=state[FACE_IDX.F*9+8]; state[FACE_IDX.F*9+2]=state[FACE_IDX.D*9+2];state[FACE_IDX.F*9+5]=state[FACE_IDX.D*9+5];state[FACE_IDX.F*9+8]=state[FACE_IDX.D*9+8]; state[FACE_IDX.D*9+2]=state[FACE_IDX.B*9+6];state[FACE_IDX.D*9+5]=state[FACE_IDX.B*9+3];state[FACE_IDX.D*9+8]=state[FACE_IDX.B*9+0]; state[FACE_IDX.B*9+6]=t[0];state[FACE_IDX.B*9+3]=t[1];state[FACE_IDX.B*9+0]=t[2]; break;
-                case 'L': t=[state[FACE_IDX.U*9+0],state[FACE_IDX.U*9+3],state[FACE_IDX.U*9+6]]; state[FACE_IDX.U*9+0]=state[FACE_IDX.B*9+8];state[FACE_IDX.U*9+3]=state[FACE_IDX.B*9+5];state[FACE_IDX.U*9+6]=state[FACE_IDX.B*9+2]; state[FACE_IDX.B*9+8]=state[FACE_IDX.D*9+6];state[FACE_IDX.B*9+5]=state[FACE_IDX.D*9+3];state[FACE_IDX.B*9+2]=state[FACE_IDX.D*9+0]; state[FACE_IDX.D*9+6]=state[FACE_IDX.F*9+0];state[FACE_IDX.D*9+3]=state[FACE_IDX.F*9+3];state[FACE_IDX.D*9+0]=state[FACE_IDX.F*9+6]; state[FACE_IDX.F*9+0]=t[0];state[FACE_IDX.F*9+3]=t[1];state[FACE_IDX.F*9+6]=t[2]; break;
+                case 'U': // B->L->F->R->B (indices 0,1,2 of each face)
+                    tempStickers = [state[FACE_IDX.B*9+0], state[FACE_IDX.B*9+1], state[FACE_IDX.B*9+2]];
+                    for(let i=0;i<3;i++){ state[FACE_IDX.B*9+i] = state[FACE_IDX.L*9+i]; state[FACE_IDX.L*9+i] = state[FACE_IDX.F*9+i]; state[FACE_IDX.F*9+i] = state[FACE_IDX.R*9+i]; state[FACE_IDX.R*9+i] = tempStickers[i]; }
+                    break;
+                case 'D': // F->L->B->R->F (indices 6,7,8 of each face)
+                    tempStickers = [state[FACE_IDX.F*9+6], state[FACE_IDX.F*9+7], state[FACE_IDX.F*9+8]];
+                    for(let i=0;i<3;i++){ state[FACE_IDX.F*9+6+i] = state[FACE_IDX.L*9+6+i]; state[FACE_IDX.L*9+6+i] = state[FACE_IDX.B*9+6+i]; state[FACE_IDX.B*9+6+i] = state[FACE_IDX.R*9+6+i]; state[FACE_IDX.R*9+6+i] = tempStickers[i]; }
+                    break;
+                case 'F': // U(6,7,8) -> L(8,5,2)' -> D(2,1,0)' -> R(0,3,6) -> U (Indices are tricky due to face orientations)
+                    tempStickers = [state[FACE_IDX.U*9+6], state[FACE_IDX.U*9+7], state[FACE_IDX.U*9+8]]; // U bottom row
+                    state[FACE_IDX.U*9+6] = state[FACE_IDX.L*9+8]; state[FACE_IDX.U*9+7] = state[FACE_IDX.L*9+5]; state[FACE_IDX.U*9+8] = state[FACE_IDX.L*9+2]; // L right col to U bottom
+                    state[FACE_IDX.L*9+8] = state[FACE_IDX.D*9+2]; state[FACE_IDX.L*9+5] = state[FACE_IDX.D*9+1]; state[FACE_IDX.L*9+2] = state[FACE_IDX.D*9+0]; // D top row to L right col
+                    state[FACE_IDX.D*9+2] = state[FACE_IDX.R*9+0]; state[FACE_IDX.D*9+1] = state[FACE_IDX.R*9+3]; state[FACE_IDX.D*9+0] = state[FACE_IDX.R*9+6]; // R left col to D top row
+                    state[FACE_IDX.R*9+0] = tempStickers[0];       state[FACE_IDX.R*9+3] = tempStickers[1];       state[FACE_IDX.R*9+6] = tempStickers[2]; // U bottom to R left col
+                    break;
+                case 'B': // U(2,1,0) -> R(8,5,2)' -> D(6,7,8)' -> L(0,3,6) -> U
+                    tempStickers = [state[FACE_IDX.U*9+2], state[FACE_IDX.U*9+1], state[FACE_IDX.U*9+0]]; // U top row (reversed for CW logic)
+                    state[FACE_IDX.U*9+2] = state[FACE_IDX.R*9+8]; state[FACE_IDX.U*9+1] = state[FACE_IDX.R*9+5]; state[FACE_IDX.U*9+0] = state[FACE_IDX.R*9+2]; // R right col to U top
+                    state[FACE_IDX.R*9+8] = state[FACE_IDX.D*9+6]; state[FACE_IDX.R*9+5] = state[FACE_IDX.D*9+7]; state[FACE_IDX.R*9+2] = state[FACE_IDX.D*9+8]; // D bottom row to R right col
+                    state[FACE_IDX.D*9+6] = state[FACE_IDX.L*9+0]; state[FACE_IDX.D*9+7] = state[FACE_IDX.L*9+3]; state[FACE_IDX.D*9+8] = state[FACE_IDX.L*9+6]; // L left col to D bottom row
+                    state[FACE_IDX.L*9+0] = tempStickers[0];       state[FACE_IDX.L*9+3] = tempStickers[1];       state[FACE_IDX.L*9+6] = tempStickers[2]; // U top to L left col
+                    break;
+                case 'R': // U(2,5,8) -> B(6,3,0)' -> D(2,5,8) -> F(2,5,8) -> U (Column on U, B(rev), D, F)
+                    tempStickers = [state[FACE_IDX.U*9+2], state[FACE_IDX.U*9+5], state[FACE_IDX.U*9+8]]; // U right col
+                    state[FACE_IDX.U*9+2] = state[FACE_IDX.F*9+2]; state[FACE_IDX.U*9+5] = state[FACE_IDX.F*9+5]; state[FACE_IDX.U*9+8] = state[FACE_IDX.F*9+8]; // F right col to U right
+                    state[FACE_IDX.F*9+2] = state[FACE_IDX.D*9+2]; state[FACE_IDX.F*9+5] = state[FACE_IDX.D*9+5]; state[FACE_IDX.F*9+8] = state[FACE_IDX.D*9+8]; // D right col to F right
+                    state[FACE_IDX.D*9+2] = state[FACE_IDX.B*9+6]; state[FACE_IDX.D*9+5] = state[FACE_IDX.B*9+3]; state[FACE_IDX.D*9+8] = state[FACE_IDX.B*9+0]; // B left col (rev) to D right
+                    state[FACE_IDX.B*9+6] = tempStickers[0];       state[FACE_IDX.B*9+3] = tempStickers[1];       state[FACE_IDX.B*9+0] = tempStickers[2]; // U right to B left (rev)
+                    break;
+                case 'L': // U(0,3,6) -> F(0,3,6) -> D(0,3,6) -> B(8,5,2)' -> U
+                    tempStickers = [state[FACE_IDX.U*9+0], state[FACE_IDX.U*9+3], state[FACE_IDX.U*9+6]]; // U left col
+                    state[FACE_IDX.U*9+0] = state[FACE_IDX.B*9+8]; state[FACE_IDX.U*9+3] = state[FACE_IDX.B*9+5]; state[FACE_IDX.U*9+6] = state[FACE_IDX.B*9+2]; // B right col (rev) to U left
+                    state[FACE_IDX.B*9+8] = state[FACE_IDX.D*9+0]; state[FACE_IDX.B*9+5] = state[FACE_IDX.D*9+3]; state[FACE_IDX.B*9+2] = state[FACE_IDX.D*9+6]; // D left col to B right (rev) (Error here in original, D should be 6,3,0 for B 8,5,2) -> D(0,3,6)
+                    state[FACE_IDX.D*9+0] = state[FACE_IDX.F*9+0]; state[FACE_IDX.D*9+3] = state[FACE_IDX.F*9+3]; state[FACE_IDX.D*9+6] = state[FACE_IDX.F*9+6]; // F left col to D left
+                    state[FACE_IDX.F*9+0] = tempStickers[0];       state[FACE_IDX.F*9+3] = tempStickers[1];       state[FACE_IDX.F*9+6] = tempStickers[2]; // U left to F left
+                    break;
             }
         }
-        
-        function findEdge(state, color1, color2) {
+
+        /**
+         * Finds an edge piece by its two sticker colors.
+         * @param {string[]} state - The current logical state array.
+         * @param {string} color1 - The first color of the edge.
+         * @param {string} color2 - The second color of the edge.
+         * @returns {object|null} An object { key: edgeKey, s1_actual: colorOnSticker1, s2_actual: colorOnSticker2 } or null if not found.
+         */
+        function findEdgeByColors(state, color1, color2) {
             for (const edgeKey of EDGE_KEYS) {
-                const s1Idx = EDGE_STICKERS[edgeKey][0];
-                const s2Idx = EDGE_STICKERS[edgeKey][1];
-                const s1Color = state[s1Idx];
-                const s2Color = state[s2Idx];
-                if ((s1Color === color1 && s2Color === color2) || (s1Color === color2 && s2Color === color1)) {
-                    return { key: edgeKey, color1StickerIdx: (s1Color === color1 ? s1Idx : s2Idx), color2StickerIdx: (s1Color === color2 ? s1Idx : s2Idx) };
+                const sticker1Index = EDGE_STICKERS[edgeKey][0];
+                const sticker2Index = EDGE_STICKERS[edgeKey][1];
+                const sticker1Color = state[sticker1Index];
+                const sticker2Color = state[sticker2Index];
+
+                if ((sticker1Color === color1 && sticker2Color === color2) || (sticker1Color === color2 && sticker2Color === color1)) {
+                    return { key: edgeKey, s1_actual: sticker1Color, s2_actual: sticker2Color };
                 }
             }
+            console.warn(`Edge with colors ${color1}-${color2} not found.`);
             return null;
         }
 
+        /**
+         * Checks if a specific white cross edge is solved.
+         * @param {string[]} state - The current logical state.
+         * @param {object} targetEdgeData - Object defining the target edge (uSticker, sideSticker, uColor, sideColor).
+         * @returns {boolean} True if the edge is solved.
+         */
+        function isWhiteCrossEdgeSolved(state, targetEdgeData) {
+            return state[targetEdgeData.uSticker] === targetEdgeData.uColor &&
+                   state[targetEdgeData.sideSticker] === targetEdgeData.sideColor;
+        }
+
+        /**
+         * Gets D-layer alignment moves to bring a piece currently at `currentDFaceSlotChar`
+         * to the D-slot corresponding to `targetSideFaceChar`.
+         * @param {string} currentDFaceSlotChar - The side face character of the current D-slot (e.g., 'F' for DF).
+         * @param {string} targetSideFaceChar - The target side face character (e.g., 'R' for DR slot).
+         * @returns {string[]} Array of D-moves ("D", "D'", "D2").
+         */
+        function getDAlignMoves(currentDFaceSlotChar, targetSideFaceChar) {
+            const dOrder = ['F', 'R', 'B', 'L']; // Order of faces adjacent to D when looking from D
+            let currentIndex = dOrder.indexOf(currentDFaceSlotChar);
+            let targetIndex = dOrder.indexOf(targetSideFaceChar);
+
+            if (currentIndex === -1 || targetIndex === -1) {
+                console.error("Invalid face character in getDAlignMoves", currentDFaceSlotChar, targetSideFaceChar);
+                return [];
+            }
+
+            let diff = (targetIndex - currentIndex + 4) % 4;
+            if (diff === 1) return ["D"];
+            if (diff === 2) return ["D2"];
+            if (diff === 3) return ["D'"];
+            return []; // Already aligned
+        }
+
+
+        /**
+         * AI attempts to solve the white cross. (Rudimentary)
+         * @param {string[]} state - The logical cube state (will be modified).
+         * @param {string[]} solutionMoves - Array to append solution moves to.
+         */
         function solveCubeAI_WhiteCross(state, solutionMoves) {
-            const MAX_TOTAL_MOVES_CROSS = 40; 
-            const MAX_MOVES_PER_EDGE_ATTEMPT = 10;  
-            let crossPiecesSolvedCount = 0;
-
-            const targetWhiteEdgesData = [ 
-                { uSticker: EDGE_STICKERS.UF[0], sideSticker: EDGE_STICKERS.UF[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.F, sideFace: 'F', key: 'UF'},
-                { uSticker: EDGE_STICKERS.UR[0], sideSticker: EDGE_STICKERS.UR[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.R, sideFace: 'R', key: 'UR'},
-                { uSticker: EDGE_STICKERS.UB[0], sideSticker: EDGE_STICKERS.UB[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.B, sideFace: 'B', key: 'UB'},
-                { uSticker: EDGE_STICKERS.UL[0], sideSticker: EDGE_STICKERS.UL[1], uColor: LGC_U, sideColor: LOGICAL_COLORS_MAP.L, sideFace: 'L', key: 'UL'}
+            const MAX_CROSS_ITERATIONS = 30; // Increased iterations for rudimentary solver
+            const targetWhiteEdges = [
+                { uSticker:EDGE_STICKERS.UF[0], sideSticker:EDGE_STICKERS.UF[1], uColor:LGC_U, sideColor:LOGICAL_COLORS_MAP.F, sideFaceChar:'F', key:'UF' },
+                { uSticker:EDGE_STICKERS.UR[0], sideSticker:EDGE_STICKERS.UR[1], uColor:LGC_U, sideColor:LOGICAL_COLORS_MAP.R, sideFaceChar:'R', key:'UR' },
+                { uSticker:EDGE_STICKERS.UB[0], sideSticker:EDGE_STICKERS.UB[1], uColor:LGC_U, sideColor:LOGICAL_COLORS_MAP.B, sideFaceChar:'B', key:'UB' },
+                { uSticker:EDGE_STICKERS.UL[0], sideSticker:EDGE_STICKERS.UL[1], uColor:LGC_U, sideColor:LOGICAL_COLORS_MAP.L, sideFaceChar:'L', key:'UL' }
             ];
-            
-            for (let solveAttempts = 0; solveAttempts < MAX_TOTAL_MOVES_CROSS && crossPiecesSolvedCount < 4; solveAttempts++) {
-                let progressMadeThisAttempt = false;
-                for (const targetEdge of targetWhiteEdgesData) {
-                    if (state[targetEdge.uSticker] === targetEdge.uColor && state[targetEdge.sideSticker] === targetEdge.sideColor) {
-                        continue; 
+
+            for (let iter = 0; iter < MAX_CROSS_ITERATIONS; iter++) {
+                let allCrossEdgesSolved = targetWhiteEdges.every(te => isWhiteCrossEdgeSolved(state, te));
+                if (allCrossEdgesSolved) break;
+
+                let moveMadeInIteration = false;
+                for (const targetEdge of targetWhiteEdges) {
+                    if (isWhiteCrossEdgeSolved(state, targetEdge)) continue;
+
+                    let edgeInfo = findEdgeByColors(state, targetEdge.uColor, targetEdge.sideColor);
+                    if (!edgeInfo) {
+                        console.error("AI Error: White edge piece not found for target:", targetEdge);
+                        continue;
                     }
 
-                    let edgeInfo = findEdge(state, targetEdge.uColor, targetEdge.sideColor);
-                    if (!edgeInfo) continue; 
+                    messageArea.textContent = `AI: Cross - Target ${targetEdge.key}, Found at ${edgeInfo.key} (Iter ${iter + 1})`;
+                    let movesForSubStep = [];
+                    let currentEdgeKey = edgeInfo.key; // e.g., "UF", "DR", "FL"
+                    const currentEdgeFaces = EDGE_FACES_CHARS[currentEdgeKey]; // [Face1Char, Face2Char]
 
-                    messageArea.textContent = `AI: Cross - Targeting ${targetEdge.uColor}-${targetEdge.sideColor} (at ${edgeInfo.key})`;
-                    let movesForThisSubStep = [];
-                    let currentEdgeLocationKey = edgeInfo.key;
-                    let whiteStickerIsOnFace1 = state[EDGE_STICKERS[currentEdgeLocationKey][0]] === LGC_U;
-
-                    // Case 1: Edge is in U layer but wrong
-                    if (currentEdgeLocationKey.startsWith('U')) {
-                        let sideFaceOfCurrentSlot = currentEdgeLocationKey.charAt(1); // e.g., 'F' from "UF"
-                        movesForThisSubStep.push(sideFaceOfCurrentSlot + "2"); // Move to D layer
+                    // Case 1: Edge is in U-Layer but incorrect
+                    if (currentEdgeKey.startsWith('U')) {
+                        // Simplest: move it to D layer using F2, R2, B2, or L2 based on its current U-slot's side face
+                        const uSideFaceChar = currentEdgeFaces[1]; // e.g., for "UR", this is 'R'
+                        movesForSubStep.push(uSideFaceChar + "2");
+                        messageArea.textContent += ` | U-layer ${currentEdgeKey} -> D via ${uSideFaceChar}2`;
                     }
-                    // Case 2: Edge is in E Slice (FR, FL, BR, BL)
-                    else if (["FR", "FL", "BR", "BL"].includes(currentEdgeLocationKey)) {
-                        let firstFace = currentEdgeLocationKey.charAt(0);
-                        let secondFace = currentEdgeLocationKey.charAt(1);
-                        // Simplistic: move to D layer using one of its faces
-                        // This needs smarter logic to choose which face to turn to preserve U layer cross
-                        if (state[EDGE_STICKERS[currentEdgeLocationKey][0]] === LGC_U) { // Color1 is White (e.g., F part of FR)
-                            movesForThisSubStep.push(firstFace + "'", "D'", firstFace);
-                        } else { // Color2 is White (e.g., R part of FR)
-                            movesForThisSubStep.push(secondFace, "D", secondFace + "'");
+                    // Case 2: Edge is in E-Slice (FR, FL, BR, BL)
+                    else if (["FR", "FL", "BR", "BL"].includes(currentEdgeKey)) {
+                        const eSliceFace1 = currentEdgeFaces[0]; // e.g., 'F' for "FR"
+                        const eSliceFace2 = currentEdgeFaces[1]; // e.g., 'R' for "FR"
+
+                        // Check which sticker is white
+                        const isWhiteOnFace1Sticker = state[EDGE_STICKERS[currentEdgeKey][0]] === LGC_U;
+
+                        // Basic strategy: try to move it to U-layer, then if needed it will be moved to D by Case 1.
+                        // This is a placeholder for more intelligent E-slice handling.
+                        if (isWhiteOnFace1Sticker) { // e.g. FR, white on F-side. Alg: F U F' (moves to UF)
+                            movesForSubStep.push(eSliceFace1, "U", eSliceFace1 + "'");
+                             messageArea.textContent += ` | E-layer ${currentEdgeKey} (W on ${eSliceFace1}) -> U via ${eSliceFace1} U ${eSliceFace1}'`;
+                        } else { // e.g. FR, white on R-side. Alg: R' U' R (moves to UR)
+                            movesForSubStep.push(eSliceFace2 + "'", "U'", eSliceFace2);
+                            messageArea.textContent += ` | E-layer ${currentEdgeKey} (W on ${eSliceFace2}) -> U via ${eSliceFace2}' U' ${eSliceFace2}`;
                         }
                     }
-                    // Case 3: Edge is in D layer
-                    else if (currentEdgeLocationKey.startsWith('D')) {
-                        // Determine alignment needed for D layer piece
-                        let targetDFaceSlotSide = targetEdge.sideFace; // 'F', 'R', 'B', or 'L'
-                        let currentDFaceSlotSide = currentEdgeLocationKey.charAt(1); // 'F', 'R', 'B', or 'L'
-                        
-                        let dTurns = 0;
-                        const dOrder = ['F', 'R', 'B', 'L']; // Order of side faces for D turns
-                        let currentIdx = dOrder.indexOf(currentDFaceSlotSide);
-                        let targetIdx = dOrder.indexOf(targetDFaceSlotSide);
-                        if (currentIdx !== -1 && targetIdx !== -1) {
-                            dTurns = (targetIdx - currentIdx + 4) % 4;
-                        }
+                    // Case 3: Edge is in D-Layer
+                    else if (currentEdgeKey.startsWith('D')) {
+                        const currentDFaceSlotSideChar = currentEdgeFaces[1]; // The side face this D-edge is currently associated with (e.g. 'F' for 'DF')
+                        const dAlignMoves = getDAlignMoves(currentDFaceSlotSideChar, targetEdge.sideFaceChar);
+                        movesForSubStep.push(...dAlignMoves);
+                        if (dAlignMoves.length > 0) messageArea.textContent += ` | D-Align: ${dAlignMoves.join(' ')}`;
 
-                        if (dTurns === 1) movesForThisSubStep.push("D");
-                        else if (dTurns === 2) movesForThisSubStep.push("D2");
-                        else if (dTurns === 3) movesForThisSubStep.push("D'");
-                        
-                        // After D alignment, the piece is logically under its target sideFace.
-                        // Now check orientation and apply algorithm.
-                        // Re-find the edge as D turns might have changed its key (e.g. DF -> DR)
-                        let tempStateAfterDTurns = JSON.parse(JSON.stringify(state));
-                        movesForThisSubStep.forEach(m => applyMoveToLogicalState(m, tempStateAfterDTurns));
-                        let alignedEdgeInfo = findEdge(tempStateAfterDTurns, targetEdge.uColor, targetEdge.sideColor);
 
-                        if (alignedEdgeInfo && alignedEdgeInfo.key.startsWith('D')) {
-                             // White is on the D-face part of the edge
-                            if (tempStateAfterDTurns[EDGE_STICKERS[alignedEdgeInfo.key][0]] === LGC_U) {
-                                movesForThisSubStep.push(targetEdge.sideFace + "2");
-                            } 
-                            // White is on the side-face part of the edge
-                            else if (tempStateAfterDTurns[EDGE_STICKERS[alignedEdgeInfo.key][1]] === LGC_U) {
-                                movesForThisSubStep.push(targetEdge.sideFace + "'", "U'", targetEdge.sideFace);
-                            }
-                        } else { // Should be at the D-slot of targetEdge.sideFace, if D-turns were correct
-                             movesForThisSubStep.push(targetEdge.sideFace + "2"); // Fallback if orientation check fails
+                        // After D-alignment, the piece is in the D-slot of targetEdge.sideFaceChar
+                        // Create a temporary state to check orientation after alignment for THIS sub-step's moves
+                        let tempStateForOrientationCheck = JSON.parse(JSON.stringify(state));
+                        movesForSubStep.forEach(m => applyMoveToLogicalState(m, tempStateForOrientationCheck));
+
+                        // The edge we are tracking is now (logically) at "D" + targetEdge.sideFaceChar
+                        const alignedEdgeTheoreticalKey = "D" + targetEdge.sideFaceChar;
+                        const dSlotStickerOnDFaceIndex = EDGE_STICKERS[alignedEdgeTheoreticalKey][0];
+                        // const dSlotStickerOnSideFaceIndex = EDGE_STICKERS[alignedEdgeTheoreticalKey][1]; // Not directly used for check logic here
+
+                        if (tempStateForOrientationCheck[dSlotStickerOnDFaceIndex] === LGC_U) { // White is on D-face part
+                            movesForSubStep.push(targetEdge.sideFaceChar + "2"); // e.g., F2
+                             messageArea.textContent += ` | D-insert (W on D): ${targetEdge.sideFaceChar}2`;
+                        } else { // White is on side-face part (e.g. for DF, white is on F-sticker)
+                            // Using the "Sexy Move" variant as per original implication F U F' U' (or R U R' U' etc.)
+                            // This is a placeholder - it's not the most direct edge insertion.
+                            // It uses the target side face, and the face to its right (e.g., F and R)
+                            const mainTurnFace = targetEdge.sideFaceChar; // e.g., F
+                            // To apply F U F' U', we push F, U, F', U'
+                            movesForSubStep.push(mainTurnFace, "U", mainTurnFace + "'", "U'");
+                            messageArea.textContent += ` | D-insert (W on side): ${mainTurnFace} U ${mainTurnFace}' U' (placeholder)`;
                         }
                     }
 
-                    if (movesForThisSubStep.length > 0 && movesForThisSubStep.length <= MAX_MOVES_PER_EDGE_ATTEMPT) {
-                        movesForThisSubStep.forEach(m => {
+                    if (movesForSubStep.length > 0) {
+                        movesForSubStep.forEach(m => {
                             solutionMoves.push(m);
-                            applyMoveToLogicalState(m, state); // Apply to master state for next edge
+                            applyMoveToLogicalState(m, state); // Apply to actual state
                         });
-                        progressMadeThisAttempt = true; 
+                        moveMadeInIteration = true;
                         break; // Re-evaluate all edges from the new state
                     }
-                } // end for each targetEdge
-                
-                if (!progressMadeThisAttempt && solveAttempts > 0) { 
-                    let tempSolvedCount = 0;
-                    targetWhiteEdgesData.forEach(te => {if(state[te.uSticker]===te.uColor && state[te.sideSticker]===te.sideColor)tempSolvedCount++;});
-                    if (tempSolvedCount === 4) { crossPiecesSolvedCount = 4; break; }
-                    if (solveAttempts > MAX_TOTAL_MOVES_CROSS / 2) { console.warn("AI Cross: Stuck, breaking."); break; }
-                }
-                crossPiecesSolvedCount = 0;
-                targetWhiteEdgesData.forEach(te => {if(state[te.uSticker]===te.uColor && state[te.sideSticker]===te.sideColor)crossPiecesSolvedCount++;});
-                if (crossPiecesSolvedCount === 4) break;
-            } 
+                } // End loop over targetWhiteEdges
 
-            if (crossPiecesSolvedCount < 4) {
-                console.warn(`AI: White cross only partially solved (${crossPiecesSolvedCount}/4). Total moves: ${solutionMoves.length}`);
+                if (!moveMadeInIteration && iter > 0) {
+                    let checkSolved = targetWhiteEdges.every(te => isWhiteCrossEdgeSolved(state, te));
+                    if (checkSolved) break;
+                    console.warn("AI Cross: Stuck, no progress in iteration. Breaking.");
+                    messageArea.textContent = "AI Cross: Stuck, no progress. Partial solution likely.";
+                    break;
+                }
+            } // End main iteration loop
+
+            // Final alignment of U-layer cross pieces with centers
+            // This ensures side colors match respective centers
+            messageArea.textContent = "AI: Aligning U-layer cross with centers...";
+            for (let uAlignIter = 0; uAlignIter < 4; uAlignIter++) { // Max 3 U turns needed
+                let correctlyAlignedCount = 0;
+                targetWhiteEdges.forEach(te => { if (isWhiteCrossEdgeSolved(state, te)) correctlyAlignedCount++; });
+
+                if (correctlyAlignedCount === 4) {
+                    messageArea.textContent = "AI: U-layer cross fully aligned.";
+                    break;
+                }
+                
+                // Check if all U-face stickers are white but side colors don't match
+                let allWhiteOnTop = targetWhiteEdges.every(te => state[te.uSticker] === LGC_U);
+                if (allWhiteOnTop && correctlyAlignedCount < 4) {
+                     solutionMoves.push("U");
+                     applyMoveToLogicalState("U", state);
+                     messageArea.textContent = "AI: Aligning U-layer cross with U turn...";
+                } else if (!allWhiteOnTop) {
+                    // This case implies some white edges are not even on top face,
+                    // previous logic should have handled it. Or solver failed.
+                    messageArea.textContent = "AI: U-layer alignment issue - not all white stickers on top.";
+                    break;
+                } else {
+                    // Should not happen if allWhiteOnTop and correctlyAlignedCount < 4 is handled
+                    break;
+                }
+                 if (uAlignIter === 3 && correctlyAlignedCount < 4) {
+                    messageArea.textContent = "AI: Could not fully align U-layer cross after 3 U-turns.";
+                }
+            }
+
+            if (targetWhiteEdges.every(te => isWhiteCrossEdgeSolved(state, te))) {
+                 messageArea.textContent = `AI: White Cross appears solved! (${solutionMoves.length} moves).`;
+            } else {
+                let solvedCount = targetWhiteEdges.filter(te => isWhiteCrossEdgeSolved(state, te)).length;
+                messageArea.textContent = `AI: White Cross partially solved (${solvedCount}/4). (${solutionMoves.length} moves). Check console.`;
+                console.warn("AI Cross incomplete. Final state:", JSON.parse(JSON.stringify(state)), "Moves:", solutionMoves);
             }
         }
 
-        function solveCubeAI(logicalState) {
+
+        /**
+         * Main AI solver function (currently only does white cross).
+         * @param {string[]} initialLogicalState - The scrambled logical state.
+         * @returns {string[]} Array of moves for the solution.
+         */
+        function solveCubeAI(initialLogicalState) {
             let solutionMoves = [];
-            let currentLogicalState = JSON.parse(JSON.stringify(logicalState)); 
-            
+            // Clone the state so the original passed in isn't modified by the solver directly
+            let currentLogicalState = JSON.parse(JSON.stringify(initialLogicalState));
+
+            messageArea.textContent = "AI: Starting White Cross solution...";
             solveCubeAI_WhiteCross(currentLogicalState, solutionMoves);
-            
+
+            // Placeholder for future steps (F2L, OLL, PLL)
+            // solveCubeAI_FirstLayerCorners(currentLogicalState, solutionMoves);
+            // solveCubeAI_SecondLayerEdges(currentLogicalState, solutionMoves);
+            // ... etc.
+
             if (solutionMoves.length === 0) {
-                 messageArea.textContent = "AI: No moves generated (solver is basic).";
-            } else {
-                 messageArea.textContent = `AI: Generated ${solutionMoves.length} moves for White Cross attempt.`;
+                messageArea.textContent = "AI: No moves generated (solver is very basic or cube already solved/stuck).";
             }
             return solutionMoves;
         }
-        // --- END LOGICAL CUBE STATE AND SOLVER ---
 
-        initThreeJS();
-        initUI();
-        animate();
+        // --- UI and Game Flow Functions ---
 
-        function initThreeJS(){const c=document.getElementById('gameContainer'),e=document.getElementById('canvas');scene=new THREE.Scene();scene.background=new THREE.Color(0x0a000a);camera=new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,0.1,1000);camera.position.set(CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*2.5);camera.lookAt(0,0,0);renderer=new THREE.WebGLRenderer({canvas:e,antialias:true});renderer.setSize(c.clientWidth,c.clientHeight);scene.add(new THREE.AmbientLight(0xcccccc,0.7));const d=new THREE.DirectionalLight(0xffffff,0.9);d.position.set(1,1.5,1).normalize();scene.add(d);controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.1;controls.screenSpacePanning=false;controls.minDistance=CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.5;controls.maxDistance=CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*5;controls.target.set(0,0,0);pivot=new THREE.Object3D();scene.add(pivot);createRubiksCube();}
-        function initUI(){loadHighScores();displayHighScores();populateLessonsDropdown();setupEventListeners();showView('menu');}
-        function populateLessonsDropdown(){lessons.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.name;lessonSelect.appendChild(o);});}
-        function showView(vId){activeView=vId;mainMenuView.style.display='none';gameView.style.display='none';creditsView.style.display='none';let e=vId==='menu'?mainMenuView:vId==='game'?gameView:creditsView;if(e)e.style.display='flex';if(vId==='game'){if(currentMode)gameModeTitle.textContent=`${currentMode[0].toUpperCase()+currentMode.slice(1)} Mode`;updateGameUI();if(!renderer)initThreeJS();onWindowResize();}else stopTimer();if(vId==='menu')resetCubeStateForNewGame();}
-        function resetCubeStateForNewGame(){playModeState='IDLE';aiModeState='IDLE';lastScrambleSequence=[];learnModeState={currentLesson:null,algorithmMoves:[],currentMoveIndex:0,isLessonSetup:false,isWatchingAll:false};resetCubeVisuals();elapsedTime=0;updateTimerDisplay();sequenceInProgress=false;isAnimating=false;}
-        function createRubiksCube(){while(pivot.children.length>0)pivot.remove(pivot.children[0]);cubies.forEach(c=>scene.remove(c));cubies=[];const g=new THREE.BoxGeometry(CUBIE_SIZE,CUBIE_SIZE,CUBIE_SIZE),o=(CUBE_SIZE-1)/2*EFFECTIVE_CUBIE_SIZE;for(let x=0;x<CUBE_SIZE;x++)for(let y=0;y<CUBE_SIZE;y++)for(let z=0;z<CUBE_SIZE;z++){if(CUBE_SIZE>2&&x>0&&x<CUBE_SIZE-1&&y>0&&y<CUBE_SIZE-1&&z>0&&z<CUBE_SIZE-1)continue;const m=[new THREE.MeshStandardMaterial({color:(x===CUBE_SIZE-1)?VISUAL_COLORS.RIGHT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(x===0)?VISUAL_COLORS.LEFT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===CUBE_SIZE-1)?VISUAL_COLORS.UP:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(y===0)?VISUAL_COLORS.DOWN:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===CUBE_SIZE-1)?VISUAL_COLORS.FRONT:VISUAL_COLORS.INTERNAL}),new THREE.MeshStandardMaterial({color:(z===0)?VISUAL_COLORS.BACK:VISUAL_COLORS.INTERNAL})];m.forEach(i=>{i.roughness=0.3;i.metalness=0.1;});const c=new THREE.Mesh(g,m);const pX=x*EFFECTIVE_CUBIE_SIZE-o,pY=y*EFFECTIVE_CUBIE_SIZE-o,pZ=z*EFFECTIVE_CUBIE_SIZE-o;c.position.set(pX,pY,pZ);c.userData={initialLogicX:x,initialLogicY:y,initialLogicZ:z,initialWorldPos:new THREE.Vector3(pX,pY,pZ),initialQuaternion:c.quaternion.clone()};cubies.push(c);scene.add(c);}}
-        function setupEventListeners(){window.addEventListener('resize',onWindowResize,false);menuPlayBtn.addEventListener('click',()=>{currentMode='play';showView('game');});menuAiBtn.addEventListener('click',()=>{currentMode='ai';showView('game');});menuLearnBtn.addEventListener('click',()=>{currentMode='learn';showView('game');});menuCreditsBtn.addEventListener('click',()=>{showView('credits');});backToMenuBtn.addEventListener('click',()=>{showView('menu');});creditsBackToMenuBtn.addEventListener('click',()=>{showView('menu');});scrambleBtn.addEventListener('click',handleScramble);startSolveBtn.addEventListener('click',handleStartSolving);startAiDemoBtn.addEventListener('click',handleStartAiSolver);resetCubeBtn.addEventListener('click',handleResetCube);allMoveButtons.forEach(b=>{b.addEventListener('click',()=>{if(isAnimating||sequenceInProgress)return;if(currentMode==='play'&&playModeState!=='SOLVING')return;if(currentMode==='ai'||currentMode==='learn')return;performMove(b.dataset.move,s=>{if(s&¤tMode==='play'&&playModeState==='SOLVING')checkIfSolved();});});});lessonSelect.addEventListener('change',handleLessonSelection);setupLessonBtn.addEventListener('click',handleSetupLesson);watchAlgorithmBtn.addEventListener('click',handleWatchAlgorithm);nextLessonMoveBtn.addEventListener('click',handleNextLessonMove);}
+        /**
+         * Populates the lessons dropdown menu.
+         */
+        function populateLessonsDropdown() {
+            lessons.forEach(lesson => {
+                const optionElement = document.createElement('option');
+                optionElement.value = lesson.id;
+                optionElement.textContent = lesson.name;
+                lessonSelect.appendChild(optionElement);
+            });
+        }
+
+        /**
+         * Shows the specified view and hides others.
+         * @param {string} viewId - The ID of the view to show ('menu', 'game', 'credits').
+         */
+        function showView(viewId) {
+            activeView = viewId;
+            mainMenuView.style.display = 'none';
+            gameView.style.display = 'none';
+            creditsView.style.display = 'none';
+
+            let viewToShow = null;
+            if (viewId === 'menu') viewToShow = mainMenuView;
+            else if (viewId === 'game') viewToShow = gameView;
+            else if (viewId === 'credits') viewToShow = creditsView;
+
+            if (viewToShow) viewToShow.style.display = 'flex'; // Using flex for centering
+
+            if (viewId === 'game') {
+                if (currentMode) { // Ensure currentMode is set before showing game view
+                    gameModeTitle.textContent = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode`;
+                }
+                updateGameUI();
+                if (!renderer) { // Initialize Three.js only if not already done (e.g., first time to game view)
+                    initThreeJS();
+                }
+                onWindowResize(); // Adjust canvas size
+            } else {
+                stopTimer(); // Stop timer if navigating away from game view
+            }
+
+            if (viewId === 'menu') {
+                resetCubeStateForNewGameSession();
+            }
+        }
         
+        /**
+         * Resets game state variables when returning to menu for a new session.
+         */
+        function resetCubeStateForNewGameSession() {
+            playModeState = 'IDLE';
+            aiModeState = 'IDLE';
+            lastScrambleSequence = [];
+            learnModeState = { currentLesson: null, algorithmMoves: [], currentMoveIndex: 0, isLessonSetup: false, isWatchingAll: false };
+            
+            if (lessonSelect.options.length > 0) lessonSelect.value = lessonSelect.options[0].value; // Reset dropdown
+            lessonDescription.textContent = "";
+            algorithmDisplay.textContent = "";
+
+            resetCubeVisuals(); // Resets the 3D cube to solved state
+            elapsedTime = 0;
+            updateTimerDisplay();
+            
+            sequenceInProgress = false; // Stop any ongoing sequences
+            isAnimating = false;        // Stop any ongoing animations
+            currentSequenceQueue = [];  // Clear queue
+            if (onCurrentSequenceCompleteCallback) {
+                onCurrentSequenceCompleteCallback(false); // Notify interruption
+                onCurrentSequenceCompleteCallback = null;
+            }
+        }
+
+
+        /**
+         * Creates the visual Rubik's Cube cubies and adds them to the scene.
+         */
+        function createRubiksCubeVisuals() {
+            // Clear existing cubies from scene and pivot
+            while (pivot.children.length > 0) {
+                const child = pivot.children[0];
+                pivot.remove(child); // Remove from pivot
+                scene.remove(child); // Also ensure it's removed from scene if re-parented
+            }
+            cubies.forEach(cubie => { // Cubies directly in scene (not in pivot initially)
+                scene.remove(cubie);
+                if (cubie.geometry) cubie.geometry.dispose();
+                if (cubie.material) {
+                    if (Array.isArray(cubie.material)) {
+                        cubie.material.forEach(m => m.dispose());
+                    } else {
+                        cubie.material.dispose();
+                    }
+                }
+            });
+            cubies = [];
+
+            const cubieGeometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+            const offset = (CUBE_SIZE - 1) / 2 * EFFECTIVE_CUBIE_SIZE;
+
+            for (let x = 0; x < CUBE_SIZE; x++) {
+                for (let y = 0; y < CUBE_SIZE; y++) {
+                    for (let z = 0; z < CUBE_SIZE; z++) {
+                        // Skip internal cubie for larger cubes (not strictly necessary for 3x3 but good practice)
+                        if (CUBE_SIZE > 2 && x > 0 && x < CUBE_SIZE - 1 && y > 0 && y < CUBE_SIZE - 1 && z > 0 && z < CUBE_SIZE - 1) {
+                            continue;
+                        }
+
+                        const materials = [
+                            new THREE.MeshStandardMaterial({ color: (x === CUBE_SIZE - 1) ? VISUAL_COLORS.RIGHT : VISUAL_COLORS.INTERNAL }), // Right face (+X)
+                            new THREE.MeshStandardMaterial({ color: (x === 0) ? VISUAL_COLORS.LEFT : VISUAL_COLORS.INTERNAL }),   // Left face (-X)
+                            new THREE.MeshStandardMaterial({ color: (y === CUBE_SIZE - 1) ? VISUAL_COLORS.UP : VISUAL_COLORS.INTERNAL }),     // Top face (+Y)
+                            new THREE.MeshStandardMaterial({ color: (y === 0) ? VISUAL_COLORS.DOWN : VISUAL_COLORS.INTERNAL }),   // Bottom face (-Y)
+                            new THREE.MeshStandardMaterial({ color: (z === CUBE_SIZE - 1) ? VISUAL_COLORS.FRONT : VISUAL_COLORS.INTERNAL }),  // Front face (+Z)
+                            new THREE.MeshStandardMaterial({ color: (z === 0) ? VISUAL_COLORS.BACK : VISUAL_COLORS.INTERNAL })    // Back face (-Z)
+                        ];
+                        materials.forEach(material => {
+                            material.roughness = 0.3;
+                            material.metalness = 0.1;
+                        });
+
+                        const cubie = new THREE.Mesh(cubieGeometry, materials);
+                        const posX = x * EFFECTIVE_CUBIE_SIZE - offset;
+                        const posY = y * EFFECTIVE_CUBIE_SIZE - offset;
+                        const posZ = z * EFFECTIVE_CUBIE_SIZE - offset;
+                        cubie.position.set(posX, posY, posZ);
+
+                        // Store initial state for checking if solved
+                        cubie.userData = {
+                            initialLogicX: x, initialLogicY: y, initialLogicZ: z, // For potential advanced logic
+                            initialWorldPos: new THREE.Vector3(posX, posY, posZ),
+                            initialQuaternion: cubie.quaternion.clone()
+                        };
+                        cubies.push(cubie);
+                        scene.add(cubie);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Sets up all event listeners for UI elements.
+         */
+        function setupEventListeners() {
+            window.addEventListener('resize', onWindowResize, false);
+
+            menuPlayBtn.addEventListener('click', () => { currentMode = 'play'; showView('game'); });
+            menuAiBtn.addEventListener('click', () => { currentMode = 'ai'; showView('game'); });
+            menuLearnBtn.addEventListener('click', () => { currentMode = 'learn'; showView('game'); });
+            menuCreditsBtn.addEventListener('click', () => { showView('credits'); });
+
+            backToMenuBtn.addEventListener('click', () => { showView('menu'); });
+            creditsBackToMenuBtn.addEventListener('click', () => { showView('menu'); });
+
+            scrambleBtn.addEventListener('click', handleScramble);
+            startSolveBtn.addEventListener('click', handleStartSolving);
+            startAiDemoBtn.addEventListener('click', handleStartAiSolver);
+            resetCubeBtn.addEventListener('click', handleResetCube);
+
+            allMoveButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (isAnimating || sequenceInProgress) return;
+
+                    // Player can only make moves in 'play' mode when 'SOLVING'
+                    if (currentMode === 'play' && playModeState !== 'SOLVING') return;
+                    // AI and Learn modes don't allow direct manual moves via these buttons during their processes
+                    if (currentMode === 'ai' || currentMode === 'learn') return;
+
+                    performMove(button.dataset.move, (success) => {
+                        if (success && currentMode === 'play' && playModeState === 'SOLVING') {
+                            checkIfSolved();
+                        }
+                    });
+                });
+            });
+
+            lessonSelect.addEventListener('change', handleLessonSelection);
+            setupLessonBtn.addEventListener('click', handleSetupLesson);
+            watchAlgorithmBtn.addEventListener('click', handleWatchAlgorithm);
+            nextLessonMoveBtn.addEventListener('click', handleNextLessonMove);
+        }
+
+        /**
+         * Updates the game UI elements based on the current mode and state.
+         */
         function updateGameUI() {
             if (activeView !== 'game') return;
-            const anyAnimationRunning = isAnimating || sequenceInProgress;
-            controls.enabled = !anyAnimationRunning;
 
+            const controlsShouldBeDisabled = isAnimating || sequenceInProgress;
+            controls.enabled = !controlsShouldBeDisabled; // OrbitControls
+
+            // Default states
             scrambleBtn.style.display = 'inline-block';
             startSolveBtn.style.display = 'none';
             startAiDemoBtn.style.display = 'none';
             learnModeSpecificControls.style.display = 'none';
-            allMoveButtons.forEach(btn => btn.disabled = true); // Default to disabled
-            
-            scrambleBtn.disabled = anyAnimationRunning;
-            resetCubeBtn.disabled = anyAnimationRunning;
+            allMoveButtons.forEach(btn => btn.disabled = true); // Disable all by default
+
+            scrambleBtn.disabled = controlsShouldBeDisabled;
+            resetCubeBtn.disabled = controlsShouldBeDisabled;
 
             if (currentMode === 'play') {
-                allMoveButtons.forEach(btn => btn.disabled = (playModeState !== 'SOLVING' || anyAnimationRunning));
-                scrambleBtn.disabled = (playModeState === 'SOLVING' || anyAnimationRunning);
+                allMoveButtons.forEach(btn => btn.disabled = (playModeState !== 'SOLVING' || controlsShouldBeDisabled));
+                scrambleBtn.disabled = (playModeState === 'SOLVING' || controlsShouldBeDisabled);
 
                 if (playModeState === 'IDLE') {
-                    messageArea.textContent = "Scramble the cube to begin.";
+                    messageArea.textContent = "Scramble the cube to begin your solve!";
                 } else if (playModeState === 'SCRAMBLED') {
-                    messageArea.textContent = "Cube scrambled! Press 'Start Solving!'";
-                    // Crucial Fix: Ensure button appears ONLY when no animations are running
-                    if (!isAnimating && !sequenceInProgress) { 
-                         startSolveBtn.style.display = 'inline-block';
-                         startSolveBtn.disabled = false;
-                    } else {
-                         startSolveBtn.style.display = 'none'; // Hide if any animation is active
+                    messageArea.textContent = "Cube is scrambled! Press 'Start Solving!' to begin.";
+                    if (!controlsShouldBeDisabled) {
+                        startSolveBtn.style.display = 'inline-block';
+                        startSolveBtn.disabled = false;
                     }
                 } else if (playModeState === 'SOLVING') {
-                    startSolveBtn.style.display = 'inline-block'; // Keep visible
-                    startSolveBtn.disabled = true; // But disabled as it's already started
-                    messageArea.textContent = "Timer started! Solve the cube!";
+                    // startSolveBtn remains visible but disabled during solving
+                    startSolveBtn.style.display = 'inline-block';
+                    startSolveBtn.disabled = true;
+                    messageArea.textContent = "Timer is running! Solve the cube!";
                 }
             } else if (currentMode === 'ai') {
                 startAiDemoBtn.style.display = 'inline-block';
-                startAiDemoBtn.textContent = "Start AI Solver";
-                allMoveButtons.forEach(btn => btn.disabled = true);
-                startAiDemoBtn.disabled = (aiModeState === 'DEMOING' || anyAnimationRunning || lastScrambleSequence.length === 0);
-                scrambleBtn.disabled = (aiModeState === 'DEMOING' || anyAnimationRunning);
+                startAiDemoBtn.textContent = "Start AI Solver"; // Consistent text
+                allMoveButtons.forEach(btn => btn.disabled = true); // No manual moves in AI mode
 
-                if (aiModeState === 'IDLE') messageArea.textContent = `AI Mode: ${lastScrambleSequence.length > 0 ? "Current scramble active. " : ""}Scramble cube then 'Start AI Solver'.`;
-                else if (aiModeState === 'SCRAMBLED') messageArea.textContent = "Cube scrambled. Press 'Start AI Solver'.";
-                else if (aiModeState === 'DEMOING') messageArea.textContent = "AI is attempting to solve...";
-            
+                startAiDemoBtn.disabled = (aiModeState === 'DEMOING' || controlsShouldBeDisabled || lastScrambleSequence.length === 0);
+                scrambleBtn.disabled = (aiModeState === 'DEMOING' || controlsShouldBeDisabled);
+
+                if (aiModeState === 'IDLE') {
+                    messageArea.textContent = `AI Mode: ${lastScrambleSequence.length > 0 ? "A scramble is loaded. " : ""}Scramble the cube, then press 'Start AI Solver'.`;
+                } else if (aiModeState === 'SCRAMBLED') {
+                    messageArea.textContent = "Cube scrambled. Ready for AI to solve.";
+                } else if (aiModeState === 'DEMOING') {
+                    messageArea.textContent = "AI is attempting to solve the cube...";
+                }
             } else if (currentMode === 'learn') {
                 learnModeSpecificControls.style.display = 'block';
-                allMoveButtons.forEach(btn => btn.disabled = true);
-                scrambleBtn.style.display = 'none';
-                
+                allMoveButtons.forEach(btn => btn.disabled = true); // No manual moves in Learn mode via main buttons
+                scrambleBtn.style.display = 'none'; // No scramble button in learn mode generally
+
                 const lessonSelected = !!learnModeState.currentLesson;
-                const canInteractLesson = learnModeState.isLessonSetup && !anyAnimationRunning && !learnModeState.isWatchingAll;
+                const canInteractWithLesson = learnModeState.isLessonSetup && !controlsShouldBeDisabled && !learnModeState.isWatchingAll;
 
-                setupLessonBtn.disabled = !lessonSelected || anyAnimationRunning || learnModeState.isWatchingAll;
-                watchAlgorithmBtn.disabled = !learnModeState.isLessonSetup || anyAnimationRunning || learnModeState.isWatchingAll || learnModeState.currentMoveIndex > 0;
-                nextLessonMoveBtn.disabled = !canInteractLesson || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length;
-                resetCubeBtn.disabled = anyAnimationRunning || learnModeState.isWatchingAll;
+                setupLessonBtn.disabled = !lessonSelected || controlsShouldBeDisabled || learnModeState.isWatchingAll || learnModeState.isLessonSetup;
+                watchAlgorithmBtn.disabled = !learnModeState.isLessonSetup || controlsShouldBeDisabled || learnModeState.isWatchingAll || learnModeState.currentMoveIndex > 0;
+                nextLessonMoveBtn.disabled = !canInteractWithLesson || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length;
+                resetCubeBtn.disabled = controlsShouldBeDisabled || learnModeState.isWatchingAll; // Can reset unless AI is actively showing moves
 
-                if (!lessonSelected) messageArea.textContent = "Select a lesson from the dropdown.";
-                else if (!learnModeState.isLessonSetup) messageArea.textContent = `Lesson: ${learnModeState.currentLesson.name}. Press 'Set up for Lesson'.`;
-                else {
-                    if (learnModeState.isWatchingAll) messageArea.textContent = `AI showing: ${learnModeState.currentLesson.name} (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length})`;
-                    else messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. Watch or step through. (${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;
-                    if (learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length && learnModeState.algorithmMoves.length > 0) messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                if (!lessonSelected) {
+                    messageArea.textContent = "Select a lesson from the dropdown.";
+                } else if (!learnModeState.isLessonSetup) {
+                    messageArea.textContent = `Lesson: ${learnModeState.currentLesson.name}. Press 'Set up for Lesson'.`;
+                } else {
+                    const progress = `(${learnModeState.currentMoveIndex}/${learnModeState.algorithmMoves.length} shown)`;
+                    if (learnModeState.isWatchingAll) {
+                        messageArea.textContent = `AI demonstrating: ${learnModeState.currentLesson.name} ${progress}`;
+                    } else {
+                         messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. Watch or step through. ${progress}`;
+                    }
+                    if (learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length && learnModeState.algorithmMoves.length > 0) {
+                         messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete. Reset or choose another lesson.`;
+                    }
                 }
             }
         }
 
-        function onWindowResize(){if(activeView!=='game'||!renderer)return;const c=document.getElementById('gameContainer');camera.aspect=c.clientWidth/c.clientHeight;camera.updateProjectionMatrix();renderer.setSize(c.clientWidth,c.clientHeight);}
-        function getCubiesInLayer(x,i){const l=[];const o=(CUBE_SIZE-1)/2;const t=(i-o)*EFFECTIVE_CUBIE_SIZE;cubies.forEach(c=>{let p=(x==='x')?c.position.x:(x==='y')?c.position.y:c.position.z;if(Math.abs(p-t)<EFFECTIVE_CUBIE_SIZE/2)l.push(c);});return l;}
-        
-        function rotateLayerAroundAxis(axis, layerIndex, angle, onCompleteCallback) {
-            isAnimating = true;
-            controls.enabled = false;
-            updateGameUI();
-            pivot.rotation.set(0, 0, 0);
-            pivot.position.set(0, 0, 0);
-            const layerCubies = getCubiesInLayer(axis, layerIndex);
 
-            if (layerCubies.length === 0) {
-                isAnimating = false; controls.enabled = true; updateGameUI();
-                if (onCompleteCallback) onCompleteCallback(true);
+        /**
+         * Handles window resize events to adjust camera and renderer.
+         */
+        function onWindowResize() {
+            if (activeView !== 'game' || !renderer || !camera || !gameContainerEl) return;
+
+            const containerWidth = gameContainerEl.clientWidth;
+            const containerHeight = gameContainerEl.clientHeight;
+
+            camera.aspect = containerWidth / containerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(containerWidth, containerHeight);
+        }
+
+        // --- Rubik's Cube Visual Manipulation ---
+
+        /**
+         * Gets all cubies that belong to a specific layer.
+         * @param {string} axis - 'x', 'y', or 'z'.
+         * @param {number} layerIndex - 0, 1, or 2 (for a 3x3 cube).
+         * @returns {THREE.Mesh[]} Array of cubie meshes in the layer.
+         */
+        function getCubiesInLayer(axis, layerIndex) {
+            const layerCubies = [];
+            const centerOffset = (CUBE_SIZE - 1) / 2; // For 3x3, this is 1
+            // Layer index 0 is -X, -Y, -Z face; Layer index CUBE_SIZE-1 is +X, +Y, +Z face
+            const targetCoordinate = (layerIndex - centerOffset) * EFFECTIVE_CUBIE_SIZE;
+
+            cubies.forEach(cubie => {
+                let positionOnAxis;
+                if (axis === 'x') positionOnAxis = cubie.position.x;
+                else if (axis === 'y') positionOnAxis = cubie.position.y;
+                else positionOnAxis = cubie.position.z;
+
+                if (Math.abs(positionOnAxis - targetCoordinate) < EFFECTIVE_CUBIE_SIZE / 2) {
+                    layerCubies.push(cubie);
+                }
+            });
+            return layerCubies;
+        }
+
+        /**
+         * Animates the rotation of a layer around a given axis.
+         * @param {string} axis - 'x', 'y', or 'z'.
+         * @param {number} layerIndex - The index of the layer to rotate.
+         * @param {number} angle - The angle to rotate by (in radians).
+         * @param {function(boolean)} callback - Called with true on success, false on failure/interruption.
+         */
+        function rotateLayerAroundAxis(axis, layerIndex, angle, callback) {
+            if (isAnimating) { // Prevent starting new animation if one is running (should be handled by sequenceInProgress too)
+                if (callback) callback(false);
                 return;
             }
-            layerCubies.forEach(cubie => pivot.attach(cubie));
+            isAnimating = true;
+            controls.enabled = false; // Disable orbit controls during animation
+            updateGameUI();
+
+            pivot.rotation.set(0, 0, 0); // Reset pivot rotation
+            pivot.position.set(0, 0, 0); // Reset pivot position (should be at origin)
             
-            let currentAngle = 0; // Fixed: was 'cA' previously in compacted code
+            const layerCubiesToRotate = getCubiesInLayer(axis, layerIndex);
+
+            if (layerCubiesToRotate.length === 0) {
+                console.warn(`No cubies found for layer ${axis}${layerIndex}`);
+                isAnimating = false;
+                controls.enabled = true;
+                updateGameUI();
+                if (callback) callback(true); // Technically no failure, but nothing happened
+                return;
+            }
+            
+            // Detach from scene and attach to pivot
+            layerCubiesToRotate.forEach(cubie => scene.remove(cubie)); // Ensure correct parenting
+            layerCubiesToRotate.forEach(cubie => pivot.attach(cubie));
+
+
+            let currentAngle = 0;
             const targetAngle = angle;
-            const animationSpeed = 0.08;
+            const animationSpeed = ANIMATION_SPEED_FACTOR; // Controls how much of remaining angle is covered per frame
 
             function animateRotationStep() {
-                let deltaAngle = targetAngle * animationSpeed;
+                if (!isAnimating && currentAngle !== targetAngle) { // Animation was cancelled externally
+                    // Re-attach cubies to scene without completing rotation
+                    [...pivot.children].forEach(childCubie => { // Iterate over a copy for safe removal
+                        // Make sure cubie is valid and has a scene reference
+                         if(childCubie && scene) {
+                            scene.attach(childCubie);
+                         } else if (childCubie) {
+                            console.warn("Scene not available for re-attaching cubie", childCubie);
+                         }
+                    });
+                    if (callback) callback(false); // Indicate interruption
+                    return;
+                }
+
+
+                let deltaAngle = targetAngle * animationSpeed; // Simple proportional speed
+
+                // Ensure we don't overshoot and snap to target at the end
                 if (Math.abs(currentAngle + deltaAngle) >= Math.abs(targetAngle)) {
                     deltaAngle = targetAngle - currentAngle;
                 }
+
                 if (axis === 'x') pivot.rotation.x += deltaAngle;
                 else if (axis === 'y') pivot.rotation.y += deltaAngle;
                 else pivot.rotation.z += deltaAngle;
                 currentAngle += deltaAngle;
 
-                if (Math.abs(currentAngle - targetAngle) < 0.001) { 
+                if (Math.abs(currentAngle - targetAngle) < 0.001) { // Threshold for completion
+                    // Snap to final angle
                     if (axis === 'x') pivot.rotation.x = targetAngle;
                     else if (axis === 'y') pivot.rotation.y = targetAngle;
                     else pivot.rotation.z = targetAngle;
-                    
-                    [...layerCubies].forEach(cubie => scene.attach(cubie)); 
-                    
-                    cubies.forEach(c => { 
-                        c.position.x = Math.round(c.position.x / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
-                        c.position.y = Math.round(c.position.y / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
-                        c.position.z = Math.round(c.position.z / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+
+                    // Detach from pivot and re-attach to scene
+                    // Important: Use a copy of children array as pivot.attach modifies it
+                    const childrenToReattach = [...pivot.children];
+                    childrenToReattach.forEach(childCubie => {
+                        // Update world matrix before detaching for correct position re-parenting
+                        childCubie.updateMatrixWorld();
+                        scene.attach(childCubie);
                     });
-                    isAnimating = false; controls.enabled = true; updateGameUI();
-                    if (onCompleteCallback) onCompleteCallback(true);
+                    
+                    // Round positions to align with grid (important after rotations)
+                    // This helps combat floating point inaccuracies over many moves.
+                    cubies.forEach(cubie => {
+                        cubie.position.x = Math.round(cubie.position.x / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        cubie.position.y = Math.round(cubie.position.y / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                        cubie.position.z = Math.round(cubie.position.z / EFFECTIVE_CUBIE_SIZE) * EFFECTIVE_CUBIE_SIZE;
+                    });
+
+                    isAnimating = false;
+                    controls.enabled = true;
+                    updateGameUI();
+                    if (callback) callback(true);
                 } else {
                     requestAnimationFrame(animateRotationStep);
                 }
@@ -684,159 +1187,512 @@
             animateRotationStep();
         }
 
-        function performMove(moveNotation, onCompleteCallback) {
-            if (isAnimating) {
-                if (onCompleteCallback) onCompleteCallback(false); // Indicate move was skipped
+        /**
+         * Performs a Rubik's Cube move based on standard notation.
+         * @param {string} moveNotation - e.g., "F", "R'", "U2".
+         * @param {function(boolean)} callback - Called with true on success, false on failure.
+         */
+        function performMove(moveNotation, callback) {
+            if (isAnimating) { // Should be caught by sequenceInProgress as well if part of sequence
+                if (callback) callback(false);
                 return;
             }
 
             const isDouble = moveNotation.includes("2");
-            const baseMove = isDouble ? moveNotation.slice(0, -1) : moveNotation; // e.g., "L" from "L2"
+            const baseMove = isDouble ? moveNotation.slice(0, -1) : moveNotation; // e.g., "F" from "F2"
+            const PI_HALF = Math.PI / 2;
 
-            const PI_2 = Math.PI / 2;
             let axis, layer, direction;
 
-            // Determine axis, layer, direction for the base move (90 degrees)
             switch (baseMove) {
                 case 'F':  axis = 'z'; layer = CUBE_SIZE - 1; direction = -1; break;
                 case 'F\'': axis = 'z'; layer = CUBE_SIZE - 1; direction = 1;  break;
-                case 'B':  axis = 'z'; layer = 0; direction = 1;  break;
-                case 'B\'': axis = 'z'; layer = 0; direction = -1; break;
+                case 'B':  axis = 'z'; layer = 0;             direction = 1;  break;
+                case 'B\'': axis = 'z'; layer = 0;             direction = -1; break;
                 case 'U':  axis = 'y'; layer = CUBE_SIZE - 1; direction = -1; break;
                 case 'U\'': axis = 'y'; layer = CUBE_SIZE - 1; direction = 1;  break;
-                case 'D':  axis = 'y'; layer = 0; direction = 1;  break;
-                case 'D\'': axis = 'y'; layer = 0; direction = -1; break;
+                case 'D':  axis = 'y'; layer = 0;             direction = 1;  break;
+                case 'D\'': axis = 'y'; layer = 0;             direction = -1; break;
                 case 'R':  axis = 'x'; layer = CUBE_SIZE - 1; direction = -1; break;
                 case 'R\'': axis = 'x'; layer = CUBE_SIZE - 1; direction = 1;  break;
-                case 'L':  axis = 'x'; layer = 0; direction = 1;  break;
-                case 'L\'': axis = 'x'; layer = 0; direction = -1; break;
+                case 'L':  axis = 'x'; layer = 0;             direction = 1;  break;
+                case 'L\'': axis = 'x'; layer = 0;             direction = -1; break;
                 default:
                     console.warn("Unknown move base:", baseMove, "(from original:", moveNotation, ")");
-                    if (onCompleteCallback) onCompleteCallback(false);
+                    if (callback) callback(false);
                     return;
             }
 
             if (isDouble) {
-                // Perform the 90-degree move twice for a 180-degree "double" move
-                rotateLayerAroundAxis(axis, layer, direction * PI_2, (success1) => {
+                // Perform the first 90-degree turn
+                rotateLayerAroundAxis(axis, layer, direction * PI_HALF, (success1) => {
                     if (success1) {
-                        // Add a very slight delay before the second part of the double move
-                        // This helps visually and prevents potential race conditions if any.
+                        // Perform the second 90-degree turn after a short delay (optional, for visual separation)
                         setTimeout(() => {
-                           rotateLayerAroundAxis(axis, layer, direction * PI_2, onCompleteCallback);
+                             if (!isAnimating && !sequenceInProgress && currentMode === 'play' && playModeState !== 'SOLVING' && activeView === 'game' && !learnModeState.isWatchingAll) {
+                                // If state changed such that animation should stop (e.g. user went back to menu)
+                                if (callback) callback(false); return;
+                            }
+                            rotateLayerAroundAxis(axis, layer, direction * PI_HALF, callback);
                         }, 10); // Minimal delay
                     } else {
-                        if (onCompleteCallback) onCompleteCallback(false); // First part failed
+                        if (callback) callback(false); // First part of double move failed
                     }
                 });
             } else {
-                // Single or prime move, perform one 90-degree rotation
-                rotateLayerAroundAxis(axis, layer, direction * PI_2, onCompleteCallback);
+                rotateLayerAroundAxis(axis, layer, direction * PI_HALF, callback);
             }
         }
 
 
-        function startFullMoveSequence(moves, onCompleteAll) {
+        /**
+         * Starts a sequence of moves (e.g., scramble, AI solution).
+         * @param {string[]} movesArray - Array of move notations.
+         * @param {function(boolean)} onDoneCallback - Called with true on full success, false on interruption/failure.
+         */
+        function startFullMoveSequence(movesArray, onDoneCallback) {
             if (sequenceInProgress || isAnimating) {
-                console.warn("Cannot start new sequence, one is already in progress or a move is animating.");
-                if (onCompleteAll) onCompleteAll(false);
+                console.warn("Attempted to start a sequence while another is in progress or animating.");
+                if (onDoneCallback) onDoneCallback(false);
                 return;
             }
-            currentSequenceQueue = [...moves]; 
-            onCurrentSequenceCompleteCallback = onCompleteAll;
+            currentSequenceQueue = [...movesArray];
+            onCurrentSequenceCompleteCallback = onDoneCallback;
             sequenceInProgress = true;
-            updateGameUI(); 
+            updateGameUI(); // Disable buttons etc.
             executeNextMoveInCurrentSequence();
         }
 
+        /**
+         * Executes the next move in the `currentSequenceQueue`.
+         */
         function executeNextMoveInCurrentSequence() {
+            if (!sequenceInProgress) { // Sequence was cancelled
+                 if (onCurrentSequenceCompleteCallback) {
+                    onCurrentSequenceCompleteCallback(false); // Indicate interruption
+                    onCurrentSequenceCompleteCallback = null;
+                 }
+                 updateGameUI();
+                 return;
+            }
+
             if (currentSequenceQueue.length > 0) {
                 const move = currentSequenceQueue.shift();
                 performMove(move, (success) => {
-                    if (!success) {
-                        console.warn(`Move ${move} in sequence failed or was skipped. Aborting sequence.`);
+                    if (!success) { // A single move failed or was interrupted (e.g. isAnimating became false)
                         sequenceInProgress = false;
                         if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(false);
+                        onCurrentSequenceCompleteCallback = null;
                         updateGameUI();
                         return;
                     }
+
                     if (currentSequenceQueue.length > 0) {
-                        setTimeout(executeNextMoveInCurrentSequence, 75); 
-                    } else {
+                        setTimeout(executeNextMoveInCurrentSequence, SEQUENCE_MOVE_DELAY);
+                    } else { // Queue empty, sequence finished successfully
                         sequenceInProgress = false;
                         if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(true);
-                        onCurrentSequenceCompleteCallback = null; 
-                        updateGameUI(); 
+                        onCurrentSequenceCompleteCallback = null;
+                        updateGameUI(); // Re-enable UI
                     }
                 });
-            } else { 
+            } else { // Should be caught by the block above, but as a fallback
                 sequenceInProgress = false;
-                if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(true);
+                if (onCurrentSequenceCompleteCallback) onCurrentSequenceCompleteCallback(true); // Empty array means success
                 onCurrentSequenceCompleteCallback = null;
                 updateGameUI();
             }
         }
-        
-        function resetCubeVisuals(){createRubiksCube();if(controls)controls.reset();camera.position.set(CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*1.8,CUBE_SIZE*EFFECTIVE_CUBIE_SIZE*2.5);camera.lookAt(0,0,0);if(controls)controls.target.set(0,0,0);}
-        
+
+        /**
+         * Resets the Rubik's Cube visuals to the solved state.
+         */
+        function resetCubeVisuals() {
+            createRubiksCubeVisuals(); // Recreates cubies in solved state
+            if (controls) controls.reset(); // Reset camera orientation/zoom
+            // Ensure camera is repositioned correctly
+            camera.position.set(CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 1.8, CUBE_SIZE * EFFECTIVE_CUBIE_SIZE * 2.5);
+            camera.lookAt(0,0,0);
+            if (controls) controls.target.set(0,0,0);
+        }
+
+
+        // --- Event Handlers for Buttons ---
+
         function handleScramble() {
             if (sequenceInProgress || isAnimating) return;
+
             messageArea.textContent = "Scrambling...";
-            resetCubeVisuals(); 
-            stopTimer(); elapsedTime = 0; updateTimerDisplay();
+            resetCubeVisuals(); // Start from a solved visual state
+            stopTimer();
+            elapsedTime = 0;
+            updateTimerDisplay();
 
             const baseMoves = ['F', 'B', 'U', 'D', 'R', 'L'];
             const modifiers = ['', "'", '2'];
-            lastScrambleSequence = []; 
+            lastScrambleSequence = [];
             let previousMoveFace = '';
-            let secondPreviousMoveFace = '';
-            const numScrambleMoves = 20 + Math.floor(Math.random() * 11); 
+            let secondPreviousMoveFace = ''; // To avoid U D U or U U' U etc.
+
+            const numScrambleMoves = SCRAMBLE_MOVES_COUNT_MIN + Math.floor(Math.random() * SCRAMBLE_MOVES_COUNT_RANGE);
 
             for (let i = 0; i < numScrambleMoves; i++) {
-                let randomFace, move;
+                let randomFace, moveNotation;
                 do {
                     randomFace = baseMoves[Math.floor(Math.random() * baseMoves.length)];
                 } while (randomFace === previousMoveFace || (randomFace === secondPreviousMoveFace && areOppositeFaces(randomFace, previousMoveFace)));
-                
+                // This logic prevents F B F but allows F R B. It prevents F F' F.
+
                 let randomModifier = modifiers[Math.floor(Math.random() * modifiers.length)];
-                move = randomFace + randomModifier;
-                
-                lastScrambleSequence.push(move);
+                moveNotation = randomFace + randomModifier;
+
+                lastScrambleSequence.push(moveNotation);
                 secondPreviousMoveFace = previousMoveFace;
                 previousMoveFace = randomFace;
             }
-            
+
             startFullMoveSequence([...lastScrambleSequence], (success) => {
                 if (success) {
                     if (currentMode === 'play') playModeState = 'SCRAMBLED';
-                    else if (currentMode === 'ai') aiModeState = 'SCRAMBLED'; 
+                    else if (currentMode === 'ai') aiModeState = 'SCRAMBLED';
+                    // Learn mode doesn't typically use global scramble button
                     messageArea.textContent = "Cube scrambled!";
                 } else {
                     messageArea.textContent = "Scramble interrupted or failed.";
+                     // If scramble failed, reset to a usable state
+                    if (currentMode === 'play') playModeState = 'IDLE';
+                    else if (currentMode === 'ai') aiModeState = 'IDLE';
+                    lastScrambleSequence = []; // Clear failed scramble
                 }
-                updateGameUI(); 
+                updateGameUI();
             });
         }
-        function areOppositeFaces(face1, face2) { const opposites = { 'F': 'B', 'B': 'F', 'U': 'D', 'D': 'U', 'R': 'L', 'L': 'R' }; return opposites[face1] === face2;}
 
-        function handleResetCube(){if(isAnimating||sequenceInProgress)return;learnModeState.isWatchingAll=false;stopTimer();elapsedTime=0;updateTimerDisplay();resetCubeVisuals();lastScrambleSequence=[];if(currentMode==='play')playModeState='IDLE';else if(currentMode==='ai')aiModeState='IDLE';else if(currentMode==='learn'){learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.algorithmMoves=learnModeState.currentLesson?[...learnModeState.currentLesson.algorithm]:[];}messageArea.textContent="Cube reset.";updateGameUI();}
-        function handleStartSolving(){if(currentMode!=='play'||playModeState!=='SCRAMBLED'||isAnimating||sequenceInProgress)return;playModeState='SOLVING';startTimer();updateGameUI();}
-        function handleStartAiSolver(){if(currentMode!=='ai'||isAnimating||sequenceInProgress||aiModeState==='DEMOING'||lastScrambleSequence.length===0){if(lastScrambleSequence.length===0&¤tMode==='ai')messageArea.textContent="AI needs a scramble. Press Scramble.";return;}aiModeState='DEMOING';messageArea.textContent="AI applying current scramble to internal logic...";startTimer();const lgSt=getLogicalStateFromScramble(lastScrambleSequence);const aiMvs=solveCubeAI(lgSt);if(aiMvs&&aiMvs.length>0){messageArea.textContent=`AI Solver generated ${aiMvs.length} moves. Animating...`;startFullMoveSequence(aiMvs,s=>{stopTimer();if(s){messageArea.textContent=`AI Solver finished its attempt in ${elapsedTime.toFixed(2)}s. (Logical state in console)`;console.log("Logical state after AI attempt:",lgSt);}else messageArea.textContent=`AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;aiModeState='IDLE';updateGameUI();});}else{stopTimer();messageArea.textContent="AI Solver found no moves (solver is still basic).";aiModeState='IDLE';updateGameUI();}}
-        function handleLessonSelection(){const lId=lessonSelect.value;learnModeState.currentLesson=lessons.find(l=>l.id===lId)||null;learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=false;if(learnModeState.currentLesson){lessonDescription.textContent=learnModeState.currentLesson.description;algorithmDisplay.textContent=learnModeState.currentLesson.algorithm.join(' ');learnModeState.algorithmMoves=[...learnModeState.currentLesson.algorithm];}else{lessonDescription.textContent="";algorithmDisplay.textContent="";learnModeState.algorithmMoves=[];}updateGameUI();}
-        function handleSetupLesson(){if(!learnModeState.currentLesson||isAnimating||sequenceInProgress||learnModeState.isWatchingAll)return;messageArea.textContent=`Setting up: ${learnModeState.currentLesson.name}`;resetCubeVisuals();learnModeState.isLessonSetup=false;learnModeState.currentMoveIndex=0;updateGameUI();startFullMoveSequence([...learnModeState.currentLesson.initialScramble],s=>{if(s){learnModeState.isLessonSetup=true;messageArea.textContent=`Lesson ready: ${learnModeState.currentLesson.name}.`;}else messageArea.textContent=`Setup for ${learnModeState.currentLesson.name} failed.`;updateGameUI();});}
-        function handleWatchAlgorithm(){if(!learnModeState.isLessonSetup||sequenceInProgress||isAnimating||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>0)return;messageArea.textContent=`AI performing: ${learnModeState.currentLesson.name}`;learnModeState.currentMoveIndex=0;learnModeState.isWatchingAll=true;updateGameUI();playNextLearnAlgorithmMove();}
-        function handleNextLessonMove(){if(!learnModeState.isLessonSetup||sequenceInProgress||isAnimating||learnModeState.isWatchingAll||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length)return;playNextLearnAlgorithmMove();}
-        function playNextLearnAlgorithmMove(){if(!learnModeState.isLessonSetup||learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length){learnModeState.isWatchingAll=false;if(learnModeState.currentLesson&&learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length)messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;updateGameUI();return;}if(isAnimating){setTimeout(playNextLearnAlgorithmMove,50);return;}const m=learnModeState.algorithmMoves[learnModeState.currentMoveIndex];messageArea.textContent=`Learning ${learnModeState.currentMoveIndex+1}/${learnModeState.algorithmMoves.length}: ${m}`;performMove(m,s=>{if(!s){learnModeState.isWatchingAll=false;updateGameUI();return;}learnModeState.currentMoveIndex++;updateGameUI();if(learnModeState.isWatchingAll&&learnModeState.currentMoveIndex<learnModeState.algorithmMoves.length)setTimeout(playNextLearnAlgorithmMove,300);else if(learnModeState.isWatchingAll&&learnModeState.currentMoveIndex>=learnModeState.algorithmMoves.length){learnModeState.isWatchingAll=false;messageArea.textContent=`Alg for ${learnModeState.currentLesson.name} complete.`;updateGameUI();}});}
-        function startTimer(){if(timerInterval)clearInterval(timerInterval);startTime=Date.now()-(elapsedTime*1000);timerInterval=setInterval(()=>{elapsedTime=(Date.now()-startTime)/1000;updateTimerDisplay();},100);}
-        function stopTimer(){clearInterval(timerInterval);timerInterval=null;}
-        function updateTimerDisplay(){timerDisplay.textContent=`Time: ${elapsedTime.toFixed(2)}s`;}
-        function isSolved(){const e=0.01;for(const c of cubies){if(c.position.distanceTo(c.userData.initialWorldPos)>e)return false;if(Math.abs(Math.abs(c.quaternion.dot(c.userData.initialQuaternion))-1.0)>e)return false;}return true;}
-        function checkIfSolved(){if(currentMode==='play'&&isSolved()){stopTimer();messageArea.textContent=`CONGRATULATIONS! Solved in ${elapsedTime.toFixed(2)}s!`;addHighScore(elapsedTime);playModeState='IDLE';updateGameUI();}}
-        function loadHighScores(){const s=localStorage.getItem('retroRubiksHighScores');if(s)highScores=JSON.parse(s);}
-        function saveHighScores(){localStorage.setItem('retroRubiksHighScores',JSON.stringify(highScores));}
-        function addHighScore(t){const sc={time:parseFloat(t.toFixed(2))};highScores.push(sc);highScores.sort((a,b)=>a.time-b.time);highScores=highScores.slice(0,MAX_HIGH_SCORES);saveHighScores();displayHighScores();}
-        function displayHighScores(){highScoresList.innerHTML='';if(highScores.length===0)highScoresList.innerHTML="<li>No scores yet.</li>";else highScores.forEach(s=>highScoresList.innerHTML+=`<li>${s.time.toFixed(2)}s</li>`);}
-        function animate(){requestAnimationFrame(animate);if(controls&&controls.enabled)controls.update();if(renderer&&scene&&camera)renderer.render(scene,camera);}
+        /** Checks if two faces are opposite on a Rubik's cube. */
+        function areOppositeFaces(face1, face2) {
+            const opposites = { 'F':'B', 'B':'F', 'U':'D', 'D':'U', 'R':'L', 'L':'R' };
+            return opposites[face1] === face2;
+        }
+
+
+        function handleResetCube() {
+            if (isAnimating || sequenceInProgress) return;
+
+            learnModeState.isWatchingAll = false; // Stop any AI demo in learn mode
+            if (sequenceInProgress && onCurrentSequenceCompleteCallback) { // If a sequence was running (e.g. lesson AI)
+                sequenceInProgress = false; // Manually stop it
+                onCurrentSequenceCompleteCallback(false); // Indicate interruption
+                onCurrentSequenceCompleteCallback = null;
+                currentSequenceQueue = [];
+            }
+
+            stopTimer();
+            elapsedTime = 0;
+            updateTimerDisplay();
+            resetCubeVisuals();
+            lastScrambleSequence = []; // Clear any loaded scramble
+
+            if (currentMode === 'play') playModeState = 'IDLE';
+            else if (currentMode === 'ai') aiModeState = 'IDLE';
+            else if (currentMode === 'learn') {
+                learnModeState.isLessonSetup = false;
+                learnModeState.currentMoveIndex = 0;
+                if (learnModeState.currentLesson) { // Repopulate algorithm moves for the current lesson
+                    learnModeState.algorithmMoves = [...learnModeState.currentLesson.algorithm];
+                } else {
+                    learnModeState.algorithmMoves = [];
+                }
+                // Don't reset lesson selection, just its state.
+            }
+            messageArea.textContent = "Cube reset to solved state.";
+            updateGameUI();
+        }
+
+        function handleStartSolving() {
+            if (currentMode !== 'play' || playModeState !== 'SCRAMBLED' || isAnimating || sequenceInProgress) return;
+            playModeState = 'SOLVING';
+            startTimer();
+            updateGameUI();
+        }
+
+        function handleStartAiSolver() {
+            if (currentMode !== 'ai' || isAnimating || sequenceInProgress || aiModeState === 'DEMOING') return;
+
+            if (lastScrambleSequence.length === 0) {
+                messageArea.textContent = "AI needs a scrambled cube. Please press 'Scramble' first.";
+                return;
+            }
+
+            aiModeState = 'DEMOING';
+            messageArea.textContent = "AI analyzing current scramble and preparing solution...";
+            updateGameUI(); // Disable buttons
+            startTimer(); // Time the AI's solving process
+
+            // Get the logical state based on the last scramble performed
+            const logicalStateToSolve = getLogicalStateFromScramble(lastScrambleSequence);
+            
+            // Use a timeout to allow the message to update before potentially blocking AI calculation
+            setTimeout(() => {
+                const aiSolutionMoves = solveCubeAI(logicalStateToSolve);
+
+                if (aiSolutionMoves && aiSolutionMoves.length > 0) {
+                    messageArea.textContent = `AI Solver generated ${aiSolutionMoves.length} moves. Animating solution...`;
+                    startFullMoveSequence(aiSolutionMoves, (success) => {
+                        stopTimer();
+                        if (success) {
+                            messageArea.textContent = `AI Solver finished its attempt in ${elapsedTime.toFixed(2)}s. Check console for logical state.`;
+                            // The logical state after AI attempt would be the `currentLogicalState` inside solveCubeAI functions.
+                            // To show it here, solveCubeAI would need to return it or it needs to be tracked.
+                            // For now, message implies checking console logs from within solver.
+                            let finalLogicalStateAfterAISolve = getLogicalStateFromScramble(lastScrambleSequence); // Start from scramble
+                            aiSolutionMoves.forEach(m => applyMoveToLogicalState(m, finalLogicalStateAfterAISolve)); // Apply AI moves
+                            console.log("Logical state after AI attempt:", finalLogicalStateAfterAISolve);
+                        } else {
+                            messageArea.textContent = `AI Solver sequence interrupted. Time: ${elapsedTime.toFixed(2)}s.`;
+                        }
+                        aiModeState = 'IDLE'; // Or 'SCRAMBLED' if we want to keep the scramble loaded
+                        updateGameUI();
+                    });
+                } else {
+                    stopTimer();
+                    messageArea.textContent = "AI Solver found no moves or cube is already solved (solver is basic).";
+                    aiModeState = 'IDLE'; // Or 'SCRAMBLED'
+                    updateGameUI();
+                }
+            }, 50); // Short delay for UI update
+        }
+
+
+        function handleLessonSelection() {
+            const lessonId = lessonSelect.value;
+            learnModeState.currentLesson = lessons.find(l => l.id === lessonId) || null;
+            learnModeState.isLessonSetup = false;
+            learnModeState.currentMoveIndex = 0;
+            learnModeState.isWatchingAll = false; // Reset watching state
+
+            if (sequenceInProgress && onCurrentSequenceCompleteCallback) { // Stop any ongoing lesson demo
+                sequenceInProgress = false;
+                onCurrentSequenceCompleteCallback(false);
+                onCurrentSequenceCompleteCallback = null;
+                currentSequenceQueue = [];
+            }
+
+
+            if (learnModeState.currentLesson) {
+                lessonDescription.textContent = learnModeState.currentLesson.description;
+                algorithmDisplay.textContent = learnModeState.currentLesson.algorithm.join(' ');
+                learnModeState.algorithmMoves = [...learnModeState.currentLesson.algorithm];
+            } else {
+                lessonDescription.textContent = "";
+                algorithmDisplay.textContent = "";
+                learnModeState.algorithmMoves = [];
+            }
+            updateGameUI();
+        }
+
+        function handleSetupLesson() {
+            if (!learnModeState.currentLesson || isAnimating || sequenceInProgress || learnModeState.isWatchingAll || learnModeState.isLessonSetup) return;
+
+            messageArea.textContent = `Setting up lesson: ${learnModeState.currentLesson.name}`;
+            resetCubeVisuals(); // Reset to solved state first
+            learnModeState.isLessonSetup = false; // Mark as not setup until scramble is complete
+            learnModeState.currentMoveIndex = 0; // Reset progress
+            updateGameUI(); // Disable buttons during setup
+
+            // Apply the initial scramble for the lesson (if any)
+            const initialScramble = learnModeState.currentLesson.initialScramble || [];
+            if (initialScramble.length > 0) {
+                startFullMoveSequence([...initialScramble], (success) => {
+                    if (success) {
+                        learnModeState.isLessonSetup = true;
+                        messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. You can now watch or step through.`;
+                    } else {
+                        messageArea.textContent = `Setup for lesson '${learnModeState.currentLesson.name}' failed or was interrupted.`;
+                        learnModeState.isLessonSetup = false; // Ensure it's marked as not setup
+                    }
+                    updateGameUI();
+                });
+            } else { // No scramble, lesson is ready immediately
+                learnModeState.isLessonSetup = true;
+                messageArea.textContent = `Lesson ready: ${learnModeState.currentLesson.name}. You can now watch or step through.`;
+                updateGameUI();
+            }
+        }
+
+        function handleWatchAlgorithm() {
+            if (!learnModeState.isLessonSetup || sequenceInProgress || isAnimating || learnModeState.isWatchingAll || learnModeState.currentMoveIndex > 0) {
+                if (learnModeState.currentMoveIndex > 0) {
+                    messageArea.textContent = "Reset lesson progress (via Reset Cube or re-setup) to watch full algorithm.";
+                }
+                return;
+            }
+            
+            messageArea.textContent = `AI performing algorithm for: ${learnModeState.currentLesson.name}`;
+            // currentMoveIndex is already 0 if button is enabled
+            learnModeState.isWatchingAll = true;
+            updateGameUI(); // Disable other controls
+            playNextLearnAlgorithmMove(true); // Pass true to indicate auto-play
+        }
+
+        function handleNextLessonMove() {
+            if (!learnModeState.isLessonSetup || sequenceInProgress || isAnimating || learnModeState.isWatchingAll ||
+                learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) return;
+
+            playNextLearnAlgorithmMove(false); // Pass false for single step
+        }
+
+        /**
+         * Plays the next move in the current lesson's algorithm.
+         * @param {boolean} autoPlayNext - If true, automatically schedules the subsequent move.
+         */
+        function playNextLearnAlgorithmMove(autoPlayNext) {
+            if (!learnModeState.isLessonSetup || learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                learnModeState.isWatchingAll = false; // Stop auto-play if at the end
+                if (learnModeState.currentLesson && learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length && learnModeState.algorithmMoves.length > 0) {
+                    messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} complete.`;
+                }
+                updateGameUI();
+                return;
+            }
+
+            if (isAnimating) { // Wait for current animation to finish
+                setTimeout(() => playNextLearnAlgorithmMove(autoPlayNext), 50);
+                return;
+            }
+
+            const move = learnModeState.algorithmMoves[learnModeState.currentMoveIndex];
+            messageArea.textContent = `Learning move ${learnModeState.currentMoveIndex + 1}/${learnModeState.algorithmMoves.length}: ${move}`;
+            
+            // Temporarily set sequenceInProgress for this single move to use performMove's animation
+            // isAnimating will be set by performMove itself.
+            // learnModeState.isWatchingAll handles overall control state.
+            performMove(move, (success) => {
+                if (!success) { // Move failed or interrupted
+                    learnModeState.isWatchingAll = false; // Stop auto-play on failure
+                    messageArea.textContent = `Lesson move ${move} failed or was interrupted.`;
+                    updateGameUI();
+                    return;
+                }
+
+                learnModeState.currentMoveIndex++;
+                updateGameUI(); // Update progress display and button states
+
+                if (autoPlayNext && learnModeState.isWatchingAll && learnModeState.currentMoveIndex < learnModeState.algorithmMoves.length) {
+                    setTimeout(() => playNextLearnAlgorithmMove(true), LESSON_AUTO_PLAY_DELAY);
+                } else if (autoPlayNext && learnModeState.isWatchingAll && learnModeState.currentMoveIndex >= learnModeState.algorithmMoves.length) {
+                    // Auto-play finished
+                    learnModeState.isWatchingAll = false;
+                    messageArea.textContent = `Algorithm for ${learnModeState.currentLesson.name} demonstration complete.`;
+                    updateGameUI();
+                }
+                // If not autoPlayNext, it just finishes the single step.
+            });
+        }
+
+
+        // --- Timer Functions ---
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now() - (elapsedTime * 1000); // Resume from previous elapsedTime if any
+            timerInterval = setInterval(() => {
+                elapsedTime = (Date.now() - startTime) / 1000;
+                updateTimerDisplay();
+            }, 100); // Update timer display 10 times a second for smoother feel
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.textContent = `Time: ${elapsedTime.toFixed(2)}s`;
+        }
+
+        // --- Solve Checking and High Scores ---
+
+        /**
+         * Checks if the Rubik's Cube is in its solved state visually.
+         * @returns {boolean} True if solved, false otherwise.
+         */
+        function isSolved() {
+            const positionTolerance = 0.01 * EFFECTIVE_CUBIE_SIZE; // Tolerance for position check
+            const quaternionTolerance = 0.01; // Tolerance for quaternion dot product check
+
+            for (const cubie of cubies) {
+                if (!cubie.userData || cubie.userData.initialWorldPos === undefined || cubie.userData.initialQuaternion === undefined) {
+                    console.warn("Cubie missing userData for solve check:", cubie);
+                    return false; // Cannot determine if solved
+                }
+                // Check position
+                if (cubie.position.distanceTo(cubie.userData.initialWorldPos) > positionTolerance) {
+                    return false;
+                }
+                // Check orientation (dot product of quaternions should be close to 1 or -1)
+                // Normalizing quaternions before dot product is good practice if they might drift.
+                const currentQuaternionNormalized = cubie.quaternion.clone().normalize();
+                const initialQuaternionNormalized = cubie.userData.initialQuaternion.clone().normalize();
+                if (Math.abs(Math.abs(currentQuaternionNormalized.dot(initialQuaternionNormalized)) - 1.0) > quaternionTolerance) {
+                    return false;
+                }
+            }
+            return true; // All cubies are in their initial position and orientation
+        }
+
+
+        function checkIfSolved() {
+            if (currentMode === 'play' && playModeState === 'SOLVING' && isSolved()) {
+                stopTimer();
+                messageArea.textContent = `CONGRATULATIONS! You solved the cube in ${elapsedTime.toFixed(2)}s!`;
+                addHighScore(elapsedTime);
+                playModeState = 'IDLE'; // Reset play mode state
+                updateGameUI();
+            }
+        }
+
+        function loadHighScores() {
+            const scoresJSON = localStorage.getItem('retroRubiksHighScores');
+            if (scoresJSON) {
+                highScores = JSON.parse(scoresJSON);
+            }
+        }
+
+        function saveHighScores() {
+            localStorage.setItem('retroRubiksHighScores', JSON.stringify(highScores));
+        }
+
+        function addHighScore(timeInSeconds) {
+            const newScore = { time: parseFloat(timeInSeconds.toFixed(2)) };
+            highScores.push(newScore);
+            highScores.sort((a, b) => a.time - b.time); // Sort ascending (best times first)
+            highScores = highScores.slice(0, MAX_HIGH_SCORES); // Keep only top N scores
+            saveHighScores();
+            displayHighScores();
+        }
+
+        function displayHighScores() {
+            highScoresListEl.innerHTML = ''; // Clear previous list
+            if (highScores.length === 0) {
+                highScoresListEl.innerHTML = "<li>No high scores yet. Be the first!</li>";
+            } else {
+                highScores.forEach(score => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${score.time.toFixed(2)}s`;
+                    highScoresListEl.appendChild(listItem);
+                });
+            }
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls && controls.enabled) { // Only update controls if enabled
+                controls.update();
+            }
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
     </script>
 </body>
 </html>
