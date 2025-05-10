@@ -73,11 +73,10 @@
             width: 100%; height: 100%; background-color: #66BB6A;
             border-radius: 10px 0 0 10px; transition: width 0.1s linear, background-color 0.2s;
         }
-        .rtl { direction: rtl; /* text-align: right; (Applied on body, specific elements might need override if centered) */ }
+        .rtl { direction: rtl; }
         .rtl .ui-panel { text-align: right; }
         .rtl .ui-panel label { text-align: right;}
         .rtl .ui-panel h2, .rtl .ui-panel h3, .rtl .ui-panel p:not(#typingArea p) { text-align: right; }
-        /* Keep typing area centered for RTL too, text inside will be RTL if needed */
         .rtl #typingArea { text-align: right; }
 
 
@@ -127,6 +126,14 @@
                     <option value="en">English</option> <option value="fr">Français</option> <option value="ar">العربية</option>
                 </select>
             </div>
+            <div>
+                <label for="typingSpeedSelect" data-i18n="typing_speed_label">Typing Speed:</label>
+                <select id="typingSpeedSelect">
+                    <option value="slow" data-i18n="speed_slow">Slow</option>
+                    <option value="normal" selected data-i18n="speed_normal">Normal</option>
+                    <option value="fast" data-i18n="speed_fast">Fast</option>
+                </select>
+            </div>
             <button id="createProfileBtn" data-i18n="create_profile_btn">Create Profile</button>
             <hr>
             <button id="exportProgressBtn" data-i18n="export_progress_btn">Export Progress</button>
@@ -152,6 +159,7 @@
             <p><strong data-i18n="keys_to_practice">Keys to Practice:</strong> <span id="introKeysList"></span></p>
             <p><strong data-i18n="lesson_objective">Objective:</strong> <span id="introObjective"></span></p>
             <p><span data-i18n="lesson_length_approx">Approx. Length:</span> <span id="introLength"></span> <span data-i18n="characters_unit">characters</span></p>
+            <p><strong data-i18n="time_per_char_label">Time per Character:</strong> <span id="introTimePerChar"></span> ms</p>
             <button id="startLessonBtn" data-i18n="start_lesson_btn">Start Lesson</button>
             <button id="backToLessonsBtn" data-i18n="back_to_lessons_btn">Back to Lessons</button>
         </div>
@@ -193,21 +201,19 @@
         const PROFILES_STORE = 'profiles';
         let db;
         let currentProfile = null;
-        let currentLessonData = null; // Holds the fully prepared data for the active lesson instance
-        let currentLessonIdx = 0;    // Index in the LESSONS array
+        let currentLessonData = null;
+        let currentLessonIdx = 0;
         let gameActive = false;
         let sessionStats = { score: 0, correctPresses: 0, totalPresses: 0, errors: [] };
-        let LESSONS = []; // Array of lesson configurations
+        let LESSONS = [];
         let lessonProgressChartInstance = null;
-        let lastActiveScreen = 'profileScreen'; // For back button functionality in progress screen
+        let lastActiveScreen = 'profileScreen';
 
-        // For typing game state
         let currentTypedIdx = 0;
         let currentErrorsThisSession = 0;
         let totalKeyStrokesInSession = 0;
         let lessonStartTime = 0;
         let charTimerTimeoutId = null;
-
 
         let three = { scene: null, camera: null, renderer: null, font: null, active3DChar: null, backgroundSphere: null };
 
@@ -232,6 +238,8 @@
                 "target_format": "{0}% Acc, {1} WPM", "view_progress_btn": "View Progress",
                 "progress_overview_title": "Progress Overview", "select_lesson_for_chart": "Select Lesson for Detailed Chart:",
                 "back_btn": "Back", "lesson_length_approx": "Approx. Length:", "characters_unit": "characters", "Attempt": "Attempt",
+                "typing_speed_label": "Typing Speed:", "speed_slow": "Slow", "speed_normal": "Normal", "speed_fast": "Fast",
+                "time_per_char_label": "Time per Character:",
                 "L_NAME_HOME_ROW_BASIC": "Home Row Basics {0}", "L_DESC_HOME_ROW_BASIC": "Practice keys: {0} with space.",
                 "L_NAME_HOME_ROW_EXTENDED": "Home Row Extended {0}", "L_DESC_HOME_ROW_EXTENDED": "More keys: {0} and longer words.",
                 "L_NAME_HOME_ROW_FULL": "Full Home Row", "L_DESC_HOME_ROW_FULL": "Master the entire home row with varied words.",
@@ -260,6 +268,8 @@
                 "target_format": "{0}% Préc., {1} MPM", "view_progress_btn": "Voir Progrès",
                 "progress_overview_title": "Aperçu des Progrès", "select_lesson_for_chart": "Choisir Leçon pour Graphique:",
                 "back_btn": "Retour", "lesson_length_approx": "Longueur Approx.:", "characters_unit": "caractères", "Attempt": "Tentative",
+                "typing_speed_label": "Vitesse de Frappe:", "speed_slow": "Lente", "speed_normal": "Normale", "speed_fast": "Rapide",
+                "time_per_char_label": "Temps par Caractère:",
                 "L_NAME_HOME_ROW_BASIC": "Bases Ligne Repos {0}", "L_DESC_HOME_ROW_BASIC": "Pratiquez touches : {0} avec espace.",
                 "L_NAME_HOME_ROW_EXTENDED": "Ligne Repos Étendue {0}", "L_DESC_HOME_ROW_EXTENDED": "Plus de touches : {0} et mots plus longs.",
                 "L_NAME_HOME_ROW_FULL": "Ligne Repos Complète", "L_DESC_HOME_ROW_FULL": "Maîtrisez toute la ligne de repos.",
@@ -288,6 +298,8 @@
                 "target_format": "{0}% دقة, {1} ك/د", "view_progress_btn": "عرض التقدم",
                 "progress_overview_title": "نظرة عامة على التقدم", "select_lesson_for_chart": "اختر درسًا للرسم البياني:",
                 "back_btn": "رجوع", "lesson_length_approx": "الطول التقريبي:", "characters_unit": "حرفًا", "Attempt": "محاولة",
+                "typing_speed_label": "سرعة الكتابة:", "speed_slow": "بطيئة", "speed_normal": "عادية", "speed_fast": "سريعة",
+                "time_per_char_label": "الوقت لكل حرف:",
                 "L_NAME_HOME_ROW_BASIC": "أساسيات صف الارتكاز {0}", "L_DESC_HOME_ROW_BASIC": "تمرن على المفاتيح: {0} مع المسافة.",
                 "L_NAME_HOME_ROW_EXTENDED": "صف الارتكاز الموسع {0}", "L_DESC_HOME_ROW_EXTENDED": "المزيد من المفاتيح: {0} وكلمات أطول.",
                 "L_NAME_HOME_ROW_FULL": "صف الارتكاز الكامل", "L_DESC_HOME_ROW_FULL": "أتقن صف الارتكاز بأكمله.",
@@ -303,23 +315,22 @@
         function _t(key, ...args) {
             const store = i18nData[currentLang] || i18nData.en;
             let template = store[key];
-            let processedArgs = [...args]; // Use a mutable copy for potentially modified arguments
+            let processedArgs = [...args];
 
-            if (template === undefined) { // Key not found directly
-                const match = key.match(/^(.*?)_(S|AUTO)_(\d+)$/); // e.g. L_NAME_HOME_ROW_BASIC_S1 or L_NAME_MIXED_PRACTICE_AUTO_3
+            if (template === undefined) {
+                const match = key.match(/^(.*?)_(S|AUTO)_(\d+)$/);
                 if (match) {
-                    const baseKey = match[1]; 
-                    const suffixNumber = match[3]; 
+                    const baseKey = match[1];
+                    const suffixNumber = match[3];
                     const potentialTemplate = store[baseKey];
                     if (potentialTemplate !== undefined) {
                         template = potentialTemplate;
-                        // Prepend the number from the suffix to the arguments for the base key's template
                         processedArgs = [suffixNumber, ...args];
                     }
                 }
             }
-            
-            if (template === undefined) { // Still not found, default to the key itself
+
+            if (template === undefined) {
                 template = key;
             }
 
@@ -341,16 +352,22 @@
             });
             document.documentElement.lang = currentLang;
             document.getElementById('appBody').className = currentLang === 'ar' ? 'rtl' : '';
-            
+
             if (currentProfile) {
                 const activeProfileNameEl = document.getElementById('activeProfileName');
-                if(activeProfileNameEl && activeProfileNameEl.offsetParent !== null) 
+                if(activeProfileNameEl && activeProfileNameEl.offsetParent !== null)
                     activeProfileNameEl.textContent = currentProfile.name;
-                
+
                 const progressProfileNameEl = document.getElementById('progressProfileName');
                 if(progressProfileNameEl && progressProfileNameEl.offsetParent !== null)
                     progressProfileNameEl.textContent = currentProfile.name;
             }
+             // Ensure dynamic options in selects are also translated if they use data-i18n
+            document.querySelectorAll('#typingSpeedSelect option').forEach(opt => {
+                if (opt.dataset.i18n) {
+                    opt.textContent = _t(opt.dataset.i18n);
+                }
+            });
         }
 
         const KEYBOARDS = {
@@ -382,21 +399,21 @@
 
             const makeLesson = (nameKeyBase, keyGroupPedagogical, numWords, minWLen, maxWLen, timeMod, accT, wpmT, stage = "") => {
                 const actualKeys = [...new Set(
-                    (Array.isArray(keyGroupPedagogical) ? keyGroupPedagogical : [keyGroupPedagogical]) // Ensure array
+                    (Array.isArray(keyGroupPedagogical) ? keyGroupPedagogical : [keyGroupPedagogical])
                     .map(pk => pedagogicalMap[pk] || pk)
                     .filter(ak => ak)
                 )];
 
                 if (actualKeys.length === 0) {
                     console.warn(`No valid actual keys for lesson group starting with ${keyGroupPedagogical[0]} on ${kbLayoutName}. Skipping lesson generation for this entry: ${nameKeyBase} stage ${stage}`);
-                    return; 
+                    return;
                 }
-                                
+
                 LESSONS.push({
                     id: `L${lessonIdCounter++}`,
-                    nameKey: nameKeyBase, 
-                    descKey: nameKeyBase.replace('NAME','DESC'), 
-                    stageArgument: stage, 
+                    nameKey: nameKeyBase,
+                    descKey: nameKeyBase.replace('NAME','DESC'),
+                    stageArgument: stage,
                     keyCharsForDesc: actualKeys.join(', '),
 
                     getChars: () => actualKeys.concat([' ']),
@@ -418,7 +435,7 @@
                         return text;
                     },
                     numWords, minWLen, maxWLen,
-                    timePerChar: Math.max(800, 2500 * timeMod),
+                    timePerChar: Math.max(800, 2500 * timeMod), // Base time, will be adjusted by profile speed
                     targetAccuracy: accT, targetWPM: wpmT,
                 });
             };
@@ -448,7 +465,7 @@
                 makeLesson("L_NAME_BOTTOM_ROW_INTRO", [...new Set(homeTopBottom)], 25 + i*2, 3, 6, 0.7 - (i*0.02), 93, 25 + i + 2, `${Math.floor(i/2) + 1}`);
             }
             makeLesson("L_NAME_MIXED_PRACTICE", [...new Set(homeTopBottom)], 35, 4, 8, 0.65, 94, 32, "BOTTOM_FULL");
-            
+
             const allAlphaKeys = [...new Set(homeTopBottom)];
             const numberKeysFirstHalf = keyboardDef.numbers.slice(0,5);
             makeLesson("L_NAME_NUMBERS_INTRO", [...new Set([...allAlphaKeys, ...numberKeysFirstHalf])], 25, 3, 7, 0.7, 90, 25, "1");
@@ -458,32 +475,30 @@
             let autoLessonCounter = 0;
             while(LESSONS.length < 50 && LESSONS.length > 0) {
                 const lastLesson = LESSONS[LESSONS.length-1];
-                // It's safer to use lastLesson.keyCharsForDesc and parse it, or re-evaluate based on its constituent groups.
-                // For simplicity, let's use the `getChars()` method, which should return the intended character set for the lesson.
-                const existingCharsRaw = lastLesson.getChars(); // This includes space, filter it out
+                const existingCharsRaw = lastLesson.getChars();
                 const existingChars = existingCharsRaw.filter(c => c !== ' ');
-                
+
                 const allKeyboardChars = [...new Set([...keyboardDef.home_keys, ...keyboardDef.upper_keys, ...keyboardDef.lower_keys, ...keyboardDef.numbers])];
                 let newCharPool = allKeyboardChars.filter(c => !existingChars.includes(c));
-                
+
                 let charsForNewLesson = [...existingChars];
                 if (newCharPool.length > 0) {
                     charsForNewLesson.push(newCharPool[Math.floor(Math.random() * newCharPool.length)]);
                 }
                 charsForNewLesson = [...new Set(charsForNewLesson)];
 
-                if (charsForNewLesson.length === 0) { // Safety break if we somehow end up with no chars
+                if (charsForNewLesson.length === 0) {
                     console.warn("Auto-lesson generation resulted in no characters. Stopping.");
                     break;
                 }
 
-                makeLesson("L_NAME_MIXED_PRACTICE", charsForNewLesson, 
-                    lastLesson.numWords + 1, 
-                    lastLesson.minWLen, 
+                makeLesson("L_NAME_MIXED_PRACTICE", charsForNewLesson,
+                    lastLesson.numWords + 1,
+                    lastLesson.minWLen,
                     lastLesson.maxWLen + (LESSONS.length % 3 === 0 ? 1 : 0),
-                    Math.max(0.4, lastLesson.timePerChar / 2500 * 0.97),
+                    Math.max(0.4, lastLesson.timePerChar / 2500 * 0.97), // timeMod based on previous timePerChar
                     Math.min(98, lastLesson.targetAccuracy + 0.05),
-                    Math.round(lastLesson.targetWPM + (LESSONS.length % 5 === 0 ? 1 : 0.5)), // WPM should be integer
+                    Math.round(lastLesson.targetWPM + (LESSONS.length % 5 === 0 ? 1 : 0.5)),
                     `AUTO_${autoLessonCounter++}`
                 );
             }
@@ -547,87 +562,87 @@
             three.renderer.setSize(window.innerWidth, window.innerHeight);
             three.renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(three.renderer.domElement);
-            
-            const ambient = new THREE.AmbientLight(0xffffff, 0.7); 
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
             three.scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.9); 
-            directional.position.set(8, 15, 10); 
+            const directional = new THREE.DirectionalLight(0xffffff, 0.9);
+            directional.position.set(8, 15, 10);
             three.scene.add(directional);
-            
-            const starGeo = new THREE.BufferGeometry(); 
+
+            const starGeo = new THREE.BufferGeometry();
             const starVertices = [];
-            for(let i=0; i<10000; i++) { 
-                const x = THREE.MathUtils.randFloatSpread(1500); 
-                const y = THREE.MathUtils.randFloatSpread(1500); 
-                const z = THREE.MathUtils.randFloatSpread(1500); 
-                starVertices.push(x,y,z); 
+            for(let i=0; i<10000; i++) {
+                const x = THREE.MathUtils.randFloatSpread(1500);
+                const y = THREE.MathUtils.randFloatSpread(1500);
+                const z = THREE.MathUtils.randFloatSpread(1500);
+                starVertices.push(x,y,z);
             }
             starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
             const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.7, transparent: true, opacity:0.7});
-            three.backgroundSphere = new THREE.Points(starGeo, starMat); 
+            three.backgroundSphere = new THREE.Points(starGeo, starMat);
             three.scene.add(three.backgroundSphere);
-            
+
             const fontLoader = new THREE.FontLoader();
-            return new Promise((resolve, reject) => { 
+            return new Promise((resolve, reject) => {
                 fontLoader.load(
-                    'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', 
-                    (f) => { three.font = f; resolve(); }, 
-                    undefined, 
-                    (e) => { 
+                    'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
+                    (f) => { three.font = f; resolve(); },
+                    undefined,
+                    (e) => {
                         console.error("Font loading error:", e);
-                        reject(_t("font_error_msg")); 
+                        reject(_t("font_error_msg"));
                     }
                 );
             });
         }
 
-        function animateThree() { 
-            requestAnimationFrame(animateThree); 
-            TWEEN.update(); 
-            if (three.backgroundSphere) { 
-                three.backgroundSphere.rotation.y += 0.0002; 
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+            TWEEN.update();
+            if (three.backgroundSphere) {
+                three.backgroundSphere.rotation.y += 0.0002;
                 three.backgroundSphere.rotation.x += 0.0001;
-            } 
+            }
             if(three.renderer && three.scene && three.camera) {
-                three.renderer.render(three.scene, three.camera); 
+                three.renderer.render(three.scene, three.camera);
             }
         }
 
-        function update3DChar(char) { 
-            if (!three.font || !three.scene) return; 
+        function update3DChar(char) {
+            if (!three.font || !three.scene) return;
             if (three.active3DChar) {
                 three.scene.remove(three.active3DChar);
                 if (three.active3DChar.geometry) three.active3DChar.geometry.dispose();
                 if (three.active3DChar.material) three.active3DChar.material.dispose();
             }
-            three.active3DChar = null; 
-            
+            three.active3DChar = null;
+
             if (!char || char === ' ' || char === ' ') {
-                if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene, three.camera); 
-                return; 
-            } 
-            try { 
+                if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene, three.camera);
+                return;
+            }
+            try {
                 const geometry = new THREE.TextGeometry(char, {
                     font:three.font,
                     size:1.2,height:0.25,curveSegments:5,
                     bevelEnabled:true,bevelThickness:0.04,bevelSize:0.03,bevelSegments:3
-                }); 
-                geometry.center(); 
-                const material = new THREE.MeshStandardMaterial({color:0xFFEB3B,emissive:0x443300}); 
-                three.active3DChar=new THREE.Mesh(geometry,material); 
-                three.active3DChar.position.set(0,1.8,0); 
-                three.scene.add(three.active3DChar); 
+                });
+                geometry.center();
+                const material = new THREE.MeshStandardMaterial({color:0xFFEB3B,emissive:0x443300});
+                three.active3DChar=new THREE.Mesh(geometry,material);
+                three.active3DChar.position.set(0,1.8,0);
+                three.scene.add(three.active3DChar);
             } catch(e){
                 console.error("Error creating 3D text for char:", char, e);
-            } 
-            if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene, three.camera); 
+            }
+            if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene, three.camera);
         }
-        
-        window.addEventListener('resize', () => { 
-            if(!three.camera || !three.renderer) return; 
-            three.camera.aspect=window.innerWidth/window.innerHeight; 
-            three.camera.updateProjectionMatrix(); 
-            three.renderer.setSize(window.innerWidth,window.innerHeight); 
+
+        window.addEventListener('resize', () => {
+            if(!three.camera || !three.renderer) return;
+            three.camera.aspect=window.innerWidth/window.innerHeight;
+            three.camera.updateProjectionMatrix();
+            three.renderer.setSize(window.innerWidth,window.innerHeight);
             if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene,three.camera);
         }, false);
 
@@ -643,8 +658,8 @@
                 console.error(`UI Screen with ID "${screenId}" not found.`);
             }
 
-            if(screenId !== 'hud' && screenId !== 'typingArea' && screenId !== 'charTimeIndicator') { 
-                gameActive = false; 
+            if(screenId !== 'hud' && screenId !== 'typingArea' && screenId !== 'charTimeIndicator') {
+                gameActive = false;
                 update3DChar(null);
             }
         }
@@ -653,7 +668,7 @@
             try {
                 const profiles = await getAllProfilesData();
                 const selectElement = document.getElementById('profileSelect');
-                selectElement.innerHTML = `<option value="">-- ${_t('profile_select_create')} --</option>`; // This gets translated by applyLocalization later
+                selectElement.innerHTML = `<option value="">-- ${_t('profile_select_create')} --</option>`;
                 profiles.forEach(p => {
                     const option = document.createElement('option');
                     option.value = p.id;
@@ -665,11 +680,12 @@
                 console.error("Error populating profiles:", e);
                 document.getElementById('viewProgressBtnMain').style.display = 'none';
             }
-            
+
             const savedLang = localStorage.getItem('typeMasterLang') || navigator.language.split('-')[0];
             currentLang = i18nData[savedLang] ? savedLang : 'en';
             document.getElementById('uiLanguageSelect').value = currentLang;
-            
+            document.getElementById('typingSpeedSelect').value = 'normal'; // Default for new profile UI
+
             applyLocalization();
             showUIScreen('profileScreen');
         }
@@ -680,8 +696,8 @@
                 displayProfileScreen();
                 return;
             }
-            
-            generateLessons(); 
+
+            generateLessons();
             if (!LESSONS || LESSONS.length === 0) {
                 console.error("No lessons generated. Check generateLessons logic and keyboard layout definitions.");
             }
@@ -693,17 +709,17 @@
             LESSONS.forEach((lessonConfig, index) => {
                 const button = document.createElement('button');
                 button.classList.add('level-button');
-                
+
                 const lessonNameText = _t(lessonConfig.nameKey, lessonConfig.stageArgument);
-                
+
                 let statsText = "";
                 const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonConfig.id] : null;
                 if(lessonStats && typeof lessonStats.accuracy === 'number' && typeof lessonStats.wpm === 'number'){
                     statsText = `<small>${_t('target_format', lessonStats.accuracy.toFixed(0), lessonStats.wpm)}</small>`;
-                } 
+                }
                 button.innerHTML = `${_t('lesson')} ${index + 1}: ${lessonNameText} ${statsText}`;
 
-                const isUnlocked = index <= (currentProfile.progress.highestLessonUnlocked + 1);
+                const isUnlocked = index <= ((currentProfile.progress.highestLessonUnlocked || -1) + 1);
                 if(isUnlocked){
                     button.onclick = () => displayLessonIntroScreen(index);
                 } else {
@@ -714,7 +730,7 @@
                 lessonsGrid.appendChild(button);
             });
 
-            applyLocalization(); 
+            applyLocalization();
             showUIScreen('lessonSelectScreen', 'profileScreen');
         }
 
@@ -726,21 +742,33 @@
 
             if (!lessonConfig) {
                 console.error(`Lesson config not found for index: ${lessonIndex}. LESSONS length: ${LESSONS.length}`);
-                displayLessonSelectScreen(); 
+                displayLessonSelectScreen();
                 return;
             }
-            
-            currentLessonData = { ...lessonConfig }; 
-            currentLessonData.actualChars = currentLessonData.getChars(); 
-            currentLessonData.targetString = currentLessonData.generateString(
-                currentLessonData.actualChars, 
-                currentLessonData 
-            );
 
-            // console.log("Lesson Intro: lessonConfig was:", JSON.parse(JSON.stringify(lessonConfig)));
-            // console.log("Lesson Intro: currentLessonData is:", JSON.parse(JSON.stringify(currentLessonData)));
-            // console.log("Lesson Intro: currentLessonData.actualChars =", currentLessonData.actualChars);
-            // console.log("Lesson Intro: currentLessonData.targetString =", currentLessonData.targetString);
+            currentLessonData = { ...lessonConfig };
+            currentLessonData.actualChars = currentLessonData.getChars();
+
+            // Adjust timePerChar based on profile's typingSpeedSetting
+            const speedSetting = (currentProfile && currentProfile.typingSpeedSetting) ? currentProfile.typingSpeedSetting : 'normal';
+            let baseTimeFromConfig = lessonConfig.timePerChar;
+
+            if (speedSetting === 'slow') {
+                currentLessonData.timePerChar = baseTimeFromConfig * 1.5; // 50% longer
+            } else if (speedSetting === 'fast') {
+                currentLessonData.timePerChar = baseTimeFromConfig * 0.75; // 25% shorter
+            } else { // 'normal'
+                currentLessonData.timePerChar = baseTimeFromConfig;
+            }
+            // Apply caps: min 600ms, max 5000ms
+            currentLessonData.timePerChar = Math.max(600, Math.min(currentLessonData.timePerChar, 5000));
+            currentLessonData.timePerChar = Math.round(currentLessonData.timePerChar); // Keep it integer
+
+
+            currentLessonData.targetString = currentLessonData.generateString(
+                currentLessonData.actualChars,
+                currentLessonData
+            );
 
             const startLessonBtnEl = document.getElementById('startLessonBtn');
             if (currentLessonData.targetString === "error_no_chars" || !currentLessonData.targetString) {
@@ -750,25 +778,26 @@
                 document.getElementById('introKeysList').textContent = "";
                 document.getElementById('introObjective').textContent = "";
                 document.getElementById('introLength').textContent = "0";
+                document.getElementById('introTimePerChar').textContent = "N/A";
                 if(startLessonBtnEl) startLessonBtnEl.disabled = true;
             } else {
                 if(startLessonBtnEl) startLessonBtnEl.disabled = false;
                 document.getElementById('introLessonTitle').textContent = _t(currentLessonData.nameKey, currentLessonData.stageArgument);
                 document.getElementById('introLessonDescription').textContent = _t(currentLessonData.descKey, currentLessonData.keyCharsForDesc);
-                document.getElementById('introKeysList').textContent = currentLessonData.keyCharsForDesc; 
+                document.getElementById('introKeysList').textContent = currentLessonData.keyCharsForDesc;
                 document.getElementById('introObjective').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
                 document.getElementById('introLength').textContent = currentLessonData.targetString.length;
+                document.getElementById('introTimePerChar').textContent = currentLessonData.timePerChar;
             }
-            
-            applyLocalization(); 
+
+            applyLocalization();
         }
 
         function startGameSession() {
-            // console.log("startGameSession called. currentLessonData.targetString =", currentLessonData ? currentLessonData.targetString : "null");
             if (!currentLessonData || !currentLessonData.targetString || currentLessonData.targetString === "error_no_chars") {
                 console.error("Cannot start game: currentLessonData or targetString is invalid.");
-                alert(_t("error_title") + ": Could not start lesson. Target text is missing."); 
-                showUIScreen('lessonSelectScreen'); 
+                alert(_t("error_title") + ": Could not start lesson. Target text is missing.");
+                showUIScreen('lessonSelectScreen');
                 return;
             }
 
@@ -777,47 +806,47 @@
             currentErrorsThisSession = 0;
             totalKeyStrokesInSession = 0;
             lessonStartTime = Date.now();
-            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0, errors: [] }; 
+            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0, errors: [] };
 
             document.getElementById('hudProfileName').textContent = currentProfile.name;
             document.getElementById('hudLessonName').textContent = _t(currentLessonData.nameKey, currentLessonData.stageArgument);
             document.getElementById('hudLessonIndex').textContent = currentLessonIdx + 1;
             document.getElementById('hudTotalLessons').textContent = LESSONS.length;
             document.getElementById('hudTargetInfo').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
-            
+
             updateTypingAreaDisplay();
             startCharTimer();
 
             document.querySelectorAll('.ui-overlay').forEach(s => s.style.display='none');
             document.getElementById('hud').style.display = 'block';
-            document.getElementById('typingArea').style.display = 'block'; 
+            document.getElementById('typingArea').style.display = 'block';
             document.getElementById('charTimeIndicator').style.display = 'block';
-            
-            window.focus(); 
+
+            window.focus();
         }
-        
+
         function updateTypingAreaDisplay() {
             const typingAreaEl = document.getElementById('typingArea');
             if (!currentLessonData || !currentLessonData.targetString) {
-                typingAreaEl.innerHTML = ""; 
-                update3DChar(null); 
+                typingAreaEl.innerHTML = "";
+                update3DChar(null);
                 return;
             }
 
             let html = '';
             for(let i = 0; i < currentLessonData.targetString.length; i++) {
                 const char = currentLessonData.targetString[i];
-                const displayChar = char === ' ' ? ' ' : char; 
-                
+                const displayChar = char === ' ' ? ' ' : char;
+
                 if (i < currentTypedIdx) {
-                    if (sessionStats.errors && sessionStats.errors[i] === true) { 
+                    if (sessionStats.errors && sessionStats.errors[i] === true) {
                         html += `<span class="typed-char-error">${displayChar}</span>`;
                     } else {
                         html += `<span class="typed-char-correct">${displayChar}</span>`;
                     }
                 } else if (i === currentTypedIdx) {
                     html += `<span class="current-target-char">${displayChar}</span>`;
-                    update3DChar(char); 
+                    update3DChar(char);
                 } else {
                     html += `<span>${displayChar}</span>`;
                 }
@@ -843,67 +872,87 @@
                 let percentage = Math.max(0, 100 - (elapsed / currentLessonData.timePerChar * 100));
                 timerBar.style.width = percentage + '%';
 
-                if (percentage <= 20) timerBar.style.backgroundColor = '#EF5350'; 
+                if (percentage <= 20) timerBar.style.backgroundColor = '#EF5350';
                 if (percentage <= 0) {
-                    handleCharacterInput(null, true); 
+                    handleCharacterInput(null, true);
                 } else {
                     charTimerTimeoutId = setTimeout(decrementBar, 50);
                 }
             }
             charTimerTimeoutId = setTimeout(decrementBar, 50);
         }
-        
+
         function handleCharacterInput(typedKey, timedOut = false) {
             if (!gameActive || !currentLessonData || currentTypedIdx >= currentLessonData.targetString.length) {
                 return;
             }
-            
+
             clearTimeout(charTimerTimeoutId);
-            totalKeyStrokesInSession++; 
-            sessionStats.totalPresses++; 
-            
+            totalKeyStrokesInSession++;
+            sessionStats.totalPresses++;
+
             const targetChar = currentLessonData.targetString[currentTypedIdx];
 
+            // --- For Debugging the Red Highlight Issue ---
+            // Uncomment the following lines to log details of each key press
+            /*
+            console.log(
+                `[Input Debug] Typed: "${typedKey}" (Code: ${typedKey ? typedKey.charCodeAt(0) : 'N/A'}), ` +
+                `Target: "${targetChar}" (Code: ${targetChar ? targetChar.charCodeAt(0) : 'N/A'}), ` +
+                `Index: ${currentTypedIdx}, ` +
+                `Comparison (typedKey === targetChar): ${typedKey === targetChar}, ` +
+                `Timed Out: ${timedOut}`
+            );
+            */
+
             if (timedOut) {
-                currentErrorsThisSession++; 
+                currentErrorsThisSession++;
                 sessionStats.score -= 2;
-                sessionStats.errors[currentTypedIdx] = true; 
-                if(three.active3DChar && three.active3DChar.rotation) { 
+                sessionStats.errors[currentTypedIdx] = true;
+                if(three.active3DChar && three.active3DChar.rotation) {
                     new TWEEN.Tween(three.active3DChar.rotation).to({y: three.active3DChar.rotation.y + Math.PI/8},100).yoyo(true).repeat(1).start();
                 }
             } else if (typedKey === targetChar) {
-                sessionStats.correctPresses++; 
+                sessionStats.correctPresses++;
                 sessionStats.score += 10;
-                sessionStats.errors[currentTypedIdx] = false; 
+                sessionStats.errors[currentTypedIdx] = false;
                 if(three.active3DChar && three.active3DChar.scale) {
                      new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.3, z:1.3 }, 100).easing(TWEEN.Easing.Quadratic.Out)
                         .chain(new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.0, z:1.0 }, 200).easing(TWEEN.Easing.Bounce.Out)).start();
                 }
-            } else {
-                currentErrorsThisSession++; 
+            } else { // Incorrect key
+                currentErrorsThisSession++;
                 sessionStats.score -= 5;
-                sessionStats.errors[currentTypedIdx] = true; 
+                sessionStats.errors[currentTypedIdx] = true;
                 if(three.active3DChar && three.active3DChar.material && three.active3DChar.material.color) {
                     const originalColor = three.active3DChar.material.color.clone();
                     new TWEEN.Tween(three.active3DChar.material.color)
-                        .to({r:1, g:0, b:0}, 100) 
-                        .yoyo(true).repeat(1)    
-                        .onComplete(() => { 
-                            if(three.active3DChar && three.active3DChar.material) { // Check again in case char changed
-                                three.active3DChar.material.color.copy(originalColor); 
+                        .to({r:1, g:0, b:0}, 100)
+                        .yoyo(true).repeat(1)
+                        .onComplete(() => {
+                            if(three.active3DChar && three.active3DChar.material) {
+                                three.active3DChar.material.color.copy(originalColor);
                             }
-                        }) 
+                        })
                         .start();
                 }
             }
-            
+
+            // --- For Debugging the Red Highlight Issue ---
+            // Uncomment this to see what error state was recorded for the character
+            /*
+            console.log(
+                `[Input Debug] Recorded error for index ${currentTypedIdx}: ${sessionStats.errors[currentTypedIdx]}`
+            );
+            */
+
             currentTypedIdx++;
-            updateTypingAreaDisplay(); 
+            updateTypingAreaDisplay();
 
             if (currentTypedIdx >= currentLessonData.targetString.length) {
                 endGameSession();
             } else {
-                startCharTimer(); 
+                startCharTimer();
             }
         }
 
@@ -911,7 +960,7 @@
             document.getElementById('hudScore').textContent = sessionStats.score;
             const accuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
             document.getElementById('hudAccuracy').textContent = accuracy.toFixed(0) + '%';
-            
+
             const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
             const wpm = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0;
             document.getElementById('hudWPM').textContent = wpm;
@@ -920,7 +969,7 @@
         async function endGameSession() {
             gameActive = false;
             clearTimeout(charTimerTimeoutId);
-            update3DChar(null); 
+            update3DChar(null);
 
             const finalAccuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 0;
             const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
@@ -931,28 +980,27 @@
             }
             const lessonId = currentLessonData.id;
             const lessonStat = currentProfile.progress.lessonStats[lessonId] || { score: -Infinity, accuracy: 0, wpm: 0, attempts: [] };
-            
+
             let newHighScore = false;
             if (sessionStats.score > lessonStat.score) {
                 lessonStat.score = sessionStats.score;
                 newHighScore = true;
             }
-            lessonStat.accuracy = Math.max(lessonStat.accuracy, finalAccuracy); 
-            lessonStat.wpm = Math.max(lessonStat.wpm, finalWPM); 
+            lessonStat.accuracy = Math.max(lessonStat.accuracy, finalAccuracy);
+            lessonStat.wpm = Math.max(lessonStat.wpm, finalWPM);
 
             if(!lessonStat.attempts) lessonStat.attempts = [];
             lessonStat.attempts.push({ date: Date.now(), wpm: finalWPM, accuracy: finalAccuracy, score: sessionStats.score });
-            if (lessonStat.attempts.length > 20) lessonStat.attempts.shift(); 
+            if (lessonStat.attempts.length > 20) lessonStat.attempts.shift();
 
             currentProfile.progress.lessonStats[lessonId] = lessonStat;
 
             const passedLesson = finalAccuracy >= currentLessonData.targetAccuracy && finalWPM >= currentLessonData.targetWPM;
-            
-            // Update highestLessonUnlocked logic
+
             if (passedLesson) {
                  currentProfile.progress.highestLessonUnlocked = Math.max(currentProfile.progress.highestLessonUnlocked || -1, currentLessonIdx);
             }
-            
+
             try {
                 await saveProfileData(currentProfile);
             } catch (e) {
@@ -967,14 +1015,14 @@
             document.getElementById('summaryNewHighScoreText').style.display = newHighScore ? 'block' : 'none';
             document.getElementById('summaryCriteriaFeedback').textContent = `${_t('target_criteria')}: ${_t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM)}`;
             document.getElementById('proceedToNextLessonBtn').style.display = (passedLesson && currentLessonIdx < LESSONS.length - 1) ? 'inline-block' : 'none';
-            
-            applyLocalization(); 
+
+            applyLocalization();
             showUIScreen('sessionSummaryScreen', 'lessonSelectScreen');
         }
 
         function displayProgressScreen() {
             if(!currentProfile) return;
-            generateLessons(); 
+            generateLessons();
             document.getElementById('progressProfileName').textContent = currentProfile.name;
             const selectEl = document.getElementById('lessonChartSelect');
             selectEl.innerHTML = '';
@@ -986,9 +1034,9 @@
             });
             selectEl.onchange = () => renderLessonChart(selectEl.value);
             if(LESSONS.length > 0) {
-                renderLessonChart(LESSONS[0].id); 
+                renderLessonChart(LESSONS[0].id);
             } else {
-                if(lessonProgressChartInstance) lessonProgressChartInstance.destroy(); 
+                if(lessonProgressChartInstance) lessonProgressChartInstance.destroy();
             }
             applyLocalization();
             showUIScreen('progressScreen', lastActiveScreen || 'lessonSelectScreen');
@@ -997,8 +1045,8 @@
         function renderLessonChart(lessonId) {
             const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonId] : null;
             const attempts = (lessonStats && lessonStats.attempts) ? lessonStats.attempts : [];
-            
-            const labels = attempts.map((a, i) => `${_t('Attempt')} ${i + 1}`); 
+
+            const labels = attempts.map((a, i) => `${_t('Attempt')} ${i + 1}`);
             const wpmData = attempts.map(a => a.wpm);
             const accuracyData = attempts.map(a => a.accuracy);
 
@@ -1022,7 +1070,7 @@
                         yAccuracy: { type: 'linear', display: true, position: 'right', min:0, max:100, title: { display: true, text: _t('accuracy') + ' (%)', color:'#ECEFF1' }, grid:{drawOnChartArea:false}, ticks:{color:'#ECEFF1'}}
                     },
                     plugins: { legend: { labels: { color: '#ECEFF1' } } },
-                    color: '#ECEFF1' 
+                    color: '#ECEFF1'
                 }
             });
         }
@@ -1031,17 +1079,15 @@
         document.getElementById('uiLanguageSelect').addEventListener('change', async (e) => {
             currentLang = e.target.value;
             localStorage.setItem('typeMasterLang', currentLang);
-            applyLocalization(); 
+            applyLocalization();
             if (currentProfile) {
                 currentProfile.language = currentLang;
                 try { await saveProfileData(currentProfile); } catch (err) { console.error("Error saving profile lang:", err); }
-                
+
                 const activeOverlay = document.querySelector('.ui-overlay[style*="display: flex"]');
                 if (activeOverlay) {
                     if (activeOverlay.id === 'lessonSelectScreen') displayLessonSelectScreen();
-                    else if (activeOverlay.id === 'lessonIntroScreen' && currentLessonData) displayLessonIntroScreen(currentLessonIdx); 
-                    // Avoid re-running endGameSession logic directly for summary; usually user navigates away
-                    // else if (activeOverlay.id === 'sessionSummaryScreen' && currentLessonData) {} 
+                    else if (activeOverlay.id === 'lessonIntroScreen' && currentLessonData) displayLessonIntroScreen(currentLessonIdx);
                     else if (activeOverlay.id === 'progressScreen') displayProgressScreen();
                 }
             }
@@ -1052,36 +1098,45 @@
             if (!name) { alert(_t("profile_name_placeholder")); return; }
             const layout = document.getElementById('keyboardLayoutSelect').value;
             const lang = document.getElementById('uiLanguageSelect').value;
+            const speed = document.getElementById('typingSpeedSelect').value;
             const profileId = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-            
-            currentProfile = { id: profileId, name: name, keyboardLayout: layout, language: lang, progress: { highestLessonUnlocked: -1, lessonStats: {} } };
-            
+
+            currentProfile = {
+                id: profileId, name: name, keyboardLayout: layout, language: lang,
+                typingSpeedSetting: speed, // Save the typing speed
+                progress: { highestLessonUnlocked: -1, lessonStats: {} }
+            };
+
             try {
                 await saveProfileData(currentProfile);
-                currentLang = lang; 
-                // generateLessons must happen AFTER currentLang is set if lessons depend on it for immediate display needs
-                // but generateLessons itself primarily depends on keyboardLayout.
-                // applyLocalization will handle UI text.
-                applyLocalization(); 
-                generateLessons();   
+                currentLang = lang;
+                applyLocalization();
+                generateLessons();
                 displayLessonSelectScreen();
             } catch (e) {
                 alert(_t("error_title") + ": " + (e.message || "Unknown error creating profile."));
-                currentProfile = null; 
+                currentProfile = null;
             }
         });
 
         document.getElementById('loadProfileBtn').addEventListener('click', async () => {
             const profileId = document.getElementById('profileSelect').value;
             if (!profileId) { alert(_t("profile_select_create")); return; }
-            
+
             try {
                 currentProfile = await getProfileData(profileId);
                 if (currentProfile) {
-                    currentLang = currentProfile.language || 'en'; 
+                    currentLang = currentProfile.language || 'en';
                     document.getElementById('uiLanguageSelect').value = currentLang;
-                    applyLocalization(); 
-                    generateLessons();   
+                    // For existing profiles, default typingSpeedSetting if not present
+                    if (typeof currentProfile.typingSpeedSetting === 'undefined') {
+                        currentProfile.typingSpeedSetting = 'normal';
+                    }
+                    // Note: We don't update the #typingSpeedSelect here as it's for new profile creation
+                    // If we add a profile settings screen, that's where it would be reflected/changed.
+
+                    applyLocalization();
+                    generateLessons();
                     displayLessonSelectScreen();
                     document.getElementById('viewProgressBtnMain').style.display = 'inline-block';
                 } else {
@@ -1094,7 +1149,7 @@
                 currentProfile = null;
             }
         });
-        
+
         document.getElementById('viewProgressBtnMain').addEventListener('click', () => displayProgressScreen());
         document.getElementById('viewProgressBtnLessons').addEventListener('click', () => displayProgressScreen());
         document.getElementById('backFromProgressBtn').addEventListener('click', () => showUIScreen(lastActiveScreen || 'lessonSelectScreen'));
@@ -1137,31 +1192,35 @@
                     let importedCount = 0;
                     for (const profile of profilesToImport) {
                         if (profile.id && profile.name && profile.keyboardLayout && profile.progress) {
-                            await saveProfileData(profile); 
+                             // Default typingSpeedSetting for imported profiles if missing
+                            if (typeof profile.typingSpeedSetting === 'undefined') {
+                                profile.typingSpeedSetting = 'normal';
+                            }
+                            await saveProfileData(profile);
                             importedCount++;
                         } else {
                             console.warn("Skipping invalid profile during import:", profile);
                         }
                     }
                     alert(`${importedCount} profiles imported/updated.`);
-                    displayProfileScreen(); 
+                    displayProfileScreen();
                 } else {
                     alert("Invalid file format. Expected an array of profiles.");
                 }
             } catch (e) {
                 alert(_t("error_title") + ": " + e.message);
             }
-            event.target.value = null; 
+            event.target.value = null;
         });
 
         window.addEventListener('keydown', (event) => {
             if (!gameActive) return;
-            if (event.metaKey || event.ctrlKey || event.altKey) return; 
-            
-            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') { 
+            if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') {
                 return;
             }
-            event.preventDefault(); 
+            event.preventDefault();
             handleCharacterInput(event.key);
         });
 
@@ -1169,13 +1228,13 @@
         async function initializeApp() {
             try {
                 await initDB();
-                await setupThreeScene(); 
-                animateThree(); 
-                displayProfileScreen(); 
+                await setupThreeScene();
+                animateThree();
+                displayProfileScreen();
             } catch (error) {
                 console.error("Initialization Error:", error);
                 const errorTitle = (i18nData[currentLang] || i18nData.en).error_title || "Error";
-                document.body.innerHTML = 
+                document.body.innerHTML =
                     `<div class="ui-overlay" style="display:flex;">
                         <div class="ui-panel">
                             <h2>${errorTitle}</h2>
