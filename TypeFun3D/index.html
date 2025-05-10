@@ -6,10 +6,10 @@
     <title>TypeMasterKids Pro - Structured Typing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script> <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #263238; /* Darker background */ color: #ECEFF1; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #263238; color: #ECEFF1; }
         #container { width: 100vw; height: 100vh; position: fixed; top:0; left:0; z-index: -1;}
         .ui-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -18,20 +18,20 @@
             transition: opacity 0.3s ease-in-out; overflow-y: auto; padding: 20px; box-sizing: border-box;
         }
         .ui-panel {
-            background-color: #37474F; /* Blue Grey darker */
+            background-color: #37474F;
             padding: 30px 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
             min-width: 450px; max-width: 90%; max-height: 90vh; overflow-y: auto;
         }
-        .ui-panel h2 { margin-top: 0; color: #80CBC4; /* Teal Lighten-3 */ font-size: 2.2em; }
-        .ui-panel h3 { color: #B0BEC5; /* Blue Grey Lighten-3 */}
+        .ui-panel h2 { margin-top: 0; color: #80CBC4; font-size: 2.2em; }
+        .ui-panel h3 { color: #B0BEC5; }
         .ui-panel p { font-size: 1.1em; margin-bottom: 15px; color: #CFD8DC; }
         .ui-panel label { display: block; margin-top:15px; color: #90A4AE; font-size: 0.9em; text-align: left;}
         .ui-panel button, .ui-panel input, .ui-panel select {
             padding: 12px 20px; margin: 10px 5px; border: none; border-radius: 10px;
-            font-size: 1em; cursor: pointer; background-color: #546E7A; /* Blue Grey */
+            font-size: 1em; cursor: pointer; background-color: #546E7A;
             color: white; transition: background-color 0.2s;
         }
-        .ui-panel button:hover { background-color: #78909C; /* Blue Grey Lighten-1 */ }
+        .ui-panel button:hover { background-color: #78909C; }
         .ui-panel input[type="text"], .ui-panel select { background-color: #ECEFF1; color: #263238; cursor: text; }
         .ui-panel input[type="file"] { display: none; }
         .ui-panel hr { border: 0; height: 1px; background-color: #546E7A; margin: 20px 0; }
@@ -45,24 +45,18 @@
         #hudStrong { font-weight: bold; color: #80CBC4; }
 
         #typingArea {
-            position: fixed;
-            top: 60%; /* Adjusted position */
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2.8em; /* Slightly reduced for potentially longer strings */
-            font-weight: bold;
-            color: #FFF;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 15px 30px;
-            border-radius: 15px;
-            z-index: 6;
-            min-width: 70%;
-            text-align: center;
-            display: none;
-            letter-spacing: 2px;
-            white-space: pre;
+            position: fixed; top: 60%; left: 50%; transform: translateX(-50%);
+            font-size: 2.8em; font-weight: bold; color: #FFF;
+            background-color: rgba(0, 0, 0, 0.6); padding: 15px 30px; border-radius: 15px;
+            z-index: 6; min-width: 70%; text-align: center; display: none;
+            letter-spacing: 2px; white-space: pre;
         }
         .typed-char-correct { color: #A5D6A7; }
+        .typed-char-error {
+            color: #FFCDD2; /* Light Red */
+            background-color: rgba(239, 83, 80, 0.3); /* Red background hint */
+            text-decoration: underline wavy red;
+        }
         .current-target-char {
             color: #FFEB3B; text-decoration: underline; text-decoration-color: #FFEB3B;
             text-decoration-thickness: 3px; padding: 0 2px; display: inline-block;
@@ -81,16 +75,16 @@
         }
         .rtl { direction: rtl; text-align: right; }
         .rtl .ui-panel label { text-align: right;}
-        .level-button { background-color: #00796B; /* Teal Darken-2 */ margin: 8px !important; padding: 15px 10px !important; width: 200px; text-align: left;}
+        .level-button { background-color: #00796B; margin: 8px !important; padding: 15px 10px !important; width: 200px; text-align: left;}
         .level-button.locked { background-color: #616161; cursor: not-allowed; opacity: 0.6; }
-        .level-button:not(.locked):hover { background-color: #00897B; /* Teal Darken-1 */ }
+        .level-button:not(.locked):hover { background-color: #00897B; }
         .level-button small { font-size: 0.8em; color: #B2DFDB; display: block; margin-top:4px;}
         #lessonsGrid { display: flex; flex-wrap: wrap; justify-content: center; max-height: 60vh; overflow-y: auto; padding: 10px;}
         .progress-chart-container { width: 100%; max-width: 600px; margin: 20px auto; background: #455A64; padding:15px; border-radius:10px;}
     </style>
 </head>
 <body id="appBody">
-    <div id="container"></div> <!-- For Three.js -->
+    <div id="container"></div>
 
     <div id="hud">
         <p><span data-i18n="profile">Profile</span>: <strong id="hudProfileName"></strong></p>
@@ -104,7 +98,6 @@
     <div id="typingArea"></div>
     <div id="charTimeIndicator"><div id="charTimeIndicatorBar"></div></div>
 
-    <!-- UI Screens -->
     <div id="profileScreen" class="ui-overlay">
         <div class="ui-panel">
             <h2 data-i18n="welcome_title">Welcome!</h2>
@@ -151,7 +144,7 @@
             <p id="introLessonDescription"></p>
             <p><strong data-i18n="keys_to_practice">Keys to Practice:</strong> <span id="introKeysList"></span></p>
             <p><strong data-i18n="lesson_objective">Objective:</strong> <span id="introObjective"></span></p>
-            <p data-i18n="lesson_length_approx">Approx. Length: <span id="introLength"></span> characters</p>
+            <p><span data-i18n="lesson_length_approx">Approx. Length:</span> <span id="introLength"></span> <span data-i18n="characters_unit">characters</span></p>
             <button id="startLessonBtn" data-i18n="start_lesson_btn">Start Lesson</button>
             <button id="backToLessonsBtn" data-i18n="back_to_lessons_btn">Back to Lessons</button>
         </div>
@@ -190,113 +183,109 @@
 
     <script>
         // --- Global Constants & Variables ---
-        const APP_DB_NAME = 'TypeMasterKidsProDB_v4'; // Incremented DB version
+        const APP_DB_NAME = 'TypeMasterKidsProDB_v5'; // Incremented DB version
         const PROFILES_STORE = 'profiles';
         let db;
         let currentProfile = null;
-        let currentLessonData = null; // Holds the full lesson object during a session
-        let currentLessonIdx = 0;    // Index from generated LESSONS array
+        let currentLessonData = null;
+        let currentLessonIdx = 0;
         let gameActive = false;
-        let sessionStats = {};
-        let LESSONS = []; // This will be populated by generateLessons()
+        let sessionStats = { errors: [] }; // Initialize errors array here
+        let LESSONS = [];
         let lessonProgressChartInstance = null;
-        let lastActiveScreen = 'profileScreen'; // To return from progress screen
+        let lastActiveScreen = 'profileScreen';
 
         let three = { scene: null, camera: null, renderer: null, font: null, active3DChar: null, backgroundSphere: null };
 
         // --- Localization (i18n) ---
         const i18nData = {
-            en: { /* ... (same as before, adding new keys) ... */
-                "view_progress_btn": "View Progress", "progress_overview_title": "Progress Overview",
-                "select_lesson_for_chart": "Select Lesson for Detailed Chart:", "back_btn": "Back",
-                "lesson_length_approx": "Approx. Length:",
-                "L_NAME_HOME_ROW_BASIC": "Home Row Basics", "L_DESC_HOME_ROW_BASIC": "Practice initial home row keys with space.",
-                "L_NAME_HOME_ROW_EXTENDED": "Home Row Extended", "L_DESC_HOME_ROW_EXTENDED": "More home row keys and longer words.",
-                "L_NAME_HOME_ROW_FULL": "Full Home Row", "L_DESC_HOME_ROW_FULL": "Master the entire home row with varied words.",
-                "L_NAME_TOP_ROW_INTRO": "Top Row Introduction", "L_DESC_TOP_ROW_INTRO": "Introduce first keys from the top row.",
-                "L_NAME_NUMBERS_INTRO": "Numbers Introduction", "L_DESC_NUMBERS_INTRO": "Start learning the number keys.",
-                "L_NAME_SYMBOLS_PRACTICE": "Symbols Practice", "L_DESC_SYMBOLS_PRACTICE": "Practice common symbols.",
-                 // Profile Screen
-                "welcome_title": "Welcome to TypeMasterKids!", "profile_select_create": "Select or create a profile to begin:",
+            en: {
+                "welcome_title": "Welcome to TypeMasterKids Pro!", "profile_select_create": "Select or create a profile:",
                 "load_profile": "Load Profile", "create_new_profile": "Create New Profile",
                 "profile_name_placeholder": "Enter Profile Name", "keyboard_layout_label": "Keyboard Layout:",
                 "language_label": "UI Language:", "create_profile_btn": "Create Profile",
                 "export_progress_btn": "Export Progress", "import_progress_btn": "Import Progress",
-                // Lesson Select
                 "lesson_select_title": "Select a Lesson", "current_profile": "Profile", "back_to_profiles_btn": "Back to Profiles",
-                // Lesson Intro
-                "keys_to_practice": "Keys:", "lesson_objective": "Objective:",
+                "keys_to_practice": "Keys to Practice:", "lesson_objective": "Objective:",
                 "start_lesson_btn": "Start Lesson", "back_to_lessons_btn": "Back to Lessons",
-                // In-Game HUD
                 "profile": "Profile", "lesson": "Lesson", "score": "Score", "accuracy": "Accuracy", "wpm": "WPM", "target_criteria": "Target",
-                // Session Summary
                 "lesson_name": "Lesson", "final_score": "Score", "final_accuracy": "Accuracy", "final_wpm": "WPM",
                 "new_high_score_text": "🎉 New High Score! 🎉", "replay_lesson_btn": "Replay Lesson",
                 "next_lesson_btn": "Next Lesson", "return_to_lessons_btn": "Return to Lessons",
                 "lesson_passed": "Excellent! You've passed this lesson.", "lesson_failed": "Keep practicing! You'll get it.",
-                // General
                 "error_title": "Error", "db_error_msg": "Database could not be initialized. Please ensure IndexedDB is enabled.",
                 "font_error_msg": "3D Font could not be loaded. The game cannot start.", "locked": "Locked",
-                "target_format": "{0}% Acc, {1} WPM"
+                "target_format": "{0}% Acc, {1} WPM", "view_progress_btn": "View Progress",
+                "progress_overview_title": "Progress Overview", "select_lesson_for_chart": "Select Lesson for Detailed Chart:",
+                "back_btn": "Back", "lesson_length_approx": "Approx. Length:", "characters_unit": "characters",
+                "L_NAME_HOME_ROW_BASIC": "Home Row Basics {0}", "L_DESC_HOME_ROW_BASIC": "Practice keys: {0} with space.",
+                "L_NAME_HOME_ROW_EXTENDED": "Home Row Extended {0}", "L_DESC_HOME_ROW_EXTENDED": "More keys: {0} and longer words.",
+                "L_NAME_HOME_ROW_FULL": "Full Home Row", "L_DESC_HOME_ROW_FULL": "Master the entire home row with varied words.",
+                "L_NAME_TOP_ROW_INTRO": "Top Row Intro {0}", "L_DESC_TOP_ROW_INTRO": "Introduce top row keys: {0}.",
+                "L_NAME_BOTTOM_ROW_INTRO": "Bottom Row Intro {0}", "L_DESC_BOTTOM_ROW_INTRO": "Learn bottom row keys: {0}.",
+                "L_NAME_NUMBERS_INTRO": "Numbers Intro {0}", "L_DESC_NUMBERS_INTRO": "Start learning numbers: {0}.",
+                "L_NAME_SYMBOLS_PRACTICE": "Symbols Practice {0}", "L_DESC_SYMBOLS_PRACTICE": "Practice common symbols: {0}.",
+                "L_NAME_MIXED_PRACTICE": "Mixed Practice {0}", "L_DESC_MIXED_PRACTICE": "Review all learned keys."
             },
-            fr: { /* ... (similar additions) ... */
-                "view_progress_btn": "Voir Progrès", "progress_overview_title": "Aperçu des Progrès",
-                "select_lesson_for_chart": "Choisir Leçon pour Graphique Détaillé:", "back_btn": "Retour",
-                "lesson_length_approx": "Longueur Approx.:",
-                "L_NAME_HOME_ROW_BASIC": "Bases Ligne de Repos", "L_DESC_HOME_ROW_BASIC": "Pratiquez les premières touches de la ligne de repos avec espace.",
-                "L_NAME_HOME_ROW_EXTENDED": "Ligne de Repos Étendue", "L_DESC_HOME_ROW_EXTENDED": "Plus de touches de la ligne de repos et mots plus longs.",
-                "L_NAME_HOME_ROW_FULL": "Ligne de Repos Complète", "L_DESC_HOME_ROW_FULL": "Maîtrisez toute la ligne de repos avec mots variés.",
-                "L_NAME_TOP_ROW_INTRO": "Introduction Ligne Supérieure", "L_DESC_TOP_ROW_INTRO": "Introduire les premières touches de la ligne supérieure.",
-                "L_NAME_NUMBERS_INTRO": "Introduction Chiffres", "L_DESC_NUMBERS_INTRO": "Commencez à apprendre les chiffres.",
-                "L_NAME_SYMBOLS_PRACTICE": "Pratique Symboles", "L_DESC_SYMBOLS_PRACTICE": "Pratiquez les symboles courants.",
-                "welcome_title": "Bienvenue à TypeMasterKids !", "profile_select_create": "Sélectionnez ou créez un profil pour commencer :",
+            fr: {
+                "welcome_title": "Bienvenue à TypeMasterKids Pro !", "profile_select_create": "Sélectionnez ou créez un profil :",
                 "load_profile": "Charger Profil", "create_new_profile": "Créer Nouveau Profil",
                 "profile_name_placeholder": "Nom du Profil", "keyboard_layout_label": "Disposition Clavier:",
                 "language_label": "Langue Interface:", "create_profile_btn": "Créer Profil",
                 "export_progress_btn": "Exporter Progrès", "import_progress_btn": "Importer Progrès",
                 "lesson_select_title": "Choisissez une Leçon", "current_profile": "Profil", "back_to_profiles_btn": "Retour aux Profils",
-                "keys_to_practice": "Touches:", "lesson_objective": "Objectif:",
+                "keys_to_practice": "Touches à Pratiquer:", "lesson_objective": "Objectif:",
                 "start_lesson_btn": "Commencer Leçon", "back_to_lessons_btn": "Retour aux Leçons",
                 "profile": "Profil", "lesson": "Leçon", "score": "Score", "accuracy": "Précision", "wpm": "MPM", "target_criteria": "Cible",
                 "lesson_name": "Leçon", "final_score": "Score", "final_accuracy": "Précision", "final_wpm": "MPM",
                 "new_high_score_text": "🎉 Nouveau Record ! 🎉", "replay_lesson_btn": "Rejouer Leçon",
                 "next_lesson_btn": "Leçon Suivante", "return_to_lessons_btn": "Retour aux Leçons",
-                "lesson_passed": "Excellent ! Vous avez réussi cette leçon.", "lesson_failed": "Continuez à pratiquer ! Vous y arriverez.",
-                "error_title":"Erreur", "db_error_msg": "La base de données n'a pas pu être initialisée. Veuillez vérifier qu'IndexedDB est activé.",
-                "font_error_msg": "La police 3D n'a pas pu être chargée. Le jeu ne peut pas démarrer.", "locked": "Verrouillé",
-                "target_format": "{0}% Préc., {1} MPM"
+                "lesson_passed": "Excellent ! Leçon réussie.", "lesson_failed": "Continuez à pratiquer !",
+                "error_title":"Erreur", "db_error_msg": "Échec d'initialisation de la base de données.",
+                "font_error_msg": "Échec de chargement de la police 3D.", "locked": "Verrouillé",
+                "target_format": "{0}% Préc., {1} MPM", "view_progress_btn": "Voir Progrès",
+                "progress_overview_title": "Aperçu des Progrès", "select_lesson_for_chart": "Choisir Leçon pour Graphique:",
+                "back_btn": "Retour", "lesson_length_approx": "Longueur Approx.:", "characters_unit": "caractères",
+                "L_NAME_HOME_ROW_BASIC": "Bases Ligne Repos {0}", "L_DESC_HOME_ROW_BASIC": "Pratiquez touches : {0} avec espace.",
+                "L_NAME_HOME_ROW_EXTENDED": "Ligne Repos Étendue {0}", "L_DESC_HOME_ROW_EXTENDED": "Plus de touches : {0} et mots plus longs.",
+                "L_NAME_HOME_ROW_FULL": "Ligne Repos Complète", "L_DESC_HOME_ROW_FULL": "Maîtrisez toute la ligne de repos.",
+                "L_NAME_TOP_ROW_INTRO": "Intro Ligne Supérieure {0}", "L_DESC_TOP_ROW_INTRO": "Introduire touches supérieures : {0}.",
+                "L_NAME_BOTTOM_ROW_INTRO": "Intro Ligne Inférieure {0}", "L_DESC_BOTTOM_ROW_INTRO": "Apprendre touches inférieures : {0}.",
+                "L_NAME_NUMBERS_INTRO": "Intro Chiffres {0}", "L_DESC_NUMBERS_INTRO": "Commencez à apprendre les chiffres : {0}.",
+                "L_NAME_SYMBOLS_PRACTICE": "Pratique Symboles {0}", "L_DESC_SYMBOLS_PRACTICE": "Pratiquez les symboles : {0}.",
+                "L_NAME_MIXED_PRACTICE": "Pratique Mixte {0}", "L_DESC_MIXED_PRACTICE": "Révision de toutes les touches apprises."
             },
-            ar: { /* ... (similar additions) ... */
-                "view_progress_btn": "عرض التقدم", "progress_overview_title": "نظرة عامة على التقدم",
-                "select_lesson_for_chart": "اختر درسًا للرسم البياني التفصيلي:", "back_btn": "رجوع",
-                "lesson_length_approx": "الطول التقريبي:",
-                "L_NAME_HOME_ROW_BASIC": "أساسيات صف الارتكاز", "L_DESC_HOME_ROW_BASIC": "تمرن على مفاتيح صف الارتكاز الأولية مع المسافة.",
-                "L_NAME_HOME_ROW_EXTENDED": "صف الارتكاز الموسع", "L_DESC_HOME_ROW_EXTENDED": "المزيد من مفاتيح صف الارتكاز وكلمات أطول.",
-                "L_NAME_HOME_ROW_FULL": "صف الارتكاز الكامل", "L_DESC_HOME_ROW_FULL": "أتقن صف الارتكاز بأكمله بكلمات متنوعة.",
-                "L_NAME_TOP_ROW_INTRO": "مقدمة للصف العلوي", "L_DESC_TOP_ROW_INTRO": "مقدمة لأولى مفاتيح الصف العلوي.",
-                "L_NAME_NUMBERS_INTRO": "مقدمة للأرقام", "L_DESC_NUMBERS_INTRO": "ابدأ تعلم مفاتيح الأرقام.",
-                "L_NAME_SYMBOLS_PRACTICE": "تمرين الرموز", "L_DESC_SYMBOLS_PRACTICE": "تمرن على الرموز الشائعة.",
-                "welcome_title": "أهلاً بك في تايب ماستر كيدز!", "profile_select_create": "اختر أو أنشئ ملفًا شخصيًا للبدء:",
+            ar: {
+                "welcome_title": "أهلاً بك في تايب ماستر كيدز برو!", "profile_select_create": "اختر أو أنشئ ملفًا شخصيًا:",
                 "load_profile": "تحميل الملف", "create_new_profile": "إنشاء ملف جديد",
                 "profile_name_placeholder": "اسم الملف الشخصي", "keyboard_layout_label": "تخطيط لوحة المفاتيح:",
                 "language_label": "لغة الواجهة:", "create_profile_btn": "إنشاء ملف",
                 "export_progress_btn": "تصدير التقدم", "import_progress_btn": "استيراد التقدم",
                 "lesson_select_title": "اختر درسًا", "current_profile": "الملف الحالي", "back_to_profiles_btn": "العودة للملفات",
-                "keys_to_practice": "المفاتيح:", "lesson_objective": "الهدف:",
+                "keys_to_practice": "المفاتيح للتمرين:", "lesson_objective": "الهدف:",
                 "start_lesson_btn": "ابدأ الدرس", "back_to_lessons_btn": "العودة للدروس",
                 "profile": "الملف", "lesson": "الدرس", "score": "النقاط", "accuracy": "الدقة", "wpm": "كلمة/دقيقة", "target_criteria": "الهدف",
                 "lesson_name": "الدرس", "final_score": "النقاط", "final_accuracy": "الدقة", "final_wpm": "كلمة/دقيقة",
                 "new_high_score_text": "🎉 رقم قياسي جديد! 🎉", "replay_lesson_btn": "إعادة الدرس",
                 "next_lesson_btn": "الدرس التالي", "return_to_lessons_btn": "العودة للدروس",
-                "lesson_passed": "ممتاز! لقد تجاوزت هذا الدرس.", "lesson_failed": "استمر في التدريب! ستنجح.",
-                "error_title":"خطأ", "db_error_msg": "لم يتم تهيئة قاعدة البيانات. يرجى التأكد من تفعيل IndexedDB.",
-                "font_error_msg": "لا يمكن تحميل الخط ثلاثي الأبعاد. لا يمكن بدء اللعبة.", "locked": "مغلق",
-                "target_format": "{0}% دقة, {1} ك/د"
+                "lesson_passed": "ممتاز! لقد تجاوزت هذا الدرس.", "lesson_failed": "استمر في التدريب!",
+                "error_title":"خطأ", "db_error_msg": "لم يتم تهيئة قاعدة البيانات.",
+                "font_error_msg": "لا يمكن تحميل الخط ثلاثي الأبعاد.", "locked": "مغلق",
+                "target_format": "{0}% دقة, {1} ك/د", "view_progress_btn": "عرض التقدم",
+                "progress_overview_title": "نظرة عامة على التقدم", "select_lesson_for_chart": "اختر درسًا للرسم البياني:",
+                "back_btn": "رجوع", "lesson_length_approx": "الطول التقريبي:", "characters_unit": "حرفًا",
+                "L_NAME_HOME_ROW_BASIC": "أساسيات صف الارتكاز {0}", "L_DESC_HOME_ROW_BASIC": "تمرن على المفاتيح: {0} مع المسافة.",
+                "L_NAME_HOME_ROW_EXTENDED": "صف الارتكاز الموسع {0}", "L_DESC_HOME_ROW_EXTENDED": "المزيد من المفاتيح: {0} وكلمات أطول.",
+                "L_NAME_HOME_ROW_FULL": "صف الارتكاز الكامل", "L_DESC_HOME_ROW_FULL": "أتقن صف الارتكاز بأكمله.",
+                "L_NAME_TOP_ROW_INTRO": "مقدمة للصف العلوي {0}", "L_DESC_TOP_ROW_INTRO": "مقدمة لمفاتيح الصف العلوي: {0}.",
+                "L_NAME_BOTTOM_ROW_INTRO": "مقدمة للصف السفلي {0}", "L_DESC_BOTTOM_ROW_INTRO": "تعلم مفاتيح الصف السفلي: {0}.",
+                "L_NAME_NUMBERS_INTRO": "مقدمة للأرقام {0}", "L_DESC_NUMBERS_INTRO": "ابدأ تعلم الأرقام: {0}.",
+                "L_NAME_SYMBOLS_PRACTICE": "تمرين الرموز {0}", "L_DESC_SYMBOLS_PRACTICE": "تمرن على الرموز الشائعة: {0}.",
+                "L_NAME_MIXED_PRACTICE": "تمرين مختلط {0}", "L_DESC_MIXED_PRACTICE": "مراجعة جميع المفاتيح المتعلمة."
             }
         };
         let currentLang = 'en';
-
-        function _t(key, ...args) { /* ... (same as before) ... */
+        function _t(key, ...args) { /* Same */
             const store = i18nData[currentLang] || i18nData.en;
             let template = store[key] || key;
             if (args.length > 0) {
@@ -306,7 +295,7 @@
             }
             return template;
         }
-        function applyLocalization() { /* ... (same as before) ... */
+        function applyLocalization() { /* Same */
             document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = _t(el.dataset.i18n); });
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = _t(el.dataset.i18nPlaceholder); });
             document.documentElement.lang = currentLang;
@@ -315,62 +304,40 @@
             if(currentProfile) document.getElementById('progressProfileName').textContent = currentProfile.name;
         }
 
-        // --- Keyboard Layouts ---
         const KEYBOARDS = {
-            qwerty: { /* ... QWERTY definition ... */
-                name: "QWERTY",
-                home: "asdfghjkl;", home_left_keys: ['a','s','d','f','g'], home_right_keys: ['h','j','k','l',';'],
-                upper: "qwertyuiop", upper_left_keys: ['q','w','e','r','t'], upper_right_keys: ['y','u','i','o','p'],
-                lower: "zxcvbnm,.", lower_left_keys: ['z','x','c','v','b'], lower_right_keys: ['n','m',',','.'],
-                numbers: "1234567890", symbols_common: "!@#$%^&*()_+-=[]{}|;':\",./<>?" // Example
-            },
-            azerty: { /* ... AZERTY definition ... */
-                name: "AZERTY",
-                home: "qsdfghjklm", home_left_keys: ['q','s','d','f','g'], home_right_keys: ['h','j','k','l','m'],
-                upper: "azertyuiop", upper_left_keys: ['a','z','e','r','t','y'], upper_right_keys: ['u','i','o','p'], // Note: AZERTY 'y' is often left hand
-                lower: "wxcvbn,;", lower_left_keys: ['w','x','c','v','b'], lower_right_keys: ['n',',',';'], // Simplified
-                numbers: "&é\"'(-è_çà)=", symbols_common: "$ù*%µ£=+" // Example
-            },
-            arabic_101: { /* ... Arabic definition ... */
-                name: "Arabic (PC 101)",
-                home: "شسيبلاتنمكط", home_left_keys: ['ش','س','ي','ب','ل'], home_right_keys: ['ا','ت','ن','م','ك','ط'],
-                upper: "ضصثقفغعهخحجد", upper_left_keys: ['ض','ص','ث','ق','ف'], upper_right_keys: ['غ','ع','ه','خ','ح','ج','د'],
-                lower: "ئءؤرلاىةوزظ", lower_left_keys: ['ئ','ء','ؤ','ر','ذ'], lower_right_keys: ['لا','ى','ة','و','ز','ظ'], // 'لا' is one key
-                numbers: "١٢٣٤٥٦٧٨٩٠", symbols_common: "؟،٪٭؛:" // Example
-            }
+            qwerty: { name: "QWERTY", home: "asdfghjkl;", home_keys: "asdfghjkl;".split(''), upper: "qwertyuiop", upper_keys: "qwertyuiop".split(''), lower: "zxcvbnm,.", lower_keys: "zxcvbnm,.".split(''), numbers: "1234567890".split(''), symbols_shift: ")!@#$%^&*(".split(''), symbols_no_shift: "-=[]\\;',./`".split('') },
+            azerty: { name: "AZERTY", home: "qsdfghjklm", home_keys: "qsdfghjklm".split(''), upper: "azertyuiop", upper_keys: "azertyuiop".split(''), lower: "wxcvbn,;:", lower_keys: "wxcvbn,;:".split(''), numbers: "&é\"'(-è_çà".split(''), symbols_shift: ")1234567890°+".split(''), symbols_no_shift: "$ù*%µ£=+".split('') }, // Note: Number row shifted for AZERTY
+            arabic_101: { name: "Arabic (PC 101)", home: "شسيبلاتنمكط", home_keys: "شسيبلاتنمكط".split(''), upper: "ضصثقفغعهخحجد", upper_keys: "ضصثقفغعهخحجد".split(''), lower: "ئءؤرلاىةوزظ", lower_keys: "ئءؤرلاىةوزظ".split(''), numbers: "١٢٣٤٥٦٧٨٩٠".split(''), symbols_shift: "؛:|><؟{!ـ".split(''), symbols_no_shift: "ذ.,/’\"".split('') }
         };
-        // Corrected key access for lessons
-        const KB_MAPPING = {
-            qwerty: { f:'f', j:'j', d:'d', k:'k', s:'s', l:'l', a:'a', ';':';', g:'g', h:'h' /* ... more ... */ },
-            azerty: { f:'f', j:'j', d:'d', k:'k', s:'s', l:'l', a:'q', ';':'m', g:'g', h:'h' /* ... more ... */ }, // Map QWERTY pedagogical keys to AZERTY actual
-            arabic_101: { f:'ت', j:'ن', d:'ك', k:'م', s:'س', l:'ل', a:'ش', ';':'ط', g:'ب', h:'ا' /* ... more ... */ } // Example mapping
+        const KB_MAPPING_PEDAGOGICAL = { // Maps common QWERTY-based pedagogical keys to actual keys on other layouts
+            qwerty: { f:'f', j:'j', d:'d', k:'k', s:'s', l:'l', a:'a', ';':';', g:'g', h:'h', e:'e', i:'i', r:'r', u:'u', w:'w', o:'o', q:'q', p:'p', c:'c', ',':',', v:'v', m:'m', x:'x', '.':'.', z:'z', '/':"/" },
+            azerty: { f:'f', j:'j', d:'s', k:'k', s:'d', l:'l', a:'q', ';':'m', g:'g', h:'h', e:'e', i:'i', r:'r', u:'u', w:'a', o:'o', q:'z', p:'p', c:'c', ',':',', v:'v', m:';', x:'x', '.':':', z:'w', '/':"!" },
+            arabic_101: { f:'ب', j:'ل', d:'ي', k:'ا', s:'س', l:'ت', a:'ش', ';':'ك', g:'لا', h:'ن', e:'ث', i:'ه', r:'ق', u:'ع', w:'ص', o:'خ', q:'ض', p:'ح', c:'ؤ', ',':'و', v:'ر', m:'ة', x:'ء', '.':'ز', z:'ئ', '/':"ظ" }
         };
 
-        // --- Lesson Generation ---
         function generateLessons() {
-            const lessons = [];
+            LESSONS = []; // Clear previous lessons
             let lessonIdCounter = 1;
-            const kbName = currentProfile.keyboardLayout;
-            const kbMap = KB_MAPPING[kbName];
-            const keyboard = KEYBOARDS[kbName];
+            const kbLayoutName = currentProfile.keyboardLayout;
+            const pedagogicalMap = KB_MAPPING_PEDAGOGICAL[kbLayoutName];
+            const keyboardDef = KEYBOARDS[kbLayoutName];
 
-            const makeLesson = (nameKey, descKey, keyChars, numWords, minWordLen, maxWordLen, timeMod, accTarget, wpmTarget) => {
-                // Ensure all keyChars are valid for the current keyboard
-                const validKeyChars = keyChars.map(k => kbMap[k] || k).filter(kc => keyboard.home.includes(kc) || keyboard.upper.includes(kc) || keyboard.lower.includes(kc) || keyboard.numbers.includes(kc) || kc === ' ');
-                if (validKeyChars.length === 0 && !keyChars.includes(' ')) { // If only space, that's fine. otherwise error.
-                    console.warn(`Lesson "${nameKey}" has no valid keys for ${kbName}, skipping key char logic or using defaults.`);
-                }
-
-                lessons.push({
-                    id: `L${lessonIdCounter++}`, nameKey, descKey,
-                    getChars: () => validKeyChars.length > 0 ? [...new Set(validKeyChars)] : ['a',' '], // Fallback
+            const makeLesson = (nameKeyBase, keyGroupPedagogical, numWords, minWLen, maxWLen, timeMod, accT, wpmT, stage = "") => {
+                const actualKeys = [...new Set(keyGroupPedagogical.map(pk => pedagogicalMap[pk] || pk).filter(ak => ak))]; // Map and get unique valid keys
+                if (actualKeys.length === 0) { console.warn(`No valid keys for ${nameKeyBase} on ${kbLayoutName}`); return; }
+                
+                LESSONS.push({
+                    id: `L${lessonIdCounter++}`,
+                    nameKey: `${nameKeyBase}${stage ? '_S'+stage : ''}`, // Add stage to nameKey if provided
+                    descKey: `${nameKeyBase.replace('NAME','DESC')}${stage ? '_S'+stage : ''}`,
+                    getChars: () => actualKeys.concat([' ']), // Always include space
                     generateString: (chars, lessonParams) => {
                         let text = "";
                         const usableChars = chars.filter(c => c !== ' ');
-                        if (usableChars.length === 0) usableChars.push(kbMap['f'] || 'f'); // Absolute fallback
+                        if (usableChars.length === 0) return "error"; // Should not happen with new logic
                         for (let i = 0; i < lessonParams.numWords; i++) {
                             let word = "";
-                            const wordLen = Math.floor(Math.random() * (lessonParams.maxWordLen - lessonParams.minWordLen + 1)) + lessonParams.minWordLen;
+                            const wordLen = Math.floor(Math.random() * (lessonParams.maxWLen - lessonParams.minWLen + 1)) + lessonParams.minWLen;
                             for (let j = 0; j < wordLen; j++) {
                                 word += usableChars[Math.floor(Math.random() * usableChars.length)];
                             }
@@ -378,58 +345,71 @@
                         }
                         return text;
                     },
-                    numWords, minWordLen, maxWordLen,
-                    timePerChar: Math.max(1000, 3000 * timeMod), // Minimum 1s per char
-                    targetAccuracy: accTarget, targetWPM: wpmTarget
+                    numWords, minWLen, maxWLen,
+                    timePerChar: Math.max(800, 2500 * timeMod),
+                    targetAccuracy: accT, targetWPM: wpmT,
+                    keyCharsForDesc: actualKeys.join(', ') // Store for description
                 });
             };
 
-            // Level Group 1: Basic Home Row + Space
-            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['f', 'j', ' '], 10, 1, 3, 1.0, 85, 8); // fj + space
-            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['d', 'k', ' '], 12, 1, 3, 0.95, 87, 10); // dk + space
-            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['f', 'j', 'd', 'k', ' '], 15, 2, 4, 0.9, 88, 12);
+            // Home Row
+            makeLesson("L_NAME_HOME_ROW_BASIC", ['f', 'j'], 10, 1, 3, 1.0, 85, 8, "1");
+            makeLesson("L_NAME_HOME_ROW_BASIC", ['d', 'k'], 12, 1, 4, 0.95, 87, 10, "2");
+            makeLesson("L_NAME_HOME_ROW_BASIC", ['s', 'l'], 15, 2, 4, 0.9, 88, 12, "3");
+            makeLesson("L_NAME_HOME_ROW_BASIC", ['a', ';'], 18, 2, 5, 0.88, 90, 14, "4");
+            makeLesson("L_NAME_HOME_ROW_EXTENDED", ['f','j','d','k','s','l','a',';'], 20, 3, 5, 0.85, 90, 16, "1");
+            makeLesson("L_NAME_HOME_ROW_EXTENDED", ['g', 'h'], 18, 2, 5, 0.85, 90, 17, "2");
+            makeLesson("L_NAME_HOME_ROW_FULL", keyboardDef.home_keys, 25, 3, 6, 0.8, 92, 20);
 
-            // Level Group 2: Extended Home Row
-            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['s', 'l', ' '], 15, 2, 4, 0.9, 90, 14);
-            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['a', ';', ' '], 18, 2, 5, 0.85, 90, 15);
-            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['f','j','d','k','s','l','a',';',' '], 20, 3, 5, 0.8, 92, 18);
-
-            // Level Group 3: Full Home Row
-            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", ['g', 'h', ' '], 18, 3, 5, 0.8, 92, 20);
-            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", keyboard.home.split('').concat([' ']), 25, 3, 6, 0.75, 94, 22);
-            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", keyboard.home.split('').concat([' ']), 30, 4, 7, 0.7, 95, 25); // Longer words
-
-            // Programmatically add more lessons to reach ~50
-            // Example: Introduce top row keys gradually
-            let topRowKeys = [...keyboard.upper_left_keys, ...keyboard.upper_right_keys];
-            let currentActiveKeys = keyboard.home.split('').concat([' ']);
-            for(let i=0; i< topRowKeys.length; i+=2) {
-                let newKeys = topRowKeys.slice(i, i+2);
-                currentActiveKeys.push(...newKeys);
-                currentActiveKeys = [...new Set(currentActiveKeys)]; // Unique keys
-                makeLesson("L_NAME_TOP_ROW_INTRO", "L_DESC_TOP_ROW_INTRO", [...currentActiveKeys],
-                    20 + i*2, 3, 6, 0.7 - (i*0.02), 93, 20 + i);
-                 if (lessons.length >= 45) break; // Stop if we have enough, avoid infinite loop
+            // Top Row
+            const homeAndTop = [...keyboardDef.home_keys];
+            const topKeysPedagogical = ['e','i','r','u','w','o','q','p']; // Pedagogical order
+            for(let i=0; i< topKeysPedagogical.length; i+=2) {
+                homeAndTop.push(...topKeysPedagogical.slice(i, i+2).map(pk => pedagogicalMap[pk] || pk).filter(ak=>ak));
+                makeLesson("L_NAME_TOP_ROW_INTRO", [...new Set(homeAndTop)], 20 + i*2, 3, 6, 0.78 - (i*0.02), 92, 20 + i +1, `${i/2 + 1}`);
             }
-            // ... similar logic for bottom row, numbers, symbols ...
-            // Ensure at least 50, fill with variations if needed
-            while(lessons.length < 50) {
-                let lastLesson = lessons[lessons.length-1];
-                makeLesson(lastLesson.nameKey, lastLesson.descKey, lastLesson.getChars(),
-                    lastLesson.numWords + 2, lastLesson.minWordLen, lastLesson.maxWordLen + (lessons.length%2), // Vary word length
-                    Math.max(0.5, lastLesson.timePerChar/3000 * 0.98), // Gradually faster
-                    Math.min(98, lastLesson.targetAccuracy + 0.1), // Slightly higher acc
-                    lastLesson.targetWPM + 1); // Higher WPM
+            makeLesson("L_NAME_MIXED_PRACTICE", [...new Set(homeAndTop)], 30, 4, 7, 0.7, 93, 28, "TOP_FULL");
+
+            // Bottom Row
+            const homeTopBottom = [...homeAndTop];
+            const bottomKeysPedagogical = ['c',',','v','m','x','.','z','/'];
+            for(let i=0; i< bottomKeysPedagogical.length; i+=2) {
+                homeTopBottom.push(...bottomKeysPedagogical.slice(i, i+2).map(pk => pedagogicalMap[pk] || pk).filter(ak=>ak));
+                makeLesson("L_NAME_BOTTOM_ROW_INTRO", [...new Set(homeTopBottom)], 25 + i*2, 3, 6, 0.7 - (i*0.02), 93, 25 + i + 2, `${i/2 + 1}`);
             }
-            LESSONS = lessons;
+            makeLesson("L_NAME_MIXED_PRACTICE", [...new Set(homeTopBottom)], 35, 4, 8, 0.65, 94, 32, "BOTTOM_FULL");
+
+            // Numbers (simplified for now)
+            const allAlphaKeys = [...homeTopBottom];
+            const numberKeys = keyboardDef.numbers.slice(0,5); // First 5 numbers
+            allAlphaKeys.push(...numberKeys);
+            makeLesson("L_NAME_NUMBERS_INTRO", [...new Set(allAlphaKeys)], 25, 3, 7, 0.7, 90, 25, "1");
+            allAlphaKeys.push(...keyboardDef.numbers.slice(5,10)); // Next 5 numbers
+            makeLesson("L_NAME_NUMBERS_INTRO", [...new Set(allAlphaKeys)], 30, 4, 7, 0.68, 92, 28, "2");
+
+            // Fill to 50+ lessons with increasing difficulty
+            while(LESSONS.length < 50) {
+                const lastLesson = LESSONS[LESSONS.length-1];
+                const existingChars = lastLesson.getChars().filter(c => c !== ' ');
+                // Add one more random key from the full keyboard definition if possible
+                const allKeyboardChars = [...keyboardDef.home_keys, ...keyboardDef.upper_keys, ...keyboardDef.lower_keys, ...keyboardDef.numbers];
+                let newCharPool = allKeyboardChars.filter(c => !existingChars.includes(c));
+                if (newCharPool.length > 0) existingChars.push(newCharPool[Math.floor(Math.random() * newCharPool.length)]);
+
+                makeLesson("L_NAME_MIXED_PRACTICE", [...new Set(existingChars)],
+                    lastLesson.numWords + 1, lastLesson.minWLen, lastLesson.maxWLen + (LESSONS.length%3 === 0 ? 1 : 0),
+                    Math.max(0.4, lastLesson.timePerChar/2500 * 0.97),
+                    Math.min(98, lastLesson.targetAccuracy + 0.05),
+                    lastLesson.targetWPM + (LESSONS.length%5 === 0 ? 1 : 0.5),
+                    `AUTO_${LESSONS.length - 25}` // Stage for auto-generated part
+                );
+            }
         }
 
-
-        // --- IndexedDB Functions ---
-        // ... (initDB, saveProfileData, getProfileData, getAllProfilesData - largely same, but ensure lessonAttempts are saved) ...
-        function initDB() { /* same */
+        // DB Functions (initDB, saveProfileData, getProfileData, getAllProfilesData) - Same
+        function initDB() { /* Same */
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(APP_DB_NAME, 1); // Version can be incremented if schema changes
+                const request = indexedDB.open(APP_DB_NAME, 1);
                 request.onupgradeneeded = event => {
                     const store = event.target.result.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
                     store.createIndex('name', 'name', { unique: false });
@@ -438,7 +418,7 @@
                 request.onerror = event => { console.error('DB Error:', event.target.error); reject(_t("db_error_msg")); };
             });
         }
-        async function saveProfileData(profile) { /* ensure profile.progress.lessonAttempts is part of what's saved */
+        async function saveProfileData(profile) { /* Same */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readwrite');
             const store = tx.objectStore(PROFILES_STORE);
@@ -448,7 +428,7 @@
                 req.onerror = () => { console.error("Save Profile Error:", req.error); reject(req.error); }
             });
         }
-        async function getProfileData(profileId) { /* same */
+        async function getProfileData(profileId) { /* Same */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readonly');
             const store = tx.objectStore(PROFILES_STORE);
@@ -458,7 +438,7 @@
                 req.onerror = () => { console.error("Get Profile Error:", req.error); reject(req.error); }
             });
         }
-        async function getAllProfilesData() { /* same */
+        async function getAllProfilesData() { /* Same */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readonly');
             const store = tx.objectStore(PROFILES_STORE);
@@ -469,204 +449,69 @@
             });
         }
 
-
-        // --- Three.js Scene ---
-        // ... (largely same, maybe a cooler background) ...
-        function setupThreeScene() {
+        // Three.js Scene (setupThreeScene, animateThree, update3DChar, resize listener) - Same
+        function setupThreeScene() { /* Same with starfield */
             const container = document.getElementById('container');
             three.scene = new THREE.Scene();
-            // three.scene.background = new THREE.Color(0x1a237e); // Indigo Darken-4
             three.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-            three.camera.position.set(0, 1.5, 10); // Slightly further
+            three.camera.position.set(0, 1.5, 10);
             three.camera.lookAt(0,1,0);
-
-            three.renderer = new THREE.WebGLRenderer({ antialias: true, alpha:true }); // Alpha for potential CSS background
+            three.renderer = new THREE.WebGLRenderer({ antialias: true, alpha:true });
             three.renderer.setSize(window.innerWidth, window.innerHeight);
             three.renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(three.renderer.domElement);
-
-            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-            three.scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.9);
-            directional.position.set(8, 15, 10);
-            three.scene.add(directional);
-
-            // Dynamic Background (Starfield or similar)
-            const starGeo = new THREE.BufferGeometry();
-            const starVertices = [];
-            for(let i=0; i<10000; i++) {
-                const x = THREE.MathUtils.randFloatSpread(1500);
-                const y = THREE.MathUtils.randFloatSpread(1500);
-                const z = THREE.MathUtils.randFloatSpread(1500);
-                starVertices.push(x,y,z);
-            }
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7); three.scene.add(ambient);
+            const directional = new THREE.DirectionalLight(0xffffff, 0.9); directional.position.set(8, 15, 10); three.scene.add(directional);
+            const starGeo = new THREE.BufferGeometry(); const starVertices = [];
+            for(let i=0; i<10000; i++) { const x = THREE.MathUtils.randFloatSpread(1500); const y = THREE.MathUtils.randFloatSpread(1500); const z = THREE.MathUtils.randFloatSpread(1500); starVertices.push(x,y,z); }
             starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
             const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.7, transparent: true, opacity:0.7});
-            three.backgroundSphere = new THREE.Points(starGeo, starMat);
-            three.scene.add(three.backgroundSphere);
-
-
+            three.backgroundSphere = new THREE.Points(starGeo, starMat); three.scene.add(three.backgroundSphere);
             const fontLoader = new THREE.FontLoader();
-            return new Promise((resolve, reject) => {
-                fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
-                    (loadedFont) => { three.font = loadedFont; console.log("3D Font loaded."); resolve(); },
-                    undefined,
-                    (error) => { console.error('Font Load Error:', error); reject(_t("font_error_msg")); }
-                );
-            });
+            return new Promise((resolve, reject) => { fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (f) => { three.font = f; resolve(); }, undefined, (e) => { reject(_t("font_error_msg")); });});
         }
-        function animateThree() {
-            requestAnimationFrame(animateThree);
-            TWEEN.update();
-            if (three.backgroundSphere) {
-                three.backgroundSphere.rotation.y += 0.0002;
-                three.backgroundSphere.rotation.x += 0.0001;
-            }
-            if(three.renderer) three.renderer.render(three.scene, three.camera);
-        }
-        // update3DChar and window.addEventListener('resize'...) are the same
+        function animateThree() { /* Same */ requestAnimationFrame(animateThree); TWEEN.update(); if (three.backgroundSphere) { three.backgroundSphere.rotation.y += 0.0002; three.backgroundSphere.rotation.x += 0.0001;} if(three.renderer) three.renderer.render(three.scene, three.camera); }
+        function update3DChar(char) { /* Same */ if (!three.font || !three.scene) return; if (three.active3DChar) three.scene.remove(three.active3DChar); three.active3DChar = null; if (!char || char === ' ') { if(three.renderer) three.renderer.render(three.scene, three.camera); return; } try { const g = new THREE.TextGeometry(char, {font:three.font,size:1.2,height:0.25,curveSegments:5,bevelEnabled:true,bevelThickness:0.04,bevelSize:0.03,bevelSegments:3}); g.center(); const m = new THREE.MeshStandardMaterial({color:0xFFEB3B,emissive:0x443300}); three.active3DChar=new THREE.Mesh(g,m); three.active3DChar.position.set(0,1.8,0); three.scene.add(three.active3DChar); } catch(e){} if(three.renderer) three.renderer.render(three.scene, three.camera); }
+        window.addEventListener('resize', () => { /* Same */ if(!three.camera||!three.renderer)return; three.camera.aspect=window.innerWidth/window.innerHeight; three.camera.updateProjectionMatrix(); three.renderer.setSize(window.innerWidth,window.innerHeight); if(three.renderer)three.renderer.render(three.scene,three.camera);}, false);
 
-        function update3DChar(char) { /* same */
-            if (!three.font || !three.scene) return;
-            if (three.active3DChar) three.scene.remove(three.active3DChar);
-            three.active3DChar = null;
-            if (!char || char === ' ') { if(three.renderer) three.renderer.render(three.scene, three.camera); return; }
+        // UI Navigation (showUIScreen, displayProfileScreen, displayLessonSelectScreen)
+        function showUIScreen(screenId, callingScreen = null) { /* Same */ if(callingScreen) lastActiveScreen = callingScreen; document.querySelectorAll('.ui-overlay').forEach(s=>s.style.display='none'); document.getElementById(screenId).style.display='flex'; if(screenId !== 'gameScreenPlaceholder' && screenId !== 'hud' && screenId !== 'typingArea' && screenId !== 'charTimeIndicator') { gameActive=false; update3DChar(null);}}
+        async function displayProfileScreen() { /* Same */ try {const P=await getAllProfilesData();const sE=document.getElementById('profileSelect');sE.innerHTML=`<option value="">-- ${_t('profile_select_create')} --</option>`;P.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sE.appendChild(o);});document.getElementById('viewProgressBtnMain').style.display=P.length>0?'inline-block':'none';}catch(e){} const sL=localStorage.getItem('typeMasterLang')||navigator.language.split('-')[0];currentLang=i18nData[sL]?sL:'en';document.getElementById('uiLanguageSelect').value=currentLang;applyLocalization();showUIScreen('profileScreen');}
+        function displayLessonSelectScreen() { /* Same with generateLessons() */ if(!currentProfile){displayProfileScreen();return;} generateLessons(); document.getElementById('activeProfileName').textContent=currentProfile.name;const g=document.getElementById('lessonsGrid');g.innerHTML='';LESSONS.forEach((lC,i)=>{const b=document.createElement('button');b.classList.add('level-button');const lN=_t(lC.nameKey, lC.keyCharsForDesc||"")||`Lesson ${lC.id}`;const iU=i<=(currentProfile.progress.highestLessonUnlocked+1);let sT="";const lS=currentProfile.progress.lessonStats?currentProfile.progress.lessonStats[lC.id]:null;if(lS&&typeof lS.accuracy==='number'&&typeof lS.wpm==='number'){sT=`<small>${_t('target_format',lS.accuracy.toFixed(0),lS.wpm)}</small>`;} b.innerHTML=`${_t('lesson')} ${i+1}: ${lN} ${sT}`;if(iU){b.onclick=()=>displayLessonIntroScreen(i);}else{b.classList.add('locked');b.disabled=true;b.innerHTML+=` <small>(${_t('locked')})</small>`;} g.appendChild(b);});applyLocalization();showUIScreen('lessonSelectScreen','profileScreen');}
 
-            try {
-                const geometry = new THREE.TextGeometry(char, {
-                    font: three.font, size: 1.2, height: 0.25, curveSegments: 5,
-                    bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.03, bevelSegments: 3
-                });
-                geometry.center();
-                const material = new THREE.MeshStandardMaterial({ color: 0xFFEB3B, emissive: 0x443300 });
-                three.active3DChar = new THREE.Mesh(geometry, material);
-                three.active3DChar.position.set(0, 1.8, 0); // Slightly higher for better visibility
-                three.scene.add(three.active3DChar);
-            } catch(e) {
-                console.error("Error creating 3D text for char:", char, e);
-            }
-            if(three.renderer) three.renderer.render(three.scene, three.camera);
-        }
-        window.addEventListener('resize', () => { /* same */
-            if(!three.camera || !three.renderer) return;
-            three.camera.aspect = window.innerWidth / window.innerHeight;
-            three.camera.updateProjectionMatrix();
-            three.renderer.setSize(window.innerWidth, window.innerHeight);
-            if(three.renderer) three.renderer.render(three.scene, three.camera);
-        }, false);
+        function displayLessonIntroScreen(lessonIndex) { // FIXED
+            showUIScreen('lessonIntroScreen', 'lessonSelectScreen'); // Call this FIRST
 
-
-        // --- UI Navigation & Management ---
-        function showUIScreen(screenId, callingScreen = null) {
-            if(callingScreen) lastActiveScreen = callingScreen;
-            document.querySelectorAll('.ui-overlay').forEach(s => s.style.display = 'none');
-            document.getElementById(screenId).style.display = 'flex';
-            
-            const isGameScreen = false; // Game screen elements are managed directly by startGameSession
-            document.getElementById('hud').style.display = isGameScreen ? 'block' : 'none';
-            document.getElementById('typingArea').style.display = isGameScreen ? 'block' : 'none';
-            document.getElementById('charTimeIndicator').style.display = isGameScreen ? 'block' : 'none';
-
-            if(!isGameScreen) { gameActive = false; update3DChar(null); }
-        }
-
-        async function displayProfileScreen() { /* ... (largely same, add View Progress button logic) ... */
-            try {
-                const profiles = await getAllProfilesData();
-                const selectEl = document.getElementById('profileSelect');
-                selectEl.innerHTML = `<option value="">-- ${_t('profile_select_create')} --</option>`;
-                profiles.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.id;
-                    opt.textContent = p.name;
-                    selectEl.appendChild(opt);
-                });
-                 document.getElementById('viewProgressBtnMain').style.display = profiles.length > 0 ? 'inline-block' : 'none';
-            } catch(e) { console.error("Error populating profiles:", e); }
-            const storedLang = localStorage.getItem('typeMasterLang') || navigator.language.split('-')[0];
-            currentLang = i18nData[storedLang] ? storedLang : 'en';
-            document.getElementById('uiLanguageSelect').value = currentLang;
-            applyLocalization();
-            showUIScreen('profileScreen');
-        }
-
-        function displayLessonSelectScreen() { /* ... (populate from generated LESSONS) ... */
-            if (!currentProfile) { displayProfileScreen(); return; } // Safety
-            generateLessons(); // Regenerate based on current profile's keyboard
-            document.getElementById('activeProfileName').textContent = currentProfile.name;
-            const grid = document.getElementById('lessonsGrid');
-            grid.innerHTML = '';
-
-            LESSONS.forEach((lessonConf, index) => {
-                const button = document.createElement('button');
-                button.classList.add('level-button');
-                const lessonName = _t(lessonConf.nameKey) || `Lesson ${lessonConf.id}`;
-                const isUnlocked = index <= (currentProfile.progress.highestLessonUnlocked + 1);
-                
-                let statsText = "";
-                const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonConf.id] : null;
-                if(lessonStats && typeof lessonStats.accuracy === 'number' && typeof lessonStats.wpm === 'number') {
-                    statsText = `<small>${_t('target_format', lessonStats.accuracy.toFixed(0), lessonStats.wpm)}</small>`;
-                }
-
-                button.innerHTML = `${_t('lesson')} ${index + 1}: ${lessonName} ${statsText}`;
-
-                if (isUnlocked) {
-                    button.onclick = () => displayLessonIntroScreen(index);
-                } else {
-                    button.classList.add('locked');
-                    button.disabled = true;
-                    button.innerHTML += ` <small>(${_t('locked')})</small>`;
-                }
-                grid.appendChild(button);
-            });
-            applyLocalization();
-            showUIScreen('lessonSelectScreen', 'profileScreen');
-        }
-
-        function displayLessonIntroScreen(lessonIndex) { /* ... (use LESSONS[lessonIndex]) ... */
             currentLessonIdx = lessonIndex;
             const lessonConfig = LESSONS[currentLessonIdx];
+            if (!lessonConfig) {
+                console.error(`Lesson config not found for index: ${lessonIndex}. LESSONS length: ${LESSONS.length}`);
+                displayLessonSelectScreen(); return;
+            }
             
-            currentLessonData = { ...lessonConfig }; // shallow copy config
-            currentLessonData.actualChars = currentLessonData.getChars(); // Call the function
+            currentLessonData = { ...lessonConfig };
+            currentLessonData.actualChars = currentLessonData.getChars();
             currentLessonData.targetString = currentLessonData.generateString(currentLessonData.actualChars, currentLessonData);
 
-            document.getElementById('introLessonTitle').textContent = _t(currentLessonData.nameKey) || `Lesson ${currentLessonData.id}`;
-            document.getElementById('introLessonDescription').textContent = _t(currentLessonData.descKey) || "Practice typing.";
-            document.getElementById('introKeysList').textContent = currentLessonData.actualChars.filter(c => c !== ' ').join(', ');
-            document.getElementById('introObjective').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
-            document.getElementById('introLength').textContent = currentLessonData.targetString.length;
-            applyLocalization();
-            showUIScreen('lessonIntroScreen', 'lessonSelectScreen');
-        }
+            const introTitleEl = document.getElementById('introLessonTitle');
+            const introDescEl = document.getElementById('introLessonDescription');
+            const introKeysEl = document.getElementById('introKeysList');
+            const introObjectiveEl = document.getElementById('introObjective');
+            const introLengthEl = document.getElementById('introLength');
 
-        // --- Game Core Logic (startGameSession, updateTypingAreaDisplay, startCharTimer, handleCharacterInput, updateHUD, endGameSession) ---
-        // ... (largely same, ensure lessonAttempts is updated in endGameSession) ...
-        function startGameSession() { /* same, but update HUD lesson index/total */
-            gameActive = true;
-            currentTypedIdx = 0;
-            currentErrorsThisSession = 0;
-            totalKeyStrokesInSession = 0;
-            lessonStartTime = Date.now();
-            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0 };
-
-            document.getElementById('hudProfileName').textContent = currentProfile.name;
-            document.getElementById('hudLessonName').textContent = _t(currentLessonData.nameKey);
-            document.getElementById('hudLessonIndex').textContent = currentLessonIdx + 1;
-            document.getElementById('hudTotalLessons').textContent = LESSONS.length;
-            document.getElementById('hudTargetInfo').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
+            if (introTitleEl) introTitleEl.textContent = _t(currentLessonData.nameKey, currentLessonData.keyCharsForDesc || ""); else console.warn("#introLessonTitle not found");
+            if (introDescEl) introDescEl.textContent = _t(currentLessonData.descKey, currentLessonData.keyCharsForDesc || ""); else console.warn("#introLessonDescription not found");
+            if (introKeysEl) introKeysEl.textContent = currentLessonData.actualChars.filter(c => c !== ' ').join(', '); else console.warn("#introKeysList not found");
+            if (introObjectiveEl) introObjectiveEl.textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM); else console.warn("#introObjective not found");
+            if (introLengthEl) introLengthEl.textContent = currentLessonData.targetString.length; else console.warn("#introLength not found");
             
-            updateTypingAreaDisplay();
-            startCharTimer();
-            document.querySelectorAll('.ui-overlay').forEach(s => s.style.display = 'none'); // Hide all overlays
-            document.getElementById('hud').style.display = 'block';
-            document.getElementById('typingArea').style.display = 'block';
-            document.getElementById('charTimeIndicator').style.display = 'block';
-            window.focus();
+            applyLocalization(); // Re-apply for elements within the intro screen that might use data-i18n directly
         }
-        // updateTypingAreaDisplay, startCharTimer, handleCharacterInput, updateHUD are mostly the same
-         function updateTypingAreaDisplay() { /* same */
+
+        // Game Core Logic
+        function startGameSession() { /* Same */ gameActive=true;currentTypedIdx=0;currentErrorsThisSession=0;totalKeyStrokesInSession=0;lessonStartTime=Date.now();sessionStats={score:0,correctPresses:0,totalPresses:0, errors:[]};document.getElementById('hudProfileName').textContent=currentProfile.name;document.getElementById('hudLessonName').textContent=_t(currentLessonData.nameKey, currentLessonData.keyCharsForDesc||"");document.getElementById('hudLessonIndex').textContent=currentLessonIdx+1;document.getElementById('hudTotalLessons').textContent=LESSONS.length;document.getElementById('hudTargetInfo').textContent=_t('target_format',currentLessonData.targetAccuracy,currentLessonData.targetWPM);updateTypingAreaDisplay();startCharTimer();document.querySelectorAll('.ui-overlay').forEach(s=>s.style.display='none');document.getElementById('hud').style.display='block';document.getElementById('typingArea').style.display='block';document.getElementById('charTimeIndicator').style.display='block';window.focus();}
+        
+        function updateTypingAreaDisplay() { // MODIFIED for error highlighting
             const typingAreaEl = document.getElementById('typingArea');
             if (!currentLessonData || !currentLessonData.targetString) {
                 typingAreaEl.innerHTML = ""; update3DChar(null); return;
@@ -674,44 +519,26 @@
             let html = '';
             for(let i=0; i < currentLessonData.targetString.length; i++) {
                 const char = currentLessonData.targetString[i];
-                if (i < currentTypedIdx) {
-                    html += `<span class="typed-char-correct">${char === ' ' ? ' ' : char}</span>`;
+                const displayChar = char === ' ' ? ' ' : char;
+                if (i < currentTypedIdx) { // Already typed
+                    if (sessionStats.errors && sessionStats.errors[i]) {
+                        html += `<span class="typed-char-error">${displayChar}</span>`;
+                    } else {
+                        html += `<span class="typed-char-correct">${displayChar}</span>`;
+                    }
                 } else if (i === currentTypedIdx) {
-                    html += `<span class="current-target-char">${char === ' ' ? ' ' : char}</span>`;
+                    html += `<span class="current-target-char">${displayChar}</span>`;
                     update3DChar(char);
                 } else {
-                    html += `<span>${char === ' ' ? ' ' : char}</span>`;
+                    html += `<span>${displayChar}</span>`;
                 }
             }
             typingAreaEl.innerHTML = html;
             updateHUD();
         }
-        function startCharTimer() { /* same */
-            clearTimeout(charTimerTimeoutId);
-            const timerBar = document.getElementById('charTimeIndicatorBar');
-            timerBar.style.width = '100%';
-            timerBar.style.backgroundColor = '#66BB6A';
-
-            if (!gameActive || !currentLessonData || currentTypedIdx >= currentLessonData.targetString.length) return;
-
-            let charStartTime = Date.now();
-            function depleteBar() {
-                if (!gameActive) return;
-                let elapsed = Date.now() - charStartTime;
-                let progress = Math.max(0, 100 - (elapsed / currentLessonData.timePerChar * 100));
-                timerBar.style.width = progress + '%';
-                if (progress <= 20) timerBar.style.backgroundColor = '#EF5350'; // Red when low
-
-                if (progress <= 0) {
-                    handleCharacterInput(null, true);
-                } else {
-                    charTimerTimeoutId = setTimeout(depleteBar, 50);
-                }
-            }
-            charTimerTimeoutId = setTimeout(depleteBar, 50);
-        }
-
-        function handleCharacterInput(typedKey, timedOut = false) { /* same */
+        function startCharTimer() { /* Same */ clearTimeout(charTimerTimeoutId); const tB=document.getElementById('charTimeIndicatorBar'); tB.style.width='100%'; tB.style.backgroundColor='#66BB6A'; if(!gameActive||!currentLessonData||currentTypedIdx>=currentLessonData.targetString.length)return; let cST=Date.now(); function dB(){if(!gameActive)return; let e=Date.now()-cST; let p=Math.max(0,100-(e/currentLessonData.timePerChar*100)); tB.style.width=p+'%'; if(p<=20)tB.style.backgroundColor='#EF5350'; if(p<=0){handleCharacterInput(null,true);}else{charTimerTimeoutId=setTimeout(dB,50);}} charTimerTimeoutId=setTimeout(dB,50);}
+        
+        function handleCharacterInput(typedKey, timedOut = false) { // MODIFIED for error recording
             if (!gameActive || !currentLessonData || currentTypedIdx >= currentLessonData.targetString.length) return;
             
             clearTimeout(charTimerTimeoutId);
@@ -721,251 +548,53 @@
 
             if (timedOut) {
                 currentErrorsThisSession++; sessionStats.score -= 2;
+                sessionStats.errors[currentTypedIdx] = true; // Record error
                 if(three.active3DChar) new TWEEN.Tween(three.active3DChar.rotation).to({y: three.active3DChar.rotation.y + Math.PI/8},100).yoyo(true).repeat(1).start();
             } else if (typedKey === targetChar) {
                 sessionStats.correctPresses++; sessionStats.score += 10;
+                sessionStats.errors[currentTypedIdx] = false; // Record correct
                 if(three.active3DChar) new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.3, z:1.3 }, 100).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.0, z:1.0 }, 200).easing(TWEEN.Easing.Bounce.Out)).start();
             } else {
                 currentErrorsThisSession++; sessionStats.score -= 5;
+                sessionStats.errors[currentTypedIdx] = true; // Record error
                 if(three.active3DChar) new TWEEN.Tween(three.active3DChar.material.color).to({r:1, g:0, b:0}, 100).yoyo(true).repeat(1).onUpdate(c => three.active3DChar.material.color.setRGB(c.r, c.g, c.b)).start();
             }
             
-            currentTypedIdx++;
+            currentTypedIdx++; // Move to next character *after* processing current
+            updateTypingAreaDisplay(); // Update display *before* starting timer for next char (if any)
+
             if (currentTypedIdx >= currentLessonData.targetString.length) {
                 endGameSession();
             } else {
-                updateTypingAreaDisplay();
                 startCharTimer();
             }
         }
-        function updateHUD() { /* same */
-            document.getElementById('hudScore').textContent = sessionStats.score;
-            const accuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
-            document.getElementById('hudAccuracy').textContent = accuracy.toFixed(0) + '%';
-            const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
-            const wpm = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0;
-            document.getElementById('hudWPM').textContent = wpm;
-        }
+        function updateHUD() { /* Same */ document.getElementById('hudScore').textContent=sessionStats.score; const acc=sessionStats.totalPresses>0?(sessionStats.correctPresses/sessionStats.totalPresses*100):100; document.getElementById('hudAccuracy').textContent=acc.toFixed(0)+'%'; const tEM=(Date.now()-lessonStartTime)/60000; const wpm=tEM>0?Math.round((sessionStats.correctPresses/5)/tEM):0; document.getElementById('hudWPM').textContent=wpm;}
+        async function endGameSession() { /* Same */ gameActive=false;clearTimeout(charTimerTimeoutId);update3DChar(null);const fA=sessionStats.totalPresses>0?(sessionStats.correctPresses/sessionStats.totalPresses*100):100;const tEM=(Date.now()-lessonStartTime)/60000;const fW=tEM>0?Math.round((sessionStats.correctPresses/5)/tEM):0;if(!currentProfile.progress.lessonStats)currentProfile.progress.lessonStats={};const lId=currentLessonData.id;const lS=currentProfile.progress.lessonStats[lId]||{score:-Infinity,accuracy:0,wpm:0,attempts:[]};let nHS=false;if(sessionStats.score>lS.score){lS.score=sessionStats.score;nHS=true;}lS.accuracy=Math.max(lS.accuracy,fA);lS.wpm=Math.max(lS.wpm,fW);if(!lS.attempts)lS.attempts=[];lS.attempts.push({date:Date.now(),wpm:fW,accuracy:fA,score:sessionStats.score});if(lS.attempts.length>20)lS.attempts.shift();currentProfile.progress.lessonStats[lId]=lS;const p=fA>=currentLessonData.targetAccuracy&&fW>=currentLessonData.targetWPM;if(currentLessonIdx>=(currentProfile.progress.highestLessonUnlocked||-1)){currentProfile.progress.highestLessonUnlocked=currentLessonIdx;}try{await saveProfileData(currentProfile);}catch(e){}document.getElementById('summaryTitleText').textContent=p?_t('lesson_passed'):_t('lesson_failed');document.getElementById('summaryLessonName').textContent=_t(currentLessonData.nameKey, currentLessonData.keyCharsForDesc || "");document.getElementById('summaryScore').textContent=sessionStats.score;document.getElementById('summaryAccuracy').textContent=fA.toFixed(1);document.getElementById('summaryWPM').textContent=fW;document.getElementById('summaryNewHighScoreText').style.display=nHS?'block':'none';document.getElementById('summaryCriteriaFeedback').textContent=`${_t('target_criteria')}: ${_t('target_format',currentLessonData.targetAccuracy,currentLessonData.targetWPM)}`;document.getElementById('proceedToNextLessonBtn').style.display=(p&¤tLessonIdx<LESSONS.length-1)?'inline-block':'none';applyLocalization();showUIScreen('sessionSummaryScreen','lessonSelectScreen');}
 
-        async function endGameSession() { /* Update for lessonAttempts array */
-            gameActive = false;
-            clearTimeout(charTimerTimeoutId);
-            update3DChar(null);
+        // Progress Charting (displayProgressScreen, renderLessonChart) - Same
+        function displayProgressScreen() { /* Same */ if(!currentProfile)return;generateLessons();document.getElementById('progressProfileName').textContent=currentProfile.name;const sE=document.getElementById('lessonChartSelect');sE.innerHTML='';LESSONS.forEach((l,i)=>{const o=document.createElement('option');o.value=l.id;o.textContent=`${_t('lesson')} ${i+1}: ${_t(l.nameKey, l.keyCharsForDesc || "")||l.id}`;sE.appendChild(o);});sE.onchange=()=>renderLessonChart(sE.value);if(LESSONS.length>0)renderLessonChart(LESSONS[0].id);applyLocalization();showUIScreen('progressScreen',lastActiveScreen);}
+        function renderLessonChart(lessonId) { /* Same */ const lS=currentProfile.progress.lessonStats?currentProfile.progress.lessonStats[lessonId]:null;const atts=(lS&&lS.attempts)?lS.attempts:[];const labs=atts.map((a,i)=>`Attempt ${i+1}`);const wD=atts.map(a=>a.wpm);const aD=atts.map(a=>a.accuracy);if(lessonProgressChartInstance){lessonProgressChartInstance.destroy();}const ctx=document.getElementById('lessonProgressChart').getContext('2d');lessonProgressChartInstance=new Chart(ctx,{type:'line',data:{labels:labs,datasets:[{label:'WPM',data:wD,borderColor:'rgb(75,192,192)',tension:0.1,yAxisID:'yWPM'},{label:'Accuracy (%)',data:aD,borderColor:'rgb(255,99,132)',tension:0.1,yAxisID:'yAccuracy'}]},options:{responsive:true,maintainAspectRatio:false,scales:{yWPM:{type:'linear',display:true,position:'left',title:{display:true,text:'WPM'},ticks:{color:'#ECEFF1'}},yAccuracy:{type:'linear',display:true,position:'right',min:0,max:100,title:{display:true,text:'Accuracy (%)'},grid:{drawOnChartArea:false},ticks:{color:'#ECEFF1'}}},plugins:{legend:{labels:{color:'#ECEFF1'}}},color:'#ECEFF1'}});}
 
-            const finalAccuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
-            const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
-            const finalWPM = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0;
+        // Event Handlers (UI Languages, Profile Create/Load, Navigation, Import/Export, Keydown) - Same
+        document.getElementById('uiLanguageSelect').addEventListener('change',async(e)=>{currentLang=e.target.value;localStorage.setItem('typeMasterLang',currentLang);applyLocalization();if(currentProfile){currentProfile.language=currentLang;try{await saveProfileData(currentProfile);}catch(err){}}});
+        document.getElementById('createProfileBtn').addEventListener('click',async()=>{const n=document.getElementById('newProfileInputName').value.trim();if(!n){alert(_t("profile_name_placeholder"));return;}const l=document.getElementById('keyboardLayoutSelect').value;const g=document.getElementById('uiLanguageSelect').value;const id=n.toLowerCase().replace(/[^a-z0-9]/g,'-')+'-'+Date.now();currentProfile={id,name:n,keyboardLayout:l,language:g,progress:{highestLessonUnlocked:-1,lessonStats:{}}};try{await saveProfileData(currentProfile);currentLang=g;applyLocalization();generateLessons();displayLessonSelectScreen();}catch(e){alert("Error creating profile. "+(e.message||""));}});
+        document.getElementById('loadProfileBtn').addEventListener('click',async()=>{const id=document.getElementById('profileSelect').value;if(!id){alert(_t("profile_select_create"));return;}try{currentProfile=await getProfileData(id);if(currentProfile){currentLang=currentProfile.language||'en';document.getElementById('uiLanguageSelect').value=currentLang;applyLocalization();generateLessons();displayLessonSelectScreen();document.getElementById('viewProgressBtnMain').style.display='inline-block';}else{alert("Profile not found.");document.getElementById('viewProgressBtnMain').style.display='none';}}catch(e){alert("Error loading profile.");document.getElementById('viewProgressBtnMain').style.display='none';}});
+        document.getElementById('viewProgressBtnMain').addEventListener('click',()=>displayProgressScreen());
+        document.getElementById('viewProgressBtnLessons').addEventListener('click',()=>displayProgressScreen());
+        document.getElementById('backFromProgressBtn').addEventListener('click',()=>showUIScreen(lastActiveScreen||'lessonSelectScreen'));
+        document.getElementById('backToProfilesBtn').addEventListener('click',()=>showUIScreen('profileScreen','lessonSelectScreen'));
+        document.getElementById('startLessonBtn').addEventListener('click',startGameSession);
+        document.getElementById('backToLessonsBtn').addEventListener('click',()=>showUIScreen('lessonSelectScreen','lessonIntroScreen'));
+        document.getElementById('replayCurrentLessonBtn').addEventListener('click',()=>displayLessonIntroScreen(currentLessonIdx));
+        document.getElementById('proceedToNextLessonBtn').addEventListener('click',()=>{if(currentLessonIdx<LESSONS.length-1){displayLessonIntroScreen(currentLessonIdx+1);}});
+        document.getElementById('returnToLessonSelectBtn').addEventListener('click',()=>showUIScreen('lessonSelectScreen','sessionSummaryScreen'));
+        document.getElementById('exportProgressBtn').addEventListener('click',async()=>{try{const d=await getAllProfilesData();if(!d||d.length===0){alert("No data to export.");return;}const j=JSON.stringify(d,null,2);const b=new Blob([j],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='typeMasterKidsPro_progress.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);}catch(e){alert("Error exporting data.");}});
+        document.getElementById('importProgressFile').addEventListener('change',async(ev)=>{const f=ev.target.files[0];if(!f)return;const t=await f.text();try{const pTI=JSON.parse(t);if(Array.isArray(pTI)){let iC=0;for(const p of pTI){if(p.id&&p.name&&p.keyboardLayout&&p.progress){await saveProfileData(p);iC++;}else{}}alert(`${iC} profiles imported/updated.`);displayProfileScreen();}else{alert("Invalid file format.");}}catch(e){alert("Error importing file: "+e.message);}ev.target.value=null;});
+        window.addEventListener('keydown',(ev)=>{if(!gameActive)return;if(ev.metaKey||ev.ctrlKey||ev.altKey)return;if(ev.key.length>1&&ev.key!==' '&&ev.key!=='Backspace')return;ev.preventDefault();handleCharacterInput(ev.key);});
 
-            // Update overall lesson stats (best score, etc.)
-            if (!currentProfile.progress.lessonStats) currentProfile.progress.lessonStats = {};
-            const lessonId = currentLessonData.id;
-            const lessonStats = currentProfile.progress.lessonStats[lessonId] || { score: -Infinity, accuracy: 0, wpm: 0, attempts: [] };
-            
-            let newHighScore = false;
-            if (sessionStats.score > lessonStats.score) {
-                lessonStats.score = sessionStats.score;
-                newHighScore = true;
-            }
-            lessonStats.accuracy = Math.max(lessonStats.accuracy, finalAccuracy);
-            lessonStats.wpm = Math.max(lessonStats.wpm, finalWPM);
-            
-            // Add current attempt to history
-            if (!lessonStats.attempts) lessonStats.attempts = [];
-            lessonStats.attempts.push({ date: Date.now(), wpm: finalWPM, accuracy: finalAccuracy, score: sessionStats.score });
-            if (lessonStats.attempts.length > 20) lessonStats.attempts.shift(); // Keep last 20 attempts
-
-            currentProfile.progress.lessonStats[lessonId] = lessonStats;
-
-            const passed = finalAccuracy >= currentLessonData.targetAccuracy && finalWPM >= currentLessonData.targetWPM;
-            if (passed && currentLessonIdx >= (currentProfile.progress.highestLessonUnlocked || -1) ) {
-                currentProfile.progress.highestLessonUnlocked = currentLessonIdx;
-            }
-            
-            try { await saveProfileData(currentProfile); }
-            catch (e) { console.error("Error saving profile post-session:", e); }
-
-            document.getElementById('summaryTitleText').textContent = passed ? _t('lesson_passed') : _t('lesson_failed');
-            document.getElementById('summaryLessonName').textContent = _t(currentLessonData.nameKey);
-            document.getElementById('summaryScore').textContent = sessionStats.score;
-            document.getElementById('summaryAccuracy').textContent = finalAccuracy.toFixed(1);
-            document.getElementById('summaryWPM').textContent = finalWPM;
-            document.getElementById('summaryNewHighScoreText').style.display = newHighScore ? 'block' : 'none';
-            document.getElementById('summaryCriteriaFeedback').textContent = `${_t('target_criteria')}: ${_t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM)}`;
-            document.getElementById('proceedToNextLessonBtn').style.display = (passed && currentLessonIdx < LESSONS.length - 1) ? 'inline-block' : 'none';
-            
-            applyLocalization();
-            showUIScreen('sessionSummaryScreen', 'lessonSelectScreen'); // Assuming game came from lesson select
-        }
-
-        // --- Progress Charting ---
-        function displayProgressScreen() {
-            if (!currentProfile) return;
-            generateLessons(); // Ensure LESSONS is populated for names
-            document.getElementById('progressProfileName').textContent = currentProfile.name;
-            const selectEl = document.getElementById('lessonChartSelect');
-            selectEl.innerHTML = '';
-            LESSONS.forEach((lesson, index) => {
-                const opt = document.createElement('option');
-                opt.value = lesson.id;
-                opt.textContent = `${_t('lesson')} ${index + 1}: ${_t(lesson.nameKey) || lesson.id}`;
-                selectEl.appendChild(opt);
-            });
-            selectEl.onchange = () => renderLessonChart(selectEl.value);
-            if (LESSONS.length > 0) renderLessonChart(LESSONS[0].id); // Render first lesson chart by default
-            applyLocalization();
-            showUIScreen('progressScreen', lastActiveScreen);
-        }
-
-        function renderLessonChart(lessonId) {
-            const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonId] : null;
-            const attempts = (lessonStats && lessonStats.attempts) ? lessonStats.attempts : [];
-
-            const labels = attempts.map((att, i) => `Attempt ${i+1}`); // Could use dates: new Date(att.date).toLocaleDateString()
-            const wpmData = attempts.map(att => att.wpm);
-            const accuracyData = attempts.map(att => att.accuracy);
-
-            if (lessonProgressChartInstance) {
-                lessonProgressChartInstance.destroy();
-            }
-            const ctx = document.getElementById('lessonProgressChart').getContext('2d');
-            lessonProgressChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'WPM', data: wpmData, borderColor: 'rgb(75, 192, 192)', tension: 0.1, yAxisID: 'yWPM' },
-                        { label: 'Accuracy (%)', data: accuracyData, borderColor: 'rgb(255, 99, 132)', tension: 0.1, yAxisID: 'yAccuracy' }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        yWPM: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'WPM'} },
-                        yAccuracy: { type: 'linear', display: true, position: 'right', min: 0, max: 100, title: { display: true, text: 'Accuracy (%)'}, grid: { drawOnChartArea: false } }
-                    },
-                    plugins: { legend: { labels: { color: '#ECEFF1' } } },
-                    color: '#ECEFF1' // For axes and title
-                }
-            });
-        }
-
-
-        // --- Event Handlers & Input ---
-        // ... (Existing button handlers, create/load profile handlers, keydown listener)
-        // Add handlers for new progress buttons
-        document.getElementById('viewProgressBtnMain').addEventListener('click', displayProgressScreen);
-        document.getElementById('viewProgressBtnLessons').addEventListener('click', displayProgressScreen);
-        document.getElementById('backFromProgressBtn').addEventListener('click', () => showUIScreen(lastActiveScreen || 'lessonSelectScreen'));
-        // ... (createProfileBtn, loadProfileBtn, etc. - largely same)
-         document.getElementById('uiLanguageSelect').addEventListener('change', async (e) => { /* same */
-            currentLang = e.target.value;
-            localStorage.setItem('typeMasterLang', currentLang);
-            applyLocalization();
-            if(currentProfile) {
-                currentProfile.language = currentLang;
-                try { await saveProfileData(currentProfile); } catch (err) { console.error("Error saving lang pref:", err); }
-            }
-        });
-
-        document.getElementById('createProfileBtn').addEventListener('click', async () => { /* same, ensure lessonAttempts:[] is part of initial progress */
-            const name = document.getElementById('newProfileInputName').value.trim();
-            if (!name) { alert(_t("profile_name_placeholder")); return; }
-            const layout = document.getElementById('keyboardLayoutSelect').value;
-            const lang = document.getElementById('uiLanguageSelect').value;
-            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-
-            currentProfile = {
-                id, name, keyboardLayout: layout, language: lang,
-                progress: { highestLessonUnlocked: -1, lessonStats: {} } // lessonStats will hold { score, accuracy, wpm, attempts: [] }
-            };
-            try {
-                await saveProfileData(currentProfile);
-                currentLang = lang;
-                applyLocalization();
-                generateLessons(); // Generate lessons based on new profile's layout
-                displayLessonSelectScreen();
-            } catch (e) { console.error("Create profile error:", e); alert("Error creating profile. " + (e.message || ""));}
-        });
-        
-        document.getElementById('loadProfileBtn').addEventListener('click', async () => { /* same */
-            const id = document.getElementById('profileSelect').value;
-            if (!id) { alert(_t("profile_select_create")); return; }
-            try {
-                currentProfile = await getProfileData(id);
-                if (currentProfile) {
-                    currentLang = currentProfile.language || 'en';
-                    document.getElementById('uiLanguageSelect').value = currentLang;
-                    applyLocalization();
-                    generateLessons(); // Generate lessons based on loaded profile's layout
-                    displayLessonSelectScreen();
-                    document.getElementById('viewProgressBtnMain').style.display = 'inline-block'; // Show progress button
-                } else { alert("Profile not found."); document.getElementById('viewProgressBtnMain').style.display = 'none';}
-            } catch(e) { console.error("Load profile error:", e); alert("Error loading profile."); document.getElementById('viewProgressBtnMain').style.display = 'none';}
-        });
-
-        document.getElementById('backToProfilesBtn').addEventListener('click', () => showUIScreen('profileScreen', 'lessonSelectScreen'));
-        document.getElementById('startLessonBtn').addEventListener('click', startGameSession);
-        document.getElementById('backToLessonsBtn').addEventListener('click', () => showUIScreen('lessonSelectScreen', 'lessonIntroScreen'));
-        document.getElementById('replayCurrentLessonBtn').addEventListener('click', () => displayLessonIntroScreen(currentLessonIdx));
-        document.getElementById('proceedToNextLessonBtn').addEventListener('click', () => {
-            if (currentLessonIdx < LESSONS.length - 1) {
-                displayLessonIntroScreen(currentLessonIdx + 1);
-            }
-        });
-        document.getElementById('returnToLessonSelectBtn').addEventListener('click', () => showUIScreen('lessonSelectScreen', 'sessionSummaryScreen'));
-
-        document.getElementById('exportProgressBtn').addEventListener('click', async () => { /* same */
-            try {
-                const data = await getAllProfilesData();
-                if (!data || data.length === 0) { alert("No data to export."); return;}
-                const json = JSON.stringify(data, null, 2);
-                const blob = new Blob([json], {type: 'application/json'});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob); a.download = 'typeMasterKidsPro_progress.json';
-                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
-            } catch(e) { console.error("Export error:", e); alert("Error exporting data."); }
-        });
-        document.getElementById('importProgressFile').addEventListener('change', async (event) => { /* same */
-            const file = event.target.files[0]; if (!file) return;
-            const text = await file.text();
-            try {
-                const profilesToImport = JSON.parse(text);
-                if(Array.isArray(profilesToImport)) {
-                    let importCount = 0;
-                    for(const p of profilesToImport) {
-                        if(p.id && p.name && p.keyboardLayout && p.progress) {
-                             await saveProfileData(p); importCount++;
-                        } else { console.warn("Skipping invalid profile during import:", p); }
-                    }
-                    alert(`${importCount} profiles imported/updated.`);
-                    displayProfileScreen(); // Refresh list
-                } else { alert("Invalid file format."); }
-            } catch (e) { console.error("Import error:", e); alert("Error importing file: " + e.message); }
-            event.target.value = null;
-        });
-
-        window.addEventListener('keydown', (event) => { /* same */
-            if (!gameActive) return;
-            if (event.metaKey || event.ctrlKey || event.altKey) return; // Ignore combinations with modifier keys
-            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') return;
-            event.preventDefault();
-            handleCharacterInput(event.key);
-        });
-
-
-        // --- Application Initialization ---
-        async function initializeApp() {
-            try {
-                await initDB();
-                await setupThreeScene();
-                animateThree();
-                displayProfileScreen(); // Start here
-            } catch (error) {
-                console.error("App Init Error:", error);
-                document.body.innerHTML = `<div class="ui-overlay" style="display:flex;"><div class="ui-panel"><h2>${_t('error_title')}</h2><p>${error || "Unknown initialization error."}</p></div></div>`;
-            }
-        }
-
+        // App Initialization
+        async function initializeApp() {try{await initDB();await setupThreeScene();animateThree();displayProfileScreen();}catch(error){document.body.innerHTML=`<div class="ui-overlay" style="display:flex;"><div class="ui-panel"><h2>${_t('error_title')}</h2><p>${error||"Unknown initialization error."}</p></div></div>`;}}
         initializeApp();
     </script>
 </body>
