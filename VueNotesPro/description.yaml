@@ -1,0 +1,9 @@
+author: ParisNeo
+category: Productivity
+creation_date: 2023-10-27 # Assuming today's date
+last_update_date: 2023-10-27
+description: A feature-rich, responsive note-taking web application built with Vue.js and Tailwind CSS. Supports categories, subcategories, Markdown rendering, import/export, social sharing, and client-side encryption for secret notes. All data is stored locally using IndexedDB.
+disclaimer: This application stores data, including potentially encrypted secret notes, locally in your browser's IndexedDB. The master key for secret notes is NOT stored. Ensure you remember your master key, as there is no recovery mechanism. Use at your own risk.
+model: Claude 3 Opus (via self-generation, with specifications provided by ParisNeo)
+name: VueNotesPro
+version: 1.0

@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VueNotesPro - Advanced Note Taking</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Marked.js (Markdown Parser) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- DOMPurify (XSS Sanitizer) CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <!-- CryptoJS (Encryption) CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <!-- UUID CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+
+    <style>
+        /* Basic styling for a pleasant UI */
+        body {
+            font-family: 'Inter', sans-serif; /* Using a common sans-serif font, Tailwind will handle most */
+            overscroll-behavior-y: contain; /* Prevents pull-to-refresh on mobile */
+        }
+        /* For Webkit scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        [v-cloak] { display: none; }
+        .markdown-content p { margin-bottom: 0.5em; }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
+        .markdown-content ul, .markdown-content ol { margin-left: 1.5em; margin-bottom: 0.5em; }
+        .markdown-content pre { background-color: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto;}
+        .markdown-content code { background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        .markdown-content pre code { background-color: transparent; padding: 0; }
+        .markdown-content blockquote { border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0; color: #666; }
+        .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+        .markdown-content th, .markdown-content td { border: 1px solid #ddd; padding: 8px; }
+        .markdown-content th { background-color: #f9f9f9; }
+    </style>
+    <script>
+        // Tailwind Customizations (optional, can be extended)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'rgb(var(--color-primary) / <alpha-value>)',
+                        secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
+                        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+                        light: 'rgb(var(--color-light) / <alpha-value>)',
+                        dark: 'rgb(var(--color-dark) / <alpha-value>)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-in-left': 'slideInLeft 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        },
+                        slideInLeft: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(0)' },
+                        }
+                    }
+                }
+            },
+            plugins: [
+                // require('@tailwindcss/forms'), // If we had a build step
+            ]
+        }
+    </script>
+</head>
+<body class="bg-light text-dark antialiased">
+    <div id="app" v-cloak class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-primary text-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <button @click="toggleSidebar" class="lg:hidden mr-3 text-xl p-2 hover:bg-primary-dark rounded-full">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="text-2xl font-bold tracking-tight">
+                        <i class="fas fa-feather-alt mr-2"></i>VueNotesPro
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button @click="showImportExportModal = true" title="Import/Export Notes" class="p-2 hover:bg-primary-dark rounded-full">
+                        <i class="fas fa-file-import"></i>
+                    </button>
+                    <button @click="toggleTheme" title="Toggle Theme" class="p-2 hover:bg-primary-dark rounded-full">
+                        <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+                    </button>
+                     <button @click="showAppInfoModal = true" title="App Info" class="p-2 hover:bg-primary-dark rounded-full">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside :class="{'translate-x-0': showSidebar, '-translate-x-full': !showSidebar}"
+                   class="fixed inset-y-0 left-0 z-30 lg:static lg:translate-x-0 w-64 bg-secondary text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto">
+                <div class="mt-16 lg:mt-0">
+                    <button @click="setActiveView('addNote'); selectedNote = null; showSidebar = false;"
+                            class="w-full bg-accent text-white py-2 px-4 rounded-lg hover:bg-opacity-80 transition duration-150 flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i> New Note
+                    </button>
+                </div>
+
+                <div>
+                    <h3 class="text-xs uppercase font-semibold text-gray-500 mb-1">Search</h3>
+                    <input type="text" v-model="searchTerm" placeholder="Search notes..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-accent focus:border-accent text-sm text-gray-700">
+                </div>
+
+                <div>
+                    <h3 class="text-xs uppercase font-semibold text-gray-500 mb-1">Categories</h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" @click.prevent="selectCategory(null)"
+                               :class="{'bg-accent text-white': !currentCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory}"
+                               class="block px-3 py-2 rounded-md transition duration-150">
+                                <i class="fas fa-inbox mr-2"></i> All Notes
+                            </a>
+                        </li>
+                        <li v-for="category in uniqueCategories" :key="category">
+                            <a href="#" @click.prevent="selectCategory(category)"
+                               :class="{'bg-accent text-white': currentCategory === category, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory !== category}"
+                               class="block px-3 py-2 rounded-md transition duration-150 truncate">
+                                <i class="fas fa-folder mr-2"></i> {{ category }}
+                            </a>
+                            <ul v-if="currentCategory === category && uniqueSubcategoriesForCurrentCategory.length > 0" class="ml-4 mt-1 space-y-1">
+                                <li>
+                                    <a href="#" @click.prevent="selectSubCategory(null)"
+                                       :class="{'bg-accent/80 text-white': !currentSubCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory}"
+                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150">
+                                        <i class="fas fa-folder-open mr-2"></i> All in {{ category }}
+                                    </a>
+                                </li>
+                                <li v-for="subCategory in uniqueSubcategoriesForCurrentCategory" :key="subCategory">
+                                    <a href="#" @click.prevent="selectSubCategory(subCategory)"
+                                       :class="{'bg-accent/80 text-white': currentSubCategory === subCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory !== subCategory}"
+                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 truncate">
+                                        <i class="fas fa-stream mr-2"></i> {{ subCategory }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-light">
+                <!-- Add/Edit Note View -->
+                <div v-if="activeView === 'addNote' || activeView === 'editNote'" class="animate-fade-in max-w-3xl mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 text-dark">{{ activeView === 'addNote' ? 'Create New Note' : 'Edit Note' }}</h2>
+                    <form @submit.prevent="saveNote" class="space-y-4">
+                        <div>
+                            <label for="noteTitle" class="block text-sm font-medium text-gray-700">Title</label>
+                            <input type="text" id="noteTitle" v-model="form.title" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="noteCategory" class="block text-sm font-medium text-gray-700">Category (optional)</label>
+                                <input type="text" id="noteCategory" v-model="form.category" list="categorySuggestions"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700">
+                                <datalist id="categorySuggestions">
+                                    <option v-for="cat in uniqueCategories" :value="cat"></option>
+                                </datalist>
+                            </div>
+                            <div>
+                                <label for="noteSubCategory" class="block text-sm font-medium text-gray-700">Subcategory (optional)</label>
+                                <input type="text" id="noteSubCategory" v-model="form.subCategory" :disabled="!form.category" list="subCategorySuggestions"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700"
+                                       :placeholder="form.category ? 'Enter subcategory' : 'Enter category first'">
+                                <datalist id="subCategorySuggestions">
+                                    <option v-for="subCat in uniqueSubcategoriesForCategory(form.category)" :value="subCat"></option>
+                                </datalist>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="noteContent" class="block text-sm font-medium text-gray-700">Content (Markdown)</label>
+                            <textarea id="noteContent" v-model="form.content" rows="10" required
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700"></textarea>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="noteIsSecret" v-model="form.isSecret"
+                                   class="h-4 w-4 text-accent border-gray-300 rounded focus:ring-accent">
+                            <label for="noteIsSecret" class="ml-2 block text-sm text-gray-700">
+                                Secret Note (requires master key to encrypt/decrypt)
+                            </label>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" @click="cancelEdit"
+                                    class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                                Save Note
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notes List View -->
+                <div v-if="activeView === 'notesList'" class="animate-fade-in">
+                    <div v-if="filteredNotes.length === 0 && !isLoading" class="text-center py-10">
+                        <i class="fas fa-ghost text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-xl text-gray-500">No notes found.</p>
+                        <p class="text-gray-400">Try adjusting your filters or create a new note!</p>
+                    </div>
+                     <div v-if="isLoading" class="text-center py-10">
+                        <i class="fas fa-spinner fa-spin text-4xl text-accent mb-4"></i>
+                        <p class="text-xl text-gray-500">Loading notes...</p>
+                    </div>
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div v-for="note in filteredNotes" :key="note.id"
+                             class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
+                            <div class="p-5 flex-grow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-lg font-semibold text-primary mb-1 break-all">{{ note.title }}</h3>
+                                    <span v-if="note.isSecret" title="Secret Note" class="ml-2 text-yellow-500"><i class="fas fa-lock"></i></span>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                    <span v-if="note.category">
+                                        <i class="fas fa-folder-open"></i> {{ note.category }}
+                                        <span v-if="note.subCategory"> / {{ note.subCategory }}</span>
+                                    </span>
+                                    <span v-else><i class="fas fa-inbox"></i> Uncategorized</span>
+                                    <span class="mx-1">|</span>
+                                    <span>{{ formatDate(note.updatedAt) }}</span>
+                                </div>
+                                <div v-if="note.isSecret && !note.decryptedContent" 
+                                     class="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 italic p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                                    Content is encrypted.
+                                    <button @click="promptMasterKey('decrypt', note.id)" class="ml-2 text-accent hover:underline text-sm">Decrypt</button>
+                                </div>
+                                <div v-else v-html="renderMarkdown(note.decryptedContent || note.content)"
+                                     class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300 markdown-content max-h-48 overflow-y-auto">
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-end space-x-2">
+                                <button @click="copyToClipboard(note.decryptedContent || note.content)" title="Copy Content" class="text-gray-500 hover:text-accent transition-colors"><i class="fas fa-copy"></i></button>
+                                <button @click="shareNote(note)" title="Share Note" class="text-gray-500 hover:text-accent transition-colors"><i class="fas fa-share-alt"></i></button>
+                                <button @click="editNote(note)" title="Edit Note" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-edit"></i></button>
+                                <button v-if="note.isSecret && note.decryptedContent" @click="promptMasterKey('encrypt', note.id)" title="Re-encrypt Note" class="text-gray-500 hover:text-yellow-600 transition-colors"><i class="fas fa-lock-open"></i></button>
+                                <button @click="deleteNote(note.id)" title="Delete Note" class="text-gray-500 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Master Key Modal -->
+        <div v-if="showMasterKeyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
+                <h3 class="text-lg font-medium mb-4 text-dark">Master Key Required</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                    This note is {{ modalAction === 'encrypt' ? 'being secured' : 'secured' }}. Please enter your master key.
+                </p>
+                <p class="text-xs text-red-500 mb-3">Warning: The master key is NOT stored. If you forget it, encrypted notes cannot be recovered.</p>
+                <input type="password" v-model="masterKeyInput" @keyup.enter="processMasterKeyAction"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-accent focus:border-accent mb-4 text-gray-700"
+                       placeholder="Enter master key">
+                <div class="flex justify-end space-x-2">
+                    <button @click="showMasterKeyModal = false; masterKeyInput = '';"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button @click="processMasterKeyAction"
+                            class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-opacity-80">
+                        {{ modalAction === 'encrypt' ? 'Encrypt' : 'Decrypt' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export Modal -->
+        <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
+                <h3 class="text-lg font-medium mb-4 text-dark">Import / Export Notes</h3>
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-dark">Export Notes</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Download all your notes as a JSON file.</p>
+                        <button @click="exportNotes" class="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
+                            <i class="fas fa-file-export mr-2"></i>Export All Notes
+                        </button>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-dark">Import Notes</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Import notes from a JSON file. This will replace existing notes if IDs match, or add new ones.</p>
+                        <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-opacity-80"/>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button @click="showImportExportModal = false"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Info Modal -->
+        <div v-if="showAppInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-dark">About VueNotesPro v1.0</h3>
+                    <button @click="showAppInfoModal = false" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
+                </div>
+                <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
+                    <p><strong>Author:</strong> ParisNeo</p>
+                    <p><strong>Category:</strong> Productivity</p>
+                    <p><strong>Description:</strong> A feature-rich, responsive note-taking web application built with Vue.js and Tailwind CSS. Supports categories, subcategories, Markdown rendering, import/export, social sharing, and client-side encryption for secret notes. All data is stored locally using IndexedDB.</p>
+                    <p><strong>Model used for assistance:</strong> Claude 3 Opus</p>
+                    <p><strong>Disclaimer:</strong> This application stores data, including potentially encrypted secret notes, locally in your browser's IndexedDB. The master key for secret notes is NOT stored. Ensure you remember your master key, as there is no recovery mechanism. Use at your own risk.</p>
+                    <h4 class="font-semibold mt-4">Features:</h4>
+                    <ul>
+                        <li>Categories & Subcategories</li>
+                        <li>Markdown input, HTML rendering</li>
+                        <li>Import/Export notes (JSON)</li>
+                        <li>Social Sharing (basic text sharing)</li>
+                        <li>Secret notes with AES-256 encryption (master key not stored)</li>
+                        <li>Data stored in IndexedDB</li>
+                        <li>Easy copy/paste</li>
+                        <li>Responsive design for PC, phone, and tablet</li>
+                        <li>Light/Dark theme</li>
+                    </ul>
+                     <h4 class="font-semibold mt-4">Keyboard Shortcuts (in note form):</h4>
+                    <ul>
+                        <li><code>Ctrl+S</code> or <code>Cmd+S</code>: Save note</li>
+                    </ul>
+                </div>
+                 <div class="mt-6 flex justify-end">
+                    <button @click="showAppInfoModal = false"
+                            class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-opacity-80">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div v-if="toast.show" 
+             class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-md animate-fade-in"
+             :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
+            <i class="fas mr-2" :class="toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+            {{ toast.message }}
+        </div>
+
+    </div>
+
+    <script>
+        const App = {
+            data() {
+                return {
+                    notes: [],
+                    activeView: 'notesList', // 'notesList', 'addNote', 'editNote'
+                    form: {
+                        id: null,
+                        title: '',
+                        content: '',
+                        category: '',
+                        subCategory: '',
+                        isSecret: false,
+                        createdAt: null,
+                        updatedAt: null,
+                    },
+                    currentCategory: null,
+                    currentSubCategory: null,
+                    searchTerm: '',
+                    showMasterKeyModal: false,
+                    masterKeyInput: '',
+                    modalAction: '', // 'encrypt' or 'decrypt'
+                    modalNoteId: null,
+                    db: null,
+                    isLoading: true,
+                    showSidebar: false, // For mobile
+                    showImportExportModal: false,
+                    showAppInfoModal: false,
+                    isDarkMode: false,
+                    toast: {
+                        show: false,
+                        message: '',
+                        type: 'success' // 'success' or 'error'
+                    },
+                    // Default theme colors
+                    themeColors: {
+                        light: { primary: '59, 130, 246', secondary: '243, 244, 246', accent: '234, 179, 8', light: '249, 250, 251', dark: '17, 24, 39' }, // blue, light-gray, yellow, very-light-gray, dark-gray
+                        dark: { primary: '37, 99, 235', secondary: '31, 41, 55', accent: '202, 138, 4', light: '17, 24, 39', dark: '243, 244, 246' }   // darker-blue, dark-gray, dark-yellow, very-dark-gray, light-gray
+                    }
+                }
+            },
+            computed: {
+                filteredNotes() {
+                    let notesToFilter = this.notes;
+                    if (this.currentCategory) {
+                        notesToFilter = notesToFilter.filter(note => note.category === this.currentCategory);
+                        if (this.currentSubCategory) {
+                            notesToFilter = notesToFilter.filter(note => note.subCategory === this.currentSubCategory);
+                        }
+                    }
+                    if (this.searchTerm) {
+                        const lowerSearchTerm = this.searchTerm.toLowerCase();
+                        notesToFilter = notesToFilter.filter(note =>
+                            note.title.toLowerCase().includes(lowerSearchTerm) ||
+                            (note.decryptedContent || note.content).toLowerCase().includes(lowerSearchTerm) ||
+                            (note.category && note.category.toLowerCase().includes(lowerSearchTerm)) ||
+                            (note.subCategory && note.subCategory.toLowerCase().includes(lowerSearchTerm))
+                        );
+                    }
+                    return notesToFilter.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                },
+                uniqueCategories() {
+                    const categories = new Set();
+                    this.notes.forEach(note => {
+                        if (note.category) categories.add(note.category);
+                    });
+                    return Array.from(categories).sort();
+                },
+                uniqueSubcategoriesForCurrentCategory() {
+                    if (!this.currentCategory) return [];
+                    const subCategories = new Set();
+                    this.notes.forEach(note => {
+                        if (note.category === this.currentCategory && note.subCategory) {
+                            subCategories.add(note.subCategory);
+                        }
+                    });
+                    return Array.from(subCategories).sort();
+                }
+            },
+            methods: {
+                setThemeColors(theme) {
+                    const colors = this.themeColors[theme];
+                    const root = document.documentElement;
+                    for (const [key, value] of Object.entries(colors)) {
+                        root.style.setProperty(`--color-${key}`, value);
+                    }
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                    this.isDarkMode = theme === 'dark';
+                    localStorage.setItem('vueNotesProTheme', theme);
+                },
+                toggleTheme() {
+                    this.setThemeColors(this.isDarkMode ? 'light' : 'dark');
+                },
+                loadTheme() {
+                    const savedTheme = localStorage.getItem('vueNotesProTheme');
+                    if (savedTheme) {
+                        this.setThemeColors(savedTheme);
+                    } else {
+                         // Prefer dark mode if system prefers it
+                        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            this.setThemeColors('dark');
+                        } else {
+                            this.setThemeColors('light'); // Default to light
+                        }
+                    }
+                },
+                initDB() {
+                    return new Promise((resolve, reject) => {
+                        const request = indexedDB.open('VueNotesProDB', 1);
+                        request.onerror = (event) => {
+                            console.error("Database error:", event.target.errorCode);
+                            this.showToast('Error initializing database.', 'error');
+                            reject("Error initializing database.");
+                        };
+                        request.onsuccess = (event) => {
+                            this.db = event.target.result;
+                            console.log("Database initialized successfully.");
+                            resolve();
+                        };
+                        request.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            if (!db.objectStoreNames.contains('notes')) {
+                                db.createObjectStore('notes', { keyPath: 'id' });
+                                console.log("Notes object store created.");
+                            }
+                        };
+                    });
+                },
+                async loadNotes() {
+                    this.isLoading = true;
+                    if (!this.db) {
+                        console.error("DB not initialized for loading notes.");
+                        this.showToast('Database not ready.', 'error');
+                        this.isLoading = false;
+                        return;
+                    }
+                    const transaction = this.db.transaction(['notes'], 'readonly');
+                    const objectStore = transaction.objectStore('notes');
+                    const request = objectStore.getAll();
+
+                    request.onsuccess = (event) => {
+                        this.notes = event.target.result.map(note => ({
+                            ...note,
+                            decryptedContent: null // Ensure this is reset on load
+                        }));
+                        console.log("Notes loaded from IndexedDB:", this.notes.length);
+                        this.isLoading = false;
+                    };
+                    request.onerror = (event) => {
+                        console.error("Error loading notes:", event.target.errorCode);
+                        this.showToast('Error loading notes.', 'error');
+                        this.isLoading = false;
+                    };
+                },
+                async saveNoteToDB(note) {
+                    if (!this.db) {
+                        console.error("DB not initialized for saving note.");
+                        this.showToast('Database not ready.', 'error');
+                        return;
+                    }
+                    // Create a clone to avoid storing decryptedContent in DB
+                    const noteToSave = { ...note };
+                    delete noteToSave.decryptedContent;
+
+                    const transaction = this.db.transaction(['notes'], 'readwrite');
+                    const objectStore = transaction.objectStore('notes');
+                    const request = objectStore.put(noteToSave);
+                    
+                    request.onsuccess = () => {
+                        console.log("Note saved/updated in DB:", noteToSave.id);
+                    };
+                    request.onerror = (event) => {
+                        console.error("Error saving note:", event.target.errorCode);
+                        this.showToast(`Error saving note ${noteToSave.title}.`, 'error');
+                    };
+                },
+                async deleteNoteFromDB(noteId) {
+                    if (!this.db) {
+                        console.error("DB not initialized for deleting note.");
+                        this.showToast('Database not ready.', 'error');
+                        return;
+                    }
+                    const transaction = this.db.transaction(['notes'], 'readwrite');
+                    const objectStore = transaction.objectStore('notes');
+                    const request = objectStore.delete(noteId);
+                    request.onsuccess = () => {
+                        console.log("Note deleted from DB:", noteId);
+                    };
+                    request.onerror = (event) => {
+                        console.error("Error deleting note:", event.target.errorCode);
+                        this.showToast('Error deleting note from database.', 'error');
+                    };
+                },
+                setActiveView(view) {
+                    this.activeView = view;
+                    if (view === 'addNote') {
+                        this.resetForm();
+                    }
+                },
+                resetForm() {
+                    this.form = {
+                        id: null, title: '', content: '', category: '', subCategory: '', isSecret: false,
+                        createdAt: null, updatedAt: null,
+                    };
+                },
+                saveNote() {
+                    if (this.form.isSecret && !this.masterKeyInput && !this.form.id) { // New secret note
+                        this.showToast('A master key is required to save a new secret note.', 'info');
+                        this.promptMasterKey('encrypt', null, true); // Pass true for new note
+                        return;
+                    }
+
+                    const now = new Date().toISOString();
+                    let noteToSave;
+
+                    if (this.form.id) { // Editing existing note
+                        const index = this.notes.findIndex(n => n.id === this.form.id);
+                        if (index !== -1) {
+                            noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
+                            // If it was secret and now isn't, or content changed for a secret note
+                            if ( (this.notes[index].isSecret && !this.form.isSecret) || 
+                                 (this.form.isSecret && this.form.content !== this.notes[index].content && !this.form.encryptedContent) ) {
+                                // If content changed for a secret note and it's not already encrypted (meaning it was just decrypted for edit)
+                                // or if it's being made non-secret
+                                // It needs re-processing. If it's being made secret, it'll be handled by encryption logic.
+                                // If it's made non-secret, ensure encryptedContent is removed.
+                                if (!this.form.isSecret) {
+                                    noteToSave.content = this.notes[index].decryptedContent || this.notes[index].content;
+                                    delete noteToSave.encryptedContent;
+                                } else if (this.form.isSecret && !this.form.encryptedContent) {
+                                     // Content of a secret note was edited, needs re-encryption
+                                     this.notes[index].decryptedContent = this.form.content; // Store temp decrypted content for encryption
+                                     this.promptMasterKey('encrypt', this.form.id);
+                                     return; // Encryption will handle saving
+                                }
+                            }
+                            this.notes.splice(index, 1, noteToSave);
+                        }
+                    } else { // New note
+                        noteToSave = {
+                            ...this.form,
+                            id: uuidv4(),
+                            createdAt: now,
+                            updatedAt: now,
+                        };
+                        if (noteToSave.isSecret) {
+                             // Content is in form.content, will be encrypted via promptMasterKey if not already done
+                             // The actual saving will happen after encryption
+                             this.notes.push(noteToSave); // Add temporarily, will be updated by encryption
+                             this.promptMasterKey('encrypt', noteToSave.id); // this will encrypt form.content
+                             return; // Encryption will handle proper saving
+                        }
+                        this.notes.push(noteToSave);
+                    }
+                    
+                    this.saveNoteToDB(noteToSave);
+                    this.showToast(`Note "${noteToSave.title}" saved.`, 'success');
+                    this.setActiveView('notesList');
+                    this.resetForm();
+                    this.masterKeyInput = ''; // Clear key after use
+                },
+                editNote(note) {
+                    this.form = { ...note }; // Create a copy for editing
+                    if (note.isSecret && note.encryptedContent) {
+                        // If secret and has encrypted content, we need to decrypt it for editing
+                        this.form.content = ''; // Clear content, will be filled by decryption
+                        this.promptMasterKey('decrypt', note.id, true); // true indicates for editing
+                    } else {
+                        // Not secret, or already decrypted (e.g. error during previous encrypt)
+                        this.form.content = note.decryptedContent || note.content;
+                        this.setActiveView('editNote');
+                    }
+                     this.showSidebar = false;
+                },
+                cancelEdit() {
+                    const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
+                    if (note && note.isSecret && note.decryptedContent) {
+                        // If a secret note was decrypted for editing and then cancelled, re-encrypt it.
+                        // But only if it was truly decrypted. If it failed decryption, it might not have decryptedContent.
+                        this.promptMasterKey('encrypt', note.id); // This will use the existing decryptedContent
+                    }
+                    this.resetForm();
+                    this.setActiveView('notesList');
+                },
+                deleteNote(noteId) {
+                    if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
+                        const noteIndex = this.notes.findIndex(n => n.id === noteId);
+                        if (noteIndex > -1) {
+                            const title = this.notes[noteIndex].title;
+                            this.notes.splice(noteIndex, 1);
+                            this.deleteNoteFromDB(noteId);
+                            this.showToast(`Note "${title}" deleted.`, 'success');
+                        }
+                    }
+                },
+                renderMarkdown(markdownText) {
+                    if (!markdownText) return '';
+                    // DOMPurify is crucial here to prevent XSS if Markdown source is untrusted
+                    return DOMPurify.sanitize(marked.parse(markdownText || ''));
+                },
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                },
+                selectCategory(category) {
+                    this.currentCategory = category;
+                    this.currentSubCategory = null; // Reset subcategory when category changes
+                    this.activeView = 'notesList'; // Switch to notes list
+                    this.showSidebar = false;
+                },
+                selectSubCategory(subCategory) {
+                    this.currentSubCategory = subCategory;
+                    this.activeView = 'notesList'; // Switch to notes list
+                    this.showSidebar = false;
+                },
+                uniqueSubcategoriesForCategory(categoryName) {
+                    if (!categoryName) return [];
+                    const subCategories = new Set();
+                    this.notes.forEach(note => {
+                        if (note.category === categoryName && note.subCategory) {
+                            subCategories.add(note.subCategory);
+                        }
+                    });
+                    return Array.from(subCategories).sort();
+                },
+
+                // Encryption / Decryption
+                promptMasterKey(action, noteId, forEditing = false) {
+                    this.modalAction = action;
+                    this.modalNoteId = noteId;
+                    this.editingAfterDecrypt = forEditing; // Store if this decryption is for editing
+                    this.showMasterKeyModal = true;
+                    // Focus input after modal is shown
+                    this.$nextTick(() => {
+                        const keyInput = this.$el.querySelector('input[type="password"]');
+                        if (keyInput) keyInput.focus();
+                    });
+                },
+                processMasterKeyAction() {
+                    if (!this.masterKeyInput) {
+                        this.showToast('Master key cannot be empty.', 'error');
+                        return;
+                    }
+                    const noteIndex = this.notes.findIndex(n => n.id === this.modalNoteId);
+                    let noteToProcess = noteIndex !== -1 ? this.notes[noteIndex] : null;
+
+                    // Special case: encrypting a new note that's currently in the form
+                    if (!noteToProcess && this.modalAction === 'encrypt' && this.modalNoteId && this.form.id === this.modalNoteId && this.form.isSecret) {
+                        noteToProcess = this.form; // This is a new note from the form
+                    } else if (!noteToProcess && this.modalAction === 'encrypt' && this.activeView === 'addNote' && this.form.isSecret) {
+                        // New note encryption before initial save
+                        noteToProcess = this.form; // Use current form data
+                        noteToProcess.id = uuidv4(); // Assign ID if not already
+                        noteToProcess.createdAt = new Date().toISOString();
+                    }
+
+
+                    if (!noteToProcess) {
+                        this.showToast('Note not found for master key action.', 'error');
+                        this.showMasterKeyModal = false;
+                        this.masterKeyInput = '';
+                        return;
+                    }
+                    
+                    try {
+                        if (this.modalAction === 'encrypt') {
+                            const contentToEncrypt = noteToProcess.decryptedContent || this.form.content || noteToProcess.content;
+                            if (!contentToEncrypt) {
+                                this.showToast('No content to encrypt.', 'error');
+                                this.showMasterKeyModal = false;
+                                this.masterKeyInput = '';
+                                return;
+                            }
+                            const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
+                            
+                            if (noteIndex !== -1) { // Existing note
+                                this.notes[noteIndex].encryptedContent = encrypted;
+                                this.notes[noteIndex].content = "[[ENCRYPTED CONTENT]]"; // Placeholder
+                                this.notes[noteIndex].decryptedContent = null; // Clear decrypted version
+                                this.notes[noteIndex].isSecret = true; // Ensure it's marked secret
+                                this.notes[noteIndex].updatedAt = new Date().toISOString();
+                                this.saveNoteToDB(this.notes[noteIndex]);
+                                this.showToast(`Note "${this.notes[noteIndex].title}" encrypted.`, 'success');
+                            } else if (this.form.id === noteToProcess.id && this.form.isSecret) { // New note from form
+                                this.form.encryptedContent = encrypted;
+                                this.form.content = "[[ENCRYPTED CONTENT]]"; // Placeholder
+                                this.form.updatedAt = new Date().toISOString();
+                                // Proceed to save the new note (this.form)
+                                const now = new Date().toISOString();
+                                const newNote = {
+                                    ...this.form,
+                                    id: this.form.id || uuidv4(),
+                                    createdAt: this.form.createdAt || now,
+                                    updatedAt: now,
+                                };
+                                // Add to notes array if it's truly new
+                                if (!this.notes.find(n => n.id === newNote.id)) {
+                                    this.notes.push(newNote);
+                                } else { // If it was temporarily added, update it
+                                    const existingIndex = this.notes.findIndex(n => n.id === newNote.id);
+                                    this.notes.splice(existingIndex, 1, newNote);
+                                }
+                                this.saveNoteToDB(newNote);
+                                this.showToast(`New note "${newNote.title}" encrypted and saved.`, 'success');
+                                this.setActiveView('notesList');
+                                this.resetForm();
+                            }
+
+                        } else if (this.modalAction === 'decrypt') {
+                            if (!noteToProcess.encryptedContent) {
+                                this.showToast('No encrypted content to decrypt.', 'error');
+                            } else {
+                                const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
+                                const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                                if (!decrypted) {
+                                    throw new Error("Decryption failed. Incorrect master key or corrupted data.");
+                                }
+                                if (noteIndex !== -1) {
+                                    this.notes[noteIndex].decryptedContent = decrypted;
+                                } else if (this.form.id === noteToProcess.id) { // Editing scenario
+                                    this.form.decryptedContent = decrypted;
+                                    this.form.content = decrypted; // Populate form content for editing
+                                }
+                                this.showToast(`Note "${noteToProcess.title}" decrypted.`, 'success');
+                                
+                                if (this.editingAfterDecrypt) {
+                                    // If decryption was for editing, populate form and switch view
+                                    this.form = { ...noteToProcess, content: decrypted }; // Make sure form is populated
+                                    this.setActiveView('editNote');
+                                    this.editingAfterDecrypt = false; // Reset flag
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Crypto action error:", e);
+                        this.showToast(this.modalAction === 'encrypt' ? 'Encryption failed.' : 'Decryption failed. Check master key.', 'error');
+                    } finally {
+                        this.showMasterKeyModal = false;
+                        if (this.modalAction === 'decrypt' && !this.editingAfterDecrypt) {
+                             // Do not clear key if going into edit mode after decrypt
+                        } else if (this.modalAction === 'encrypt' && this.activeView === 'addNote') {
+                            // For new notes, key already used, form will be reset
+                        }
+                        // Don't clear masterKeyInput here if it might be needed for immediate re-encryption
+                        // This is tricky. For safety, maybe clear always, but this makes "decrypt-edit-encrypt" require 2 key entries.
+                        // For now, let's clear it generally.
+                        // this.masterKeyInput = '';
+                    }
+                },
+
+                // Import / Export
+                exportNotes() {
+                    // Create a deep copy and remove decryptedContent before export
+                    const notesToExport = JSON.parse(JSON.stringify(this.notes));
+                    notesToExport.forEach(note => delete note.decryptedContent);
+
+                    const jsonData = JSON.stringify(notesToExport, null, 2);
+                    const blob = new Blob([jsonData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    this.showToast('Notes exported successfully.', 'success');
+                    this.showImportExportModal = false;
+                },
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file && file.type === "application/json") {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const importedNotes = JSON.parse(e.target.result);
+                                if (!Array.isArray(importedNotes)) {
+                                   throw new Error("Invalid JSON format: Not an array.");
+                                }
+                                // Basic validation of note structure
+                                importedNotes.forEach(note => {
+                                    if (!note.id || !note.title || typeof note.content === 'undefined') { // content can be empty string
+                                        throw new Error(`Invalid note structure: ${JSON.stringify(note).substring(0,100)}...`);
+                                    }
+                                    // Ensure dates are valid or set to now
+                                    note.createdAt = note.createdAt && !isNaN(new Date(note.createdAt)) ? new Date(note.createdAt).toISOString() : new Date().toISOString();
+                                    note.updatedAt = note.updatedAt && !isNaN(new Date(note.updatedAt)) ? new Date(note.updatedAt).toISOString() : new Date().toISOString();
+                                    // Ensure isSecret is boolean
+                                    note.isSecret = !!note.isSecret;
+                                    // Remove any potential decryptedContent from import
+                                    delete note.decryptedContent;
+                                });
+
+                                // Merge strategy: Update existing by ID, add new ones.
+                                importedNotes.forEach(importedNote => {
+                                    const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
+                                    if (existingIndex > -1) {
+                                        this.notes[existingIndex] = { ...this.notes[existingIndex], ...importedNote }; // Merge, imported takes precedence for shared fields
+                                        this.saveNoteToDB(this.notes[existingIndex]);
+                                    } else {
+                                        this.notes.push(importedNote);
+                                        this.saveNoteToDB(importedNote);
+                                    }
+                                });
+                                this.showToast(`${importedNotes.length} notes imported successfully.`, 'success');
+                                this.showImportExportModal = false;
+                                // Force reload from DB to ensure consistency if needed, or trust current state.
+                                // For now, trust current state, it's been updated.
+                            } catch (error) {
+                                console.error("Error importing notes:", error);
+                                this.showToast(`Error importing notes: ${error.message}`, 'error');
+                            } finally {
+                                event.target.value = null; // Reset file input
+                            }
+                        };
+                        reader.readAsText(file);
+                    } else {
+                        this.showToast('Please select a valid JSON file.', 'error');
+                         event.target.value = null; // Reset file input
+                    }
+                },
+
+                // Sharing
+                shareNote(note) {
+                    const contentToShare = note.decryptedContent || note.content;
+                    if (note.isSecret && !note.decryptedContent) {
+                        this.showToast("Cannot share encrypted content. Decrypt it first.", "info");
+                        return;
+                    }
+                    
+                    const title = note.title;
+                    const text = `Check out this note: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
+                    
+                    if (navigator.share) {
+                        navigator.share({
+                            title: title,
+                            text: text,
+                        })
+                        .then(() => console.log('Successful share'))
+                        .catch((error) => {
+                            console.log('Error sharing', error);
+                            this.showToast('Could not share using system dialog. Try manual copy.', 'error');
+                            this.copyToClipboardForSharing(title, text); // Fallback for some desktop cases or errors
+                        });
+                    } else {
+                        // Fallback for browsers that don't support Web Share API
+                        this.copyToClipboardForSharing(title, text);
+                    }
+                },
+                copyToClipboardForSharing(title, text) {
+                     const shareText = `${title}\n\n${text}`;
+                     navigator.clipboard.writeText(shareText).then(() => {
+                        this.showToast('Note content (for sharing) copied to clipboard!', 'success');
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                        this.showToast('Failed to copy content.', 'error');
+                    });
+                },
+                copyToClipboard(text) {
+                    if (!text) {
+                        this.showToast('Nothing to copy.', 'info');
+                        return;
+                    }
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showToast('Content copied to clipboard!', 'success');
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                        this.showToast('Failed to copy content.', 'error');
+                    });
+                },
+
+                toggleSidebar() {
+                    this.showSidebar = !this.showSidebar;
+                },
+
+                showToast(message, type = 'success', duration = 3000) {
+                    this.toast.message = message;
+                    this.toast.type = type;
+                    this.toast.show = true;
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, duration);
+                },
+                handleKeyDown(event) {
+                    // Ctrl+S or Cmd+S to save note when form is active
+                    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+                        if (this.activeView === 'addNote' || this.activeView === 'editNote') {
+                            event.preventDefault();
+                            this.saveNote();
+                        }
+                    }
+                }
+            },
+            async mounted() {
+                this.loadTheme();
+                try {
+                    await this.initDB();
+                    await this.loadNotes();
+                } catch (error) {
+                    console.error("Error during mount:", error);
+                    this.showToast('Application setup failed. Please refresh.', 'error');
+                }
+                // Add global keydown listener
+                window.addEventListener('keydown', this.handleKeyDown);
+            },
+            beforeUnmount() {
+                // Remove global keydown listener
+                window.removeEventListener('keydown', this.handleKeyDown);
+            },
+            watch: {
+                // This deep watcher can be performance-intensive for large notes array.
+                // Individual DB operations on change are generally better.
+                // 'notes': {
+                //     handler(newNotes) {
+                //         // This is now handled by specific save/delete/update DB calls
+                //     },
+                //     deep: true
+                // }
+            }
+        };
+
+        Vue.createApp(App).mount('#app');
+    </script>
+</body>
+</html>
