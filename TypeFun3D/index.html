@@ -3,125 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TypeMasterKids - Structured Typing</title>
+    <title>TypeMasterKids Pro - Structured Typing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script> <!-- Chart.js CDN -->
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e0e0e0; color: #333; }
-        #container { width: 100vw; height: 100vh; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #263238; /* Darker background */ color: #ECEFF1; }
+        #container { width: 100vw; height: 100vh; position: fixed; top:0; left:0; z-index: -1;}
         .ui-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 10; color: white; text-align: center;
-            transition: opacity 0.3s ease-in-out;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10; color: #ECEFF1; text-align: center;
+            transition: opacity 0.3s ease-in-out; overflow-y: auto; padding: 20px; box-sizing: border-box;
         }
         .ui-panel {
-            background-color: #3f51b5; /* Indigo */
-            padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.4);
-            min-width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;
+            background-color: #37474F; /* Blue Grey darker */
+            padding: 30px 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            min-width: 450px; max-width: 90%; max-height: 90vh; overflow-y: auto;
         }
-        .ui-panel h2 { margin-top: 0; color: #ffca28; /* Amber */ font-size: 2em; }
-        .ui-panel p { font-size: 1.1em; margin-bottom: 15px; }
-        .ui-panel label { display: block; margin-top:15px; color: #c5cae9; font-size: 0.9em; text-align: left;}
+        .ui-panel h2 { margin-top: 0; color: #80CBC4; /* Teal Lighten-3 */ font-size: 2.2em; }
+        .ui-panel h3 { color: #B0BEC5; /* Blue Grey Lighten-3 */}
+        .ui-panel p { font-size: 1.1em; margin-bottom: 15px; color: #CFD8DC; }
+        .ui-panel label { display: block; margin-top:15px; color: #90A4AE; font-size: 0.9em; text-align: left;}
         .ui-panel button, .ui-panel input, .ui-panel select {
             padding: 12px 20px; margin: 10px 5px; border: none; border-radius: 10px;
-            font-size: 1em; cursor: pointer; background-color: #5c6bc0; /* Indigo lighter */
+            font-size: 1em; cursor: pointer; background-color: #546E7A; /* Blue Grey */
             color: white; transition: background-color 0.2s;
         }
-        .ui-panel button:hover { background-color: #7986cb; }
-        .ui-panel input[type="text"], .ui-panel select { background-color: #e8eaf6; color: #333; cursor: text; }
+        .ui-panel button:hover { background-color: #78909C; /* Blue Grey Lighten-1 */ }
+        .ui-panel input[type="text"], .ui-panel select { background-color: #ECEFF1; color: #263238; cursor: text; }
         .ui-panel input[type="file"] { display: none; }
-        .ui-panel hr { border: 0; height: 1px; background-color: #5c6bc0; margin: 20px 0; }
+        .ui-panel hr { border: 0; height: 1px; background-color: #546E7A; margin: 20px 0; }
 
         #hud {
-            position: absolute; top: 15px; left: 15px; background-color: rgba(0,0,0,0.65);
+            position: fixed; top: 15px; left: 15px; background-color: rgba(0,0,0,0.7);
             color: white; padding: 12px 18px; border-radius: 10px; font-size: 1.1em; z-index: 5;
             display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         #hud p { margin: 5px 0; }
-        #hudStrong { font-weight: bold; color: #ffca28; }
+        #hudStrong { font-weight: bold; color: #80CBC4; }
 
         #typingArea {
-            position: absolute;
-            top: 65%; /* Position for the target string */
+            position: fixed;
+            top: 60%; /* Adjusted position */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 3em; /* Larger for visibility */
+            font-size: 2.8em; /* Slightly reduced for potentially longer strings */
             font-weight: bold;
-            color: #fff;
-            background-color: rgba(0, 0, 0, 0.5);
+            color: #FFF;
+            background-color: rgba(0, 0, 0, 0.6);
             padding: 15px 30px;
             border-radius: 15px;
             z-index: 6;
-            min-width: 60%;
+            min-width: 70%;
             text-align: center;
-            display: none; /* Hidden initially */
+            display: none;
             letter-spacing: 2px;
-            white-space: pre; /* Preserve spaces */
+            white-space: pre;
         }
-        .typed-char-correct { color: #a5d6a7; /* Light Green */ }
+        .typed-char-correct { color: #A5D6A7; }
         .current-target-char {
-            color: #ffeb3b; /* Bright Yellow */
-            text-decoration: underline;
-            text-decoration-color: #ffeb3b;
-            text-decoration-thickness: 3px;
-            padding: 0 2px;
-            display: inline-block; /* Needed for some styling consistency */
+            color: #FFEB3B; text-decoration: underline; text-decoration-color: #FFEB3B;
+            text-decoration-thickness: 3px; padding: 0 2px; display: inline-block;
+            animation: pulse 1.5s infinite;
         }
-        .typed-char-error { /* This class might be used if we visually mark past errors */
-            color: #ef9a9a; /* Light Red */
-            background-color: rgba(255,0,0,0.2);
-            text-decoration: line-through;
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
         #charTimeIndicator {
-            position: absolute;
-            bottom: 15%; /* Positioned above potential on-screen keyboard or at bottom */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 250px;
-            height: 25px;
-            background-color: #757575; /* Grey */
-            border: 2px solid #424242;
-            border-radius: 12px;
-            overflow: hidden;
-            z-index: 6;
-            display: none;
+            position: fixed; bottom: 10%; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 25px; background-color: #455A64;
+            border: 2px solid #263238; border-radius: 12px; overflow: hidden; z-index: 6; display: none;
         }
         #charTimeIndicatorBar {
-            width: 100%;
-            height: 100%;
-            background-color: #66bb6a; /* Green */
-            border-radius: 10px 0 0 10px; /* Keep left radius if bar shrinks */
-            transition: width 0.1s linear; /* Smooth depletion */
+            width: 100%; height: 100%; background-color: #66BB6A;
+            border-radius: 10px 0 0 10px; transition: width 0.1s linear, background-color 0.2s;
         }
         .rtl { direction: rtl; text-align: right; }
-        .rtl .ui-panel label { text-align: right;} /* Adjust label alignment for RTL */
-        .level-button { background-color: #009688; /* Teal */ margin: 5px !important; }
-        .level-button.locked { background-color: #9e9e9e; cursor: not-allowed; opacity: 0.7; }
-        .level-button:not(.locked):hover { background-color: #26a69a; }
-        .level-button small { font-size: 0.8em; color: #e0f2f1; display: block; margin-top:3px;}
+        .rtl .ui-panel label { text-align: right;}
+        .level-button { background-color: #00796B; /* Teal Darken-2 */ margin: 8px !important; padding: 15px 10px !important; width: 200px; text-align: left;}
+        .level-button.locked { background-color: #616161; cursor: not-allowed; opacity: 0.6; }
+        .level-button:not(.locked):hover { background-color: #00897B; /* Teal Darken-1 */ }
+        .level-button small { font-size: 0.8em; color: #B2DFDB; display: block; margin-top:4px;}
+        #lessonsGrid { display: flex; flex-wrap: wrap; justify-content: center; max-height: 60vh; overflow-y: auto; padding: 10px;}
+        .progress-chart-container { width: 100%; max-width: 600px; margin: 20px auto; background: #455A64; padding:15px; border-radius:10px;}
     </style>
 </head>
 <body id="appBody">
-    <div id="container"></div>
+    <div id="container"></div> <!-- For Three.js -->
 
     <div id="hud">
         <p><span data-i18n="profile">Profile</span>: <strong id="hudProfileName"></strong></p>
-        <p><span data-i18n="lesson">Lesson</span>: <strong id="hudLessonName"></strong></p>
+        <p><span data-i18n="lesson">Lesson</span>: <strong id="hudLessonName"></strong> (<span id="hudLessonIndex"></span>/<span id="hudTotalLessons"></span>)</p>
         <p><span data-i18n="score">Score</span>: <strong id="hudScore">0</strong></p>
         <p><span data-i18n="accuracy">Accuracy</span>: <strong id="hudAccuracy">100%</strong></p>
         <p><span data-i18n="wpm">WPM</span>: <strong id="hudWPM">0</strong></p>
         <p><span data-i18n="target_criteria">Target</span>: <strong id="hudTargetInfo"></strong></p>
     </div>
 
-    <div id="typingArea">
-        <!-- Content generated by JS -->
-    </div>
-    <div id="charTimeIndicator">
-        <div id="charTimeIndicatorBar"></div>
-    </div>
+    <div id="typingArea"></div>
+    <div id="charTimeIndicator"><div id="charTimeIndicatorBar"></div></div>
 
     <!-- UI Screens -->
     <div id="profileScreen" class="ui-overlay">
@@ -130,23 +111,20 @@
             <p data-i18n="profile_select_create">Select or create a profile:</p>
             <select id="profileSelect"></select>
             <button id="loadProfileBtn" data-i18n="load_profile">Load Profile</button>
+            <button id="viewProgressBtnMain" data-i18n="view_progress_btn" style="display:none;">View Progress</button>
             <hr>
             <h3 data-i18n="create_new_profile">Create New Profile</h3>
             <input type="text" id="newProfileInputName" data-i18n-placeholder="profile_name_placeholder" placeholder="Profile Name">
             <div>
                 <label for="keyboardLayoutSelect" data-i18n="keyboard_layout_label">Keyboard Layout:</label>
                 <select id="keyboardLayoutSelect">
-                    <option value="qwerty">QWERTY</option>
-                    <option value="azerty">AZERTY</option>
-                    <option value="arabic_101">Arabic (PC 101)</option>
+                    <option value="qwerty">QWERTY</option> <option value="azerty">AZERTY</option> <option value="arabic_101">Arabic (PC 101)</option>
                 </select>
             </div>
             <div>
                 <label for="uiLanguageSelect" data-i18n="language_label">UI Language:</label>
                 <select id="uiLanguageSelect">
-                    <option value="en">English</option>
-                    <option value="fr">Français</option>
-                    <option value="ar">العربية</option>
+                    <option value="en">English</option> <option value="fr">Français</option> <option value="ar">العربية</option>
                 </select>
             </div>
             <button id="createProfileBtn" data-i18n="create_profile_btn">Create Profile</button>
@@ -163,6 +141,7 @@
             <p><span data-i18n="current_profile">Current Profile</span>: <strong id="activeProfileName"></strong></p>
             <div id="lessonsGrid"></div>
             <button id="backToProfilesBtn" data-i18n="back_to_profiles_btn">Back to Profiles</button>
+            <button id="viewProgressBtnLessons" data-i18n="view_progress_btn">View Progress</button>
         </div>
     </div>
 
@@ -172,6 +151,7 @@
             <p id="introLessonDescription"></p>
             <p><strong data-i18n="keys_to_practice">Keys to Practice:</strong> <span id="introKeysList"></span></p>
             <p><strong data-i18n="lesson_objective">Objective:</strong> <span id="introObjective"></span></p>
+            <p data-i18n="lesson_length_approx">Approx. Length: <span id="introLength"></span> characters</p>
             <button id="startLessonBtn" data-i18n="start_lesson_btn">Start Lesson</button>
             <button id="backToLessonsBtn" data-i18n="back_to_lessons_btn">Back to Lessons</button>
         </div>
@@ -184,7 +164,7 @@
             <p><span data-i18n="final_score">Score</span>: <strong id="summaryScore"></strong></p>
             <p><span data-i18n="final_accuracy">Accuracy</span>: <strong id="summaryAccuracy"></strong>%</p>
             <p><span data-i18n="final_wpm">WPM</span>: <strong id="summaryWPM"></strong></p>
-            <p id="summaryNewHighScoreText" style="color: #ffeb3b; font-weight: bold; display:none;" data-i18n="new_high_score_text">New High Score!</p>
+            <p id="summaryNewHighScoreText" style="color: #FFEB3B; font-weight: bold; display:none;" data-i18n="new_high_score_text">New High Score!</p>
             <p id="summaryCriteriaFeedback"></p>
             <button id="replayCurrentLessonBtn" data-i18n="replay_lesson_btn">Replay Lesson</button>
             <button id="proceedToNextLessonBtn" data-i18n="next_lesson_btn" style="display:none;">Next Lesson</button>
@@ -192,47 +172,83 @@
         </div>
     </div>
 
+    <div id="progressScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel" style="min-width: 80vw; max-width:95vw;">
+            <h2 data-i18n="progress_overview_title">Progress Overview</h2>
+            <p><span data-i18n="current_profile">Profile</span>: <strong id="progressProfileName"></strong></p>
+            <div>
+                <label for="lessonChartSelect" data-i18n="select_lesson_for_chart">Select Lesson for Detailed Chart:</label>
+                <select id="lessonChartSelect"></select>
+            </div>
+            <div class="progress-chart-container">
+                <canvas id="lessonProgressChart"></canvas>
+            </div>
+            <button id="backFromProgressBtn" data-i18n="back_btn">Back</button>
+        </div>
+    </div>
+
+
     <script>
         // --- Global Constants & Variables ---
-        const APP_DB_NAME = 'TypeMasterKidsDB_v3'; // Keep version in name to avoid old DB conflicts
+        const APP_DB_NAME = 'TypeMasterKidsProDB_v4'; // Incremented DB version
         const PROFILES_STORE = 'profiles';
         let db;
         let currentProfile = null;
-        let currentLesson = null; // This will hold the full lesson object during a session
-        let currentLessonIndex = 0; // Index from LESSONS_CONFIG
+        let currentLessonData = null; // Holds the full lesson object during a session
+        let currentLessonIdx = 0;    // Index from generated LESSONS array
         let gameActive = false;
-        let sessionStats = {}; // Holds stats for the current game session
+        let sessionStats = {};
+        let LESSONS = []; // This will be populated by generateLessons()
+        let lessonProgressChartInstance = null;
+        let lastActiveScreen = 'profileScreen'; // To return from progress screen
 
-        let three = { scene: null, camera: null, renderer: null, font: null, active3DChar: null };
-        // let audioCtx, sounds = {}; // For sounds later
+        let three = { scene: null, camera: null, renderer: null, font: null, active3DChar: null, backgroundSphere: null };
 
         // --- Localization (i18n) ---
         const i18nData = {
-            en: {
+            en: { /* ... (same as before, adding new keys) ... */
+                "view_progress_btn": "View Progress", "progress_overview_title": "Progress Overview",
+                "select_lesson_for_chart": "Select Lesson for Detailed Chart:", "back_btn": "Back",
+                "lesson_length_approx": "Approx. Length:",
+                "L_NAME_HOME_ROW_BASIC": "Home Row Basics", "L_DESC_HOME_ROW_BASIC": "Practice initial home row keys with space.",
+                "L_NAME_HOME_ROW_EXTENDED": "Home Row Extended", "L_DESC_HOME_ROW_EXTENDED": "More home row keys and longer words.",
+                "L_NAME_HOME_ROW_FULL": "Full Home Row", "L_DESC_HOME_ROW_FULL": "Master the entire home row with varied words.",
+                "L_NAME_TOP_ROW_INTRO": "Top Row Introduction", "L_DESC_TOP_ROW_INTRO": "Introduce first keys from the top row.",
+                "L_NAME_NUMBERS_INTRO": "Numbers Introduction", "L_DESC_NUMBERS_INTRO": "Start learning the number keys.",
+                "L_NAME_SYMBOLS_PRACTICE": "Symbols Practice", "L_DESC_SYMBOLS_PRACTICE": "Practice common symbols.",
+                 // Profile Screen
                 "welcome_title": "Welcome to TypeMasterKids!", "profile_select_create": "Select or create a profile to begin:",
                 "load_profile": "Load Profile", "create_new_profile": "Create New Profile",
                 "profile_name_placeholder": "Enter Profile Name", "keyboard_layout_label": "Keyboard Layout:",
                 "language_label": "UI Language:", "create_profile_btn": "Create Profile",
                 "export_progress_btn": "Export Progress", "import_progress_btn": "Import Progress",
+                // Lesson Select
                 "lesson_select_title": "Select a Lesson", "current_profile": "Profile", "back_to_profiles_btn": "Back to Profiles",
+                // Lesson Intro
                 "keys_to_practice": "Keys:", "lesson_objective": "Objective:",
                 "start_lesson_btn": "Start Lesson", "back_to_lessons_btn": "Back to Lessons",
+                // In-Game HUD
                 "profile": "Profile", "lesson": "Lesson", "score": "Score", "accuracy": "Accuracy", "wpm": "WPM", "target_criteria": "Target",
+                // Session Summary
                 "lesson_name": "Lesson", "final_score": "Score", "final_accuracy": "Accuracy", "final_wpm": "WPM",
                 "new_high_score_text": "🎉 New High Score! 🎉", "replay_lesson_btn": "Replay Lesson",
                 "next_lesson_btn": "Next Lesson", "return_to_lessons_btn": "Return to Lessons",
                 "lesson_passed": "Excellent! You've passed this lesson.", "lesson_failed": "Keep practicing! You'll get it.",
+                // General
                 "error_title": "Error", "db_error_msg": "Database could not be initialized. Please ensure IndexedDB is enabled.",
                 "font_error_msg": "3D Font could not be loaded. The game cannot start.", "locked": "Locked",
-                "target_format": "{0}% Acc, {1} WPM",
-                "L1_FJ_NAME": "Home: F & J", "L1_FJ_DESC": "Practice the F and J keys with your index fingers.",
-                "L2_DK_NAME": "Home: D & K", "L2_DK_DESC": "Practice the D and K keys with your middle fingers.",
-                "L3_FJDK_NAME": "Home: F, J, D, K", "L3_FJDK_DESC": "Combine F, J, D, and K.",
-                "L4_ASL_SEMICOLON_NAME": "Home: A, S, L, ;", "L4_ASL_SEMICOLON_DESC": "Practice A, S, L, and ; (semicolon) keys.",
-                "L5_HomeFull_NAME": "Home Row: Full", "L5_HomeFull_DESC": "Practice all keys on the home row (ASDFGHJKL;).",
-                "L6_HomeWordsSpace_NAME": "Home Row Words", "L6_HomeWordsSpace_DESC": "Type simple words using home row keys and the spacebar."
+                "target_format": "{0}% Acc, {1} WPM"
             },
-            fr: {
+            fr: { /* ... (similar additions) ... */
+                "view_progress_btn": "Voir Progrès", "progress_overview_title": "Aperçu des Progrès",
+                "select_lesson_for_chart": "Choisir Leçon pour Graphique Détaillé:", "back_btn": "Retour",
+                "lesson_length_approx": "Longueur Approx.:",
+                "L_NAME_HOME_ROW_BASIC": "Bases Ligne de Repos", "L_DESC_HOME_ROW_BASIC": "Pratiquez les premières touches de la ligne de repos avec espace.",
+                "L_NAME_HOME_ROW_EXTENDED": "Ligne de Repos Étendue", "L_DESC_HOME_ROW_EXTENDED": "Plus de touches de la ligne de repos et mots plus longs.",
+                "L_NAME_HOME_ROW_FULL": "Ligne de Repos Complète", "L_DESC_HOME_ROW_FULL": "Maîtrisez toute la ligne de repos avec mots variés.",
+                "L_NAME_TOP_ROW_INTRO": "Introduction Ligne Supérieure", "L_DESC_TOP_ROW_INTRO": "Introduire les premières touches de la ligne supérieure.",
+                "L_NAME_NUMBERS_INTRO": "Introduction Chiffres", "L_DESC_NUMBERS_INTRO": "Commencez à apprendre les chiffres.",
+                "L_NAME_SYMBOLS_PRACTICE": "Pratique Symboles", "L_DESC_SYMBOLS_PRACTICE": "Pratiquez les symboles courants.",
                 "welcome_title": "Bienvenue à TypeMasterKids !", "profile_select_create": "Sélectionnez ou créez un profil pour commencer :",
                 "load_profile": "Charger Profil", "create_new_profile": "Créer Nouveau Profil",
                 "profile_name_placeholder": "Nom du Profil", "keyboard_layout_label": "Disposition Clavier:",
@@ -248,15 +264,18 @@
                 "lesson_passed": "Excellent ! Vous avez réussi cette leçon.", "lesson_failed": "Continuez à pratiquer ! Vous y arriverez.",
                 "error_title":"Erreur", "db_error_msg": "La base de données n'a pas pu être initialisée. Veuillez vérifier qu'IndexedDB est activé.",
                 "font_error_msg": "La police 3D n'a pas pu être chargée. Le jeu ne peut pas démarrer.", "locked": "Verrouillé",
-                "target_format": "{0}% Préc., {1} MPM",
-                "L1_FJ_NAME": "Base: F & J", "L1_FJ_DESC": "Entraînez-vous sur les touches F et J avec vos index.",
-                "L2_DK_NAME": "Base: D & K", "L2_DK_DESC": "Entraînez-vous sur les touches D et K avec vos majeurs.",
-                "L3_FJDK_NAME": "Base: F, J, D, K", "L3_FJDK_DESC": "Combinez F, J, D, et K.",
-                "L4_ASL_SEMICOLON_NAME": "Base: Q, S, L, M", "L4_ASL_SEMICOLON_DESC": "Entraînez-vous sur Q, S, L, et M (AZERTY).", // Adjusted for AZERTY example
-                "L5_HomeFull_NAME": "Ligne de Base: Complète", "L5_HomeFull_DESC": "Pratiquez toutes les touches de la ligne de base (QSDFGHJKLM).",
-                "L6_HomeWordsSpace_NAME": "Mots Ligne de Base", "L6_HomeWordsSpace_DESC": "Tapez des mots simples avec les touches de base et espace."
+                "target_format": "{0}% Préc., {1} MPM"
             },
-            ar: {
+            ar: { /* ... (similar additions) ... */
+                "view_progress_btn": "عرض التقدم", "progress_overview_title": "نظرة عامة على التقدم",
+                "select_lesson_for_chart": "اختر درسًا للرسم البياني التفصيلي:", "back_btn": "رجوع",
+                "lesson_length_approx": "الطول التقريبي:",
+                "L_NAME_HOME_ROW_BASIC": "أساسيات صف الارتكاز", "L_DESC_HOME_ROW_BASIC": "تمرن على مفاتيح صف الارتكاز الأولية مع المسافة.",
+                "L_NAME_HOME_ROW_EXTENDED": "صف الارتكاز الموسع", "L_DESC_HOME_ROW_EXTENDED": "المزيد من مفاتيح صف الارتكاز وكلمات أطول.",
+                "L_NAME_HOME_ROW_FULL": "صف الارتكاز الكامل", "L_DESC_HOME_ROW_FULL": "أتقن صف الارتكاز بأكمله بكلمات متنوعة.",
+                "L_NAME_TOP_ROW_INTRO": "مقدمة للصف العلوي", "L_DESC_TOP_ROW_INTRO": "مقدمة لأولى مفاتيح الصف العلوي.",
+                "L_NAME_NUMBERS_INTRO": "مقدمة للأرقام", "L_DESC_NUMBERS_INTRO": "ابدأ تعلم مفاتيح الأرقام.",
+                "L_NAME_SYMBOLS_PRACTICE": "تمرين الرموز", "L_DESC_SYMBOLS_PRACTICE": "تمرن على الرموز الشائعة.",
                 "welcome_title": "أهلاً بك في تايب ماستر كيدز!", "profile_select_create": "اختر أو أنشئ ملفًا شخصيًا للبدء:",
                 "load_profile": "تحميل الملف", "create_new_profile": "إنشاء ملف جديد",
                 "profile_name_placeholder": "اسم الملف الشخصي", "keyboard_layout_label": "تخطيط لوحة المفاتيح:",
@@ -272,123 +291,145 @@
                 "lesson_passed": "ممتاز! لقد تجاوزت هذا الدرس.", "lesson_failed": "استمر في التدريب! ستنجح.",
                 "error_title":"خطأ", "db_error_msg": "لم يتم تهيئة قاعدة البيانات. يرجى التأكد من تفعيل IndexedDB.",
                 "font_error_msg": "لا يمكن تحميل الخط ثلاثي الأبعاد. لا يمكن بدء اللعبة.", "locked": "مغلق",
-                "target_format": "{0}% دقة, {1} ك/د",
-                "L1_FJ_NAME": "الأساس: ت & ن", "L1_FJ_DESC": "تمرن على مفتاحي ت و ن بأصابع السبابة.", // Example for Arabic
-                "L2_DK_NAME": "الأساس: ك & م", "L2_DK_DESC": "تمرن على مفتاحي ك و م بأصابع الوسطى.",
-                "L3_FJDK_NAME": "الأساس: ت, ن, ك, م", "L3_FJDK_DESC": "اجمع بين ت, ن, ك, و م.",
-                "L4_ASL_SEMICOLON_NAME": "الأساس: ش, س, ل, ؛", "L4_ASL_SEMICOLON_DESC": "تمرن على ش, س, ل, و ؛ (فاصلة منقوطة).",
-                "L5_HomeFull_NAME": "صف الارتكاز: كامل", "L5_HomeFull_DESC": "تمرن على جميع مفاتيح صف الارتكاز.",
-                "L6_HomeWordsSpace_NAME": "كلمات صف الارتكاز", "L6_HomeWordsSpace_DESC": "اكتب كلمات بسيطة باستخدام مفاتيح صف الارتكاز والمسافة."
+                "target_format": "{0}% دقة, {1} ك/د"
             }
         };
         let currentLang = 'en';
 
-        function _t(key, ...args) {
+        function _t(key, ...args) { /* ... (same as before) ... */
             const store = i18nData[currentLang] || i18nData.en;
-            let template = store[key] || key; // Corrected: `let template`
+            let template = store[key] || key;
             if (args.length > 0) {
                 args.forEach((arg, i) => {
-                    template = template.replace(new RegExp(`\\{${i}\\}`, 'g'), arg); // Corrected: `template =`
+                    template = template.replace(new RegExp(`\\{${i}\\}`, 'g'), arg);
                 });
             }
             return template;
         }
-
-        function applyLocalization() {
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                el.textContent = _t(el.dataset.i18n);
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                el.placeholder = _t(el.dataset.i18nPlaceholder);
-            });
+        function applyLocalization() { /* ... (same as before) ... */
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = _t(el.dataset.i18n); });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = _t(el.dataset.i18nPlaceholder); });
             document.documentElement.lang = currentLang;
             document.getElementById('appBody').className = currentLang === 'ar' ? 'rtl' : '';
             if(currentProfile) document.getElementById('activeProfileName').textContent = currentProfile.name;
+            if(currentProfile) document.getElementById('progressProfileName').textContent = currentProfile.name;
         }
 
-        // --- Keyboard Layouts & Lessons Data ---
+        // --- Keyboard Layouts ---
         const KEYBOARDS = {
-            qwerty: {
+            qwerty: { /* ... QWERTY definition ... */
                 name: "QWERTY",
-                home: "asdfghjkl;", homeLeft: "asdfg", homeRight: "hjkl;",
-                upper: "qwertyuiop", upperLeft: "qwerty", upperRight: "uiop",
-                lower: "zxcvbnm,.", lowerLeft: "zxcvb", lowerRight: "nm,.",
-                numbers: "1234567890"
+                home: "asdfghjkl;", home_left_keys: ['a','s','d','f','g'], home_right_keys: ['h','j','k','l',';'],
+                upper: "qwertyuiop", upper_left_keys: ['q','w','e','r','t'], upper_right_keys: ['y','u','i','o','p'],
+                lower: "zxcvbnm,.", lower_left_keys: ['z','x','c','v','b'], lower_right_keys: ['n','m',',','.'],
+                numbers: "1234567890", symbols_common: "!@#$%^&*()_+-=[]{}|;':\",./<>?" // Example
             },
-            azerty: {
+            azerty: { /* ... AZERTY definition ... */
                 name: "AZERTY",
-                home: "qsdfghjklm", homeLeft: "qsdfg", homeRight: "hjklm",
-                upper: "azertyuiop", upperLeft: "azerty", upperRight: "uiop",
-                lower: "wxcvbn,;", lowerLeft: "wxcvb", lowerRight: "n,;", // Note: AZERTY specific keys like 'ù' or 'µ' might need special handling if directly typed
-                numbers: "&é\"'(-è_çà)=" // Top row numbers & symbols for AZERTY
+                home: "qsdfghjklm", home_left_keys: ['q','s','d','f','g'], home_right_keys: ['h','j','k','l','m'],
+                upper: "azertyuiop", upper_left_keys: ['a','z','e','r','t','y'], upper_right_keys: ['u','i','o','p'], // Note: AZERTY 'y' is often left hand
+                lower: "wxcvbn,;", lower_left_keys: ['w','x','c','v','b'], lower_right_keys: ['n',',',';'], // Simplified
+                numbers: "&é\"'(-è_çà)=", symbols_common: "$ù*%µ£=+" // Example
             },
-            arabic_101: {
+            arabic_101: { /* ... Arabic definition ... */
                 name: "Arabic (PC 101)",
-                home: "شسيبتنمكظ", homeLeft: "شسيبت", homeRight: "نمكظ", // More standard split often points to 'ت' and 'ن' or 'ك' and 'م' as primary index
-                // Example based on common fingerings, might vary. For simplicity, I'll use keys that are generally distinct for left/right.
-                // Let's use: Left Index: ت (t), Right Index: ن (n)
-                // Left Middle: ك (k), Right Middle: م (m)
-                // Left Ring: ش (sh), Right Ring: ل (l)
-                // Left Pinky: س (s), Right Pinky: ، (comma) or a nearby letter like ط (long T)
-                home_row_letters: "شسيبلاتنمكط", // Common home row, not strictly split for lessons yet
-                homeLeftChars: ['ش', 'س', 'ي', 'ب', 'ل'], // Example for Arabic lessons, keys might differ based on teaching method
-                homeRightChars: ['ا', 'ت', 'ن', 'م', 'ك'],
-                upper: "ضصثقفغعهخحجد", upperLeft: "ضصثقف", upperRight: "غعهخحجد",
-                lower: "ئءؤرلاىةوزظ", lowerLeft: "ئءؤر", lowerRight: "لاىةوزظ",
-                numbers: "١٢٣٤٥٦٧٨٩٠" // Eastern Arabic numerals
+                home: "شسيبلاتنمكط", home_left_keys: ['ش','س','ي','ب','ل'], home_right_keys: ['ا','ت','ن','م','ك','ط'],
+                upper: "ضصثقفغعهخحجد", upper_left_keys: ['ض','ص','ث','ق','ف'], upper_right_keys: ['غ','ع','ه','خ','ح','ج','د'],
+                lower: "ئءؤرلاىةوزظ", lower_left_keys: ['ئ','ء','ؤ','ر','ذ'], lower_right_keys: ['لا','ى','ة','و','ز','ظ'], // 'لا' is one key
+                numbers: "١٢٣٤٥٦٧٨٩٠", symbols_common: "؟،٪٭؛:" // Example
             }
         };
+        // Corrected key access for lessons
+        const KB_MAPPING = {
+            qwerty: { f:'f', j:'j', d:'d', k:'k', s:'s', l:'l', a:'a', ';':';', g:'g', h:'h' /* ... more ... */ },
+            azerty: { f:'f', j:'j', d:'d', k:'k', s:'s', l:'l', a:'q', ';':'m', g:'g', h:'h' /* ... more ... */ }, // Map QWERTY pedagogical keys to AZERTY actual
+            arabic_101: { f:'ت', j:'ن', d:'ك', k:'م', s:'س', l:'ل', a:'ش', ';':'ط', g:'ب', h:'ا' /* ... more ... */ } // Example mapping
+        };
 
-        const LESSONS_CONFIG = [
-            { id: "L1_FJ", nameKey: "L1_FJ_NAME", descKey: "L1_FJ_DESC",
-              getChars: (kb) => kb.name === 'AZERTY' ? [kb.homeLeft[3], kb.homeRight[0]] : // f,j (AZERTY)
-                                kb.name === 'Arabic (PC 101)' ? ['ت', 'ن'] : // ت,ن (Arabic)
-                                [kb.homeLeft[3], kb.homeRight[0]], // f,j (QWERTY)
-              generateString: (chars, len) => Array(len).fill(0).map((_,i) => chars[i%chars.length]).join(''),
-              len: 20, timePerChar: 3000, targetAccuracy: 85, targetWPM: 5 },
-            { id: "L2_DK", nameKey: "L2_DK_NAME", descKey: "L2_DK_DESC",
-              getChars: (kb) => kb.name === 'AZERTY' ? [kb.homeLeft[2], kb.homeRight[1]] : // d,k (AZERTY)
-                                kb.name === 'Arabic (PC 101)' ? ['ك', 'م'] : // ك,م (Arabic)
-                                [kb.homeLeft[2], kb.homeRight[1]], // d,k (QWERTY)
-              generateString: (chars, len) => Array(len).fill(0).map((_,i) => chars[i%chars.length]).join(''),
-              len: 20, timePerChar: 2800, targetAccuracy: 88, targetWPM: 7 },
-            { id: "L3_FJDK", nameKey: "L3_FJDK_NAME", descKey: "L3_FJDK_DESC",
-              getChars: (kb) => kb.name === 'AZERTY' ? [kb.homeLeft[3], kb.homeRight[0], kb.homeLeft[2], kb.homeRight[1]] :
-                                kb.name === 'Arabic (PC 101)' ? ['ت', 'ن', 'ك', 'م'] :
-                                [kb.homeLeft[3], kb.homeRight[0], kb.homeLeft[2], kb.homeRight[1]],
-              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
-              len: 30, timePerChar: 2500, targetAccuracy: 90, targetWPM: 10 },
-            { id: "L4_ASL_SEMICOLON", nameKey: "L4_ASL_SEMICOLON_NAME", descKey: "L4_ASL_SEMICOLON_DESC", // QWERTY: a,s,l,; AZERTY: q,s,l,m Arabic: ش,س,ل,ط
-              getChars: (kb) => kb.name === 'AZERTY' ? [kb.homeLeft[0], kb.homeLeft[1], kb.homeRight[2], kb.homeRight[3]] : // q,s,l,m
-                                kb.name === 'Arabic (PC 101)' ? ['ش', 'س', 'ل', 'ط'] : // Arbitrary selection for demo
-                                [kb.homeLeft[0],kb.homeLeft[1],kb.homeRight[2],kb.homeRight[3]], // a,s,l,;
-              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
-              len: 30, timePerChar: 2200, targetAccuracy: 90, targetWPM: 12 },
-            { id: "L5_HomeFull", nameKey: "L5_HomeFull_NAME", descKey: "L5_HomeFull_DESC",
-              getChars: (kb) => kb.home.split(''),
-              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
-              len: 40, timePerChar: 2000, targetAccuracy: 92, targetWPM: 15 },
-            { id: "L6_HomeWordsSpace", nameKey: "L6_HomeWordsSpace_NAME", descKey: "L6_HomeWordsSpace_DESC",
-              getChars: (kb) => kb.home.split('').concat([' ']), // Add space
-              generateString: (chars, lesson) => {
-                  const words = [];
-                  const actualChars = chars.filter(c => c !== ' ');
-                  for(let i=0; i < lesson.numWords; i++) {
-                      let wordLen = Math.floor(Math.random() * (lesson.maxWordLen - lesson.minWordLen + 1)) + lesson.minWordLen;
-                      let word = Array(wordLen).fill(0).map(() => actualChars[Math.floor(Math.random()*actualChars.length)]).join('');
-                      words.push(word);
-                  }
-                  return words.join(' ');
-              },
-              numWords: 8, minWordLen: 3, maxWordLen: 5,
-              timePerChar: 1800, targetAccuracy: 95, targetWPM: 18 }
-        ];
+        // --- Lesson Generation ---
+        function generateLessons() {
+            const lessons = [];
+            let lessonIdCounter = 1;
+            const kbName = currentProfile.keyboardLayout;
+            const kbMap = KB_MAPPING[kbName];
+            const keyboard = KEYBOARDS[kbName];
+
+            const makeLesson = (nameKey, descKey, keyChars, numWords, minWordLen, maxWordLen, timeMod, accTarget, wpmTarget) => {
+                // Ensure all keyChars are valid for the current keyboard
+                const validKeyChars = keyChars.map(k => kbMap[k] || k).filter(kc => keyboard.home.includes(kc) || keyboard.upper.includes(kc) || keyboard.lower.includes(kc) || keyboard.numbers.includes(kc) || kc === ' ');
+                if (validKeyChars.length === 0 && !keyChars.includes(' ')) { // If only space, that's fine. otherwise error.
+                    console.warn(`Lesson "${nameKey}" has no valid keys for ${kbName}, skipping key char logic or using defaults.`);
+                }
+
+                lessons.push({
+                    id: `L${lessonIdCounter++}`, nameKey, descKey,
+                    getChars: () => validKeyChars.length > 0 ? [...new Set(validKeyChars)] : ['a',' '], // Fallback
+                    generateString: (chars, lessonParams) => {
+                        let text = "";
+                        const usableChars = chars.filter(c => c !== ' ');
+                        if (usableChars.length === 0) usableChars.push(kbMap['f'] || 'f'); // Absolute fallback
+                        for (let i = 0; i < lessonParams.numWords; i++) {
+                            let word = "";
+                            const wordLen = Math.floor(Math.random() * (lessonParams.maxWordLen - lessonParams.minWordLen + 1)) + lessonParams.minWordLen;
+                            for (let j = 0; j < wordLen; j++) {
+                                word += usableChars[Math.floor(Math.random() * usableChars.length)];
+                            }
+                            text += word + (i < lessonParams.numWords - 1 ? " " : "");
+                        }
+                        return text;
+                    },
+                    numWords, minWordLen, maxWordLen,
+                    timePerChar: Math.max(1000, 3000 * timeMod), // Minimum 1s per char
+                    targetAccuracy: accTarget, targetWPM: wpmTarget
+                });
+            };
+
+            // Level Group 1: Basic Home Row + Space
+            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['f', 'j', ' '], 10, 1, 3, 1.0, 85, 8); // fj + space
+            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['d', 'k', ' '], 12, 1, 3, 0.95, 87, 10); // dk + space
+            makeLesson("L_NAME_HOME_ROW_BASIC", "L_DESC_HOME_ROW_BASIC", ['f', 'j', 'd', 'k', ' '], 15, 2, 4, 0.9, 88, 12);
+
+            // Level Group 2: Extended Home Row
+            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['s', 'l', ' '], 15, 2, 4, 0.9, 90, 14);
+            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['a', ';', ' '], 18, 2, 5, 0.85, 90, 15);
+            makeLesson("L_NAME_HOME_ROW_EXTENDED", "L_DESC_HOME_ROW_EXTENDED", ['f','j','d','k','s','l','a',';',' '], 20, 3, 5, 0.8, 92, 18);
+
+            // Level Group 3: Full Home Row
+            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", ['g', 'h', ' '], 18, 3, 5, 0.8, 92, 20);
+            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", keyboard.home.split('').concat([' ']), 25, 3, 6, 0.75, 94, 22);
+            makeLesson("L_NAME_HOME_ROW_FULL", "L_DESC_HOME_ROW_FULL", keyboard.home.split('').concat([' ']), 30, 4, 7, 0.7, 95, 25); // Longer words
+
+            // Programmatically add more lessons to reach ~50
+            // Example: Introduce top row keys gradually
+            let topRowKeys = [...keyboard.upper_left_keys, ...keyboard.upper_right_keys];
+            let currentActiveKeys = keyboard.home.split('').concat([' ']);
+            for(let i=0; i< topRowKeys.length; i+=2) {
+                let newKeys = topRowKeys.slice(i, i+2);
+                currentActiveKeys.push(...newKeys);
+                currentActiveKeys = [...new Set(currentActiveKeys)]; // Unique keys
+                makeLesson("L_NAME_TOP_ROW_INTRO", "L_DESC_TOP_ROW_INTRO", [...currentActiveKeys],
+                    20 + i*2, 3, 6, 0.7 - (i*0.02), 93, 20 + i);
+                 if (lessons.length >= 45) break; // Stop if we have enough, avoid infinite loop
+            }
+            // ... similar logic for bottom row, numbers, symbols ...
+            // Ensure at least 50, fill with variations if needed
+            while(lessons.length < 50) {
+                let lastLesson = lessons[lessons.length-1];
+                makeLesson(lastLesson.nameKey, lastLesson.descKey, lastLesson.getChars(),
+                    lastLesson.numWords + 2, lastLesson.minWordLen, lastLesson.maxWordLen + (lessons.length%2), // Vary word length
+                    Math.max(0.5, lastLesson.timePerChar/3000 * 0.98), // Gradually faster
+                    Math.min(98, lastLesson.targetAccuracy + 0.1), // Slightly higher acc
+                    lastLesson.targetWPM + 1); // Higher WPM
+            }
+            LESSONS = lessons;
+        }
 
 
         // --- IndexedDB Functions ---
-        function initDB() {
+        // ... (initDB, saveProfileData, getProfileData, getAllProfilesData - largely same, but ensure lessonAttempts are saved) ...
+        function initDB() { /* same */
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(APP_DB_NAME, 1);
+                const request = indexedDB.open(APP_DB_NAME, 1); // Version can be incremented if schema changes
                 request.onupgradeneeded = event => {
                     const store = event.target.result.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
                     store.createIndex('name', 'name', { unique: false });
@@ -397,7 +438,7 @@
                 request.onerror = event => { console.error('DB Error:', event.target.error); reject(_t("db_error_msg")); };
             });
         }
-        async function saveProfileData(profile) {
+        async function saveProfileData(profile) { /* ensure profile.progress.lessonAttempts is part of what's saved */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readwrite');
             const store = tx.objectStore(PROFILES_STORE);
@@ -405,11 +446,9 @@
                 const req = store.put(profile);
                 req.onsuccess = () => resolve(req.result);
                 req.onerror = () => { console.error("Save Profile Error:", req.error); reject(req.error); }
-                tx.oncomplete = () => console.log("Profile saved successfully:", profile.id);
-                tx.onerror = (event) => console.error("Transaction error on save:", event.target.error);
             });
         }
-        async function getProfileData(profileId) {
+        async function getProfileData(profileId) { /* same */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readonly');
             const store = tx.objectStore(PROFILES_STORE);
@@ -419,7 +458,7 @@
                 req.onerror = () => { console.error("Get Profile Error:", req.error); reject(req.error); }
             });
         }
-        async function getAllProfilesData() {
+        async function getAllProfilesData() { /* same */
             if (!db) throw new Error("Database not initialized.");
             const tx = db.transaction(PROFILES_STORE, 'readonly');
             const store = tx.objectStore(PROFILES_STORE);
@@ -430,26 +469,42 @@
             });
         }
 
+
         // --- Three.js Scene ---
+        // ... (largely same, maybe a cooler background) ...
         function setupThreeScene() {
             const container = document.getElementById('container');
             three.scene = new THREE.Scene();
-            three.scene.background = new THREE.Color(0x455a64);
-
-            three.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            three.camera.position.set(0, 1.5, 8);
+            // three.scene.background = new THREE.Color(0x1a237e); // Indigo Darken-4
+            three.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            three.camera.position.set(0, 1.5, 10); // Slightly further
             three.camera.lookAt(0,1,0);
 
-            three.renderer = new THREE.WebGLRenderer({ antialias: true });
+            three.renderer = new THREE.WebGLRenderer({ antialias: true, alpha:true }); // Alpha for potential CSS background
             three.renderer.setSize(window.innerWidth, window.innerHeight);
             three.renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(three.renderer.domElement);
 
-            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
             three.scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-            directional.position.set(5, 10, 7);
+            const directional = new THREE.DirectionalLight(0xffffff, 0.9);
+            directional.position.set(8, 15, 10);
             three.scene.add(directional);
+
+            // Dynamic Background (Starfield or similar)
+            const starGeo = new THREE.BufferGeometry();
+            const starVertices = [];
+            for(let i=0; i<10000; i++) {
+                const x = THREE.MathUtils.randFloatSpread(1500);
+                const y = THREE.MathUtils.randFloatSpread(1500);
+                const z = THREE.MathUtils.randFloatSpread(1500);
+                starVertices.push(x,y,z);
+            }
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.7, transparent: true, opacity:0.7});
+            three.backgroundSphere = new THREE.Points(starGeo, starMat);
+            three.scene.add(three.backgroundSphere);
+
 
             const fontLoader = new THREE.FontLoader();
             return new Promise((resolve, reject) => {
@@ -460,61 +515,62 @@
                 );
             });
         }
-        function renderThreeScene() {
-            if(three.renderer) three.renderer.render(three.scene, three.camera);
-        }
         function animateThree() {
             requestAnimationFrame(animateThree);
             TWEEN.update();
-            renderThreeScene();
+            if (three.backgroundSphere) {
+                three.backgroundSphere.rotation.y += 0.0002;
+                three.backgroundSphere.rotation.x += 0.0001;
+            }
+            if(three.renderer) three.renderer.render(three.scene, three.camera);
         }
-        function update3DChar(char) {
+        // update3DChar and window.addEventListener('resize'...) are the same
+
+        function update3DChar(char) { /* same */
             if (!three.font || !three.scene) return;
             if (three.active3DChar) three.scene.remove(three.active3DChar);
-            three.active3DChar = null; // Clear reference first
-            if (!char || char === ' ') { renderThreeScene(); return; }
+            three.active3DChar = null;
+            if (!char || char === ' ') { if(three.renderer) three.renderer.render(three.scene, three.camera); return; }
 
             try {
                 const geometry = new THREE.TextGeometry(char, {
-                    font: three.font, size: 1, height: 0.2, curveSegments: 5,
-                    bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.02, bevelSegments: 3
+                    font: three.font, size: 1.2, height: 0.25, curveSegments: 5,
+                    bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.03, bevelSegments: 3
                 });
                 geometry.center();
-                const material = new THREE.MeshStandardMaterial({ color: 0xffeb3b });
+                const material = new THREE.MeshStandardMaterial({ color: 0xFFEB3B, emissive: 0x443300 });
                 three.active3DChar = new THREE.Mesh(geometry, material);
-                three.active3DChar.position.set(0, 1.5, 0);
+                three.active3DChar.position.set(0, 1.8, 0); // Slightly higher for better visibility
                 three.scene.add(three.active3DChar);
             } catch(e) {
                 console.error("Error creating 3D text for char:", char, e);
             }
-            renderThreeScene();
+            if(three.renderer) three.renderer.render(three.scene, three.camera);
         }
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', () => { /* same */
             if(!three.camera || !three.renderer) return;
             three.camera.aspect = window.innerWidth / window.innerHeight;
             three.camera.updateProjectionMatrix();
             three.renderer.setSize(window.innerWidth, window.innerHeight);
-            renderThreeScene();
+            if(three.renderer) three.renderer.render(three.scene, three.camera);
         }, false);
 
 
         // --- UI Navigation & Management ---
-        function showUIScreen(screenId) {
+        function showUIScreen(screenId, callingScreen = null) {
+            if(callingScreen) lastActiveScreen = callingScreen;
             document.querySelectorAll('.ui-overlay').forEach(s => s.style.display = 'none');
             document.getElementById(screenId).style.display = 'flex';
             
-            const isGameScreen = (screenId === 'gameScreenPlaceholder'); // Using a placeholder ID if no actual game screen div
+            const isGameScreen = false; // Game screen elements are managed directly by startGameSession
             document.getElementById('hud').style.display = isGameScreen ? 'block' : 'none';
             document.getElementById('typingArea').style.display = isGameScreen ? 'block' : 'none';
             document.getElementById('charTimeIndicator').style.display = isGameScreen ? 'block' : 'none';
 
-            if(!isGameScreen) { // If not on actual game screen, ensure game logic related things are reset
-                gameActive = false;
-                 update3DChar(null); // Clear 3D char when not in game
-            }
+            if(!isGameScreen) { gameActive = false; update3DChar(null); }
         }
 
-        async function displayProfileScreen() {
+        async function displayProfileScreen() { /* ... (largely same, add View Progress button logic) ... */
             try {
                 const profiles = await getAllProfilesData();
                 const selectEl = document.getElementById('profileSelect');
@@ -525,10 +581,8 @@
                     opt.textContent = p.name;
                     selectEl.appendChild(opt);
                 });
-            } catch(e) {
-                console.error("Error populating profiles:", e);
-                alert("Error loading profiles from database.");
-            }
+                 document.getElementById('viewProgressBtnMain').style.display = profiles.length > 0 ? 'inline-block' : 'none';
+            } catch(e) { console.error("Error populating profiles:", e); }
             const storedLang = localStorage.getItem('typeMasterLang') || navigator.language.split('-')[0];
             currentLang = i18nData[storedLang] ? storedLang : 'en';
             document.getElementById('uiLanguageSelect').value = currentLang;
@@ -536,26 +590,23 @@
             showUIScreen('profileScreen');
         }
 
-        function displayLessonSelectScreen() {
+        function displayLessonSelectScreen() { /* ... (populate from generated LESSONS) ... */
+            if (!currentProfile) { displayProfileScreen(); return; } // Safety
+            generateLessons(); // Regenerate based on current profile's keyboard
             document.getElementById('activeProfileName').textContent = currentProfile.name;
             const grid = document.getElementById('lessonsGrid');
             grid.innerHTML = '';
-            const currentKBLayoutName = currentProfile.keyboardLayout;
-            const currentKB = KEYBOARDS[currentKBLayoutName];
 
-            LESSONS_CONFIG.forEach((lessonConf, index) => {
+            LESSONS.forEach((lessonConf, index) => {
                 const button = document.createElement('button');
-                button.classList.add('level-button'); // 'level-button' instead of 'lesson-button' for consistency with CSS
-                
-                const lessonName = _t(lessonConf.nameKey) || lessonConf.id;
-                // isUnlocked: 0 means first lesson, always unlocked after profile creation.
-                // highestLessonUnlocked = -1 initially. So lesson 0 is unlocked if index <= -1 + 1 (i.e. index <= 0)
+                button.classList.add('level-button');
+                const lessonName = _t(lessonConf.nameKey) || `Lesson ${lessonConf.id}`;
                 const isUnlocked = index <= (currentProfile.progress.highestLessonUnlocked + 1);
                 
                 let statsText = "";
-                const lessonResult = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonConf.id] : null;
-                if(lessonResult && typeof lessonResult.accuracy === 'number' && typeof lessonResult.wpm === 'number') { // Check if stats are valid
-                    statsText = `<small>${_t('target_format', lessonResult.accuracy.toFixed(0), lessonResult.wpm)}</small>`;
+                const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonConf.id] : null;
+                if(lessonStats && typeof lessonStats.accuracy === 'number' && typeof lessonStats.wpm === 'number') {
+                    statsText = `<small>${_t('target_format', lessonStats.accuracy.toFixed(0), lessonStats.wpm)}</small>`;
                 }
 
                 button.innerHTML = `${_t('lesson')} ${index + 1}: ${lessonName} ${statsText}`;
@@ -569,81 +620,61 @@
                 }
                 grid.appendChild(button);
             });
-            applyLocalization(); // Re-apply in case any lesson names need it
-            showUIScreen('lessonSelectScreen');
-        }
-
-        function displayLessonIntroScreen(lessonIdx) {
-            currentLessonIndex = lessonIdx;
-            const lessonConfig = LESSONS_CONFIG[currentLessonIndex];
-            const currentKB = KEYBOARDS[currentProfile.keyboardLayout];
-            
-            // Prepare the full currentLesson object
-            currentLesson = { ...lessonConfig }; // shallow copy config
-            currentLesson.actualChars = currentLesson.getChars(currentKB);
-            // Handle variable length lessons (like word-based ones)
-            if (typeof currentLesson.len === 'undefined' && currentLesson.numWords) { // For word lessons
-                 currentLesson.targetString = currentLesson.generateString(currentLesson.actualChars, currentLesson); // Pass lesson object itself for more context
-            } else {
-                 currentLesson.targetString = currentLesson.generateString(currentLesson.actualChars, currentLesson.len);
-            }
-
-
-            document.getElementById('introLessonTitle').textContent = _t(currentLesson.nameKey) || currentLesson.id;
-            document.getElementById('introLessonDescription').textContent = _t(currentLesson.descKey) || "Practice typing these keys.";
-            document.getElementById('introKeysList').textContent = currentLesson.actualChars.filter(c => c !== ' ').join(', '); // Don't show space in list
-            document.getElementById('introObjective').textContent = _t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM);
             applyLocalization();
-            showUIScreen('lessonIntroScreen');
+            showUIScreen('lessonSelectScreen', 'profileScreen');
         }
 
-        // --- Game Core Logic ---
-        let currentTypedIdx = 0;
-        let currentErrorsThisSession = 0; // Renamed from currentErrors to avoid conflict
-        let charTimerTimeoutId = null;
-        let lessonStartTime = 0;
-        let totalKeyStrokesInSession = 0; // Renamed
+        function displayLessonIntroScreen(lessonIndex) { /* ... (use LESSONS[lessonIndex]) ... */
+            currentLessonIdx = lessonIndex;
+            const lessonConfig = LESSONS[currentLessonIdx];
+            
+            currentLessonData = { ...lessonConfig }; // shallow copy config
+            currentLessonData.actualChars = currentLessonData.getChars(); // Call the function
+            currentLessonData.targetString = currentLessonData.generateString(currentLessonData.actualChars, currentLessonData);
 
-        function startGameSession() {
+            document.getElementById('introLessonTitle').textContent = _t(currentLessonData.nameKey) || `Lesson ${currentLessonData.id}`;
+            document.getElementById('introLessonDescription').textContent = _t(currentLessonData.descKey) || "Practice typing.";
+            document.getElementById('introKeysList').textContent = currentLessonData.actualChars.filter(c => c !== ' ').join(', ');
+            document.getElementById('introObjective').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
+            document.getElementById('introLength').textContent = currentLessonData.targetString.length;
+            applyLocalization();
+            showUIScreen('lessonIntroScreen', 'lessonSelectScreen');
+        }
+
+        // --- Game Core Logic (startGameSession, updateTypingAreaDisplay, startCharTimer, handleCharacterInput, updateHUD, endGameSession) ---
+        // ... (largely same, ensure lessonAttempts is updated in endGameSession) ...
+        function startGameSession() { /* same, but update HUD lesson index/total */
             gameActive = true;
             currentTypedIdx = 0;
             currentErrorsThisSession = 0;
             totalKeyStrokesInSession = 0;
             lessonStartTime = Date.now();
-            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0 }; // Reset session stats
+            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0 };
 
             document.getElementById('hudProfileName').textContent = currentProfile.name;
-            document.getElementById('hudLessonName').textContent = _t(currentLesson.nameKey);
-            document.getElementById('hudTargetInfo').textContent = _t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM);
+            document.getElementById('hudLessonName').textContent = _t(currentLessonData.nameKey);
+            document.getElementById('hudLessonIndex').textContent = currentLessonIdx + 1;
+            document.getElementById('hudTotalLessons').textContent = LESSONS.length;
+            document.getElementById('hudTargetInfo').textContent = _t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM);
             
             updateTypingAreaDisplay();
             startCharTimer();
-            // This is the actual game screen. We don't use showUIScreen for it,
-            // but directly manage visibility of HUD, typingArea, charTimeIndicator.
-            document.getElementById('profileScreen').style.display = 'none';
-            document.getElementById('lessonSelectScreen').style.display = 'none';
-            document.getElementById('lessonIntroScreen').style.display = 'none';
-            document.getElementById('sessionSummaryScreen').style.display = 'none';
-
+            document.querySelectorAll('.ui-overlay').forEach(s => s.style.display = 'none'); // Hide all overlays
             document.getElementById('hud').style.display = 'block';
             document.getElementById('typingArea').style.display = 'block';
             document.getElementById('charTimeIndicator').style.display = 'block';
-            window.focus(); // Try to focus to capture keys
+            window.focus();
         }
-
-        function updateTypingAreaDisplay() {
+        // updateTypingAreaDisplay, startCharTimer, handleCharacterInput, updateHUD are mostly the same
+         function updateTypingAreaDisplay() { /* same */
             const typingAreaEl = document.getElementById('typingArea');
-            if (!currentLesson || !currentLesson.targetString) {
-                typingAreaEl.innerHTML = ""; // Clear if no lesson or string
-                update3DChar(null);
-                return;
+            if (!currentLessonData || !currentLessonData.targetString) {
+                typingAreaEl.innerHTML = ""; update3DChar(null); return;
             }
             let html = '';
-            for(let i=0; i < currentLesson.targetString.length; i++) {
-                const char = currentLesson.targetString[i];
+            for(let i=0; i < currentLessonData.targetString.length; i++) {
+                const char = currentLessonData.targetString[i];
                 if (i < currentTypedIdx) {
-                    // For simplicity, we assume past characters were correct visually for now.
-                    // A more complex system would store if char at index i was an error.
                     html += `<span class="typed-char-correct">${char === ' ' ? ' ' : char}</span>`;
                 } else if (i === currentTypedIdx) {
                     html += `<span class="current-target-char">${char === ' ' ? ' ' : char}</span>`;
@@ -655,24 +686,24 @@
             typingAreaEl.innerHTML = html;
             updateHUD();
         }
-        
-        function startCharTimer() {
+        function startCharTimer() { /* same */
             clearTimeout(charTimerTimeoutId);
             const timerBar = document.getElementById('charTimeIndicatorBar');
             timerBar.style.width = '100%';
-            timerBar.style.backgroundColor = '#66bb6a';
+            timerBar.style.backgroundColor = '#66BB6A';
 
-            if (!gameActive || !currentLesson || currentTypedIdx >= currentLesson.targetString.length) return;
+            if (!gameActive || !currentLessonData || currentTypedIdx >= currentLessonData.targetString.length) return;
 
             let charStartTime = Date.now();
             function depleteBar() {
                 if (!gameActive) return;
                 let elapsed = Date.now() - charStartTime;
-                let progress = Math.max(0, 100 - (elapsed / currentLesson.timePerChar * 100));
+                let progress = Math.max(0, 100 - (elapsed / currentLessonData.timePerChar * 100));
                 timerBar.style.width = progress + '%';
+                if (progress <= 20) timerBar.style.backgroundColor = '#EF5350'; // Red when low
 
                 if (progress <= 0) {
-                    handleCharacterInput(null, true); // Pass null for key, true for timedOut
+                    handleCharacterInput(null, true);
                 } else {
                     charTimerTimeoutId = setTimeout(depleteBar, 50);
                 }
@@ -680,60 +711,43 @@
             charTimerTimeoutId = setTimeout(depleteBar, 50);
         }
 
-        function handleCharacterInput(typedKey, timedOut = false) {
-            if (!gameActive || !currentLesson || currentTypedIdx >= currentLesson.targetString.length) return;
+        function handleCharacterInput(typedKey, timedOut = false) { /* same */
+            if (!gameActive || !currentLessonData || currentTypedIdx >= currentLessonData.targetString.length) return;
             
             clearTimeout(charTimerTimeoutId);
             totalKeyStrokesInSession++;
             sessionStats.totalPresses++;
-            const targetChar = currentLesson.targetString[currentTypedIdx];
+            const targetChar = currentLessonData.targetString[currentTypedIdx];
 
-            if (timedOut) { // If timeout, it's an error
-                currentErrorsThisSession++;
-                sessionStats.score -= 2; // Smaller penalty for timeout
-                document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#ef5350'; // Red
-                if(three.active3DChar) {
-                     new TWEEN.Tween(three.active3DChar.rotation).to({y: three.active3DChar.rotation.y + Math.PI/8},100).yoyo(true).repeat(1).start();
-                }
-
+            if (timedOut) {
+                currentErrorsThisSession++; sessionStats.score -= 2;
+                if(three.active3DChar) new TWEEN.Tween(three.active3DChar.rotation).to({y: three.active3DChar.rotation.y + Math.PI/8},100).yoyo(true).repeat(1).start();
             } else if (typedKey === targetChar) {
-                sessionStats.correctPresses++;
-                sessionStats.score += 10;
-                if(three.active3DChar) {
-                    new TWEEN.Tween(three.active3DChar.scale)
-                        .to({ y: 1.3, z:1.3 }, 100).easing(TWEEN.Easing.Quadratic.Out)
-                        .chain(new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.0, z:1.0 }, 200).easing(TWEEN.Easing.Bounce.Out))
-                        .start();
-                }
-            } else { // Wrong key typed
-                currentErrorsThisSession++;
-                sessionStats.score -= 5;
-                document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#ef5350';
-                if(three.active3DChar) {
-                     new TWEEN.Tween(three.active3DChar.material.color).to({r:1, g:0, b:0}, 100).yoyo(true).repeat(1).onUpdate(c => three.active3DChar.material.color.setRGB(c.r, c.g, c.b)).start();
-                }
+                sessionStats.correctPresses++; sessionStats.score += 10;
+                if(three.active3DChar) new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.3, z:1.3 }, 100).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.0, z:1.0 }, 200).easing(TWEEN.Easing.Bounce.Out)).start();
+            } else {
+                currentErrorsThisSession++; sessionStats.score -= 5;
+                if(three.active3DChar) new TWEEN.Tween(three.active3DChar.material.color).to({r:1, g:0, b:0}, 100).yoyo(true).repeat(1).onUpdate(c => three.active3DChar.material.color.setRGB(c.r, c.g, c.b)).start();
             }
             
             currentTypedIdx++;
-            if (currentTypedIdx >= currentLesson.targetString.length) {
+            if (currentTypedIdx >= currentLessonData.targetString.length) {
                 endGameSession();
             } else {
                 updateTypingAreaDisplay();
                 startCharTimer();
             }
         }
-        
-        function updateHUD() {
+        function updateHUD() { /* same */
             document.getElementById('hudScore').textContent = sessionStats.score;
             const accuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
             document.getElementById('hudAccuracy').textContent = accuracy.toFixed(0) + '%';
-
             const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
-            const wpm = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0; // WPM on correct chars
+            const wpm = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0;
             document.getElementById('hudWPM').textContent = wpm;
         }
 
-        async function endGameSession() { // Made async for saveProfileData
+        async function endGameSession() { /* Update for lessonAttempts array */
             gameActive = false;
             clearTimeout(charTimerTimeoutId);
             update3DChar(null);
@@ -742,46 +756,108 @@
             const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
             const finalWPM = timeElapsedMinutes > 0 ? Math.round((sessionStats.correctPresses / 5) / timeElapsedMinutes) : 0;
 
+            // Update overall lesson stats (best score, etc.)
             if (!currentProfile.progress.lessonStats) currentProfile.progress.lessonStats = {};
-            const lessonId = currentLesson.id;
-            const prevStats = currentProfile.progress.lessonStats[lessonId] || { score: -Infinity, accuracy: 0, wpm: 0 };
+            const lessonId = currentLessonData.id;
+            const lessonStats = currentProfile.progress.lessonStats[lessonId] || { score: -Infinity, accuracy: 0, wpm: 0, attempts: [] };
+            
             let newHighScore = false;
-            if (sessionStats.score > prevStats.score) {
-                prevStats.score = sessionStats.score;
+            if (sessionStats.score > lessonStats.score) {
+                lessonStats.score = sessionStats.score;
                 newHighScore = true;
             }
-            prevStats.accuracy = Math.max(prevStats.accuracy, finalAccuracy);
-            prevStats.wpm = Math.max(prevStats.wpm, finalWPM);
-            currentProfile.progress.lessonStats[lessonId] = prevStats;
+            lessonStats.accuracy = Math.max(lessonStats.accuracy, finalAccuracy);
+            lessonStats.wpm = Math.max(lessonStats.wpm, finalWPM);
+            
+            // Add current attempt to history
+            if (!lessonStats.attempts) lessonStats.attempts = [];
+            lessonStats.attempts.push({ date: Date.now(), wpm: finalWPM, accuracy: finalAccuracy, score: sessionStats.score });
+            if (lessonStats.attempts.length > 20) lessonStats.attempts.shift(); // Keep last 20 attempts
 
-            const passed = finalAccuracy >= currentLesson.targetAccuracy && finalWPM >= currentLesson.targetWPM;
-            if (passed && currentLessonIndex >= (currentProfile.progress.highestLessonUnlocked || -1) ) {
-                currentProfile.progress.highestLessonUnlocked = currentLessonIndex;
+            currentProfile.progress.lessonStats[lessonId] = lessonStats;
+
+            const passed = finalAccuracy >= currentLessonData.targetAccuracy && finalWPM >= currentLessonData.targetWPM;
+            if (passed && currentLessonIdx >= (currentProfile.progress.highestLessonUnlocked || -1) ) {
+                currentProfile.progress.highestLessonUnlocked = currentLessonIdx;
             }
             
-            try {
-                await saveProfileData(currentProfile);
-            } catch (e) {
-                console.error("Error saving profile at end of session:", e);
-                alert("Could not save session progress.");
-            }
+            try { await saveProfileData(currentProfile); }
+            catch (e) { console.error("Error saving profile post-session:", e); }
 
             document.getElementById('summaryTitleText').textContent = passed ? _t('lesson_passed') : _t('lesson_failed');
-            document.getElementById('summaryLessonName').textContent = _t(currentLesson.nameKey);
+            document.getElementById('summaryLessonName').textContent = _t(currentLessonData.nameKey);
             document.getElementById('summaryScore').textContent = sessionStats.score;
             document.getElementById('summaryAccuracy').textContent = finalAccuracy.toFixed(1);
             document.getElementById('summaryWPM').textContent = finalWPM;
             document.getElementById('summaryNewHighScoreText').style.display = newHighScore ? 'block' : 'none';
-            document.getElementById('summaryCriteriaFeedback').textContent = 
-                `${_t('target_criteria')}: ${_t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM)}`;
-            document.getElementById('proceedToNextLessonBtn').style.display = (passed && currentLessonIndex < LESSONS_CONFIG.length - 1) ? 'inline-block' : 'none';
+            document.getElementById('summaryCriteriaFeedback').textContent = `${_t('target_criteria')}: ${_t('target_format', currentLessonData.targetAccuracy, currentLessonData.targetWPM)}`;
+            document.getElementById('proceedToNextLessonBtn').style.display = (passed && currentLessonIdx < LESSONS.length - 1) ? 'inline-block' : 'none';
             
             applyLocalization();
-            showUIScreen('sessionSummaryScreen');
+            showUIScreen('sessionSummaryScreen', 'lessonSelectScreen'); // Assuming game came from lesson select
         }
 
+        // --- Progress Charting ---
+        function displayProgressScreen() {
+            if (!currentProfile) return;
+            generateLessons(); // Ensure LESSONS is populated for names
+            document.getElementById('progressProfileName').textContent = currentProfile.name;
+            const selectEl = document.getElementById('lessonChartSelect');
+            selectEl.innerHTML = '';
+            LESSONS.forEach((lesson, index) => {
+                const opt = document.createElement('option');
+                opt.value = lesson.id;
+                opt.textContent = `${_t('lesson')} ${index + 1}: ${_t(lesson.nameKey) || lesson.id}`;
+                selectEl.appendChild(opt);
+            });
+            selectEl.onchange = () => renderLessonChart(selectEl.value);
+            if (LESSONS.length > 0) renderLessonChart(LESSONS[0].id); // Render first lesson chart by default
+            applyLocalization();
+            showUIScreen('progressScreen', lastActiveScreen);
+        }
+
+        function renderLessonChart(lessonId) {
+            const lessonStats = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonId] : null;
+            const attempts = (lessonStats && lessonStats.attempts) ? lessonStats.attempts : [];
+
+            const labels = attempts.map((att, i) => `Attempt ${i+1}`); // Could use dates: new Date(att.date).toLocaleDateString()
+            const wpmData = attempts.map(att => att.wpm);
+            const accuracyData = attempts.map(att => att.accuracy);
+
+            if (lessonProgressChartInstance) {
+                lessonProgressChartInstance.destroy();
+            }
+            const ctx = document.getElementById('lessonProgressChart').getContext('2d');
+            lessonProgressChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'WPM', data: wpmData, borderColor: 'rgb(75, 192, 192)', tension: 0.1, yAxisID: 'yWPM' },
+                        { label: 'Accuracy (%)', data: accuracyData, borderColor: 'rgb(255, 99, 132)', tension: 0.1, yAxisID: 'yAccuracy' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        yWPM: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'WPM'} },
+                        yAccuracy: { type: 'linear', display: true, position: 'right', min: 0, max: 100, title: { display: true, text: 'Accuracy (%)'}, grid: { drawOnChartArea: false } }
+                    },
+                    plugins: { legend: { labels: { color: '#ECEFF1' } } },
+                    color: '#ECEFF1' // For axes and title
+                }
+            });
+        }
+
+
         // --- Event Handlers & Input ---
-        document.getElementById('uiLanguageSelect').addEventListener('change', async (e) => {
+        // ... (Existing button handlers, create/load profile handlers, keydown listener)
+        // Add handlers for new progress buttons
+        document.getElementById('viewProgressBtnMain').addEventListener('click', displayProgressScreen);
+        document.getElementById('viewProgressBtnLessons').addEventListener('click', displayProgressScreen);
+        document.getElementById('backFromProgressBtn').addEventListener('click', () => showUIScreen(lastActiveScreen || 'lessonSelectScreen'));
+        // ... (createProfileBtn, loadProfileBtn, etc. - largely same)
+         document.getElementById('uiLanguageSelect').addEventListener('change', async (e) => { /* same */
             currentLang = e.target.value;
             localStorage.setItem('typeMasterLang', currentLang);
             applyLocalization();
@@ -791,73 +867,66 @@
             }
         });
 
-        document.getElementById('createProfileBtn').addEventListener('click', async () => {
+        document.getElementById('createProfileBtn').addEventListener('click', async () => { /* same, ensure lessonAttempts:[] is part of initial progress */
             const name = document.getElementById('newProfileInputName').value.trim();
-            if (!name) { alert(_t("profile_name_placeholder")); return; } // Using placeholder as message for empty name
+            if (!name) { alert(_t("profile_name_placeholder")); return; }
             const layout = document.getElementById('keyboardLayoutSelect').value;
             const lang = document.getElementById('uiLanguageSelect').value;
-            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now(); // Make ID more URL-friendly
+            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
 
             currentProfile = {
                 id, name, keyboardLayout: layout, language: lang,
-                progress: { highestLessonUnlocked: -1, lessonStats: {} }
+                progress: { highestLessonUnlocked: -1, lessonStats: {} } // lessonStats will hold { score, accuracy, wpm, attempts: [] }
             };
             try {
                 await saveProfileData(currentProfile);
                 currentLang = lang;
-                applyLocalization(); // Apply new lang immediately
+                applyLocalization();
+                generateLessons(); // Generate lessons based on new profile's layout
                 displayLessonSelectScreen();
-            } catch (e) {
-                console.error("Create profile error:", e);
-                alert("Error creating profile. " + (e.message || ""));
-            }
+            } catch (e) { console.error("Create profile error:", e); alert("Error creating profile. " + (e.message || ""));}
         });
         
-        document.getElementById('loadProfileBtn').addEventListener('click', async () => {
+        document.getElementById('loadProfileBtn').addEventListener('click', async () => { /* same */
             const id = document.getElementById('profileSelect').value;
-            if (!id) { alert(_t("profile_select_create")); return; } // Using select_create as general "select a profile" message
+            if (!id) { alert(_t("profile_select_create")); return; }
             try {
                 currentProfile = await getProfileData(id);
                 if (currentProfile) {
                     currentLang = currentProfile.language || 'en';
                     document.getElementById('uiLanguageSelect').value = currentLang;
                     applyLocalization();
+                    generateLessons(); // Generate lessons based on loaded profile's layout
                     displayLessonSelectScreen();
-                } else {
-                    alert("Profile not found."); // Should not happen if ID is from select
-                }
-            } catch(e) {
-                 console.error("Load profile error:", e);
-                 alert("Error loading profile.");
-            }
+                    document.getElementById('viewProgressBtnMain').style.display = 'inline-block'; // Show progress button
+                } else { alert("Profile not found."); document.getElementById('viewProgressBtnMain').style.display = 'none';}
+            } catch(e) { console.error("Load profile error:", e); alert("Error loading profile."); document.getElementById('viewProgressBtnMain').style.display = 'none';}
         });
 
-        document.getElementById('backToProfilesBtn').addEventListener('click', displayProfileScreen);
+        document.getElementById('backToProfilesBtn').addEventListener('click', () => showUIScreen('profileScreen', 'lessonSelectScreen'));
         document.getElementById('startLessonBtn').addEventListener('click', startGameSession);
-        document.getElementById('backToLessonsBtn').addEventListener('click', displayLessonSelectScreen);
-        document.getElementById('replayCurrentLessonBtn').addEventListener('click', () => displayLessonIntroScreen(currentLessonIndex));
+        document.getElementById('backToLessonsBtn').addEventListener('click', () => showUIScreen('lessonSelectScreen', 'lessonIntroScreen'));
+        document.getElementById('replayCurrentLessonBtn').addEventListener('click', () => displayLessonIntroScreen(currentLessonIdx));
         document.getElementById('proceedToNextLessonBtn').addEventListener('click', () => {
-            if (currentLessonIndex < LESSONS_CONFIG.length - 1) {
-                displayLessonIntroScreen(currentLessonIndex + 1);
+            if (currentLessonIdx < LESSONS.length - 1) {
+                displayLessonIntroScreen(currentLessonIdx + 1);
             }
         });
-        document.getElementById('returnToLessonSelectBtn').addEventListener('click', displayLessonSelectScreen);
+        document.getElementById('returnToLessonSelectBtn').addEventListener('click', () => showUIScreen('lessonSelectScreen', 'sessionSummaryScreen'));
 
-        document.getElementById('exportProgressBtn').addEventListener('click', async () => {
+        document.getElementById('exportProgressBtn').addEventListener('click', async () => { /* same */
             try {
                 const data = await getAllProfilesData();
                 if (!data || data.length === 0) { alert("No data to export."); return;}
                 const json = JSON.stringify(data, null, 2);
                 const blob = new Blob([json], {type: 'application/json'});
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'typeMasterKids_progress.json';
+                a.href = URL.createObjectURL(blob); a.download = 'typeMasterKidsPro_progress.json';
                 document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
             } catch(e) { console.error("Export error:", e); alert("Error exporting data."); }
         });
-        document.getElementById('importProgressFile').addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
+        document.getElementById('importProgressFile').addEventListener('change', async (event) => { /* same */
+            const file = event.target.files[0]; if (!file) return;
             const text = await file.text();
             try {
                 const profilesToImport = JSON.parse(text);
@@ -865,20 +934,20 @@
                     let importCount = 0;
                     for(const p of profilesToImport) {
                         if(p.id && p.name && p.keyboardLayout && p.progress) {
-                             await saveProfileData(p);
-                             importCount++;
+                             await saveProfileData(p); importCount++;
                         } else { console.warn("Skipping invalid profile during import:", p); }
                     }
                     alert(`${importCount} profiles imported/updated.`);
-                    displayProfileScreen();
-                } else { alert("Invalid file format. Expected an array of profiles."); }
+                    displayProfileScreen(); // Refresh list
+                } else { alert("Invalid file format."); }
             } catch (e) { console.error("Import error:", e); alert("Error importing file: " + e.message); }
             event.target.value = null;
         });
 
-        window.addEventListener('keydown', (event) => {
+        window.addEventListener('keydown', (event) => { /* same */
             if (!gameActive) return;
-            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') return; // Allow Space, ignore others like Shift, Tab etc for now
+            if (event.metaKey || event.ctrlKey || event.altKey) return; // Ignore combinations with modifier keys
+            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') return;
             event.preventDefault();
             handleCharacterInput(event.key);
         });
@@ -890,15 +959,14 @@
                 await initDB();
                 await setupThreeScene();
                 animateThree();
-                displayProfileScreen();
+                displayProfileScreen(); // Start here
             } catch (error) {
                 console.error("App Init Error:", error);
-                document.body.innerHTML = `<div class="ui-overlay" style="display:flex;"><div class="ui-panel"><h2>${_t('error_title')}</h2><p>${error}</p></div></div>`;
+                document.body.innerHTML = `<div class="ui-overlay" style="display:flex;"><div class="ui-panel"><h2>${_t('error_title')}</h2><p>${error || "Unknown initialization error."}</p></div></div>`;
             }
         }
 
         initializeApp();
-
     </script>
 </body>
 </html>
