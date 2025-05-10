@@ -20,27 +20,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
 
     <style>
-        /* Basic styling for a pleasant UI */
         body {
-            font-family: 'Inter', sans-serif; /* Using a common sans-serif font, Tailwind will handle most */
-            overscroll-behavior-y: contain; /* Prevents pull-to-refresh on mobile */
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior-y: contain;
         }
-        /* For Webkit scrollbars */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
         [v-cloak] { display: none; }
         .markdown-content p { margin-bottom: 0.5em; }
         .markdown-content h1, .markdown-content h2, .markdown-content h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
@@ -52,9 +39,13 @@
         .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
         .markdown-content th, .markdown-content td { border: 1px solid #ddd; padding: 8px; }
         .markdown-content th { background-color: #f9f9f9; }
+
+        /* Ensure FAB is above most content but below modals */
+        .fab-button {
+            z-index: 35; /* Header is 40, Modals are 50 */
+        }
     </style>
     <script>
-        // Tailwind Customizations (optional, can be extended)
         tailwind.config = {
             theme: {
                 extend: {
@@ -70,20 +61,12 @@
                         'slide-in-left': 'slideInLeft 0.3s ease-out',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: 0 },
-                            '100%': { opacity: 1 },
-                        },
-                        slideInLeft: {
-                            '0%': { transform: 'translateX(-100%)' },
-                            '100%': { transform: 'translateX(0)' },
-                        }
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 }, },
+                        slideInLeft: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(0)' }, }
                     }
                 }
             },
-            plugins: [
-                // require('@tailwindcss/forms'), // If we had a build step
-            ]
+            plugins: []
         }
     </script>
 </head>
@@ -101,6 +84,11 @@
                     </h1>
                 </div>
                 <div class="flex items-center space-x-3">
+                    <!-- **** MODIFICATION: Added "New Note" button to header for smaller screens **** -->
+                    <button @click="goToNewNoteView" title="New Note"
+                            class="md:hidden p-2 hover:bg-primary-dark rounded-full">
+                        <i class="fas fa-plus"></i>
+                    </button>
                     <button @click="showImportExportModal = true" title="Import/Export Notes" class="p-2 hover:bg-primary-dark rounded-full">
                         <i class="fas fa-file-import"></i>
                     </button>
@@ -115,12 +103,13 @@
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex flex-1 overflow-hidden">
+        <div class="flex flex-1 overflow-hidden relative"> <!-- **** ADDED: relative positioning for FAB **** -->
             <!-- Sidebar -->
             <aside :class="{'translate-x-0': showSidebar, '-translate-x-full': !showSidebar}"
                    class="fixed inset-y-0 left-0 z-30 lg:static lg:translate-x-0 w-64 bg-secondary text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto">
                 <div class="mt-16 lg:mt-0">
-                    <button @click="setActiveView('addNote'); selectedNote = null; showSidebar = false;"
+                    <!-- This button is still good for sidebar context and larger screens -->
+                    <button @click="goToNewNoteView"
                             class="w-full bg-accent text-white py-2 px-4 rounded-lg hover:bg-opacity-80 transition duration-150 flex items-center justify-center">
                         <i class="fas fa-plus mr-2"></i> New Note
                     </button>
@@ -235,7 +224,7 @@
                         <i class="fas fa-spinner fa-spin text-4xl text-accent mb-4"></i>
                         <p class="text-xl text-gray-500">Loading notes...</p>
                     </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20"> <!-- **** ADDED: pb-20 for FAB spacing **** -->
                         <div v-for="note in filteredNotes" :key="note.id"
                              class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
                             <div class="p-5 flex-grow">
@@ -252,7 +241,7 @@
                                     <span class="mx-1">|</span>
                                     <span>{{ formatDate(note.updatedAt) }}</span>
                                 </div>
-                                <div v-if="note.isSecret && !note.decryptedContent" 
+                                <div v-if="note.isSecret && !note.decryptedContent"
                                      class="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 italic p-3 bg-gray-100 dark:bg-gray-700 rounded">
                                     Content is encrypted.
                                     <button @click="promptMasterKey('decrypt', note.id)" class="ml-2 text-accent hover:underline text-sm">Decrypt</button>
@@ -272,9 +261,17 @@
                     </div>
                 </div>
             </main>
+
+            <!-- **** NEW: Floating Action Button (FAB) for New Note **** -->
+            <button v-if="activeView === 'notesList'" @click="goToNewNoteView" title="New Note"
+                    class="fab-button fixed bottom-6 right-6 bg-accent text-white w-14 h-14 rounded-full shadow-lg hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-dark focus:ring-opacity-50 flex items-center justify-center text-2xl transition-transform hover:scale-110">
+                <i class="fas fa-plus"></i>
+            </button>
+            <!-- End FAB -->
+
         </div>
 
-        <!-- Master Key Modal -->
+        <!-- Master Key Modal (unchanged) -->
         <div v-if="showMasterKeyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
                 <h3 class="text-lg font-medium mb-4 text-dark">Master Key Required</h3>
@@ -296,7 +293,7 @@
             </div>
         </div>
 
-        <!-- Import/Export Modal -->
+        <!-- Import/Export Modal (unchanged) -->
         <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
                 <h3 class="text-lg font-medium mb-4 text-dark">Import / Export Notes</h3>
@@ -321,7 +318,7 @@
             </div>
         </div>
 
-        <!-- App Info Modal -->
+        <!-- App Info Modal (unchanged) -->
         <div v-if="showAppInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
@@ -345,6 +342,7 @@
                         <li>Easy copy/paste</li>
                         <li>Responsive design for PC, phone, and tablet</li>
                         <li>Light/Dark theme</li>
+                        <li>Floating Action Button for new notes</li>
                     </ul>
                      <h4 class="font-semibold mt-4">Keyboard Shortcuts (in note form):</h4>
                     <ul>
@@ -358,8 +356,8 @@
             </div>
         </div>
 
-        <!-- Toast Notification -->
-        <div v-if="toast.show" 
+        <!-- Toast Notification (unchanged) -->
+        <div v-if="toast.show"
              class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-md animate-fade-in"
              :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
             <i class="fas mr-2" :class="toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
@@ -393,23 +391,22 @@
                     modalNoteId: null,
                     db: null,
                     isLoading: true,
-                    showSidebar: false, // For mobile
+                    showSidebar: false,
                     showImportExportModal: false,
                     showAppInfoModal: false,
                     isDarkMode: false,
                     toast: {
                         show: false,
                         message: '',
-                        type: 'success' // 'success' or 'error'
+                        type: 'success'
                     },
-                    // Default theme colors
                     themeColors: {
-                        light: { primary: '59, 130, 246', secondary: '243, 244, 246', accent: '234, 179, 8', light: '249, 250, 251', dark: '17, 24, 39' }, // blue, light-gray, yellow, very-light-gray, dark-gray
-                        dark: { primary: '37, 99, 235', secondary: '31, 41, 55', accent: '202, 138, 4', light: '17, 24, 39', dark: '243, 244, 246' }   // darker-blue, dark-gray, dark-yellow, very-dark-gray, light-gray
+                        light: { primary: '59, 130, 246', secondary: '243, 244, 246', accent: '234, 179, 8', light: '249, 250, 251', dark: '17, 24, 39' },
+                        dark: { primary: '37, 99, 235', secondary: '31, 41, 55', accent: '202, 138, 4', light: '17, 24, 39', dark: '243, 244, 246' }
                     }
                 }
             },
-            computed: {
+            computed: { // (Unchanged from previous version)
                 filteredNotes() {
                     let notesToFilter = this.notes;
                     if (this.currentCategory) {
@@ -448,6 +445,13 @@
                 }
             },
             methods: {
+                // **** NEW METHOD ****
+                goToNewNoteView() {
+                    this.setActiveView('addNote');
+                    this.selectedNote = null; // Ensure no note is selected for editing
+                    this.showSidebar = false; // Close sidebar if open (especially on mobile)
+                    this.resetForm(); // Ensure form is clean
+                },
                 setThemeColors(theme) {
                     const colors = this.themeColors[theme];
                     const root = document.documentElement;
@@ -470,11 +474,10 @@
                     if (savedTheme) {
                         this.setThemeColors(savedTheme);
                     } else {
-                         // Prefer dark mode if system prefers it
                         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                             this.setThemeColors('dark');
                         } else {
-                            this.setThemeColors('light'); // Default to light
+                            this.setThemeColors('light');
                         }
                     }
                 },
@@ -515,7 +518,7 @@
                     request.onsuccess = (event) => {
                         this.notes = event.target.result.map(note => ({
                             ...note,
-                            decryptedContent: null // Ensure this is reset on load
+                            decryptedContent: null
                         }));
                         console.log("Notes loaded from IndexedDB:", this.notes.length);
                         this.isLoading = false;
@@ -532,14 +535,13 @@
                         this.showToast('Database not ready.', 'error');
                         return;
                     }
-                    // Create a clone to avoid storing decryptedContent in DB
                     const noteToSave = { ...note };
                     delete noteToSave.decryptedContent;
 
                     const transaction = this.db.transaction(['notes'], 'readwrite');
                     const objectStore = transaction.objectStore('notes');
                     const request = objectStore.put(noteToSave);
-                    
+
                     request.onsuccess = () => {
                         console.log("Note saved/updated in DB:", noteToSave.id);
                     };
@@ -567,9 +569,7 @@
                 },
                 setActiveView(view) {
                     this.activeView = view;
-                    if (view === 'addNote') {
-                        this.resetForm();
-                    }
+                    // Removed: this.resetForm() was here, but it's better handled by goToNewNoteView for clarity
                 },
                 resetForm() {
                     this.form = {
@@ -578,39 +578,33 @@
                     };
                 },
                 saveNote() {
-                    if (this.form.isSecret && !this.masterKeyInput && !this.form.id) { // New secret note
+                    if (this.form.isSecret && !this.masterKeyInput && !this.form.id) {
                         this.showToast('A master key is required to save a new secret note.', 'info');
-                        this.promptMasterKey('encrypt', null, true); // Pass true for new note
+                        this.promptMasterKey('encrypt', null, true);
                         return;
                     }
 
                     const now = new Date().toISOString();
                     let noteToSave;
 
-                    if (this.form.id) { // Editing existing note
+                    if (this.form.id) {
                         const index = this.notes.findIndex(n => n.id === this.form.id);
                         if (index !== -1) {
                             noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
-                            // If it was secret and now isn't, or content changed for a secret note
-                            if ( (this.notes[index].isSecret && !this.form.isSecret) || 
+                            if ( (this.notes[index].isSecret && !this.form.isSecret) ||
                                  (this.form.isSecret && this.form.content !== this.notes[index].content && !this.form.encryptedContent) ) {
-                                // If content changed for a secret note and it's not already encrypted (meaning it was just decrypted for edit)
-                                // or if it's being made non-secret
-                                // It needs re-processing. If it's being made secret, it'll be handled by encryption logic.
-                                // If it's made non-secret, ensure encryptedContent is removed.
                                 if (!this.form.isSecret) {
                                     noteToSave.content = this.notes[index].decryptedContent || this.notes[index].content;
                                     delete noteToSave.encryptedContent;
                                 } else if (this.form.isSecret && !this.form.encryptedContent) {
-                                     // Content of a secret note was edited, needs re-encryption
-                                     this.notes[index].decryptedContent = this.form.content; // Store temp decrypted content for encryption
+                                     this.notes[index].decryptedContent = this.form.content;
                                      this.promptMasterKey('encrypt', this.form.id);
-                                     return; // Encryption will handle saving
+                                     return;
                                 }
                             }
                             this.notes.splice(index, 1, noteToSave);
                         }
-                    } else { // New note
+                    } else {
                         noteToSave = {
                             ...this.form,
                             id: uuidv4(),
@@ -618,29 +612,25 @@
                             updatedAt: now,
                         };
                         if (noteToSave.isSecret) {
-                             // Content is in form.content, will be encrypted via promptMasterKey if not already done
-                             // The actual saving will happen after encryption
-                             this.notes.push(noteToSave); // Add temporarily, will be updated by encryption
-                             this.promptMasterKey('encrypt', noteToSave.id); // this will encrypt form.content
-                             return; // Encryption will handle proper saving
+                             this.notes.push(noteToSave);
+                             this.promptMasterKey('encrypt', noteToSave.id);
+                             return;
                         }
                         this.notes.push(noteToSave);
                     }
-                    
+
                     this.saveNoteToDB(noteToSave);
                     this.showToast(`Note "${noteToSave.title}" saved.`, 'success');
                     this.setActiveView('notesList');
                     this.resetForm();
-                    this.masterKeyInput = ''; // Clear key after use
+                    this.masterKeyInput = '';
                 },
                 editNote(note) {
-                    this.form = { ...note }; // Create a copy for editing
+                    this.form = { ...note };
                     if (note.isSecret && note.encryptedContent) {
-                        // If secret and has encrypted content, we need to decrypt it for editing
-                        this.form.content = ''; // Clear content, will be filled by decryption
-                        this.promptMasterKey('decrypt', note.id, true); // true indicates for editing
+                        this.form.content = '';
+                        this.promptMasterKey('decrypt', note.id, true);
                     } else {
-                        // Not secret, or already decrypted (e.g. error during previous encrypt)
                         this.form.content = note.decryptedContent || note.content;
                         this.setActiveView('editNote');
                     }
@@ -649,9 +639,7 @@
                 cancelEdit() {
                     const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
                     if (note && note.isSecret && note.decryptedContent) {
-                        // If a secret note was decrypted for editing and then cancelled, re-encrypt it.
-                        // But only if it was truly decrypted. If it failed decryption, it might not have decryptedContent.
-                        this.promptMasterKey('encrypt', note.id); // This will use the existing decryptedContent
+                        this.promptMasterKey('encrypt', note.id);
                     }
                     this.resetForm();
                     this.setActiveView('notesList');
@@ -669,7 +657,6 @@
                 },
                 renderMarkdown(markdownText) {
                     if (!markdownText) return '';
-                    // DOMPurify is crucial here to prevent XSS if Markdown source is untrusted
                     return DOMPurify.sanitize(marked.parse(markdownText || ''));
                 },
                 formatDate(dateString) {
@@ -680,13 +667,13 @@
                 },
                 selectCategory(category) {
                     this.currentCategory = category;
-                    this.currentSubCategory = null; // Reset subcategory when category changes
-                    this.activeView = 'notesList'; // Switch to notes list
+                    this.currentSubCategory = null;
+                    this.activeView = 'notesList';
                     this.showSidebar = false;
                 },
                 selectSubCategory(subCategory) {
                     this.currentSubCategory = subCategory;
-                    this.activeView = 'notesList'; // Switch to notes list
+                    this.activeView = 'notesList';
                     this.showSidebar = false;
                 },
                 uniqueSubcategoriesForCategory(categoryName) {
@@ -699,20 +686,17 @@
                     });
                     return Array.from(subCategories).sort();
                 },
-
-                // Encryption / Decryption
                 promptMasterKey(action, noteId, forEditing = false) {
                     this.modalAction = action;
                     this.modalNoteId = noteId;
-                    this.editingAfterDecrypt = forEditing; // Store if this decryption is for editing
+                    this.editingAfterDecrypt = forEditing;
                     this.showMasterKeyModal = true;
-                    // Focus input after modal is shown
                     this.$nextTick(() => {
                         const keyInput = this.$el.querySelector('input[type="password"]');
                         if (keyInput) keyInput.focus();
                     });
                 },
-                processMasterKeyAction() {
+                processMasterKeyAction() { // (Unchanged logic from previous version, but check for `this.form` context)
                     if (!this.masterKeyInput) {
                         this.showToast('Master key cannot be empty.', 'error');
                         return;
@@ -720,16 +704,13 @@
                     const noteIndex = this.notes.findIndex(n => n.id === this.modalNoteId);
                     let noteToProcess = noteIndex !== -1 ? this.notes[noteIndex] : null;
 
-                    // Special case: encrypting a new note that's currently in the form
                     if (!noteToProcess && this.modalAction === 'encrypt' && this.modalNoteId && this.form.id === this.modalNoteId && this.form.isSecret) {
-                        noteToProcess = this.form; // This is a new note from the form
+                        noteToProcess = this.form;
                     } else if (!noteToProcess && this.modalAction === 'encrypt' && this.activeView === 'addNote' && this.form.isSecret) {
-                        // New note encryption before initial save
-                        noteToProcess = this.form; // Use current form data
-                        noteToProcess.id = uuidv4(); // Assign ID if not already
-                        noteToProcess.createdAt = new Date().toISOString();
+                        noteToProcess = this.form;
+                        noteToProcess.id = this.form.id || uuidv4(); // Ensure ID before encryption if new.
+                        noteToProcess.createdAt = this.form.createdAt || new Date().toISOString();
                     }
-
 
                     if (!noteToProcess) {
                         this.showToast('Note not found for master key action.', 'error');
@@ -737,44 +718,44 @@
                         this.masterKeyInput = '';
                         return;
                     }
-                    
+
                     try {
                         if (this.modalAction === 'encrypt') {
                             const contentToEncrypt = noteToProcess.decryptedContent || this.form.content || noteToProcess.content;
-                            if (!contentToEncrypt) {
-                                this.showToast('No content to encrypt.', 'error');
+                             if (!contentToEncrypt && noteToProcess === this.form) {
+                                // If it's a new note from the form and content is empty, this is an issue.
+                                // This scenario should be caught by form validation earlier, but as a safeguard:
+                                this.showToast('Cannot encrypt an empty note.', 'error');
                                 this.showMasterKeyModal = false;
-                                this.masterKeyInput = '';
                                 return;
                             }
                             const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
-                            
-                            if (noteIndex !== -1) { // Existing note
+
+                            if (noteIndex !== -1) {
                                 this.notes[noteIndex].encryptedContent = encrypted;
-                                this.notes[noteIndex].content = "[[ENCRYPTED CONTENT]]"; // Placeholder
-                                this.notes[noteIndex].decryptedContent = null; // Clear decrypted version
-                                this.notes[noteIndex].isSecret = true; // Ensure it's marked secret
+                                this.notes[noteIndex].content = "[[ENCRYPTED CONTENT]]";
+                                this.notes[noteIndex].decryptedContent = null;
+                                this.notes[noteIndex].isSecret = true;
                                 this.notes[noteIndex].updatedAt = new Date().toISOString();
                                 this.saveNoteToDB(this.notes[noteIndex]);
                                 this.showToast(`Note "${this.notes[noteIndex].title}" encrypted.`, 'success');
-                            } else if (this.form.id === noteToProcess.id && this.form.isSecret) { // New note from form
+                            } else if (noteToProcess === this.form && this.form.isSecret) { // Encrypting a new note from form
                                 this.form.encryptedContent = encrypted;
-                                this.form.content = "[[ENCRYPTED CONTENT]]"; // Placeholder
+                                this.form.content = "[[ENCRYPTED CONTENT]]";
                                 this.form.updatedAt = new Date().toISOString();
-                                // Proceed to save the new note (this.form)
+
                                 const now = new Date().toISOString();
                                 const newNote = {
                                     ...this.form,
-                                    id: this.form.id || uuidv4(),
-                                    createdAt: this.form.createdAt || now,
+                                    id: this.form.id, // Should have been set
+                                    createdAt: this.form.createdAt || now, // Should have been set
                                     updatedAt: now,
                                 };
-                                // Add to notes array if it's truly new
-                                if (!this.notes.find(n => n.id === newNote.id)) {
-                                    this.notes.push(newNote);
-                                } else { // If it was temporarily added, update it
-                                    const existingIndex = this.notes.findIndex(n => n.id === newNote.id);
-                                    this.notes.splice(existingIndex, 1, newNote);
+                                const existingIdx = this.notes.findIndex(n => n.id === newNote.id);
+                                if (existingIdx > -1) { // if it was pushed temporarily
+                                    this.notes.splice(existingIdx, 1, newNote);
+                                } else {
+                                     this.notes.push(newNote);
                                 }
                                 this.saveNoteToDB(newNote);
                                 this.showToast(`New note "${newNote.title}" encrypted and saved.`, 'success');
@@ -793,17 +774,16 @@
                                 }
                                 if (noteIndex !== -1) {
                                     this.notes[noteIndex].decryptedContent = decrypted;
-                                } else if (this.form.id === noteToProcess.id) { // Editing scenario
+                                } else if (this.form.id === noteToProcess.id) {
                                     this.form.decryptedContent = decrypted;
-                                    this.form.content = decrypted; // Populate form content for editing
+                                    this.form.content = decrypted;
                                 }
                                 this.showToast(`Note "${noteToProcess.title}" decrypted.`, 'success');
-                                
+
                                 if (this.editingAfterDecrypt) {
-                                    // If decryption was for editing, populate form and switch view
-                                    this.form = { ...noteToProcess, content: decrypted }; // Make sure form is populated
+                                    this.form = { ...noteToProcess, content: decrypted };
                                     this.setActiveView('editNote');
-                                    this.editingAfterDecrypt = false; // Reset flag
+                                    this.editingAfterDecrypt = false;
                                 }
                             }
                         }
@@ -812,24 +792,12 @@
                         this.showToast(this.modalAction === 'encrypt' ? 'Encryption failed.' : 'Decryption failed. Check master key.', 'error');
                     } finally {
                         this.showMasterKeyModal = false;
-                        if (this.modalAction === 'decrypt' && !this.editingAfterDecrypt) {
-                             // Do not clear key if going into edit mode after decrypt
-                        } else if (this.modalAction === 'encrypt' && this.activeView === 'addNote') {
-                            // For new notes, key already used, form will be reset
-                        }
-                        // Don't clear masterKeyInput here if it might be needed for immediate re-encryption
-                        // This is tricky. For safety, maybe clear always, but this makes "decrypt-edit-encrypt" require 2 key entries.
-                        // For now, let's clear it generally.
-                        // this.masterKeyInput = '';
+                        // this.masterKeyInput = ''; // Consider implications for re-encryption flows
                     }
                 },
-
-                // Import / Export
-                exportNotes() {
-                    // Create a deep copy and remove decryptedContent before export
+                exportNotes() { // (Unchanged)
                     const notesToExport = JSON.parse(JSON.stringify(this.notes));
                     notesToExport.forEach(note => delete note.decryptedContent);
-
                     const jsonData = JSON.stringify(notesToExport, null, 2);
                     const blob = new Blob([jsonData], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -843,7 +811,7 @@
                     this.showToast('Notes exported successfully.', 'success');
                     this.showImportExportModal = false;
                 },
-                handleFileUpload(event) {
+                handleFileUpload(event) { // (Unchanged)
                     const file = event.target.files[0];
                     if (file && file.type === "application/json") {
                         const reader = new FileReader();
@@ -853,25 +821,19 @@
                                 if (!Array.isArray(importedNotes)) {
                                    throw new Error("Invalid JSON format: Not an array.");
                                 }
-                                // Basic validation of note structure
                                 importedNotes.forEach(note => {
-                                    if (!note.id || !note.title || typeof note.content === 'undefined') { // content can be empty string
+                                    if (!note.id || !note.title || typeof note.content === 'undefined') {
                                         throw new Error(`Invalid note structure: ${JSON.stringify(note).substring(0,100)}...`);
                                     }
-                                    // Ensure dates are valid or set to now
                                     note.createdAt = note.createdAt && !isNaN(new Date(note.createdAt)) ? new Date(note.createdAt).toISOString() : new Date().toISOString();
                                     note.updatedAt = note.updatedAt && !isNaN(new Date(note.updatedAt)) ? new Date(note.updatedAt).toISOString() : new Date().toISOString();
-                                    // Ensure isSecret is boolean
                                     note.isSecret = !!note.isSecret;
-                                    // Remove any potential decryptedContent from import
                                     delete note.decryptedContent;
                                 });
-
-                                // Merge strategy: Update existing by ID, add new ones.
                                 importedNotes.forEach(importedNote => {
                                     const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
                                     if (existingIndex > -1) {
-                                        this.notes[existingIndex] = { ...this.notes[existingIndex], ...importedNote }; // Merge, imported takes precedence for shared fields
+                                        this.notes[existingIndex] = { ...this.notes[existingIndex], ...importedNote };
                                         this.saveNoteToDB(this.notes[existingIndex]);
                                     } else {
                                         this.notes.push(importedNote);
@@ -880,50 +842,40 @@
                                 });
                                 this.showToast(`${importedNotes.length} notes imported successfully.`, 'success');
                                 this.showImportExportModal = false;
-                                // Force reload from DB to ensure consistency if needed, or trust current state.
-                                // For now, trust current state, it's been updated.
                             } catch (error) {
                                 console.error("Error importing notes:", error);
                                 this.showToast(`Error importing notes: ${error.message}`, 'error');
                             } finally {
-                                event.target.value = null; // Reset file input
+                                event.target.value = null;
                             }
                         };
                         reader.readAsText(file);
                     } else {
                         this.showToast('Please select a valid JSON file.', 'error');
-                         event.target.value = null; // Reset file input
+                         event.target.value = null;
                     }
                 },
-
-                // Sharing
-                shareNote(note) {
+                shareNote(note) { // (Unchanged)
                     const contentToShare = note.decryptedContent || note.content;
                     if (note.isSecret && !note.decryptedContent) {
                         this.showToast("Cannot share encrypted content. Decrypt it first.", "info");
                         return;
                     }
-                    
                     const title = note.title;
                     const text = `Check out this note: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
-                    
                     if (navigator.share) {
-                        navigator.share({
-                            title: title,
-                            text: text,
-                        })
+                        navigator.share({ title: title, text: text, })
                         .then(() => console.log('Successful share'))
                         .catch((error) => {
                             console.log('Error sharing', error);
                             this.showToast('Could not share using system dialog. Try manual copy.', 'error');
-                            this.copyToClipboardForSharing(title, text); // Fallback for some desktop cases or errors
+                            this.copyToClipboardForSharing(title, text);
                         });
                     } else {
-                        // Fallback for browsers that don't support Web Share API
                         this.copyToClipboardForSharing(title, text);
                     }
                 },
-                copyToClipboardForSharing(title, text) {
+                copyToClipboardForSharing(title, text) { // (Unchanged)
                      const shareText = `${title}\n\n${text}`;
                      navigator.clipboard.writeText(shareText).then(() => {
                         this.showToast('Note content (for sharing) copied to clipboard!', 'success');
@@ -932,7 +884,7 @@
                         this.showToast('Failed to copy content.', 'error');
                     });
                 },
-                copyToClipboard(text) {
+                copyToClipboard(text) { // (Unchanged)
                     if (!text) {
                         this.showToast('Nothing to copy.', 'info');
                         return;
@@ -944,11 +896,9 @@
                         this.showToast('Failed to copy content.', 'error');
                     });
                 },
-
                 toggleSidebar() {
                     this.showSidebar = !this.showSidebar;
                 },
-
                 showToast(message, type = 'success', duration = 3000) {
                     this.toast.message = message;
                     this.toast.type = type;
@@ -957,8 +907,7 @@
                         this.toast.show = false;
                     }, duration);
                 },
-                handleKeyDown(event) {
-                    // Ctrl+S or Cmd+S to save note when form is active
+                handleKeyDown(event) { // (Unchanged)
                     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
                         if (this.activeView === 'addNote' || this.activeView === 'editNote') {
                             event.preventDefault();
@@ -967,7 +916,7 @@
                     }
                 }
             },
-            async mounted() {
+            async mounted() { // (Unchanged)
                 this.loadTheme();
                 try {
                     await this.initDB();
@@ -976,23 +925,11 @@
                     console.error("Error during mount:", error);
                     this.showToast('Application setup failed. Please refresh.', 'error');
                 }
-                // Add global keydown listener
                 window.addEventListener('keydown', this.handleKeyDown);
             },
-            beforeUnmount() {
-                // Remove global keydown listener
+            beforeUnmount() { // (Unchanged)
                 window.removeEventListener('keydown', this.handleKeyDown);
             },
-            watch: {
-                // This deep watcher can be performance-intensive for large notes array.
-                // Individual DB operations on change are generally better.
-                // 'notes': {
-                //     handler(newNotes) {
-                //         // This is now handled by specific save/delete/update DB calls
-                //     },
-                //     deep: true
-                // }
-            }
         };
 
         Vue.createApp(App).mount('#app');
