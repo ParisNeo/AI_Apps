@@ -31,16 +31,17 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Align to top for scrollable content */
+            justify-content: flex-start; 
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding-top: 20px; /* Add some space at the top */
-            padding-bottom: 20px; /* Add some space at the bottom */
+            padding-top: 20px; 
+            padding-bottom: 20px; 
             background-color: var(--primary-bg);
             color: var(--primary-text);
             transition: background-color 0.3s;
             box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scrollbars if something slightly overflows during resize */
         }
 
         .hidden { display: none !important; }
@@ -126,10 +127,10 @@
             background-color: var(--accent-hover);
         }
         .page-container .back-button {
-            background-color: #7f8c8d; /* Asbestos */
+            background-color: #7f8c8d; 
         }
         .page-container .back-button:hover {
-            background-color: #95a5a6; /* Concrete */
+            background-color: #95a5a6; 
         }
 
         /* Main Game Area */
@@ -137,19 +138,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%; /* Takes width from parent (body flex item) */
-            max-width: 1200px; /* Optional: cap overall game area width */
-            padding: 0; /* Padding handled by JS for board or specific media query */
+            width: 100%; 
+            max-width: 1200px; 
+            padding: 0; 
             box-sizing: border-box;
         }
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: var(--board-total-width); /* Align with board */
-            max-width: 100%; /* Ensure it doesn't overflow its container if screen is too small */
+            width: var(--board-total-width); 
+            max-width: 100%; 
             margin-bottom: 15px;
-            padding: 0 5px; /* Minimal padding within the bar */
+            padding: 0 5px; 
             box-sizing: border-box;
         }
         .top-bar .menu-nav-button {
@@ -161,24 +162,27 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.2s;
-            white-space: nowrap; /* Prevent button text from wrapping */
+            white-space: nowrap; 
         }
         .top-bar .menu-nav-button:hover { background-color: var(--button-red-hover); }
 
         .turn-indicator, .game-status {
-            font-size: 1em; /* Relative font size */
+            font-size: 1em; 
             font-weight: bold;
             padding: 8px;
             border-radius: 6px;
             background-color: var(--secondary-bg);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            flex-shrink: 1; /* Allow shrinking */
-            min-width: 0; /* Allow shrinking below natural content size */
+            flex-shrink: 1; 
+            min-width: 0; 
+            overflow: hidden; /* Prevent text overflow from breaking layout */
+            text-overflow: ellipsis; /* Show ... for long text */
+            white-space: nowrap; /* Keep text on one line */
         }
         .game-status { color: var(--button-red); text-align: right; }
 
 
-        .game-container { display: flex; gap: 20px; align-items: flex-start; width: auto; }
+        .game-container { display: flex; gap: 20px; align-items: flex-start; width: auto; justify-content: center; }
         #chessboard {
             display: grid;
             grid-template-columns: repeat(8, var(--square-size));
@@ -186,6 +190,7 @@
             border: 2px solid #333;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             border-radius: 4px;
+            flex-shrink: 0; /* Prevent chessboard from shrinking if container is too small */
         }
         .square {
             width: var(--square-size);
@@ -193,11 +198,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: calc(var(--square-size) * 0.63); /* Scaled font size */
+            font-size: calc(var(--square-size) * 0.63); 
             cursor: pointer;
             transition: background-color 0.15s;
             box-sizing: border-box;
-            position: relative; /* For absolutely positioned pseudo-elements */
+            position: relative; 
         }
         .white { background-color: var(--square-light); }
         .black { background-color: var(--square-dark); }
@@ -207,10 +212,9 @@
             content: ''; position: absolute;
             width: calc(var(--square-size) * 0.25); height: calc(var(--square-size) * 0.25);
             background-color: var(--possible-move-dot); border-radius: 50%;
-            /* Centering */
             top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
-        .square:not(:empty) > .possible-move::before { /* Hide dot if square has a piece for capture */
+        .square:not(:empty) > .possible-move::before { 
            display: none;
         }
         .possible-capture::before {
@@ -218,10 +222,9 @@
             width: calc(var(--square-size) * 0.83); height: calc(var(--square-size) * 0.83);
             border: calc(var(--square-size) * 0.07) solid var(--possible-capture-ring);
             border-radius: 50%;
-            /* Centering */
             top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
-        .in-check { box-shadow: inset 0 0 0 calc(var(--square-size) * 0.07) var(--in-check-shadow); } /* Scaled shadow */
+        .in-check { box-shadow: inset 0 0 0 calc(var(--square-size) * 0.07) var(--in-check-shadow); } 
         .last-move-from, .last-move-to { background-color: var(--last-move-highlight) !important; }
 
         .scoreboard {
@@ -229,11 +232,15 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            min-width: 230px;
+            min-width: 230px; /* This can be an issue on very narrow screens if not handled */
+            width: 230px; /* Fix width for predictability when side-by-side */
+            max-width: 100%; /* Ensure it doesn't overflow its container */
             height: fit-content;
+            box-sizing: border-box;
+            flex-shrink: 0; /* Prevent scoreboard from shrinking */
         }
-        .scoreboard h2 { margin-top: 0; color: var(--accent-color); font-size: 1.25em; } /* Relative font size */
-        .score { font-size: 1em; margin-bottom: 10px; } /* Relative font size */
+        .scoreboard h2 { margin-top: 0; color: var(--accent-color); font-size: 1.25em; } 
+        .score { font-size: 1em; margin-bottom: 10px; } 
 
         /* End Game Credits Popup */
         .end-game-credits {
@@ -242,7 +249,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;
             padding: 20px; box-sizing: border-box;
         }
-        .end-game-credits h1 { margin: 0; font-size: 2.2em; color: #f1c40f; } /* Gold */
+        .end-game-credits h1 { margin: 0; font-size: 2.2em; color: #f1c40f; } 
         .end-game-credits p { font-size: 1.1em; margin: 15px 0; }
         .end-game-credits button {
             margin-top: 25px; padding: 12px 25px; font-size: 1.1em; cursor: pointer;
@@ -283,18 +290,18 @@
         #leaderboardPageTable th {
             background-color: var(--accent-color);
             color: white;
-            font-size: 1em; /* Relative font size */
+            font-size: 1em; 
         }
         #leaderboardPageTable tr:nth-child(even) { background-color: #f9f9f9; }
         #leaderboardPageTable tr:hover { background-color: #e9e9f9; }
-        .rank-icon { font-size: 1.25em; margin-right: 5px; } /* Relative font size */
-        .rank-1 { color: #ffd700; } /* Gold */
-        .rank-2 { color: #c0c0c0; } /* Silver */
-        .rank-3 { color: #cd7f32; } /* Bronze */
+        .rank-icon { font-size: 1.25em; margin-right: 5px; } 
+        .rank-1 { color: #ffd700; } 
+        .rank-2 { color: #c0c0c0; } 
+        .rank-3 { color: #cd7f32; } 
 
         /* Credits Page Specifics */
         .credits-page-content p {
-            font-size: 1.1em; /* Relative font size */
+            font-size: 1.1em; 
             line-height: 1.6;
             margin-bottom: 15px;
         }
@@ -303,7 +310,6 @@
             color: var(--accent-color);
         }
 
-        /* Small utility for screen reader only content if needed */
         .sr-only {
             position: absolute;
             width: 1px;
@@ -320,20 +326,20 @@
         /* --- Media Queries for Responsiveness --- */
         @media (max-width: 768px) { /* Tablets and Phones */
             body {
-                font-size: 15px; /* Adjust base font for smaller screens */
+                font-size: 15px; 
                 padding-top: 10px;
                 padding-bottom: 10px;
             }
 
             .page-container {
                 padding: 15px;
-                width: 95%; /* More screen real estate */
+                width: 95%; 
             }
             .page-container h1 { font-size: 1.8em; margin-bottom: 20px; }
             .page-container h2 { font-size: 1.5em; margin-bottom: 15px; }
             .page-container button, .game-menu button {
-                width: 100%; /* Full width for easier tapping */
-                max-width: 320px; /* Cap width */
+                width: 100%; 
+                max-width: 320px; 
                 padding: 12px;
                 font-size: 1.1em;
             }
@@ -346,41 +352,37 @@
             .modal-content input { padding: 10px; font-size: 1em; }
             .modal-content button { padding: 10px 20px; font-size: 1em; }
 
-            .main-game-area {
-                /* Padding for game area is handled by JS for board calculation indirectly */
-            }
-
             .top-bar {
-                flex-wrap: wrap; /* Allow items to wrap */
-                justify-content: center; /* Center items when wrapped */
+                flex-wrap: wrap; 
+                justify-content: center; 
                 gap: 8px;
-                padding: 0; /* Width is var(--board-total-width) */
+                padding: 0; 
             }
             .top-bar .turn-indicator,
             .top-bar .game-status {
-                flex-basis: 45%; /* Try to fit side-by-side */
+                flex-basis: 45%; 
                 text-align: center;
                 font-size: 0.9em;
                 padding: 6px;
             }
             .top-bar .menu-nav-button {
-                flex-basis: 100%; /* Full width on its own line */
-                order: 3; /* Place button last */
+                flex-basis: 100%; 
+                order: 3; 
                 padding: 10px;
                 font-size: 0.95em;
             }
 
             .game-container {
                 flex-direction: column;
-                align-items: center; /* Center board and scoreboard */
+                align-items: center; 
                 gap: 15px;
-                width: 100%; /* Take full available width within main-game-area */
+                width: 100%; 
             }
 
             .scoreboard {
-                width: var(--board-total-width); /* Match board width */
-                max-width: 100%; /* Don't overflow if screen is extremely narrow */
-                min-width: unset; /* Remove fixed min-width */
+                width: var(--board-total-width); 
+                max-width: 100%; 
+                min-width: unset; /* Override fixed min-width from base style */
                 margin-top: 15px;
                 padding: 15px;
                 box-sizing: border-box;
@@ -413,17 +415,18 @@
 
             .top-bar .turn-indicator,
             .top-bar .game-status {
-                flex-basis: 100%; /* Stack them if not enough space */
-                order: 1; /* Turn indicator first */
+                flex-basis: 100%; 
+                order: 1; 
             }
-             .top-bar .game-status { order: 2; } /* Game status second */
+             .top-bar .game-status { order: 2; } 
              .top-bar .menu-nav-button { order: 3; font-size: 0.9em;}
 
             .turn-indicator, .game-status {
                 font-size: 0.85em;
+                 white-space: normal; /* Allow text to wrap on very small screens */
             }
             
-            .square { /* Piece font size might need slight adjustment for very small squares */
+            .square { 
                  font-size: calc(var(--square-size) * 0.6);
             }
             .promotion-modal h3 { font-size: 1.1em; }
@@ -616,22 +619,65 @@
         // --- Responsive Design Function ---
         function updateBoardSize() {
             const mainGameEl = document.getElementById('mainGameArea');
-            if (!mainGameEl || mainGameEl.classList.contains('hidden')) {
-                // Don't try to calculate if game area isn't visible or doesn't exist
+            const scoreboardEl = document.querySelector('.scoreboard');
+            const gameContainerEl = document.querySelector('.game-container');
+
+            if (!mainGameEl || mainGameEl.classList.contains('hidden') || !gameContainerEl || mainGameEl.clientWidth === 0) {
+                // If mainGameEl is not visible or has no width, defer or skip.
+                // It might be useful to requestAnimationFrame again if clientWidth is 0.
+                if (mainGameEl && mainGameEl.clientWidth === 0 && !mainGameEl.classList.contains('hidden')) {
+                    requestAnimationFrame(updateBoardSize);
+                }
                 return;
             }
-            
-            // Calculate available width for the board, considering a small margin (e.g., 10px on each side)
-            // from the edges of the mainGameArea.
-            const availableWidthForBoard = mainGameEl.clientWidth - 20; // 10px effective padding on each side
 
-            let newSquareSize = Math.floor(availableWidthForBoard / 8);
-            newSquareSize = Math.max(newSquareSize, 30); // Minimum square size of 30px
-            // Optional: cap max size for very large screens, e.g., 80px
-            // newSquareSize = Math.min(newSquareSize, 80); 
+            const boardBorderWidth = 4; // 2px border on each side of the chessboard
+            // Desired padding around the game content (board or board+scoreboard) within mainGameEl.
+            // This creates a small margin if mainGameEl itself has no CSS padding.
+            const desiredOverallPadding = Math.min(20, mainGameEl.clientWidth * 0.05); // e.g. 20px total, or 5% of width
+
+            // This is the width available for the .game-container's content (board, or board+scoreboard)
+            let contentAreaWidth = mainGameEl.clientWidth - desiredOverallPadding;
+            
+            // Fallback if padding calculation makes contentAreaWidth too small or negative
+            if (contentAreaWidth <= boardBorderWidth + 8*5) { // Ensure at least space for smallest board (8*5px squares)
+                 contentAreaWidth = mainGameEl.clientWidth - boardBorderWidth; 
+                 if (contentAreaWidth < 0) contentAreaWidth = 0;
+            }
+
+            let spaceAllocatedForBoardGrid; // This is the width for the 8 squares (excluding board borders)
+
+            const gameContainerStyle = window.getComputedStyle(gameContainerEl);
+            const isFlexRow = gameContainerStyle.flexDirection === 'row';
+            
+            const isScoreboardVisible = scoreboardEl && 
+                                       scoreboardEl.offsetParent !== null && // Check if rendered
+                                       window.getComputedStyle(scoreboardEl).display !== 'none';
+
+            if (isFlexRow && isScoreboardVisible) {
+                // Scoreboard is side-by-side with the board
+                const currentScoreboardWidth = scoreboardEl.offsetWidth; // Actual rendered width
+                const currentGap = parseFloat(gameContainerStyle.gap) || 20; // Get gap from CSS
+                
+                // Space available for (board grid + board borders)
+                const spaceForBoardWithBorders = contentAreaWidth - currentScoreboardWidth - currentGap;
+                spaceAllocatedForBoardGrid = spaceForBoardWithBorders - boardBorderWidth;
+            } else {
+                // Scoreboard is stacked or not present; board (grid + borders) takes up contentAreaWidth
+                spaceAllocatedForBoardGrid = contentAreaWidth - boardBorderWidth;
+            }
+            
+            let newSquareSize = 0;
+            if (spaceAllocatedForBoardGrid > 0) {
+                newSquareSize = Math.floor(spaceAllocatedForBoardGrid / 8);
+            }
+            
+            newSquareSize = Math.max(newSquareSize, 30); // Minimum square size 30px
+            newSquareSize = Math.min(newSquareSize, 75); // Optional: Maximum square size 75px for aesthetics
 
             document.documentElement.style.setProperty('--square-size', `${newSquareSize}px`);
         }
+
 
         // Debounce utility
         function debounce(func, wait) {
@@ -652,9 +698,14 @@
                 page.classList.add('hidden');
             });
             pageToShow.classList.remove('hidden');
+            
             if (pageToShow === mainGameAreaPage) {
-                 // Ensure board size is calculated when game page is shown
-                requestAnimationFrame(updateBoardSize); // Use rAF for smoother updates after display change
+                // Use rAF to ensure dimensions are available after display change
+                requestAnimationFrame(() => {
+                    updateBoardSize();
+                    // Sometimes a second call helps if initial render is still settling
+                    requestAnimationFrame(updateBoardSize); 
+                });
             }
         }
         function showMenuPage() { showPage(gameMenuPage); }
@@ -695,7 +746,7 @@
         }
 
         function startGameFlow() {
-            showPage(mainGameAreaPage); // This will trigger updateBoardSize via requestAnimationFrame
+            showPage(mainGameAreaPage); 
             resetGame();
             loadLeaderboard(); 
         }
@@ -740,6 +791,8 @@
             promotionModal.style.display = 'none';
             clearAllHighlights();
             checkGameStatusAndUpdateUI();
+             // Ensure board size is correct on reset as well
+            requestAnimationFrame(updateBoardSize);
         }
 
         function confirmBackToMenu() {
@@ -882,7 +935,8 @@
                 highlightKingInCheckUI(currentPlayer);
                 gameStatusElement.textContent = `${playerNames[currentPlayer]} is in Check!`;
             } else {
-                if (!gameStatusElement.textContent.endsWith("is thinking...")) {
+                if (gameStatusElement.textContent === `${playerNames[currentPlayer]} is in Check!` || 
+                    !gameStatusElement.textContent.endsWith("is thinking...")) { // Avoid clearing "thinking" message
                     gameStatusElement.textContent = '';
                 }
             }
@@ -936,7 +990,7 @@
         }
         function isInCheck(playerColor, currentBoard) {
             const kingPos = findKing(playerColor, currentBoard);
-            if (!kingPos) return false;
+            if (!kingPos) return false; // Should not happen in a valid game
             return isSquareAttacked(kingPos.r, kingPos.c, getOpponentColor(playerColor), currentBoard);
         }
         function generatePseudoLegalMoves(r, c, piece, currentBoard, isAttackingCheck = false) {
@@ -993,10 +1047,7 @@
 
         // --- Pawn Promotion UI ---
         function showPromotionModalUI() {
-            promotionModal.style.display = 'block'; // Changed from 'flex' to 'block' as per original
-            const pieceSet = currentPlayer === 'white' ? ['♕', '♖', '♗', '♘'] : ['♛', '♜', '♝', '♞'];
-            // The buttons in promotionModal now use data-piece attribute set in HTML.
-            // We just need to ensure their visual text content matches the current player's pieces.
+            promotionModal.style.display = 'block'; 
             const buttons = promotionModal.querySelectorAll('button[data-piece]');
             buttons.forEach(button => {
                 const pieceType = button.dataset.piece;
@@ -1006,7 +1057,6 @@
                     case 'B': button.textContent = (currentPlayer === 'white' ? '♗' : '♝'); break;
                     case 'N': button.textContent = (currentPlayer === 'white' ? '♘' : '♞'); break;
                 }
-                // The onclick is now directly tied to the piece character they represent for the current player
                 button.onclick = () => handlePromotionChoice(button.textContent);
             });
         }
@@ -1054,9 +1104,9 @@
                     name: winnerName,
                     totalWins: 1,
                     totalMovesInWins: moves,
-                    winsAgainst: { Human:0, easyAI:0, mediumAI:0, hardAI:0 } // Initialize all types
+                    winsAgainst: { Human:0, easyAI:0, mediumAI:0, hardAI:0 } 
                 };
-                playerEntry.winsAgainst[opponent] = 1; // Set win for current opponent
+                playerEntry.winsAgainst[opponent] = 1; 
                 globalLeaderboard.push(playerEntry);
             }
         }
@@ -1112,7 +1162,7 @@
                 let promoChoice = null; const pieceMoved = gameBoard[bestMove.from.r][bestMove.from.c];
                 if ((pieceMoved === '♙' && bestMove.to.r === 0) || (pieceMoved === '♟' && bestMove.to.r === 7)) promoChoice = (aiColor === 'white' ? '♕' : '♛');
                 performMove(bestMove.from.r, bestMove.from.c, bestMove.to.r, bestMove.to.c, promoChoice);
-            } else { console.log("AI has no moves."); checkGameStatusAndUpdateUI(); /* This can happen in losing stalemate for AI */ }
+            } else { console.log("AI has no moves."); checkGameStatusAndUpdateUI(); }
         }
         function evaluateBoard(board, perspectiveColor) {
             let totalEvaluation = 0;
@@ -1134,7 +1184,7 @@
 
             return totalEvaluation;
         }
-        function getPiecePositionalValue(piece,r,c){const color=getPieceColor(piece);let val=0; const eR=color==='white'?r:7-r; const eC = c; /* No flip for column for these simple tables */ switch(piece.toLowerCase()){case '♟':val=pawnPositional[eR][eC];break; case '♞':val=knightPositional[eR][eC];break;} return val;} // Use toLowerCase for simplicity accessing tables
+        function getPiecePositionalValue(piece,r,c){const color=getPieceColor(piece);let val=0; const eR=color==='white'?r:7-r; const eC = c;  switch(piece.toLowerCase()){case '♟':val=pawnPositional[eR][eC];break; case '♞':val=knightPositional[eR][eC];break;} return val;}
         function findBestMoveMinimax(board,depth,aiColor){let bestS=-Infinity;let bestM=null;const lM=getAllLegalMoves(aiColor,board);if (lM.length === 0) return null; for(let i=lM.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lM[i],lM[j]]=[lM[j],lM[i]];} for(const m of lM){const tB=JSON.parse(JSON.stringify(board));const p=tB[m.from.r][m.from.c];let prP=null;if((p==='♙'&&m.to.r===0)||(p==='♟'&&m.to.r===7))prP=(aiColor==='white'?'♕':'♛');applyMoveToBoard(tB,m,prP);const s=minimax(tB,depth-1,false,aiColor);if(s>bestS){bestS=s;bestM=m;}} return bestM || lM[0];}
         function minimax(board,depth,isMax,aiColor){if(depth===0||isGameOverForAI(board,isMax?aiColor:getOpponentColor(aiColor)))return evaluateBoard(board,aiColor);const ptm=isMax?aiColor:getOpponentColor(aiColor);const lM=getAllLegalMoves(ptm,board);if(lM.length===0)return evaluateBoard(board,aiColor);if(isMax){let maxE=-Infinity;for(const m of lM){const tB=JSON.parse(JSON.stringify(board));const p=tB[m.from.r][m.from.c];let prP=null;if((p==='♙'&&m.to.r===0)||(p==='♟'&&m.to.r===7))prP=(ptm==='white'?'♕':'♛');applyMoveToBoard(tB,m,prP);const e=minimax(tB,depth-1,false,aiColor);maxE=Math.max(maxE,e);}return maxE;}else{let minE=Infinity;for(const m of lM){const tB=JSON.parse(JSON.stringify(board));const p=tB[m.from.r][m.from.c];let prP=null;if((p==='♙'&&m.to.r===0)||(p==='♟'&&m.to.r===7))prP=(ptm==='white'?'♕':'♛');applyMoveToBoard(tB,m,prP);const e=minimax(tB,depth-1,true,aiColor);minE=Math.min(minE,e);}return minE;}}
         function findBestMoveAlphaBeta(board,depth,aiColor){let bestS=-Infinity;let bestM=null;const lM=getAllLegalMoves(aiColor,board);if (lM.length === 0) return null; for(let i=lM.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lM[i],lM[j]]=[lM[j],lM[i]];} for(const m of lM){const tB=JSON.parse(JSON.stringify(board));const p=tB[m.from.r][m.from.c];let prP=null;if((p==='♙'&&m.to.r===0)||(p==='♟'&&m.to.r===7))prP=(aiColor==='white'?'♕':'♛');applyMoveToBoard(tB,m,prP);const s=alphaBeta(tB,depth-1,-Infinity,Infinity,false,aiColor);if(s>bestS){bestS=s;bestM=m;}} return bestM || lM[0];}
@@ -1146,9 +1196,9 @@
         window.onload = () => {
             loadLeaderboard(); 
             showMenuPage(); 
-            // Add debounced event listeners for responsive board sizing
-            window.addEventListener('resize', debounce(updateBoardSize, 150));
-            window.addEventListener('orientationchange', debounce(updateBoardSize, 150));
+            const debouncedUpdateBoardSize = debounce(updateBoardSize, 150);
+            window.addEventListener('resize', debouncedUpdateBoardSize);
+            window.addEventListener('orientationchange', debouncedUpdateBoardSize);
         };
 
     </script>
