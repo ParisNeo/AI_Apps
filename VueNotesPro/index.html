@@ -9,8 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="handleGoogleApiLoad()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="handleGoogleGsiLoad()"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; overscroll-behavior-y: contain; }
@@ -86,9 +84,6 @@
                     </h1>
                 </div>
                 <div class="flex items-center space-x-1 rtl:space-x-reverse md:space-x-2">
-                    <button @click="showSettingsModal = true" :title="t('settingsTooltip')" class="p-2 hover:bg-primary-dark rounded-full">
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    </button>
                     <select v-model="currentLang" @change="changeLanguage" class="bg-primary text-text-light border border-primary-dark rounded p-1 text-xs md:text-sm focus:outline-none focus:border-accent appearance-none leading-tight" :title="t('selectLanguage')">
                         <option value="en">EN</option>
                         <option value="fr">FR</option>
@@ -294,10 +289,10 @@
             </div>
         </div>
 
-        <!-- Import/Export/Sync Modal -->
+        <!-- Import/Export Modal -->
         <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[90vh] overflow-y-auto">
-                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">{{ t('importExportModalTitle') }}</h3>
+                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">{{ t('importExportModalTitleNoSync') }}</h3>
                 <div class="space-y-4">
                     <div> <!-- Export Section -->
                         <h4 class="font-semibold text-text-dark dark:text-text-light">{{ t('exportNotesTitle') }}</h4>
@@ -319,54 +314,9 @@
                          <p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">{{ t('importWarningOverwrite') }}</p>
                         <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-text-light hover:file:opacity-80"/>
                     </div>
-                    <hr class="border-border-color dark:border-gray-600">
-                    <!-- Google Drive Section -->
-                    <div>
-                        <h4 class="font-semibold text-text-dark dark:text-text-light">{{ t('googleDriveSyncTitle') }}</h4>
-                        <div v-if="!userGoogleApiKey || !userGoogleClientId" class="text-xs text-yellow-600 dark:text-yellow-500 p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded">
-                            {{ t('gDriveSetupNeeded') }}
-                            <button @click="showSettingsModal = true; showImportExportModal = false" class="underline hover:text-yellow-700 dark:hover:text-yellow-300">{{ t('openSettings') }}</button>
-                        </div>
-                        <div v-else-if="isGoogleApiLoaded && isGoogleGsiLoaded">
-                            <div v-if="googleUser" class="mt-2 space-y-2">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('signedInAs', {email: googleUser.email}) }}</p>
-                                <button @click="saveNotesToDrive" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center justify-center"><svg class="svg-icon me-2" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>{{ t('saveToDriveButton') }}</button>
-                                <button @click="loadNotesFromDrive" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center"><svg class="svg-icon me-2" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM12 17l-5-5h3V9h4v3h3l-5 5z"/></svg>{{ t('loadFromDriveButton') }}</button>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('googleDriveInfo', {folder: DRIVE_APP_FOLDER_NAME, file: DRIVE_FILE_NAME}) }}</p>
-                            </div>
-                            <div v-else class="mt-2">
-                                 <button @click="signInWithGoogle()" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">{{ t('signInWithGoogle') }}</button>
-                            </div>
-                        </div>
-                        <div v-else class="text-xs text-gray-400 dark:text-gray-500">{{ t('googleApiLoading') }}</div>
-                    </div>
                 </div>
                 <div class="mt-6 flex justify-end">
                     <button @click="showImportExportModal = false" class="px-4 py-2 border border-border-color rounded-md text-sm font-medium text-text-dark dark:text-text-light hover:bg-gray-50 dark:hover:bg-gray-700">{{ t('closeButton') }}</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Modal -->
-        <div v-if="showSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
-                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">{{ t('settingsModalTitle') }}</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="gApiKey" class="block text-sm font-medium text-text-dark dark:text-text-light">{{ t('googleApiKeyLabel') }}</label>
-                        <input type="password" id="gApiKey" v-model="settingsForm.apiKey" @input="debouncedSaveSettings" class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600" :placeholder="t('googleApiKeyPlaceholder')">
-                    </div>
-                    <div>
-                        <label for="gClientId" class="block text-sm font-medium text-text-dark dark:text-text-light">{{ t('googleClientIdLabel') }}</label>
-                        <input type="password" id="gClientId" v-model="settingsForm.clientId" @input="debouncedSaveSettings" class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600" :placeholder="t('googleClientIdPlaceholder')">
-                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('googleCredentialsNote') }}</p>
-                    </div>
-                    <p class="text-xs text-yellow-600 dark:text-yellow-500">
-                        {{ t('googleCredentialsWarning') }}
-                    </p>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <button @click="showSettingsModal = false" class="px-4 py-2 bg-primary text-text-light rounded-md text-sm font-medium hover:bg-primary-dark">{{ t('doneButton') }}</button>
                 </div>
             </div>
         </div>
@@ -381,11 +331,11 @@
                 <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
                     <p><strong>{{ t('authorLabel') }}:</strong> ParisNeo</p>
                     <p><strong>{{ t('categoryAppLabel') }}:</strong> {{ t('productivityCategory') }}</p>
-                    <p><strong>{{ t('descriptionLabel') }}:</strong> {{ t('appDescriptionFull') }}</p>
+                    <p><strong>{{ t('descriptionLabel') }}:</strong> {{ t('appDescriptionFullNoSync') }}</p>
                     <p><strong>{{ t('modelLabel') }}:</strong> Claude 3 Opus</p>
-                    <p><strong>{{ t('disclaimerLabel') }}:</strong> {{ t('appDisclaimerGDrive') }}</p>
+                    <p><strong>{{ t('disclaimerLabel') }}:</strong> {{ t('appDisclaimer') }}</p>
                     <h4 class="font-semibold mt-4">{{ t('featuresLabel') }}:</h4>
-                    <ul><li>{{t('featureCategories')}}</li><li>{{t('featureMarkdown')}}</li><li>{{t('featureFullView')}}</li><li>{{t('featureSelectiveExport')}}</li><li>{{t('featureImportExport')}}</li><li>{{t('featureGDriveUserConfig')}}</li><li>{{t('featureSocialSharing')}}</li><li>{{t('featureSecretNotes')}}</li><li>{{t('featureIndexedDB')}}</li><li>{{t('featureCopyPaste')}}</li><li>{{t('featureResponsive')}}</li><li>{{t('featureThemes')}}</li><li>{{t('featureFAB')}}</li><li>{{t('featureMultiLanguage')}}</li></ul>
+                    <ul><li>{{t('featureCategories')}}</li><li>{{t('featureMarkdown')}}</li><li>{{t('featureFullView')}}</li><li>{{t('featureSelectiveExport')}}</li><li>{{t('featureImportExport')}}</li><li>{{t('featureSocialSharing')}}</li><li>{{t('featureSecretNotes')}}</li><li>{{t('featureIndexedDB')}}</li><li>{{t('featureCopyPaste')}}</li><li>{{t('featureResponsive')}}</li><li>{{t('featureThemes')}}</li><li>{{t('featureFAB')}}</li><li>{{t('featureMultiLanguage')}}</li></ul>
                     <h4 class="font-semibold mt-4">{{ t('shortcutsLabel') }}:</h4>
                     <ul><li><code>Ctrl+S</code> or <code>Cmd+S</code>: {{t('shortcutSave')}}</li><li><code>Escape</code>: {{t('shortcutEscape')}}</li></ul>
                 </div>
@@ -406,298 +356,482 @@
     </div>
 
     <script>
-        let vueAppInstance = null;
-        function handleGoogleApiLoad() { if (vueAppInstance) vueAppInstance.handleGoogleApiLibraryLoad(); else setTimeout(handleGoogleApiLoad, 100); }
-        function handleGoogleGsiLoad() { if (vueAppInstance) vueAppInstance.handleGoogleGsiLibraryLoad(); else setTimeout(handleGoogleGsiLoad, 100); }
-
         const App = {
             data() {
                 return {
-                    // Core App State
                     notes: [], activeView: 'notesList',
                     form: { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null },
                     currentViewedNote: null, selectedNoteIdsForExport: [],
                     currentCategory: null, currentSubCategory: null, searchTerm: '',
-                    // Modals & UI State
                     showMasterKeyModal: false, masterKeyInput: '', modalAction: '', modalNoteId: null,
-                    isLoading: true, showSidebar: false, showImportExportModal: false, showAppInfoModal: false, showSettingsModal: false,
+                    isLoading: true, showSidebar: false, showImportExportModal: false, showAppInfoModal: false,
                     isDarkMode: false, toast: { show: false, message: '', type: 'success' },
-                    // Language & Theme
                     currentLang: 'en',
-                    translations: { /* Populated below */ },
+                    translations: {
+                        en: {
+                            appTitle: "VueNotesPro - Advanced Notes", appName: "VueNotesPro", selectLanguage: "Language", newNote: "New Note",
+                            newNoteTooltip: "Create new note", search: "Search", searchNotesPlaceholder: "Search notes...", categories: "Categories",
+                            allNotes: "All Notes", allInCategory: "All in {category}", createNoteTitle: "Create New Note", editNoteTitle: "Edit Note",
+                            titleLabel: "Title", categoryLabel: "Category (optional)", subCategoryLabel: "Subcategory (optional)",
+                            subCategoryPlaceholder: "Enter subcategory", subCategoryPlaceholderDisabled: "Enter category first",
+                            contentLabel: "Content (Markdown)", secretNoteLabel: "Secret Note (master key required)", secretNoteTooltip: "Secret Note",
+                            cancelButton: "Cancel", saveNoteButton: "Save Note", noNotesFound: "No notes found.",
+                            noNotesFoundHint: "Create a new note or adjust filters!", loadingNotes: "Loading notes...",
+                            uncategorized: "Uncategorized", contentEncrypted: "Content is encrypted.", decryptButton: "Decrypt",
+                            copyContentTooltip: "Copy Content", shareNoteTooltip: "Share Note", editNoteTooltip: "Edit Note",
+                            reEncryptTooltip: "Re-encrypt Note", deleteNoteTooltip: "Delete Note", masterKeyModalTitle: "Master Key Required",
+                            masterKeyModalDesc: "Note is {action}. Enter master key.", encrypting: "being secured", decrypting: "secured",
+                            masterKeyWarning: "Master key is NOT stored. Forgotten key = lost notes.", masterKeyPlaceholder: "Enter master key",
+                            encryptButton: "Encrypt", importExportModalTitleNoSync: "Import / Export Notes", importExportTooltip: "Import/Export Notes",
+                            exportNotesTitle: "Export Notes", exportNotesDesc: "Download notes as a JSON file.", exportAllButton: "Export All Notes",
+                            exportSelectedButton: "Export Selected", exportSelectedInfo: "{count} notes selected for export.",
+                            selectAllVisibleButton: "Select Visible", selectAllInCategoryButton: "Select All in '{category}'",
+                            deselectAllButton: "Deselect All", selectForExportTooltip: "Select for export", importNotesTitle: "Import Notes",
+                            importNotesDesc: "Import from a JSON file.", importWarningOverwrite: "Warning: Existing notes with same IDs will be overwritten.",
+                            closeButton: "Close", appInfoModalTitle: "About VueNotesPro v{version}", appInfoTooltip: "App Info",
+                            authorLabel: "Author", categoryAppLabel: "Category", productivityCategory: "Productivity",
+                            descriptionLabel: "Description", appDescription: "Advanced note-taking web app.",
+                            appDescriptionFullNoSync: "Feature-rich, responsive note-taking web app with Vue.js & Tailwind. Supports categories, Markdown, import/export, social sharing, and client-side encryption. Data stored locally in IndexedDB.",
+                            modelLabel: "AI Model Assistance", disclaimerLabel: "Disclaimer",
+                            appDisclaimer: "Data, including encrypted notes, stored locally. Master key NOT stored; no recovery if forgotten. Use at own risk.",
+                            featuresLabel: "Features", featureCategories: "Categories & Subcategories", featureMarkdown: "Markdown Input & Rendering",
+                            featureFullView: "Full Note View", featureSelectiveExport: "Selective Note Export", featureImportExport: "JSON Import/Export",
+                            featureSocialSharing: "Social Sharing", featureSecretNotes: "AES-256 Encrypted Secret Notes",
+                            featureIndexedDB: "IndexedDB Local Storage", featureCopyPaste: "Easy Copy/Paste (SVG Icons)",
+                            featureResponsive: "Responsive Design", featureThemes: "Light/Dark Themes", featureFAB: "Floating Action Button",
+                            featureMultiLanguage: "Multi-language (EN, FR, AR)", shortcutsLabel: "Keyboard Shortcuts",
+                            shortcutSave: "Save note (in form)", shortcutEscape: "Close modal / Back from full view",
+                            deleteConfirmation: "Delete this note? Cannot be undone.",
+                            importConfirmation: "Overwrite {count} existing note(s) with matching IDs?",
+                            toastNoteSaved: "Note \"{title}\" saved.", toastNoteDeleted: "Note \"{title}\" deleted.",
+                            toastNoteEncrypted: "Note \"{title}\" encrypted.", toastNoteDecrypted: "Note \"{title}\" decrypted.",
+                            toastExported: "Notes exported.", toastImported: "{count} notes imported.", toastCopied: "Copied to clipboard!",
+                            toastShareCopied: "Share text copied!", toastNothingToCopy: "Nothing to copy.",
+                            toastCannotShareEncrypted: "Decrypt to share.", toastFailedToCopy: "Copy failed.", toastFailedToShare: "Share failed.",
+                            toastErrorDbInit: "DB init error.", toastErrorDbNotReady: "DB not ready.", toastErrorLoadingNotes: "Error loading notes.",
+                            toastErrorSavingNote: "Error saving {title}.", toastErrorDeletingNote: "Error deleting note.",
+                            toastMasterKeyRequiredNew: "Master key needed for new secret note.", toastMasterKeyEmpty: "Master key empty.",
+                            toastNoteNotFoundCrypto: "Note not found for crypto.", toastCryptoFailed: "Crypto failed. Check key/data.",
+                            toastImportError: "Import error: {message}", toastImportInvalidFile: "Invalid JSON file.",
+                            toastAppSetupFailed: "App setup failed. Refresh.", toggleThemeTooltip: "Toggle Theme",
+                            backToList: "Back to List", lastUpdatedLabel: "Last Updated", createdLabel: "Created",
+                            noNotesToExport: "No notes selected or available for export.",
+                        },
+                        fr: {
+                            appTitle: "VueNotesPro - Notes Avancées", appName: "VueNotesPro", selectLanguage: "Langue", newNote: "Nouvelle Note",
+                            newNoteTooltip: "Créer note", search: "Recherche", searchNotesPlaceholder: "Rechercher...", categories: "Catégories",
+                            allNotes: "Toutes", allInCategory: "Tout dans {category}", createNoteTitle: "Créer Note", editNoteTitle: "Modifier Note",
+                            titleLabel: "Titre", categoryLabel: "Catégorie (opt.)", subCategoryLabel: "Sous-cat. (opt.)",
+                            subCategoryPlaceholder: "Entrer sous-cat.", subCategoryPlaceholderDisabled: "Catégorie d'abord",
+                            contentLabel: "Contenu (Markdown)", secretNoteLabel: "Note secrète (clé maîtresse)", secretNoteTooltip: "Note Secrète",
+                            cancelButton: "Annuler", saveNoteButton: "Enregistrer", noNotesFound: "Aucune note.",
+                            noNotesFoundHint: "Créez une note ou ajustez les filtres!", loadingNotes: "Chargement...",
+                            uncategorized: "Non classé", contentEncrypted: "Contenu chiffré.", decryptButton: "Déchiffrer",
+                            copyContentTooltip: "Copier", shareNoteTooltip: "Partager", editNoteTooltip: "Modifier",
+                            reEncryptTooltip: "Re-chiffrer", deleteNoteTooltip: "Supprimer", masterKeyModalTitle: "Clé Maîtresse",
+                            masterKeyModalDesc: "Note {action}. Entrez clé.", encrypting: "sécurisée", decrypting: "protégée",
+                            masterKeyWarning: "Clé NON stockée. Oubli = perte.", masterKeyPlaceholder: "Clé maîtresse",
+                            encryptButton: "Chiffrer", importExportModalTitleNoSync: "Importer / Exporter des Notes", importExportTooltip: "Import/Export Notes",
+                            exportNotesTitle: "Exporter", exportNotesDesc: "Télécharger notes (JSON).", exportAllButton: "Tout Exporter",
+                            exportSelectedButton: "Exporter Sélection", exportSelectedInfo: "{count} notes pour export.",
+                            selectAllVisibleButton: "Sél. Visibles", selectAllInCategoryButton: "Sél. '{category}'",
+                            deselectAllButton: "Désél. Tout", selectForExportTooltip: "Sél. pour export", importNotesTitle: "Importer",
+                            importNotesDesc: "Importer de JSON.", importWarningOverwrite: "ID existants seront écrasés.",
+                            closeButton: "Fermer", appInfoModalTitle: "À propos v{version}", appInfoTooltip: "Infos App",
+                            authorLabel: "Auteur", categoryAppLabel: "Catégorie", productivityCategory: "Productivité",
+                            descriptionLabel: "Description", appDescription: "App de notes avancée.",
+                            appDescriptionFullNoSync: "App de notes riche, Vue.js & Tailwind. Catégories, Markdown, import/export, partage, chiffrement. Stockage IndexedDB.",
+                            modelLabel: "Assistance IA", disclaimerLabel: "Avertissement",
+                            appDisclaimer: "Données locales. Clé NON stockée. Risque propre.",
+                            featuresLabel: "Fonctionnalités", featureCategories: "Catégories & Sous-cat.", featureMarkdown: "Markdown",
+                            featureFullView: "Vue complète", featureSelectiveExport: "Export sélectif", featureImportExport: "Import/Export JSON",
+                            featureSocialSharing: "Partage Social", featureSecretNotes: "Notes Secrètes AES-256",
+                            featureIndexedDB: "Stockage IndexedDB", featureCopyPaste: "Copier/Coller Facile",
+                            featureResponsive: "Adaptatif", featureThemes: "Thèmes Clair/Sombre", featureFAB: "Bouton Flottant",
+                            featureMultiLanguage: "Multilingue (EN, FR, AR)", shortcutsLabel: "Raccourcis",
+                            shortcutSave: "Enregistrer note (form.)", shortcutEscape: "Fermer modale / Retour vue",
+                            deleteConfirmation: "Supprimer cette note? Irréversible.",
+                            importConfirmation: "Écraser {count} note(s) existante(s) ?",
+                            toastNoteSaved: "Note \"{title}\" sauvée.", toastNoteDeleted: "Note \"{title}\" effacée.",
+                            toastNoteEncrypted: "Note \"{title}\" chiffrée.", toastNoteDecrypted: "Note \"{title}\" déchiffrée.",
+                            toastExported: "Notes exportées.", toastImported: "{count} notes importées.", toastCopied: "Copié!",
+                            toastShareCopied: "Texte de partage copié!", toastNothingToCopy: "Rien à copier.",
+                            toastCannotShareEncrypted: "Déchiffrer pour partager.", toastFailedToCopy: "Copie échouée.",
+                            toastFailedToShare: "Partage échoué.", toastErrorDbInit: "Erreur init DB.",
+                            toastErrorDbNotReady: "DB non prête.", toastErrorLoadingNotes: "Erreur charg. notes.",
+                            toastErrorSavingNote: "Erreur sauv. {title}.", toastErrorDeletingNote: "Erreur suppr. note.",
+                            toastMasterKeyRequiredNew: "Clé pour nouvelle note secrète.", toastMasterKeyEmpty: "Clé vide.",
+                            toastNoteNotFoundCrypto: "Note non trouvée (crypto).", toastCryptoFailed: "Crypto échoué. Vérif clé/données.",
+                            toastImportError: "Erreur import: {message}", toastImportInvalidFile: "Fichier JSON invalide.",
+                            toastAppSetupFailed: "Config app échouée. Rafraîchir.", toggleThemeTooltip: "Changer Thème",
+                            backToList: "Retour à la liste", lastUpdatedLabel: "MàJ le", createdLabel: "Créé le",
+                            noNotesToExport: "Aucune note à exporter.",
+                        },
+                        ar: {
+                            appTitle: "VueNotesPro - ملاحظات متقدمة", appName: "VueNotesPro", selectLanguage: "اللغة", newNote: "ملاحظة جديدة",
+                            newNoteTooltip: "إنشاء ملاحظة", search: "بحث", searchNotesPlaceholder: "ابحث...", categories: "الفئات",
+                            allNotes: "الكل", allInCategory: "الكل في {category}", createNoteTitle: "إنشاء ملاحظة", editNoteTitle: "تعديل ملاحظة",
+                            titleLabel: "العنوان", categoryLabel: "الفئة (اختياري)", subCategoryLabel: "فئة فرعية (اختياري)",
+                            subCategoryPlaceholder: "أدخل فئة فرعية", subCategoryPlaceholderDisabled: "أدخل الفئة أولاً",
+                            contentLabel: "المحتوى (Markdown)", secretNoteLabel: "ملاحظة سرية (مفتاح رئيسي)", secretNoteTooltip: "ملاحظة سرية",
+                            cancelButton: "إلغاء", saveNoteButton: "حفظ", noNotesFound: "لا توجد ملاحظات.",
+                            noNotesFoundHint: "أنشئ ملاحظة أو عدّل الفلاتر!", loadingNotes: "تحميل...",
+                            uncategorized: "غير مصنف", contentEncrypted: "المحتوى مشفر.", decryptButton: "فك التشفير",
+                            copyContentTooltip: "نسخ", shareNoteTooltip: "مشاركة", editNoteTooltip: "تعديل",
+                            reEncryptTooltip: "إعادة تشفير", deleteNoteTooltip: "حذف", masterKeyModalTitle: "مفتاح رئيسي",
+                            masterKeyModalDesc: "الملاحظة {action}. أدخل المفتاح.", encrypting: "مؤمنة", decrypting: "محمية",
+                            masterKeyWarning: "المفتاح غير مخزن. النسيان = ضياع.", masterKeyPlaceholder: "المفتاح الرئيسي",
+                            encryptButton: "تشفير", importExportModalTitleNoSync: "استيراد / تصدير الملاحظات", importExportTooltip: "استيراد/تصدير الملاحظات",
+                            exportNotesTitle: "تصدير", exportNotesDesc: "تنزيل الملاحظات (JSON).", exportAllButton: "تصدير الكل",
+                            exportSelectedButton: "تصدير المحدد", exportSelectedInfo: "{count} ملاحظات للتصدير.",
+                            selectAllVisibleButton: "تحديد المرئي", selectAllInCategoryButton: "تحديد الكل في '{category}'",
+                            deselectAllButton: "إلغاء تحديد الكل", selectForExportTooltip: "تحديد للتصدير", importNotesTitle: "استيراد",
+                            importNotesDesc: "استيراد من JSON.", importWarningOverwrite: "المعرفات الموجودة سيتم الكتابة فوقها.",
+                            closeButton: "إغلاق", appInfoModalTitle: "حول الإصدار {version}", appInfoTooltip: "معلومات التطبيق",
+                            authorLabel: "المؤلف", categoryAppLabel: "الفئة", productivityCategory: "إنتاجية",
+                            descriptionLabel: "الوصف", appDescription: "تطبيق ملاحظات متقدم.",
+                            appDescriptionFullNoSync: "تطبيق ملاحظات غني بالميزات، Vue.js و Tailwind. فئات، Markdown، استيراد/تصدير، مشاركة، تشفير. تخزين IndexedDB.",
+                            modelLabel: "مساعدة الذكاء الاصطناعي", disclaimerLabel: "إخلاء مسؤولية",
+                            appDisclaimer: "البيانات محلية. المفتاح غير مخزن. مسؤوليتك.",
+                            featuresLabel: "الميزات", featureCategories: "الفئات والفئات الفرعية", featureMarkdown: "Markdown",
+                            featureFullView: "عرض كامل للملاحظة", featureSelectiveExport: "تصدير انتقائي", featureImportExport: "استيراد/تصدير JSON",
+                            featureSocialSharing: "مشاركة اجتماعية", featureSecretNotes: "ملاحظات سرية AES-256",
+                            featureIndexedDB: "تخزين IndexedDB", featureCopyPaste: "نسخ/لصق سهل",
+                            featureResponsive: "تصميم متجاوب", featureThemes: "سمات فاتحة/داكنة", featureFAB: "زر عائم",
+                            featureMultiLanguage: "متعدد اللغات (EN, FR, AR)", shortcutsLabel: "الاختصارات",
+                            shortcutSave: "حفظ الملاحظة (نموذج)", shortcutEscape: "إغلاق النافذة / رجوع",
+                            deleteConfirmation: "حذف هذه الملاحظة؟ لا يمكن التراجع.",
+                            importConfirmation: "الكتابة فوق {count} ملاحظة (ملاحظات) موجودة؟",
+                            toastNoteSaved: "تم حفظ \"{title}\".", toastNoteDeleted: "تم حذف \"{title}\".",
+                            toastNoteEncrypted: "تم تشفير \"{title}\".", toastNoteDecrypted: "تم فك تشفير \"{title}\".",
+                            toastExported: "تم التصدير.", toastImported: "تم استيراد {count} ملاحظات.", toastCopied: "تم النسخ!",
+                            toastShareCopied: "نص المشاركة نُسخ!", toastNothingToCopy: "لا شيء للنسخ.",
+                            toastCannotShareEncrypted: "فك التشفير للمشاركة.", toastFailedToCopy: "فشل النسخ.",
+                            toastFailedToShare: "فشل المشاركة.", toastErrorDbInit: "خطأ تهيئة DB.",
+                            toastErrorDbNotReady: "DB غير جاهزة.", toastErrorLoadingNotes: "خطأ تحميل الملاحظات.",
+                            toastErrorSavingNote: "خطأ حفظ {title}.", toastErrorDeletingNote: "خطأ حذف الملاحظة.",
+                            toastMasterKeyRequiredNew: "مفتاح لملاحظة سرية جديدة.", toastMasterKeyEmpty: "المفتاح فارغ.",
+                            toastNoteNotFoundCrypto: "الملاحظة غير موجودة (تشفير).", toastCryptoFailed: "فشل التشفير. تحقق من المفتاح/البيانات.",
+                            toastImportError: "خطأ استيراد: {message}", toastImportInvalidFile: "ملف JSON غير صالح.",
+                            toastAppSetupFailed: "فشل إعداد التطبيق. حدث.", toggleThemeTooltip: "تبديل السمة",
+                            backToList: "العودة للقائمة", lastUpdatedLabel: "آخر تحديث", createdLabel: "أنشئت في",
+                            noNotesToExport: "لا ملاحظات للتصدير.",
+                        }
+                    },
                     themeColors: {
                         light: { primary: '29,78,216', 'primary-dark': '30,64,175', secondary: '243,244,246', accent: '234,179,8', light: '249,250,251', dark: '17,24,39', 'text-light': '243,244,246', 'text-dark': '31,41,55', 'border-color': '209,213,219' },
                         dark: { primary: '37,99,235', 'primary-dark': '29,78,216', secondary: '31,41,55', accent: '202,138,4', light: '17,24,39', dark: '243,244,246', 'text-light': '229,231,235', 'text-dark': '17,24,39', 'border-color': '55,65,81' }
-                    },
-                    // IndexedDB
-                    db: null,
-                    // Google Drive Sync Data
-                    googleUser: null, isGoogleApiLoaded: false, isGoogleGsiLoaded: false, googleTokenClient: null,
-                    userGoogleApiKey: '', userGoogleClientId: '', // User-provided settings
-                    settingsForm: { apiKey: '', clientId: '' }, // For settings modal
-                    DRIVE_SCOPES: 'https://www.googleapis.com/auth/drive.file', // drive.file for user-visible app folder
-                    DRIVE_APP_FOLDER_NAME: 'VueNotesPro_App_Data', // User-visible folder name
-                    DRIVE_FILE_NAME: 'notes_vnp_backup.json',
-                    saveSettingsDebounceTimer: null,
+                    }
                 };
             },
             computed: {
                 isRTL() { return this.currentLang === 'ar'; },
-                isGoogleDriveConfigured() { return !!(this.userGoogleApiKey && this.userGoogleClientId); },
-                filteredNotes() { /* ... same ... */ }, uniqueCategories() { /* ... same ... */ },
-                uniqueSubcategoriesForCurrentCategory() { /* ... same ... */ },
+                filteredNotes() {
+                    let notesToFilter = this.notes;
+                    if (this.currentCategory) {
+                        notesToFilter = notesToFilter.filter(note => note.category === this.currentCategory);
+                        if (this.currentSubCategory) {
+                            notesToFilter = notesToFilter.filter(note => note.subCategory === this.currentSubCategory);
+                        }
+                    }
+                    if (this.searchTerm) {
+                        const lowerSearchTerm = this.searchTerm.toLowerCase();
+                        notesToFilter = notesToFilter.filter(note =>
+                            note.title.toLowerCase().includes(lowerSearchTerm) ||
+                            (note.decryptedContent || note.content).toLowerCase().includes(lowerSearchTerm) ||
+                            (note.category && note.category.toLowerCase().includes(lowerSearchTerm)) ||
+                            (note.subCategory && note.subCategory.toLowerCase().includes(lowerSearchTerm))
+                        );
+                    }
+                    return notesToFilter.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                },
+                uniqueCategories() {
+                    const categories = new Set();
+                    this.notes.forEach(note => { if (note.category) categories.add(note.category); });
+                    return Array.from(categories).sort((a, b) => a.localeCompare(b, this.currentLang));
+                },
+                uniqueSubcategoriesForCurrentCategory() {
+                    if (!this.currentCategory) return [];
+                    const subCategories = new Set();
+                    this.notes.forEach(note => { if (note.category === this.currentCategory && note.subCategory) subCategories.add(note.subCategory); });
+                    return Array.from(subCategories).sort((a, b) => a.localeCompare(b, this.currentLang));
+                },
                 isNoteSelectedForExport() { return (noteId) => this.selectedNoteIdsForExport.includes(noteId); },
                 areAllFilteredSelectedForExport() { if (this.filteredNotes.length === 0) return false; return this.filteredNotes.every(note => this.selectedNoteIdsForExport.includes(note.id)); }
             },
-            watch: {
-                userGoogleApiKey() { this.tryInitializeGoogleApis(); },
-                userGoogleClientId() { this.tryInitializeGoogleApis(); }
-            },
             methods: {
-                t(key, params = {}) { /* ... same ... */ },
-                changeLanguage() { /* ... same ... */ },
-                loadLanguage() { /* ... same ... */ },
-                applyBodyTextColor() { /* ... same ... */ },
-                viewNote(note) { /* ... same ... */ },
-                goBackToList() { /* ... same ... */ },
-                toggleNoteSelectionForExport(noteId, event) { /* ... same ... */ },
-                selectAllFilteredForExport() { /* ... same ... */ },
-                deselectAllForExport() { /* ... same ... */ },
-                selectAllInCategoryForExport() { /* ... same ... */ },
-                goToNewNoteView() { /* ... same ... */ },
-                setThemeColors(theme) { /* ... same ... */ },
-                toggleTheme() { /* ... same ... */ },
-                loadTheme() { /* ... same ... */ },
-                initDB() { /* ... same ... */ },
-                async loadNotes() { /* ... same ... */ },
-                async saveNoteToDB(note) { /* ... same ... */ },
-                async deleteNoteFromDB(noteId) { /* ... same ... */ },
+                t(key, params = {}) {
+                    let string = (this.translations[this.currentLang]?.[key]) || (this.translations.en?.[key]) || key;
+                    for (const param in params) { string = string.replace(new RegExp(`{${param}}`, 'g'), params[param]); }
+                    return string;
+                },
+                changeLanguage() {
+                    localStorage.setItem('vueNotesProLang', this.currentLang);
+                    document.documentElement.setAttribute('lang', this.currentLang);
+                    document.documentElement.setAttribute('dir', this.isRTL ? 'rtl' : 'ltr');
+                    this.applyBodyTextColor();
+                },
+                loadLanguage() {
+                    const savedLang = localStorage.getItem('vueNotesProLang');
+                    if (savedLang && this.translations[savedLang]) this.currentLang = savedLang;
+                    document.documentElement.setAttribute('lang', this.currentLang);
+                    document.documentElement.setAttribute('dir', this.isRTL ? 'rtl' : 'ltr');
+                },
+                applyBodyTextColor() {
+                     const body = document.querySelector('body');
+                    if (this.isDarkMode) {
+                        body.classList.remove('text-text-dark', 'bg-light'); body.classList.add('text-text-light', 'bg-dark');
+                    } else {
+                        body.classList.remove('text-text-light', 'bg-dark'); body.classList.add('text-text-dark', 'bg-light');
+                    }
+                },
+                viewNote(note) {
+                    this.currentViewedNote = { ...note };
+                    if (this.currentViewedNote.isSecret && this.currentViewedNote.encryptedContent && !this.currentViewedNote.decryptedContent) {
+                         this.promptMasterKey('decrypt', this.currentViewedNote.id);
+                    }
+                    this.activeView = 'viewNote'; this.showSidebar = false;
+                },
+                goBackToList() { this.activeView = 'notesList'; this.currentViewedNote = null; },
+                toggleNoteSelectionForExport(noteId, event) {
+                    const index = this.selectedNoteIdsForExport.indexOf(noteId);
+                    if (index > -1) this.selectedNoteIdsForExport.splice(index, 1); else this.selectedNoteIdsForExport.push(noteId);
+                },
+                selectAllFilteredForExport() { this.filteredNotes.forEach(note => { if (!this.selectedNoteIdsForExport.includes(note.id)) this.selectedNoteIdsForExport.push(note.id); }); },
+                deselectAllForExport() { this.selectedNoteIdsForExport = []; },
+                selectAllInCategoryForExport() {
+                    if (!this.currentCategory) return;
+                    this.notes.forEach(note => { if (note.category === this.currentCategory && !this.selectedNoteIdsForExport.includes(note.id)) this.selectedNoteIdsForExport.push(note.id); });
+                },
+                goToNewNoteView() { this.setActiveView('addNote'); this.selectedNote = null; this.showSidebar = false; this.resetForm(); },
+                setThemeColors(theme) {
+                    const colors = this.themeColors[theme]; const root = document.documentElement;
+                    for (const [key, value] of Object.entries(colors)) { root.style.setProperty(`--color-${key}`, value); }
+                    if (theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+                    this.isDarkMode = theme === 'dark'; this.applyBodyTextColor(); localStorage.setItem('vueNotesProTheme', theme);
+                    const styleSheet = document.styleSheets[0];
+                    for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) { if (styleSheet.cssRules[i].cssText.includes('/* scrollbar-theme-marker */')) styleSheet.deleteRule(i); }
+                    if (this.isDarkMode) {
+                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #374151; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #6b7280; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #9ca3af; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                    } else {
+                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #f1f1f1; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #888; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #555; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                    }
+                },
+                toggleTheme() { this.setThemeColors(this.isDarkMode ? 'light' : 'dark'); },
+                loadTheme() {
+                    const savedTheme = localStorage.getItem('vueNotesProTheme');
+                    if (savedTheme) this.setThemeColors(savedTheme);
+                    else if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) this.setThemeColors('dark');
+                    else this.setThemeColors('light');
+                },
+                initDB() {
+                    return new Promise((resolve, reject) => {
+                        const request = indexedDB.open('VueNotesProDB', 1);
+                        request.onerror = (event) => { console.error("DB error:", event.target.errorCode); this.showToast(this.t('toastErrorDbInit'), 'error'); reject("DB init error."); };
+                        request.onsuccess = (event) => { this.db = event.target.result; resolve(); };
+                        request.onupgradeneeded = (event) => { if (!event.target.result.objectStoreNames.contains('notes')) event.target.result.createObjectStore('notes', { keyPath: 'id' }); };
+                    });
+                },
+                async loadNotes() {
+                    this.isLoading = true; if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); this.isLoading = false; return; }
+                    const tx = this.db.transaction(['notes'], 'readonly');
+                    const req = tx.objectStore('notes').getAll();
+                    req.onsuccess = (event) => { this.notes = event.target.result.map(n => ({ ...n, decryptedContent: null })); this.isLoading = false; };
+                    req.onerror = (event) => { this.showToast(this.t('toastErrorLoadingNotes'), 'error'); this.isLoading = false; };
+                },
+                async saveNoteToDB(note) {
+                    if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); return; }
+                    const noteToSave = { ...note }; delete noteToSave.decryptedContent;
+                    this.db.transaction(['notes'], 'readwrite').objectStore('notes').put(noteToSave)
+                        .onerror = (e) => this.showToast(this.t('toastErrorSavingNote', {title: note.title}), 'error');
+                },
+                async deleteNoteFromDB(noteId) {
+                    if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); return; }
+                    this.db.transaction(['notes'], 'readwrite').objectStore('notes').delete(noteId)
+                        .onerror = (e) => this.showToast(this.t('toastErrorDeletingNote'), 'error');
+                },
                 setActiveView(view) { this.activeView = view; },
                 resetForm() { this.form = { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null }; },
-                saveNote() { /* ... same with uuid.v4() ... */ },
-                editNote(noteParam) { /* ... same ... */ },
-                cancelEdit() { /* ... same ... */ },
-                deleteNote(noteId) { /* ... same ... */ },
+                saveNote() {
+                    if (this.form.isSecret && !this.masterKeyInput && !this.form.id) { this.showToast(this.t('toastMasterKeyRequiredNew'), 'info'); this.promptMasterKey('encrypt', null, true); return; }
+                    const now = new Date().toISOString(); let noteToSave;
+                    if (this.form.id) {
+                        const index = this.notes.findIndex(n => n.id === this.form.id); if (index === -1) return;
+                        noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
+                        const originalNote = this.notes[index];
+                        if ((originalNote.isSecret && !this.form.isSecret) || (this.form.isSecret && this.form.content !== (originalNote.decryptedContent || originalNote.content) && !this.form.encryptedContent)) {
+                            if (!this.form.isSecret) { noteToSave.content = originalNote.decryptedContent || originalNote.content; delete noteToSave.encryptedContent; }
+                            else if (this.form.isSecret && !this.form.encryptedContent) { const noteForReEncrypt = this.notes.find(n => n.id === this.form.id); if (noteForReEncrypt) noteForReEncrypt.decryptedContent = this.form.content; this.promptMasterKey('encrypt', this.form.id); return; }
+                        }
+                        this.notes.splice(index, 1, noteToSave);
+                        if (this.currentViewedNote?.id === noteToSave.id) this.currentViewedNote = { ...noteToSave, decryptedContent: (noteToSave.isSecret && noteToSave.encryptedContent) ? null : noteToSave.content };
+                    } else {
+                        noteToSave = { ...this.form, id: uuid.v4(), createdAt: now, updatedAt: now };
+                        if (noteToSave.isSecret) { this.notes.push(noteToSave); this.promptMasterKey('encrypt', noteToSave.id); return; }
+                        this.notes.push(noteToSave);
+                    }
+                    this.saveNoteToDB(noteToSave); this.showToast(this.t('toastNoteSaved', {title: noteToSave.title}), 'success');
+                    this.setActiveView('notesList'); this.resetForm(); this.masterKeyInput = '';
+                },
+                editNote(noteParam) {
+                    const noteToEdit = this.activeView === 'viewNote' && this.currentViewedNote ? this.currentViewedNote : noteParam;
+                    if (!noteToEdit) return; this.form = { ...noteToEdit };
+                    if (noteToEdit.isSecret && noteToEdit.encryptedContent) { this.form.content = ''; this.promptMasterKey('decrypt', noteToEdit.id, true); }
+                    else { this.form.content = noteToEdit.decryptedContent || noteToEdit.content; this.setActiveView('editNote'); }
+                    this.showSidebar = false;
+                },
+                cancelEdit() {
+                    const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
+                    if (note?.isSecret && note.decryptedContent) this.promptMasterKey('encrypt', note.id);
+                    this.resetForm();
+                    if (this.currentViewedNote?.id === this.form.id) this.activeView = 'viewNote'; else this.activeView = 'notesList';
+                },
+                deleteNote(noteId) {
+                    if (confirm(this.t('deleteConfirmation'))) {
+                        const idx = this.notes.findIndex(n => n.id === noteId);
+                        if (idx > -1) {
+                            const title = this.notes[idx].title; this.notes.splice(idx, 1); this.deleteNoteFromDB(noteId);
+                            this.showToast(this.t('toastNoteDeleted', {title: title}), 'success');
+                            if (this.currentViewedNote?.id === noteId) this.goBackToList();
+                        }
+                    }
+                },
                 renderMarkdown(md) { return md ? DOMPurify.sanitize(marked.parse(md)) : ''; },
-                formatDate(d) { /* ... same ... */ },
-                selectCategory(cat) { /* ... same with deselectAllForExport ... */ },
-                selectSubCategory(subCat) { /* ... same with deselectAllForExport ... */ },
-                uniqueSubcategoriesForCategory(catName) { /* ... same ... */ },
-                promptMasterKey(action, noteId, forEditing = false) { /* ... same ... */ },
-                processMasterKeyAction() { /* ... same with refined noteToProcess logic ... */ },
-                exportNotes() { /* ... same ... */ },
-                handleFileUpload(event) { /* ... same with overwrite confirmation ... */ },
-                shareNote(note) { /* ... same ... */ },
-                copyToClipboardForSharing(title, text) { /* ... same ... */ },
-                copyToClipboard(text) { /* ... same ... */ },
-                toggleSidebar() { this.showSidebar = !this.showSidebar; },
-                showToast(message, type = 'success', duration = 3000) { /* ... same ... */ },
-                handleKeyDown(event) { /* ... same with Escape for Settings modal ... */ },
+                formatDate(d) {
+                    if (!d) return ''; let locale = 'en-US';
+                    if (this.currentLang === 'fr') locale = 'fr-FR'; else if (this.currentLang === 'ar') locale = 'ar-EG'; // Using Egypt for broader Arabic date format compatibility
+                    try { return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });}
+                    catch (e) { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+                },
+                selectCategory(cat) { this.currentCategory = cat; this.currentSubCategory = null; this.activeView = 'notesList'; this.showSidebar = false; this.deselectAllForExport(); },
+                selectSubCategory(subCat) { this.currentSubCategory = subCat; this.activeView = 'notesList'; this.showSidebar = false; this.deselectAllForExport(); },
+                uniqueSubcategoriesForCategory(catName) {
+                    if (!catName) return []; const subCats = new Set();
+                    this.notes.forEach(n => { if (n.category === catName && n.subCategory) subCats.add(n.subCategory); });
+                    return Array.from(subCats).sort((a, b) => a.localeCompare(b, this.currentLang));
+                },
+                promptMasterKey(action, noteId, forEditing = false) {
+                    this.modalAction = action; this.modalNoteId = noteId; this.editingAfterDecrypt = forEditing;
+                    this.showMasterKeyModal = true; this.$nextTick(() => this.$el.querySelector('input[type="password"]')?.focus());
+                },
+                processMasterKeyAction() {
+                    if (!this.masterKeyInput) { this.showToast(this.t('toastMasterKeyEmpty'), 'error'); return; }
+                    let noteToProcess = this.notes.find(n => n.id === this.modalNoteId);
+                    if (!noteToProcess && this.modalAction === 'encrypt') {
+                        if (this.activeView === 'addNote' && this.form.isSecret && this.modalNoteId === null) { noteToProcess = this.form; if (!noteToProcess.id) noteToProcess.id = uuid.v4(); if (!noteToProcess.createdAt) noteToProcess.createdAt = new Date().toISOString(); }
+                        else if (this.form.id === this.modalNoteId && this.form.isSecret) { noteToProcess = this.form; }
+                    }
+                    if (!noteToProcess && this.modalAction === 'decrypt' && this.currentViewedNote?.id === this.modalNoteId) { noteToProcess = this.currentViewedNote; }
 
-                // --- Settings Methods ---
-                loadSettings() {
-                    this.userGoogleApiKey = localStorage.getItem('vueNotesProUserGApiKey') || '';
-                    this.userGoogleClientId = localStorage.getItem('vueNotesProUserGClientId') || '';
-                    this.settingsForm.apiKey = this.userGoogleApiKey;
-                    this.settingsForm.clientId = this.userGoogleClientId;
-                    if (this.isGoogleDriveConfigured) {
-                        this.tryInitializeGoogleApis();
-                    }
-                },
-                saveSettings() {
-                    this.userGoogleApiKey = this.settingsForm.apiKey.trim();
-                    this.userGoogleClientId = this.settingsForm.clientId.trim();
-                    localStorage.setItem('vueNotesProUserGApiKey', this.userGoogleApiKey);
-                    localStorage.setItem('vueNotesProUserGClientId', this.userGoogleClientId);
-                    this.showToast(this.t('settingsSaved'), 'success');
-                    // If settings are cleared, sign out from Google
-                    if (!this.isGoogleDriveConfigured && this.googleUser) {
-                        this.signOutFromGoogle();
-                    }
-                    // Re-initialize Google APIs if settings are now valid
-                    this.tryInitializeGoogleApis();
-                },
-                debouncedSaveSettings() {
-                    clearTimeout(this.saveSettingsDebounceTimer);
-                    this.saveSettingsDebounceTimer = setTimeout(() => {
-                        this.saveSettings();
-                    }, 500);
-                },
-
-                // --- Google Drive Methods ---
-                handleGoogleApiLibraryLoad() { this.isGoogleApiLoaded = true; this.tryInitializeGoogleApis(); },
-                handleGoogleGsiLibraryLoad() { this.isGoogleGsiLoaded = true; this.tryInitializeGoogleApis(); },
-                async tryInitializeGoogleApis() {
-                    if (this.isGoogleApiLoaded && this.isGoogleGsiLoaded && this.isGoogleDriveConfigured) {
-                        this.initializeGoogleApis();
-                    }
-                },
-                async initializeGoogleApis() {
-                    if (!this.isGoogleDriveConfigured) {
-                        console.log("Google Drive not configured by user.");
-                        return;
-                    }
-                    console.log("Initializing Google APIs with user credentials...");
+                    if (!noteToProcess) { this.showToast(this.t('toastNoteNotFoundCrypto'), 'error'); this.showMasterKeyModal = false; this.masterKeyInput = ''; return; }
                     try {
-                        await gapi.client.init({ apiKey: this.userGoogleApiKey, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"], });
-                        this.googleTokenClient = google.accounts.oauth2.initTokenClient({
-                            client_id: this.userGoogleClientId, scope: this.DRIVE_SCOPES,
-                            callback: async (tokenResponse) => {
-                                if (tokenResponse?.access_token) {
-                                    gapi.client.setToken({ access_token: tokenResponse.access_token });
-                                    try {
-                                        const profile = await gapi.client.oauth2.userinfo.get();
-                                        this.googleUser = profile.result;
-                                        this.showToast(this.t('signedInAs', {email: this.googleUser.email || 'User'}), 'success');
-                                    } catch (err) { this.showToast(this.t('driveError', {message: "Profile fetch failed"}), 'error');}
-                                } else { this.showToast(this.t('driveError', {message: "Sign-in token error"}), 'error');}
-                            },
-                            error_callback: (err) => { this.showToast(this.t('driveError', {message: "Sign-in error: " + (err?.type || "Unknown")}), 'error');}
-                        });
-                    } catch (e) { this.showToast(this.t('driveError', {message: "API init failed"}), 'error'); }
+                        if (this.modalAction === 'encrypt') {
+                            const contentToEncrypt = noteToProcess.decryptedContent || (noteToProcess === this.form ? this.form.content : noteToProcess.content);
+                            if (!contentToEncrypt && noteToProcess === this.form) { this.showToast(this.t('toastNothingToCopy'), 'error'); this.showMasterKeyModal = false; this.masterKeyInput = ''; return; }
+                            const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
+                            const updatedData = { encryptedContent: encrypted, content: "[[ENCRYPTED CONTENT]]", decryptedContent: null, isSecret: true, updatedAt: new Date().toISOString() };
+                            
+                            Object.assign(noteToProcess, updatedData);
+                            this.saveNoteToDB(noteToProcess);
+                            this.showToast(this.t('toastNoteEncrypted', {title: noteToProcess.title }), 'success');
+                            if (noteToProcess === this.form) { this.setActiveView('notesList'); this.resetForm(); }
+                        } else if (this.modalAction === 'decrypt') {
+                            if (!noteToProcess.encryptedContent) { this.showToast(this.t('contentEncrypted'), 'error'); return; }
+                            const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
+                            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                            if (!decrypted) throw new Error("Decryption failed.");
+                            noteToProcess.decryptedContent = decrypted;
+                            if (noteToProcess === this.form) this.form.content = decrypted;
+                            this.showToast(this.t('toastNoteDecrypted', {title: noteToProcess.title}), 'success');
+                            if (this.editingAfterDecrypt) { this.form = { ...noteToProcess, content: decrypted }; this.setActiveView('editNote'); this.editingAfterDecrypt = false; }
+                        }
+                    } catch (e) { console.error("Crypto error:", e); this.showToast(this.t('toastCryptoFailed'), 'error'); }
+                    finally { this.showMasterKeyModal = false; }
                 },
-                signInWithGoogle() {
-                    if (!this.isGoogleDriveConfigured) { this.showToast(this.t('gDriveSetupNeeded'), 'info'); return; }
-                    if (!this.googleTokenClient) { this.showToast(this.t('googleApiLoading'), 'info'); return; }
-                    this.googleTokenClient.requestAccessToken({prompt: 'consent'}); // Always prompt for consent with user-provided Client ID
+                exportNotes() {
+                    let notesToExport;
+                    if (this.selectedNoteIdsForExport.length > 0) notesToExport = this.notes.filter(note => this.selectedNoteIdsForExport.includes(note.id));
+                    else notesToExport = this.notes;
+                    if (notesToExport.length === 0) { this.showToast(this.t('noNotesToExport'), 'info'); return; }
+                    const notesData = JSON.parse(JSON.stringify(notesToExport)); notesData.forEach(note => delete note.decryptedContent);
+                    const jsonData = JSON.stringify(notesData, null, 2); const blob = new Blob([jsonData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                    a.href = url; a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                    this.showToast(this.t('toastExported'), 'success'); this.showImportExportModal = false; this.deselectAllForExport();
                 },
-                signOutFromGoogle() {
-                    if (gapi.client.getToken()) {
-                        google.accounts.oauth2.revoke(gapi.client.getToken().access_token, () => {
-                            gapi.client.setToken(''); this.googleUser = null; this.showToast(this.t('signOut'), 'success');
-                        });
-                    } else { this.googleUser = null; }
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file?.type === "application/json") {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const importedNotes = JSON.parse(e.target.result);
+                                if (!Array.isArray(importedNotes)) throw new Error("Not an array.");
+                                let overwriteCount = 0;
+                                importedNotes.forEach(iNote => {
+                                    if (this.notes.some(eNote => eNote.id === iNote.id)) overwriteCount++;
+                                    if (!iNote.id || typeof iNote.id !== 'string' || !iNote.title || typeof iNote.title !== 'string' || (typeof iNote.content !== 'string' && typeof iNote.encryptedContent !== 'string') || typeof iNote.isSecret !== 'boolean' || !iNote.createdAt || isNaN(new Date(iNote.createdAt).getTime()) || !iNote.updatedAt || isNaN(new Date(iNote.updatedAt).getTime()) ) { throw new Error(`Invalid note structure for note ID ${iNote.id || 'unknown'}.`);}
+                                });
+                                if (overwriteCount > 0 && !confirm(this.t('importConfirmation', { count: overwriteCount }))) { event.target.value = null; return; }
+                                importedNotes.forEach(iNote => {
+                                    iNote.createdAt = new Date(iNote.createdAt).toISOString(); iNote.updatedAt = new Date(iNote.updatedAt).toISOString(); delete iNote.decryptedContent;
+                                    const idx = this.notes.findIndex(n => n.id === iNote.id);
+                                    if (idx > -1) this.notes.splice(idx, 1, iNote); else this.notes.push(iNote);
+                                    this.saveNoteToDB(iNote);
+                                });
+                                this.showToast(this.t('toastImported', {count: importedNotes.length}), 'success'); this.showImportExportModal = false;
+                            } catch (error) { this.showToast(this.t('toastImportError', {message: error.message}), 'error'); }
+                            finally { event.target.value = null; }
+                        };
+                        reader.readAsText(file);
+                    } else { this.showToast(this.t('toastImportInvalidFile'), 'error'); event.target.value = null; }
                 },
-                async _findOrCreateAppFolder() { /* ... same ... */ },
-                async _findFileInFolder(folderId, fileName) { /* ... same ... */ },
-                async saveNotesToDrive() { /* ... same, checks isGoogleDriveConfigured and googleUser ... */ },
-                async loadNotesFromDrive() { /* ... same, checks isGoogleDriveConfigured and googleUser ... */ },
+                shareNote(note) {
+                    const contentToShare = note.decryptedContent || note.content;
+                    if (note.isSecret && !note.decryptedContent) { this.showToast(this.t("toastCannotShareEncrypted"), "info"); return; }
+                    const title = note.title; const text = `${this.t('appName')}: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
+                    if (navigator.share) navigator.share({ title, text }).catch(e => {this.copyToClipboardForSharing(title, text);});
+                    else this.copyToClipboardForSharing(title, text);
+                },
+                copyToClipboardForSharing(title, text) {
+                     navigator.clipboard.writeText(`${this.t('appName')}: "${title}"\n\n${text}`)
+                        .then(() => this.showToast(this.t('toastShareCopied'), 'success'))
+                        .catch(() => this.showToast(this.t('toastFailedToCopy'), 'error'));
+                },
+                copyToClipboard(text) {
+                    if (!text) { this.showToast(this.t('toastNothingToCopy'), 'info'); return; }
+                    navigator.clipboard.writeText(text)
+                        .then(() => this.showToast(this.t('toastCopied'), 'success'))
+                        .catch(() => this.showToast(this.t('toastFailedToCopy'), 'error'));
+                },
+                toggleSidebar() { this.showSidebar = !this.showSidebar; },
+                showToast(message, type = 'success', duration = 3000) {
+                    this.toast = { message, type, show: true }; setTimeout(() => { this.toast.show = false; }, duration);
+                },
+                handleKeyDown(event) {
+                    if ((event.ctrlKey || event.metaKey) && event.key === 's') { if (this.activeView === 'addNote' || this.activeView === 'editNote') { event.preventDefault(); this.saveNote(); }}
+                    if (event.key === 'Escape') {
+                        if (this.activeView === 'viewNote') { event.preventDefault(); this.goBackToList(); }
+                        else if (this.showMasterKeyModal) { event.preventDefault(); this.showMasterKeyModal = false; this.masterKeyInput = '';}
+                        else if (this.showImportExportModal) { event.preventDefault(); this.showImportExportModal = false;}
+                        else if (this.showAppInfoModal) { event.preventDefault(); this.showAppInfoModal = false;}
+                    }
+                }
             },
             async mounted() {
-                vueAppInstance = this;
-                this.loadSettings(); // Load API keys first
                 this.loadLanguage();
                 this.loadTheme();
                 try { await this.initDB(); await this.loadNotes(); }
                 catch (error) { this.showToast(this.t('toastAppSetupFailed'), 'error'); }
                 window.addEventListener('keydown', this.handleKeyDown);
-                // Google API initialization will be attempted if config is valid (via loadSettings -> tryInitializeGoogleApis)
             },
-            beforeUnmount() { window.removeEventListener('keydown', this.handleKeyDown); vueAppInstance = null; },
+            beforeUnmount() { window.removeEventListener('keydown', this.handleKeyDown); },
         };
-        
-        // Populate translations (condensed for brevity, assume full object exists)
-        App.data().translations.en = { /* ... All English translations from previous step ... */
-            settingsTooltip: "Settings", settingsModalTitle: "Settings", googleApiKeyLabel: "Google API Key",
-            googleApiKeyPlaceholder: "Enter your Google API Key", googleClientIdLabel: "Google Client ID",
-            googleClientIdPlaceholder: "Enter your Google OAuth Client ID", settingsSaved: "Settings saved!",
-            googleCredentialsNote: "Required for Google Drive sync. Get these from your Google Cloud Project.",
-            googleCredentialsWarning: "These credentials will be stored locally in your browser. Only use credentials for a project you own and understand the security implications.",
-            gDriveSetupNeeded: "Google Drive API Key & Client ID needed for sync.", openSettings: "Open Settings",
-            signedInAs: "Signed in as {email}", doneButton: "Done",
-            appDisclaimerGDrive: "Data stored locally. Master key NOT stored. Google Drive sync uses your provided API credentials; ensure you understand security implications. Use at own risk.",
-            featureGDriveUserConfig: "Google Drive Sync (User-configured)",
-            // ... add all other EN strings
-        };
-        App.data().translations.fr = { /* ... All French translations ... */
-            settingsTooltip: "Paramètres", settingsModalTitle: "Paramètres", googleApiKeyLabel: "Clé API Google",
-            googleApiKeyPlaceholder: "Entrez votre clé API Google", googleClientIdLabel: "ID Client Google",
-            googleClientIdPlaceholder: "Entrez votre ID Client OAuth Google", settingsSaved: "Paramètres enregistrés !",
-            googleCredentialsNote: "Requis pour la synchro Google Drive. Obtenez-les de votre projet Google Cloud.",
-            googleCredentialsWarning: "Ces identifiants seront stockés localement. Utilisez uniquement ceux d'un projet que vous possédez et comprenez les implications de sécurité.",
-            gDriveSetupNeeded: "Clé API et ID Client Google requis pour la synchro.", openSettings: "Ouvrir Paramètres",
-            signedInAs: "Connecté en tant que {email}", doneButton: "Terminé",
-            appDisclaimerGDrive: "Données locales. Clé NON stockée. Synchro Drive utilise vos identifiants API; comprenez les risques. Usage à vos risques.",
-            featureGDriveUserConfig: "Synchro Google Drive (Config. utilisateur)",
-            // ... add all other FR strings
-        };
-        App.data().translations.ar = { /* ... All Arabic translations ... */
-            settingsTooltip: "الإعدادات", settingsModalTitle: "الإعدادات", googleApiKeyLabel: "مفتاح API جوجل",
-            googleApiKeyPlaceholder: "أدخل مفتاح API جوجل الخاص بك", googleClientIdLabel: "معرف عميل جوجل",
-            googleClientIdPlaceholder: "أدخل معرف عميل OAuth جوجل الخاص بك", settingsSaved: "تم حفظ الإعدادات!",
-            googleCredentialsNote: "مطلوب لمزامنة جوجل درايف. احصل عليها من مشروع جوجل كلاود الخاص بك.",
-            googleCredentialsWarning: "سيتم تخزين هذه البيانات محليًا. استخدم فقط بيانات مشروع تملكه وتفهم الآثار الأمنية.",
-            gDriveSetupNeeded: "مفتاح API ومعرف عميل جوجل مطلوبان للمزامنة.", openSettings: "فتح الإعدادات",
-            signedInAs: "مسجل الدخول كـ {email}", doneButton: "تم",
-            appDisclaimerGDrive: "البيانات محلية. المفتاح غير مخزن. مزامنة Drive تستخدم بيانات API التي تقدمها؛ افهم المخاطر. استخدم على مسؤوليتك.",
-            featureGDriveUserConfig: "مزامنة جوجل درايف (تهيئة المستخدم)",
-            // ... add all other AR strings
-        };
-
-
-        // Fill in ALL translation strings here for EN, FR, AR based on the previous full code's translation block.
-        // This is just a structural placeholder to keep the overall script runnable.
-        // For example, for English:
-        App.data().translations.en = {
-            ...App.data().translations.en, // Keep existing ones
-            appTitle: "VueNotesPro - Advanced Notes", appName: "VueNotesPro", selectLanguage: "Language", newNote: "New Note",
-            newNoteTooltip: "Create new note", search: "Search", searchNotesPlaceholder: "Search notes...", categories: "Categories",
-            allNotes: "All Notes", allInCategory: "All in {category}", createNoteTitle: "Create New Note", editNoteTitle: "Edit Note",
-            titleLabel: "Title", categoryLabel: "Category (optional)", subCategoryLabel: "Subcategory (optional)",
-            subCategoryPlaceholder: "Enter subcategory", subCategoryPlaceholderDisabled: "Enter category first",
-            contentLabel: "Content (Markdown)", secretNoteLabel: "Secret Note (master key required)", secretNoteTooltip: "Secret Note",
-            cancelButton: "Cancel", saveNoteButton: "Save Note", noNotesFound: "No notes found.",
-            noNotesFoundHint: "Create a new note or adjust filters!", loadingNotes: "Loading notes...",
-            uncategorized: "Uncategorized", contentEncrypted: "Content is encrypted.", decryptButton: "Decrypt",
-            copyContentTooltip: "Copy Content", shareNoteTooltip: "Share Note", editNoteTooltip: "Edit Note",
-            reEncryptTooltip: "Re-encrypt Note", deleteNoteTooltip: "Delete Note", masterKeyModalTitle: "Master Key Required",
-            masterKeyModalDesc: "Note is {action}. Enter master key.", encrypting: "being secured", decrypting: "secured",
-            masterKeyWarning: "Master key is NOT stored. Forgotten key = lost notes.", masterKeyPlaceholder: "Enter master key",
-            encryptButton: "Encrypt", importExportModalTitle: "Import / Export / Sync", importExportTooltip: "Import/Export/Sync Notes",
-            exportNotesTitle: "Export Notes", exportNotesDesc: "Download notes as a JSON file.", exportAllButton: "Export All Notes",
-            exportSelectedButton: "Export Selected", exportSelectedInfo: "{count} notes selected for export.",
-            selectAllVisibleButton: "Select Visible", selectAllInCategoryButton: "Select All in '{category}'",
-            deselectAllButton: "Deselect All", selectForExportTooltip: "Select for export", importNotesTitle: "Import Notes",
-            importNotesDesc: "Import from a JSON file.", importWarningOverwrite: "Warning: Existing notes with same IDs will be overwritten.",
-            closeButton: "Close", appInfoModalTitle: "About VueNotesPro v{version}", appInfoTooltip: "App Info",
-            authorLabel: "Author", categoryAppLabel: "Category", productivityCategory: "Productivity",
-            descriptionLabel: "Description", appDescription: "Advanced note-taking web app.",
-            appDescriptionFull: "Feature-rich, responsive note-taking web app with Vue.js & Tailwind. Supports categories, Markdown, import/export, social sharing, client-side encryption, and Google Drive sync. Data stored locally in IndexedDB.",
-            modelLabel: "AI Model Assistance", disclaimerLabel: "Disclaimer",
-            appDisclaimerGDrive: "Data stored locally. Master key NOT stored. Google Drive sync uses your provided API credentials; ensure you understand security implications. Use at own risk.",
-            featuresLabel: "Features", featureCategories: "Categories & Subcategories", featureMarkdown: "Markdown Input & Rendering",
-            featureFullView: "Full Note View", featureSelectiveExport: "Selective Note Export", featureImportExport: "JSON Import/Export",
-            featureGDriveSync: "Google Drive Sync (Manual)", featureGDriveUserConfig: "Google Drive Sync (User-configured)",
-            featureSocialSharing: "Social Sharing", featureSecretNotes: "AES-256 Encrypted Secret Notes",
-            featureIndexedDB: "IndexedDB Local Storage", featureCopyPaste: "Easy Copy/Paste (SVG Icons)",
-            featureResponsive: "Responsive Design", featureThemes: "Light/Dark Themes", featureFAB: "Floating Action Button",
-            featureMultiLanguage: "Multi-language (EN, FR, AR)", shortcutsLabel: "Keyboard Shortcuts",
-            shortcutSave: "Save note (in form)", shortcutEscape: "Close modal / Back from full view",
-            deleteConfirmation: "Delete this note? Cannot be undone.",
-            importConfirmation: "Overwrite {count} existing note(s) with matching IDs?",
-            toastNoteSaved: "Note \"{title}\" saved.", toastNoteDeleted: "Note \"{title}\" deleted.",
-            toastNoteEncrypted: "Note \"{title}\" encrypted.", toastNoteDecrypted: "Note \"{title}\" decrypted.",
-            toastExported: "Notes exported.", toastImported: "{count} notes imported.", toastCopied: "Copied to clipboard!",
-            toastShareCopied: "Share text copied!", toastNothingToCopy: "Nothing to copy.",
-            toastCannotShareEncrypted: "Decrypt to share.", toastFailedToCopy: "Copy failed.", toastFailedToShare: "Share failed.",
-            toastErrorDbInit: "DB init error.", toastErrorDbNotReady: "DB not ready.", toastErrorLoadingNotes: "Error loading notes.",
-            toastErrorSavingNote: "Error saving {title}.", toastErrorDeletingNote: "Error deleting note.",
-            toastMasterKeyRequiredNew: "Master key needed for new secret note.", toastMasterKeyEmpty: "Master key empty.",
-            toastNoteNotFoundCrypto: "Note not found for crypto.", toastCryptoFailed: "Crypto failed. Check key/data.",
-            toastImportError: "Import error: {message}", toastImportInvalidFile: "Invalid JSON file.",
-            toastAppSetupFailed: "App setup failed. Refresh.", toggleThemeTooltip: "Toggle Theme",
-            backToList: "Back to List", lastUpdatedLabel: "Last Updated", createdLabel: "Created",
-            noNotesToExport: "No notes selected or available for export.", googleDriveSyncTitle: "Google Drive Sync",
-            signInWithGoogle: "Sign in with Google", signOut: "Sign Out", signInToUseDrive: "Sign in to use Google Drive features.",
-            saveToDriveButton: "Save to Drive", loadFromDriveButton: "Load from Drive",
-            googleDriveInfo: "Notes saved to '{folder}/{file}' in your Google Drive.", googleApiLoading: "Google API loading...",
-            googleUserAlt: "Google user avatar", driveError: "Google Drive Error: {message}",
-            driveFileNotFound: "Notes file not found in Drive app folder.", driveFileLoaded: "Notes loaded from Google Drive.",
-            driveFileSaved: "Notes saved to Google Drive.",
-            // New settings translations
-            settingsTooltip: "Settings", settingsModalTitle: "Settings", googleApiKeyLabel: "Google API Key",
-            googleApiKeyPlaceholder: "Enter your Google API Key", googleClientIdLabel: "Google Client ID (OAuth)",
-            googleClientIdPlaceholder: "Enter your Google OAuth Client ID", settingsSaved: "Settings saved!",
-            googleCredentialsNote: "Required for Google Drive sync. Get these from your Google Cloud Project.",
-            googleCredentialsWarning: "These credentials will be stored locally in your browser. Only use credentials for a project you own and understand the security implications of web app OAuth Client IDs.",
-            gDriveSetupNeeded: "Google Drive API Key & Client ID needed for sync. Configure them in settings.",
-            openSettings: "Open Settings", signedInAs: "Signed in as {email}", doneButton: "Done",
-        };
-        // Similarly for fr and ar, ensure ALL keys from en are present.
-        App.data().translations.fr = { ...App.data().translations.en, ...App.data().translations.fr, /* Add fr specific overrides */ };
-        App.data().translations.ar = { ...App.data().translations.en, ...App.data().translations.ar, /* Add ar specific overrides */ };
-
-
         Vue.createApp(App).mount('#app');
     </script>
 </body>
