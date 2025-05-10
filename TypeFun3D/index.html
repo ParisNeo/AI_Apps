@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeFun3D - Kids Typing Tutor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; color: #333; }
+        #container { width: 100vw; height: 100vh; }
+        .ui-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            color: white;
+            text-align: center;
+        }
+        .ui-panel {
+            background-color: #4a90e2; /* Pleasant blue */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            min-width: 300px;
+            max-width: 90%;
+        }
+        .ui-panel h2 { margin-top: 0; color: #ffeb3b; /* Bright yellow */ }
+        .ui-panel button, .ui-panel input[type="text"], .ui-panel select {
+            padding: 10px 15px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #ffc107; /* Amber */
+            color: #333;
+        }
+        .ui-panel button:hover { background-color: #ffa000; /* Darker amber */ }
+        .ui-panel input[type="text"] { background-color: white; color: #333; cursor: text; }
+        .ui-panel ul { list-style: none; padding: 0; }
+        .ui-panel li { margin-bottom: 10px; }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            z-index: 5;
+            display: none; /* Hidden initially */
+        }
+        #hud p { margin: 5px 0; }
+        #importExportButtons { margin-top: 20px; }
+        #importFile { display: none; }
+        .level-button {
+            background-color: #8bc34a; /* Green */
+            color: white;
+        }
+        .level-button.locked {
+            background-color: #9e9e9e; /* Grey for locked */
+            cursor: not-allowed;
+        }
+        .level-button:not(.locked):hover {
+            background-color: #689f38; /* Darker green */
+        }
+        .current-target-display {
+            position: absolute;
+            bottom: 15%; /* Above catcher */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffeb3b;
+            background-color: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 10px;
+            z-index: 6;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <div id="hud">
+        <p>Profile: <span id="hudProfile"></span></p>
+        <p>Level: <span id="hudLevel"></span></p>
+        <p>Score: <span id="hudScore">0</span></p>
+        <p>Accuracy: <span id="hudAccuracy">100</span>%</p>
+        <p>WPM: <span id="hudWPM">0</span></p>
+        <p>Streak: <span id="hudStreak">0</span></p>
+    </div>
+
+    <div id="currentTargetDisplay" class="current-target-display">A</div>
+
+    <div id="profileScreen" class="ui-overlay">
+        <div class="ui-panel">
+            <h2>Welcome to TypeFun3D!</h2>
+            <p>Select or create a profile:</p>
+            <select id="profileSelect"></select>
+            <button id="selectProfileBtn">Select Profile</button>
+            <hr>
+            <input type="text" id="newProfileName" placeholder="New profile name">
+            <button id="createProfileBtn">Create Profile</button>
+            <div id="importExportButtons">
+                <button id="exportDataBtn">Export All Progress</button>
+                <input type="file" id="importFile" accept=".json">
+                <button onclick="document.getElementById('importFile').click();">Import Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="levelSelectScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel">
+            <h2>Select Level</h2>
+            <p>Profile: <span id="currentProfileName"></span></p>
+            <div id="levelList"></div>
+            <button id="backToProfileBtn">Back to Profiles</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel">
+            <h2 id="gameOverTitle">Level Complete!</h2>
+            <p>Level: <span id="summaryLevel"></span></p>
+            <p>Score: <span id="summaryScore"></span></p>
+            <p>Accuracy: <span id="summaryAccuracy"></span>%</p>
+            <p>WPM: <span id="summaryWPM"></span></p>
+            <p>High Score: <span id="summaryHighScore"></span></p>
+            <button id="nextLevelBtn">Next Level</button>
+            <button id="replayLevelBtn">Replay Level</button>
+            <button id="backToLevelsBtn">Back to Level Select</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Constants and Globals ---
+        const DB_NAME = 'TypeFun3DDB';
+        const PROFILES_STORE_NAME = 'profiles';
+        let db;
+
+        let scene, camera, renderer, fontLoader;
+        let activeLetters = [];
+        let catcher;
+        const FALL_SPEED = 0.015; // Adjusted for playability
+        const LETTER_SPAWN_INTERVAL = 2000; // ms
+        let lastSpawnTime = 0;
+        let gameRunning = false;
+        let currentProfile = null;
+        let currentLevel = null;
+        let currentLevelIndex = 0;
+
+        // Game state
+        let score = 0;
+        let correctPresses = 0;
+        let totalPresses = 0;
+        let gameStartTime = 0;
+        let currentStreak = 0;
+        let currentTargetChar = '';
+        let currentFallingLetter = null;
+
+        // Audio Context for sounds
+        let audioCtx;
+        const sounds = {
+            correct: null,
+            incorrect: null,
+            levelComplete: null,
+            miss: null
+        };
+
+        const levels = [
+            { name: "Home Row Basics", chars: "asdfjkl;", duration: 60000, targetLetters: 20 }, // 1 minute, or 20 letters
+            { name: "Top Row Practice", chars: "qwertyuiop", duration: 75000, targetLetters: 25 },
+            { name: "Bottom Row Drills", chars: "zxcvbnm", duration: 75000, targetLetters: 25 }, // removed , . / for simplicity in falling letters
+            { name: "All Lowercase", chars: "abcdefghijklmnopqrstuvwxyz", duration: 90000, targetLetters: 30 },
+            { name: "Simple Words", words: ["cat", "dog", "sun", "run", "big", "fun", "pen", "cup", "map", "top"], wordMode: true, duration: 120000, targetLetters:15 },
+            { name: "Short Sentences", sentences: [
+                "the quick brown fox", "jumps over the lazy dog", "a big red cat", "sun is fun", "run to the top"
+            ], sentenceMode: true, duration: 180000, targetLetters:5 }
+        ];
+        let letterObjectsPool = []; // For reusing Three.js text objects
+
+        // --- UI Elements ---
+        const profileScreen = document.getElementById('profileScreen');
+        const levelSelectScreen = document.getElementById('levelSelectScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const hud = document.getElementById('hud');
+        const currentTargetDisplay = document.getElementById('currentTargetDisplay');
+
+        // --- IndexedDB ---
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onerror = (event) => reject('Error opening DB: ' + event.target.errorCode);
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(PROFILES_STORE_NAME)) {
+                        const store = db.createObjectStore(PROFILES_STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('name', 'name', { unique: true });
+                    }
+                };
+            });
+        }
+
+        function getProfile(profileId) {
+            return new Promise((resolve, reject) => {
+                if (!db) { reject("DB not open"); return; }
+                const transaction = db.transaction([PROFILES_STORE_NAME], 'readonly');
+                const store = transaction.objectStore(PROFILES_STORE_NAME);
+                const request = store.get(profileId);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => reject('Error fetching profile: ' + event.target.errorCode);
+            });
+        }
+
+        function saveProfile(profileData) {
+            return new Promise((resolve, reject) => {
+                if (!db) { reject("DB not open"); return; }
+                const transaction = db.transaction([PROFILES_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(PROFILES_STORE_NAME);
+                const request = store.put(profileData);
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject('Error saving profile: ' + event.target.errorCode);
+            });
+        }
+
+        function getAllProfiles() {
+            return new Promise((resolve, reject) => {
+                if (!db) { reject("DB not open"); return; }
+                const transaction = db.transaction([PROFILES_STORE_NAME], 'readonly');
+                const store = transaction.objectStore(PROFILES_STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => reject('Error fetching all profiles: ' + event.target.errorCode);
+            });
+        }
+
+        // --- Sound Generation ---
+        function initAudio() {
+            if (audioCtx) return; // Already initialized
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                sounds.correct = createSound(440, 0.1, 'sine'); // A4
+                sounds.incorrect = createSound(220, 0.2, 'square'); // A3
+                sounds.levelComplete = createSoundSequence([
+                    { freq: 261.63, duration: 0.15, type: 'triangle' }, // C4
+                    { freq: 329.63, duration: 0.15, type: 'triangle' }, // E4
+                    { freq: 392.00, duration: 0.15, type: 'triangle' }, // G4
+                    { freq: 523.25, duration: 0.3, type: 'triangle' }  // C5
+                ]);
+                sounds.miss = createSound(110, 0.3, 'sawtooth'); // A2
+            } catch (e) {
+                console.warn("Web Audio API is not supported in this browser. Sounds will be disabled.");
+                // Provide dummy functions if AudioContext fails
+                const dummySound = { play: () => {} };
+                Object.keys(sounds).forEach(key => sounds[key] = dummySound);
+            }
+        }
+
+        function createSound(frequency, duration, type) {
+            return {
+                play: () => {
+                    if (!audioCtx) return;
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    oscillator.type = type;
+                    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); // Volume
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + duration);
+                }
+            };
+        }
+
+        function createSoundSequence(notes) {
+            return {
+                play: () => {
+                    if (!audioCtx) return;
+                    let time = audioCtx.currentTime;
+                    notes.forEach(note => {
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        oscillator.type = note.type;
+                        oscillator.frequency.setValueAtTime(note.freq, time);
+                        gainNode.gain.setValueAtTime(0.3, time);
+                        gainNode.gain.exponentialRampToValueAtTime(0.0001, time + note.duration);
+                        oscillator.start(time);
+                        oscillator.stop(time + note.duration);
+                        time += note.duration;
+                    });
+                }
+            };
+        }
+
+
+        // --- Three.js Setup ---
+        function initThreeJS() {
+            const container = document.getElementById('container');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 15); // Positioned to see falling letters and catcher
+            camera.lookAt(0,0,0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Ground
+            const groundGeo = new THREE.PlaneGeometry(30, 30);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x90ee90 }); // Light green
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Catcher (simple platform)
+            const catcherGeo = new THREE.BoxGeometry(8, 0.5, 2);
+            const catcherMat = new THREE.MeshStandardMaterial({ color: 0xffa500 }); // Orange
+            catcher = new THREE.Mesh(catcherGeo, catcherMat);
+            catcher.position.y = 0.25; // Slightly above ground
+            catcher.castShadow = true;
+            scene.add(catcher);
+
+            // Font Loader for 3D Text
+            fontLoader = new THREE.FontLoader();
+            // Using a known CDN for a Helvetiker font (Three.js example font)
+            fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+                window.threeFont = font; // Make font globally available for letter creation
+                console.log("Font loaded.");
+                // Pre-populate some letter objects if needed or create on demand
+            }, undefined, function (err) {
+                console.error('Error loading font:', err);
+                alert("Critical error: Could not load 3D font. Game cannot start.");
+            });
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update(); // For animations
+
+            if (gameRunning) {
+                updateGame();
+            }
+            renderer.render(scene, camera);
+        }
+
+        // --- Game Logic ---
+        function createLetterObject(char) {
+            if (!window.threeFont) {
+                console.error("Font not loaded, cannot create letter object.");
+                // Fallback to a simple cube if font fails
+                const geom = new THREE.BoxGeometry(1,1,1);
+                const mat = new THREE.MeshBasicMaterial({color: 0xff0000});
+                const mesh = new THREE.Mesh(geom, mat);
+                mesh.userData.char = char; // Store char anyway
+                return mesh;
+            }
+
+            const textGeo = new THREE.TextGeometry(char, {
+                font: window.threeFont,
+                size: 1.5,
+                height: 0.3,
+                curveSegments: 4, // Lower for performance
+                bevelEnabled: true,
+                bevelThickness: 0.1,
+                bevelSize: 0.05,
+                bevelSegments: 2
+            });
+            textGeo.center(); // Center geometry for easier positioning
+            const textMat = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+            const letterMesh = new THREE.Mesh(textGeo, textMat);
+            letterMesh.castShadow = true;
+            letterMesh.userData = { char: char, caught: false };
+            return letterMesh;
+        }
+        
+        function getPooledLetterObject(char) {
+            let letterMesh = letterObjectsPool.find(obj => !obj.parent); // Find an object not in scene
+            if (letterMesh) {
+                // Reset and update character if necessary - for simplicity, we'll assume we create new ones if char changes
+                // For a true pool, you'd update material/geometry or have pools per char
+                if (letterMesh.userData.char !== char) { // If we need a different char
+                    scene.remove(letterMesh); // Ensure it's removed if it was somehow re-added
+                    letterMesh.geometry.dispose();
+                    letterMesh.material.dispose();
+                    letterMesh = createLetterObject(char); // Create new one
+                } else {
+                    // Reset properties for reuse
+                    letterMesh.position.set(0,0,0);
+                    letterMesh.rotation.set(0,0,0);
+                    letterMesh.scale.set(1,1,1);
+                    letterMesh.material.color.setHex(Math.random() * 0xffffff); // New color
+                    letterMesh.userData.caught = false;
+                }
+            } else {
+                letterMesh = createLetterObject(char);
+                letterObjectsPool.push(letterMesh);
+            }
+            letterMesh.userData.char = char; // Ensure char data is fresh
+            return letterMesh;
+        }
+
+
+        function spawnLetter() {
+            if (!currentLevel || !window.threeFont) return; // Ensure font is loaded and level active
+            
+            let charToSpawn;
+            if (currentLevel.wordMode || currentLevel.sentenceMode) {
+                // For word/sentence mode, we spawn one letter at a time from the current word/sentence.
+                // The logic for picking the *next* char of a word/sentence is handled in `handleCorrectLetter`.
+                // Here, we just use the current `currentTargetChar`.
+                if (!currentTargetChar) { // Word/Sentence finished, or first letter
+                    if (currentLevel.wordMode) {
+                        const_currentWord = currentLevel.words[Math.floor(Math.random() * currentLevel.words.length)];
+                         currentTargetChar = _currentWord[0]; // First letter of new word
+                         wordProgress = 0; // Reset word progress
+                    } else { // sentenceMode
+                        const_currentSentence = currentLevel.sentences[Math.floor(Math.random() * currentLevel.sentences.length)];
+                         currentTargetChar = _currentSentence[0];
+                         sentenceProgress = 0;
+                    }
+                }
+                 charToSpawn = currentTargetChar;
+            } else {
+                 charToSpawn = currentLevel.chars[Math.floor(Math.random() * currentLevel.chars.length)];
+            }
+
+            // Only spawn if there isn't an active falling letter OR if it's word/sentence mode and we need the next letter
+            if (activeLetters.length > 0 && !(currentLevel.wordMode || currentLevel.sentenceMode)) return;
+            if (activeLetters.length > 0 && (currentLevel.wordMode || currentLevel.sentenceMode) && currentFallingLetter) return;
+
+
+            const letterObj = getPooledLetterObject(charToSpawn);
+            letterObj.position.set(
+                (Math.random() - 0.5) * 10, // Random X within a range
+                15, // Start high
+                0 // Keep Z fixed for simplicity
+            );
+            letterObj.rotation.y = (Math.random() - 0.5) * Math.PI; // Random rotation
+            
+            activeLetters.push(letterObj);
+            scene.add(letterObj);
+            
+            currentFallingLetter = letterObj; // Track the current letter user needs to type
+            currentTargetChar = charToSpawn; // This is the char to type for falling letters
+
+            // Update the 2D HUD display for the target character
+            currentTargetDisplay.textContent = currentTargetChar.toUpperCase();
+            currentTargetDisplay.style.display = 'block';
+        }
+
+        let _currentWord = "";
+        let wordProgress = 0;
+        let _currentSentence = "";
+        let sentenceProgress = 0;
+
+        function setupNextTargetInSequence() {
+            if (currentLevel.wordMode) {
+                if (wordProgress === 0 || wordProgress >= _currentWord.length) { // Start new word or finished previous
+                    _currentWord = currentLevel.words[Math.floor(Math.random() * currentLevel.words.length)];
+                    wordProgress = 0;
+                }
+                currentTargetChar = _currentWord[wordProgress];
+            } else if (currentLevel.sentenceMode) {
+                if (sentenceProgress === 0 || sentenceProgress >= _currentSentence.length) { // Start new sentence or finished previous
+                     _currentSentence = currentLevel.sentences[Math.floor(Math.random() * currentLevel.sentences.length)];
+                     sentenceProgress = 0;
+                }
+                // Skip spaces in sentences for typing practice
+                while (_currentSentence[sentenceProgress] === ' ' && sentenceProgress < _currentSentence.length -1) {
+                    sentenceProgress++;
+                }
+                currentTargetChar = _currentSentence[sentenceProgress];
+            }
+            // For non-sequence modes, spawnLetter will pick a random char.
+            // This function specifically sets up the *next* target char for word/sentence modes.
+            // The visual falling letter part for these modes might be simplified:
+            // e.g., one letter falls, then the next, or the whole word/sentence is displayed statically.
+            // For now, the falling letter system will use currentTargetChar set here.
+            
+            currentTargetDisplay.textContent = currentTargetChar.toUpperCase();
+            currentTargetDisplay.style.display = 'block';
+
+            // If a letter is currently falling, and it's not the new target, remove it.
+            // This is a simplification: a new letter representing currentTargetChar should spawn.
+            if (currentFallingLetter && currentFallingLetter.userData.char !== currentTargetChar) {
+                removeLetter(currentFallingLetter, false); // false = not caught
+                currentFallingLetter = null;
+            }
+            if (!currentFallingLetter) { // If no letter is falling, or previous was removed
+                spawnLetter(); // Spawn the new target letter
+            }
+        }
+
+
+        function updateGame() {
+            const currentTime = Date.now();
+
+            // Spawn new letters periodically unless in word/sentence mode where it's sequential
+            if (!currentLevel.wordMode && !currentLevel.sentenceMode && currentTime - lastSpawnTime > LETTER_SPAWN_INTERVAL && activeLetters.length < 5) {
+                spawnLetter();
+                lastSpawnTime = currentTime;
+            } else if ((currentLevel.wordMode || currentLevel.sentenceMode) && !currentFallingLetter) {
+                // If in word/sentence mode and no letter is falling (e.g., previous was caught/missed), set up next target.
+                setupNextTargetInSequence(); // This will also call spawnLetter if needed
+            }
+
+
+            for (let i = activeLetters.length - 1; i >= 0; i--) {
+                const letter = activeLetters[i];
+                letter.position.y -= FALL_SPEED * (1 + currentLevelIndex * 0.1); // Speed increases slightly with level
+
+                // Check if letter is missed (hits the ground)
+                if (letter.position.y < 0.5 && !letter.userData.caught) { // 0.5 is slightly above ground
+                    handleMissedLetter(letter);
+                }
+            }
+
+            // Check game duration
+            const elapsedTime = (currentTime - gameStartTime) / 1000; // in seconds
+            if (elapsedTime >= currentLevel.duration / 1000 || (currentLevel.targetLetters && correctPresses >= currentLevel.targetLetters)) {
+                endLevel(true); // true for level complete
+            }
+
+            // Update HUD
+            document.getElementById('hudScore').textContent = score;
+            const accuracy = totalPresses > 0 ? ((correctPresses / totalPresses) * 100).toFixed(0) : 100;
+            document.getElementById('hudAccuracy').textContent = accuracy;
+            const timeMinutes = elapsedTime / 60;
+            const wpm = timeMinutes > 0 ? Math.round((correctPresses / 5) / timeMinutes) : 0;
+            document.getElementById('hudWPM').textContent = wpm;
+            document.getElementById('hudStreak').textContent = currentStreak;
+        }
+
+        function handleKeyPress(event) {
+            if (!gameRunning || !currentTargetChar) return;
+            initAudio(); // Ensure audio is ready on first interaction
+
+            const typedChar = event.key.toLowerCase();
+            totalPresses++;
+
+            if (typedChar === currentTargetChar.toLowerCase()) {
+                score += 10 + currentStreak; // Bonus for streak
+                correctPresses++;
+                currentStreak++;
+                sounds.correct.play();
+                if(currentFallingLetter) {
+                    handleCaughtLetter(currentFallingLetter);
+                } else if (currentLevel.wordMode || currentLevel.sentenceMode) {
+                    // No falling letter, but correct key for word/sentence
+                    // Advance word/sentence progress
+                     if (currentLevel.wordMode) wordProgress++;
+                     else if (currentLevel.sentenceMode) sentenceProgress++;
+                     setupNextTargetInSequence(); // Get next char and spawn it
+                }
+
+            } else {
+                score = Math.max(0, score - 5); // Don't go below 0
+                currentStreak = 0;
+                sounds.incorrect.play();
+                // Visual feedback for incorrect key (e.g., screen shake - too complex for now, catcher color change)
+                catcher.material.color.setHex(0xff0000); // Red
+                setTimeout(() => catcher.material.color.setHex(0xffa500), 200); // Back to orange
+            }
+            updateHUD();
+        }
+
+        function handleCaughtLetter(letter) {
+            letter.userData.caught = true;
+            sounds.correct.play(); // Already played in handleKeyPress, maybe a different catch sound?
+
+            // Visual effect for caught letter (e.g., scale up and fade)
+            new TWEEN.Tween(letter.scale)
+                .to({ x: 2, y: 2, z: 2 }, 300)
+                .easing(TWEEN.Easing.Elastic.Out)
+                .onComplete(() => {
+                    new TWEEN.Tween(letter.material)
+                        .to({ opacity: 0 }, 200)
+                        .onComplete(() => {
+                            removeLetter(letter, true);
+                            currentFallingLetter = null; // Allow next letter to spawn or be targeted
+                            // If word/sentence mode, advance to next character
+                            if (currentLevel.wordMode) {
+                                wordProgress++;
+                                setupNextTargetInSequence();
+                            } else if (currentLevel.sentenceMode) {
+                                sentenceProgress++;
+                                setupNextTargetInSequence();
+                            } else {
+                                // For random letter mode, clear target until new one spawns
+                                currentTargetChar = '';
+                                currentTargetDisplay.style.display = 'none';
+                            }
+                        })
+                        .start();
+                })
+                .start();
+             letter.material.transparent = true; // Needed for opacity tween
+        }
+
+
+        function handleMissedLetter(letter) {
+            sounds.miss.play();
+            currentStreak = 0; // Reset streak on miss
+            // score -= 2; // Optional penalty for miss
+            removeLetter(letter, false);
+            currentFallingLetter = null; // Allow next letter to spawn
+            
+            // If word/sentence mode, this miss means we need to re-try current char or reset word
+            if (currentLevel.wordMode || currentLevel.sentenceMode) {
+                // For simplicity, let's just re-spawn the same target char for word/sentence modes on miss
+                setupNextTargetInSequence(); // This will re-evaluate currentTargetChar and spawn it
+            } else {
+                currentTargetChar = ''; // Clear target
+                currentTargetDisplay.style.display = 'none';
+            }
+            updateHUD();
+        }
+
+        function removeLetter(letter, caught) {
+            scene.remove(letter);
+            const index = activeLetters.indexOf(letter);
+            if (index > -1) activeLetters.splice(index, 1);
+            // Letter mesh is not disposed, it's part of the pool and will be reused.
+            // If not pooling, you would do:
+            // letter.geometry.dispose();
+            // letter.material.dispose();
+            
+            if (letter === currentFallingLetter) { // Ensure currentFallingLetter is cleared
+                currentFallingLetter = null;
+            }
+        }
+
+        function startGame(levelIdx) {
+            if (!window.threeFont) {
+                alert("Font is still loading. Please wait a moment and try again.");
+                return;
+            }
+            initAudio(); // Ensure audio context is active
+
+            currentLevelIndex = levelIdx;
+            currentLevel = levels[currentLevelIndex];
+            
+            // Reset game state
+            score = 0;
+            correctPresses = 0;
+            totalPresses = 0;
+            currentStreak = 0;
+            gameStartTime = Date.now();
+            lastSpawnTime = Date.now(); // Prevent immediate spawn if interval is short
+            activeLetters.forEach(letter => scene.remove(letter)); // Clear existing letters
+            activeLetters = [];
+            currentFallingLetter = null;
+            currentTargetChar = ''; // Reset target char
+            wordProgress = 0; // Reset for word mode
+            sentenceProgress = 0; // Reset for sentence mode
+
+            if (currentLevel.wordMode || currentLevel.sentenceMode) {
+                setupNextTargetInSequence(); // This will pick the first char and call spawnLetter
+            } else {
+                spawnLetter(); // Spawn the first letter for char-based levels
+            }
+
+            gameRunning = true;
+            levelSelectScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            hud.style.display = 'block';
+            currentTargetDisplay.style.display = 'block'; // Show target display
+            updateHUD();
+
+            // Focus window to capture key events immediately (might not always work due to browser security)
+            window.focus();
+        }
+
+        function endLevel(completed) {
+            gameRunning = false;
+            sounds.levelComplete.play();
+
+            // Clear any remaining letters from scene
+            activeLetters.forEach(letter => scene.remove(letter));
+            activeLetters = [];
+            currentFallingLetter = null;
+            currentTargetChar = '';
+            currentTargetDisplay.style.display = 'none';
+
+
+            const elapsedTimeSeconds = (Date.now() - gameStartTime) / 1000;
+            const wpm = elapsedTimeSeconds > 0 ? Math.round((correctPresses / 5) / (elapsedTimeSeconds / 60)) : 0;
+            const accuracy = totalPresses > 0 ? parseFloat(((correctPresses / totalPresses) * 100).toFixed(1)) : 100;
+
+            // Save progress
+            if (!currentProfile.progress) currentProfile.progress = {};
+            if (!currentProfile.progress[currentLevelIndex]) {
+                currentProfile.progress[currentLevelIndex] = { highScore: 0, bestWPM: 0, bestAccuracy: 0 };
+            }
+
+            let newHighScore = false;
+            if (score > (currentProfile.progress[currentLevelIndex].highScore || 0)) {
+                currentProfile.progress[currentLevelIndex].highScore = score;
+                newHighScore = true;
+            }
+            if (wpm > (currentProfile.progress[currentLevelIndex].bestWPM || 0)) {
+                currentProfile.progress[currentLevelIndex].bestWPM = wpm;
+            }
+            if (accuracy > (currentProfile.progress[currentLevelIndex].bestAccuracy || 0)) {
+                currentProfile.progress[currentLevelIndex].bestAccuracy = accuracy;
+            }
+            
+            // Unlock next level if this one was completed successfully and it's not the last level
+            if (completed && currentLevelIndex < levels.length - 1) {
+                if (!currentProfile.progress[currentLevelIndex + 1]) {
+                     // Mark next level as unlocked (even if no score yet, just to enable button)
+                    currentProfile.progress[currentLevelIndex + 1] = { highScore: -1 }; // Special value for just unlocked
+                }
+            }
+
+
+            saveProfile(currentProfile).catch(err => console.error("Error saving profile:", err));
+
+            // Show Game Over Screen
+            document.getElementById('summaryLevel').textContent = currentLevel.name;
+            document.getElementById('summaryScore').textContent = score;
+            document.getElementById('summaryAccuracy').textContent = accuracy;
+            document.getElementById('summaryWPM').textContent = wpm;
+            document.getElementById('summaryHighScore').textContent = currentProfile.progress[currentLevelIndex].highScore + (newHighScore ? " (New High Score!)" : "");
+            
+            document.getElementById('gameOverTitle').textContent = completed ? "Level Complete!" : "Game Over";
+            document.getElementById('nextLevelBtn').style.display = (completed && currentLevelIndex < levels.length - 1) ? 'inline-block' : 'none';
+            
+            hud.style.display = 'none';
+            gameOverScreen.style.display = 'block';
+        }
+
+        function updateHUD() {
+            document.getElementById('hudProfile').textContent = currentProfile.name;
+            document.getElementById('hudLevel').textContent = currentLevel.name;
+            // Other HUD elements updated in updateGame()
+        }
+
+        // --- UI Management ---
+        async function populateProfileList() {
+            const profiles = await getAllProfiles();
+            const select = document.getElementById('profileSelect');
+            select.innerHTML = '<option value="">-- Select Profile --</option>';
+            profiles.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name;
+                select.appendChild(option);
+            });
+        }
+
+        function showProfileScreen() {
+            profileScreen.style.display = 'flex';
+            levelSelectScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            hud.style.display = 'none';
+            currentTargetDisplay.style.display = 'none';
+            populateProfileList();
+        }
+
+        function showLevelSelectScreen() {
+            profileScreen.style.display = 'none';
+            levelSelectScreen.style.display = 'flex';
+            document.getElementById('currentProfileName').textContent = currentProfile.name;
+
+            const levelListDiv = document.getElementById('levelList');
+            levelListDiv.innerHTML = '';
+            levels.forEach((level, index) => {
+                const button = document.createElement('button');
+                button.textContent = `Level ${index + 1}: ${level.name}`;
+                button.classList.add('level-button');
+                
+                const levelProgress = currentProfile.progress ? currentProfile.progress[index] : null;
+                let isUnlocked = index === 0; // First level always unlocked
+                if (index > 0 && currentProfile.progress) {
+                    // Unlocked if previous level has any progress entry OR if current level has one (meaning it was played before)
+                    const prevLevelProgress = currentProfile.progress[index - 1];
+                    if (prevLevelProgress && (prevLevelProgress.highScore > 0 || prevLevelProgress.highScore === -1)) { // -1 for just unlocked
+                        isUnlocked = true;
+                    }
+                    if(levelProgress && levelProgress.highScore !== undefined) isUnlocked = true; // Also unlocked if played before
+                }
+
+
+                if (isUnlocked) {
+                    button.onclick = () => startGame(index);
+                    if (levelProgress && levelProgress.highScore > 0) {
+                         button.innerHTML += `<br><small>(High Score: ${levelProgress.highScore}, WPM: ${levelProgress.bestWPM || 0})</small>`;
+                    }
+                } else {
+                    button.classList.add('locked');
+                    button.disabled = true;
+                     button.innerHTML += `<br><small>(Locked)</small>`;
+                }
+                levelListDiv.appendChild(button);
+            });
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('createProfileBtn').onclick = async () => {
+            const name = document.getElementById('newProfileName').value.trim();
+            if (name) {
+                const newProfile = { id: name.toLowerCase().replace(/\s+/g, '_'), name: name, progress: {} };
+                try {
+                    await saveProfile(newProfile);
+                    currentProfile = newProfile;
+                    document.getElementById('newProfileName').value = '';
+                    showLevelSelectScreen();
+                } catch (err) {
+                    alert('Error creating profile. Name might be taken or DB error.');
+                    console.error(err);
+                }
+            } else {
+                alert('Please enter a profile name.');
+            }
+        };
+
+        document.getElementById('selectProfileBtn').onclick = async () => {
+            const profileId = document.getElementById('profileSelect').value;
+            if (profileId) {
+                currentProfile = await getProfile(profileId);
+                showLevelSelectScreen();
+            } else {
+                alert('Please select a profile.');
+            }
+        };
+
+        document.getElementById('backToProfileBtn').onclick = showProfileScreen;
+        document.getElementById('replayLevelBtn').onclick = () => startGame(currentLevelIndex);
+        document.getElementById('nextLevelBtn').onclick = () => {
+            if (currentLevelIndex < levels.length - 1) {
+                startGame(currentLevelIndex + 1);
+            }
+        };
+        document.getElementById('backToLevelsBtn').onclick = showLevelSelectScreen;
+
+        window.addEventListener('keydown', handleKeyPress);
+
+        // Import/Export
+        document.getElementById('exportDataBtn').onclick = async () => {
+            const allData = await getAllProfiles();
+            if (allData && allData.length > 0) {
+                const jsonData = JSON.stringify(allData, null, 2);
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'typefun3d_progress.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                alert('All profiles exported!');
+            } else {
+                alert('No data to export.');
+            }
+        };
+
+        document.getElementById('importFile').onchange = async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (Array.isArray(importedData)) { // Expecting an array of profiles
+                            let importedCount = 0;
+                            for (const profile of importedData) {
+                                // Basic validation
+                                if (profile.id && profile.name) {
+                                    // Merge or overwrite. For simplicity, we overwrite.
+                                    // A more advanced merge would compare scores, etc.
+                                    await saveProfile(profile);
+                                    importedCount++;
+                                }
+                            }
+                            alert(`${importedCount} profiles imported/updated! Please refresh if necessary or re-select profile.`);
+                            populateProfileList(); // Refresh list
+                        } else {
+                            alert('Invalid file format. Expected an array of profiles.');
+                        }
+                    } catch (err) {
+                        alert('Error importing file: ' + err.message);
+                        console.error(err);
+                    } finally {
+                        // Reset file input to allow re-importing the same file if needed
+                        event.target.value = null;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        };
+
+
+        // --- Initialization ---
+        async function main() {
+            try {
+                await openDB();
+                initThreeJS(); // Start Three.js rendering
+                showProfileScreen(); // Start with profile selection
+            } catch (err) {
+                console.error("Initialization failed:", err);
+                document.body.innerHTML = `<div class="ui-overlay"><div class="ui-panel"><h2>Error</h2><p>Could not initialize the application. ${err}</p><p>Please ensure IndexedDB is enabled in your browser.</p></div></div>`;
+            }
+        }
+
+        main();
+
+    </script>
+</body>
+</html>

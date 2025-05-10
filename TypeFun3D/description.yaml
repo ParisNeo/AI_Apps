@@ -1,0 +1,16 @@
+author: ParisNeo
+category: Games
+creation_date: 2023-10-27
+last_update_date: 2023-10-27
+description: |
+  A fun and engaging 3D keyboard typing training application for children.
+  Features multiple user profiles, progressive difficulty levels, performance tracking (WPM, accuracy),
+  and gamified elements like falling letters, scores, and sound effects to make learning to type enjoyable.
+  Progress data is stored locally and can be exported/imported.
+disclaimer: |
+  This application is for educational and entertainment purposes.
+  While it aims to be engaging, ensure children take appropriate breaks.
+  Data is stored locally in the browser's IndexedDB; the author is not responsible for data loss.
+model: GPT-4 (via API/Playground)
+name: TypeFun3D
+version: 1.0
