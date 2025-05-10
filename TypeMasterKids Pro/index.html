@@ -835,9 +835,9 @@
             let baseTimeFromConfig = lessonConfig.timePerChar;
 
             if (speedSetting === 'slow') {
-                currentLessonData.timePerChar = baseTimeFromConfig * 1.5;
+                currentLessonData.timePerChar = baseTimeFromConfig * 5;
             } else if (speedSetting === 'fast') {
-                currentLessonData.timePerChar = baseTimeFromConfig * 0.75;
+                currentLessonData.timePerChar = baseTimeFromConfig * 2;
             } else {
                 currentLessonData.timePerChar = baseTimeFromConfig;
             }
