@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VueNotesPro - Advanced Note Taking</title>
+    <title>VueNotesPro - SVG & Dark Mode</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Vue.js CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Marked.js (Markdown Parser) CDN -->
@@ -40,21 +38,35 @@
         .markdown-content th, .markdown-content td { border: 1px solid #ddd; padding: 8px; }
         .markdown-content th { background-color: #f9f9f9; }
 
-        /* Ensure FAB is above most content but below modals */
         .fab-button {
-            z-index: 35; /* Header is 40, Modals are 50 */
+            z-index: 35;
         }
+        .svg-icon {
+            width: 1em;
+            height: 1em;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .svg-icon-sm { width: 0.875em; height: 0.875em; } /* text-sm equivalent */
+        .svg-icon-lg { width: 1.25em; height: 1.25em; } /* text-xl equivalent */
+         .svg-icon-xl { width: 1.5em; height: 1.5em; } /* text-2xl equivalent for FAB */
+        .svg-icon-2xl { width: 2.5em; height: 2.5em; } /* text-4xl equivalent for empty state */
+
     </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: 'rgb(var(--color-primary) / <alpha-value>)',
-                        secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
-                        accent: 'rgb(var(--color-accent) / <alpha-value>)',
-                        light: 'rgb(var(--color-light) / <alpha-value>)',
-                        dark: 'rgb(var(--color-dark) / <alpha-value>)',
+                        primary: 'rgb(var(--color-primary) / <alpha-value>)', // Main actions, header
+                        'primary-dark': 'rgb(var(--color-primary-dark) / <alpha-value>)', // Hover for primary
+                        secondary: 'rgb(var(--color-secondary) / <alpha-value>)', // Sidebar bg
+                        accent: 'rgb(var(--color-accent) / <alpha-value>)', // Highlights, selected items
+                        light: 'rgb(var(--color-light) / <alpha-value>)', // Page background (light mode)
+                        dark: 'rgb(var(--color-dark) / <alpha-value>)',   // Text color (light mode), Page bg (dark mode)
+                        'text-light': 'rgb(var(--color-text-light) / <alpha-value>)', // Text on dark backgrounds
+                        'text-dark': 'rgb(var(--color-text-dark) / <alpha-value>)',   // Text on light backgrounds
+                        'border-color': 'rgb(var(--color-border) / <alpha-value>)',
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.3s ease-out',
@@ -70,86 +82,111 @@
         }
     </script>
 </head>
-<body class="bg-light text-dark antialiased">
+<body class="bg-light text-text-dark antialiased"> <!-- Updated text color class -->
     <div id="app" v-cloak class="flex flex-col min-h-screen">
         <!-- Header -->
-        <header class="bg-primary text-white shadow-md sticky top-0 z-40">
+        <header class="bg-primary text-text-light shadow-md sticky top-0 z-40">
             <div class="container mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center">
-                    <button @click="toggleSidebar" class="lg:hidden mr-3 text-xl p-2 hover:bg-primary-dark rounded-full">
-                        <i class="fas fa-bars"></i>
+                    <button @click="toggleSidebar" class="lg:hidden mr-3 p-2 hover:bg-primary-dark rounded-full">
+                        <!-- SVG: Bars -->
+                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                     </button>
-                    <h1 class="text-2xl font-bold tracking-tight">
-                        <i class="fas fa-feather-alt mr-2"></i>VueNotesPro
+                    <h1 class="text-2xl font-bold tracking-tight flex items-center">
+                        <!-- SVG: Feather/Quill -->
+                        <svg class="svg-icon-lg mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 21C12 21 4 16.9706 4 12C4 7.02944 7 4 12 4C17 4 20 7.02944 20 12C20 16.9706 12 21 12 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 4V2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 15C7 15 8.5 14 12 14C15.5 14 17 15 17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        VueNotesPro
                     </h1>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <!-- **** MODIFICATION: Added "New Note" button to header for smaller screens **** -->
+                <div class="flex items-center space-x-1 md:space-x-3">
                     <button @click="goToNewNoteView" title="New Note"
                             class="md:hidden p-2 hover:bg-primary-dark rounded-full">
-                        <i class="fas fa-plus"></i>
+                        <!-- SVG: Plus -->
+                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                     </button>
                     <button @click="showImportExportModal = true" title="Import/Export Notes" class="p-2 hover:bg-primary-dark rounded-full">
-                        <i class="fas fa-file-import"></i>
+                        <!-- SVG: Import/Export (Document with arrows) -->
+                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 18V12M12 12L9 15M12 12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                     </button>
                     <button @click="toggleTheme" title="Toggle Theme" class="p-2 hover:bg-primary-dark rounded-full">
-                        <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+                        <!-- SVG: Sun/Moon (Conditional) -->
+                        <svg v-if="isDarkMode" class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V4M12 20V21M4.92944 4.92944L5.63655 5.63655M18.364 18.364L19.0711 19.0711M3 12H4M20 12H21M4.92944 19.0711L5.63655 18.364M18.364 5.63655L19.0711 4.92944M12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <svg v-else class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21C16.9706 21 21 16.9706 21 12C21 8.72892 19.4459 5.87511 17.1495 4.02325C16.6345 3.91623 16.0875 4.23229 15.9805 4.74726C15.8735 5.26224 16.1896 5.80921 16.7045 5.91623C18.4814 7.36231 19.5 9.58172 19.5 12C19.5 16.1421 16.1421 19.5 12 19.5C7.85786 19.5 4.5 16.1421 4.5 12C4.5 9.58172 5.51857 7.36231 7.29546 5.91623C7.81044 5.80921 8.12649 5.26224 8.01947 4.74726C7.91245 4.23229 7.36548 3.91623 6.8505 4.02325C4.55413 5.87511 3 8.72892 3 12C3 16.9706 7.02944 21 12 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                      <button @click="showAppInfoModal = true" title="App Info" class="p-2 hover:bg-primary-dark rounded-full">
-                        <i class="fas fa-info-circle"></i>
+                        <!-- SVG: Info Circle -->
+                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
             </div>
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex flex-1 overflow-hidden relative"> <!-- **** ADDED: relative positioning for FAB **** -->
+        <div class="flex flex-1 overflow-hidden relative">
             <!-- Sidebar -->
             <aside :class="{'translate-x-0': showSidebar, '-translate-x-full': !showSidebar}"
-                   class="fixed inset-y-0 left-0 z-30 lg:static lg:translate-x-0 w-64 bg-secondary text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto">
+                   class="fixed inset-y-0 left-0 z-30 lg:static lg:translate-x-0 w-64 bg-secondary text-text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto">
                 <div class="mt-16 lg:mt-0">
-                    <!-- This button is still good for sidebar context and larger screens -->
                     <button @click="goToNewNoteView"
-                            class="w-full bg-accent text-white py-2 px-4 rounded-lg hover:bg-opacity-80 transition duration-150 flex items-center justify-center">
-                        <i class="fas fa-plus mr-2"></i> New Note
+                            class="w-full bg-accent text-text-light py-2 px-4 rounded-lg hover:opacity-80 transition duration-150 flex items-center justify-center">
+                        <!-- SVG: Plus -->
+                        <svg class="svg-icon mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        New Note
                     </button>
                 </div>
 
                 <div>
-                    <h3 class="text-xs uppercase font-semibold text-gray-500 mb-1">Search</h3>
+                    <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">Search</h3>
                     <input type="text" v-model="searchTerm" placeholder="Search notes..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-accent focus:border-accent text-sm text-gray-700">
+                           class="w-full px-3 py-2 border border-border-color rounded-lg focus:ring-accent focus:border-accent text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
                 </div>
 
                 <div>
-                    <h3 class="text-xs uppercase font-semibold text-gray-500 mb-1">Categories</h3>
+                    <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">Categories</h3>
                     <ul class="space-y-1">
                         <li>
                             <a href="#" @click.prevent="selectCategory(null)"
-                               :class="{'bg-accent text-white': !currentCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory}"
-                               class="block px-3 py-2 rounded-md transition duration-150">
-                                <i class="fas fa-inbox mr-2"></i> All Notes
+                               :class="{'bg-accent text-text-light': !currentCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory}"
+                               class="block px-3 py-2 rounded-md transition duration-150 flex items-center">
+                                <!-- SVG: Inbox -->
+                                <svg class="svg-icon mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2L10 12 2 7V5zm0 5.5V15a2 2 0 002 2h12a2 2 0 002-2V10.5l-8 4.5-8-4.5z" clip-rule="evenodd"></path></svg>
+                                All Notes
                             </a>
                         </li>
                         <li v-for="category in uniqueCategories" :key="category">
                             <a href="#" @click.prevent="selectCategory(category)"
-                               :class="{'bg-accent text-white': currentCategory === category, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory !== category}"
-                               class="block px-3 py-2 rounded-md transition duration-150 truncate">
-                                <i class="fas fa-folder mr-2"></i> {{ category }}
+                               :class="{'bg-accent text-text-light': currentCategory === category, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory !== category}"
+                               class="block px-3 py-2 rounded-md transition duration-150 truncate flex items-center">
+                                <!-- SVG: Folder -->
+                                <svg class="svg-icon mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                                {{ category }}
                             </a>
                             <ul v-if="currentCategory === category && uniqueSubcategoriesForCurrentCategory.length > 0" class="ml-4 mt-1 space-y-1">
                                 <li>
                                     <a href="#" @click.prevent="selectSubCategory(null)"
-                                       :class="{'bg-accent/80 text-white': !currentSubCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory}"
-                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150">
-                                        <i class="fas fa-folder-open mr-2"></i> All in {{ category }}
+                                       :class="{'bg-accent/80 text-text-light': !currentSubCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory}"
+                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 flex items-center">
+                                        <!-- SVG: Folder Open -->
+                                        <svg class="svg-icon-sm mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H2V6z" clip-rule="evenodd"></path><path d="M2 12a2 2 0 00-2 2v2a2 2 0 002 2h16a2 2 0 002-2v-2a2 2 0 00-2-2H2zm14-2a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v1a2 2 0 002 2h12z"></path></svg>
+                                        All in {{ category }}
                                     </a>
                                 </li>
                                 <li v-for="subCategory in uniqueSubcategoriesForCurrentCategory" :key="subCategory">
                                     <a href="#" @click.prevent="selectSubCategory(subCategory)"
-                                       :class="{'bg-accent/80 text-white': currentSubCategory === subCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory !== subCategory}"
-                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 truncate">
-                                        <i class="fas fa-stream mr-2"></i> {{ subCategory }}
+                                       :class="{'bg-accent/80 text-text-light': currentSubCategory === subCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory !== subCategory}"
+                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 truncate flex items-center">
+                                        <!-- SVG: Hashtag/Tag (for subcategory) -->
+                                        <svg class="svg-icon-sm mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a1 1 0 011-1h5a.997.997 0 01.707.293l7 7zM6 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
+                                        {{ subCategory }}
                                     </a>
                                 </li>
                             </ul>
@@ -162,26 +199,26 @@
             <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-light">
                 <!-- Add/Edit Note View -->
                 <div v-if="activeView === 'addNote' || activeView === 'editNote'" class="animate-fade-in max-w-3xl mx-auto">
-                    <h2 class="text-2xl font-semibold mb-4 text-dark">{{ activeView === 'addNote' ? 'Create New Note' : 'Edit Note' }}</h2>
+                    <h2 class="text-2xl font-semibold mb-4 text-text-dark">{{ activeView === 'addNote' ? 'Create New Note' : 'Edit Note' }}</h2>
                     <form @submit.prevent="saveNote" class="space-y-4">
                         <div>
-                            <label for="noteTitle" class="block text-sm font-medium text-gray-700">Title</label>
+                            <label for="noteTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                             <input type="text" id="noteTitle" v-model="form.title" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700">
+                                   class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="noteCategory" class="block text-sm font-medium text-gray-700">Category (optional)</label>
+                                <label for="noteCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category (optional)</label>
                                 <input type="text" id="noteCategory" v-model="form.category" list="categorySuggestions"
-                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700">
+                                       class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
                                 <datalist id="categorySuggestions">
                                     <option v-for="cat in uniqueCategories" :value="cat"></option>
                                 </datalist>
                             </div>
                             <div>
-                                <label for="noteSubCategory" class="block text-sm font-medium text-gray-700">Subcategory (optional)</label>
+                                <label for="noteSubCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subcategory (optional)</label>
                                 <input type="text" id="noteSubCategory" v-model="form.subCategory" :disabled="!form.category" list="subCategorySuggestions"
-                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700"
+                                       class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"
                                        :placeholder="form.category ? 'Enter subcategory' : 'Enter category first'">
                                 <datalist id="subCategorySuggestions">
                                     <option v-for="subCat in uniqueSubcategoriesForCategory(form.category)" :value="subCat"></option>
@@ -189,24 +226,24 @@
                             </div>
                         </div>
                         <div>
-                            <label for="noteContent" class="block text-sm font-medium text-gray-700">Content (Markdown)</label>
+                            <label for="noteContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Content (Markdown)</label>
                             <textarea id="noteContent" v-model="form.content" rows="10" required
-                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-gray-700"></textarea>
+                                      class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"></textarea>
                         </div>
                         <div class="flex items-center">
                             <input type="checkbox" id="noteIsSecret" v-model="form.isSecret"
-                                   class="h-4 w-4 text-accent border-gray-300 rounded focus:ring-accent">
-                            <label for="noteIsSecret" class="ml-2 block text-sm text-gray-700">
+                                   class="h-4 w-4 text-accent border-gray-300 dark:border-gray-600 rounded focus:ring-accent">
+                            <label for="noteIsSecret" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                                 Secret Note (requires master key to encrypt/decrypt)
                             </label>
                         </div>
                         <div class="flex justify-end space-x-3">
                             <button type="button" @click="cancelEdit"
-                                    class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                                    class="px-4 py-2 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-dark hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
                                 Cancel
                             </button>
                             <button type="submit"
-                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-text-light bg-accent hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
                                 Save Note
                             </button>
                         </div>
@@ -216,28 +253,47 @@
                 <!-- Notes List View -->
                 <div v-if="activeView === 'notesList'" class="animate-fade-in">
                     <div v-if="filteredNotes.length === 0 && !isLoading" class="text-center py-10">
-                        <i class="fas fa-ghost text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-xl text-gray-500">No notes found.</p>
-                        <p class="text-gray-400">Try adjusting your filters or create a new note!</p>
+                        <!-- SVG: Ghost -->
+                        <svg class="svg-icon-2xl text-gray-400 dark:text-gray-500 mb-4 mx-auto" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c2.5 0 4.7.9 6.4 2.3l-1.3 1.5C15.8 4.7 14 4 12 4s-3.8.7-5.1 1.8l-1.3-1.5C7.3 2.9 9.5 2 12 2zm0 18c-3.5 0-6.5-2-7.8-4.8l1.9-.8c1 2.2 3.6 3.6 5.9 3.6s4.9-1.4 5.9-3.6l1.9.8C18.5 18 15.5 20 12 20zm7.7-7.5c.2-.8.3-1.6.3-2.5s-.1-1.7-.3-2.5l2-.8c.2.9.4 1.9.4 2.9s-.2 2-.4 2.9l-2-.8zM4.3 12.5c-.2.8-.3 1.6-.3 2.5s.1 1.7.3 2.5l-2 .8c-.2-.9-.4-1.9-.4-2.9s.2-2 .4-2.9l2 .8zm4.9-5.3C10.2 6.4 11 6 12 6s1.8.4 2.8 1.2l1.3-1.5C14.7 4.2 12 3.5 12 3.5s-2.7.7-4.1 2.2l1.3 1.5zm4.9 10.6c-1-.8-1.8-1.2-2.8-1.2s-1.8.4-2.8 1.2l-1.3-1.5c1.4-1.5 4.1-2.2 4.1-2.2s2.7.7 4.1 2.2l-1.3 1.5zM12 8a2 2 0 100 4 2 2 0 000-4zm-3 2a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"></path></svg>
+                        <p class="text-xl text-gray-500 dark:text-gray-400">No notes found.</p>
+                        <p class="text-gray-400 dark:text-gray-500">Try adjusting your filters or create a new note!</p>
                     </div>
                      <div v-if="isLoading" class="text-center py-10">
-                        <i class="fas fa-spinner fa-spin text-4xl text-accent mb-4"></i>
-                        <p class="text-xl text-gray-500">Loading notes...</p>
+                        <!-- SVG: Spinner -->
+                        <svg class="svg-icon-2xl text-accent mb-4 mx-auto animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-xl text-gray-500 dark:text-gray-400">Loading notes...</p>
                     </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20"> <!-- **** ADDED: pb-20 for FAB spacing **** -->
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
                         <div v-for="note in filteredNotes" :key="note.id"
                              class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
                             <div class="p-5 flex-grow">
                                 <div class="flex justify-between items-start">
-                                    <h3 class="text-lg font-semibold text-primary mb-1 break-all">{{ note.title }}</h3>
-                                    <span v-if="note.isSecret" title="Secret Note" class="ml-2 text-yellow-500"><i class="fas fa-lock"></i></span>
+                                    <h3 class="text-lg font-semibold text-primary dark:text-blue-400 mb-1 break-all">{{ note.title }}</h3>
+                                    <span v-if="note.isSecret" title="Secret Note" class="ml-2 text-yellow-500 dark:text-yellow-400">
+                                        <!-- SVG: Lock -->
+                                        <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2z" clip-rule="evenodd"></path></svg>
+                                    </span>
                                 </div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                    <span v-if="note.category">
-                                        <i class="fas fa-folder-open"></i> {{ note.category }}
-                                        <span v-if="note.subCategory"> / {{ note.subCategory }}</span>
+                                    <span v-if="note.category" class="inline-flex items-center">
+                                        <!-- SVG: Folder Open (small) -->
+                                        <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H2V6z" clip-rule="evenodd"></path><path d="M2 12a2 2 0 00-2 2v2a2 2 0 002 2h16a2 2 0 002-2v-2a2 2 0 00-2-2H2zm14-2a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v1a2 2 0 002 2h12z"></path></svg>
+                                        {{ note.category }}
+                                        <span v-if="note.subCategory" class="inline-flex items-center">
+                                           <span class="mx-1">/</span>
+                                            <!-- SVG: Hashtag/Tag (small) -->
+                                            <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a1 1 0 011-1h5a.997.997 0 01.707.293l7 7zM6 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
+                                            {{ note.subCategory }}
+                                        </span>
                                     </span>
-                                    <span v-else><i class="fas fa-inbox"></i> Uncategorized</span>
+                                    <span v-else class="inline-flex items-center">
+                                        <!-- SVG: Inbox (small) -->
+                                        <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2L10 12 2 7V5zm0 5.5V15a2 2 0 002 2h12a2 2 0 002-2V10.5l-8 4.5-8-4.5z" clip-rule="evenodd"></path></svg>
+                                        Uncategorized
+                                    </span>
                                     <span class="mx-1">|</span>
                                     <span>{{ formatDate(note.updatedAt) }}</span>
                                 </div>
@@ -247,83 +303,99 @@
                                     <button @click="promptMasterKey('decrypt', note.id)" class="ml-2 text-accent hover:underline text-sm">Decrypt</button>
                                 </div>
                                 <div v-else v-html="renderMarkdown(note.decryptedContent || note.content)"
-                                     class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300 markdown-content max-h-48 overflow-y-auto">
+                                     class="prose prose-sm max-w-none text-text-dark dark:text-text-light markdown-content max-h-48 overflow-y-auto">
                                 </div>
                             </div>
-                            <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-end space-x-2">
-                                <button @click="copyToClipboard(note.decryptedContent || note.content)" title="Copy Content" class="text-gray-500 hover:text-accent transition-colors"><i class="fas fa-copy"></i></button>
-                                <button @click="shareNote(note)" title="Share Note" class="text-gray-500 hover:text-accent transition-colors"><i class="fas fa-share-alt"></i></button>
-                                <button @click="editNote(note)" title="Edit Note" class="text-gray-500 hover:text-blue-500 transition-colors"><i class="fas fa-edit"></i></button>
-                                <button v-if="note.isSecret && note.decryptedContent" @click="promptMasterKey('encrypt', note.id)" title="Re-encrypt Note" class="text-gray-500 hover:text-yellow-600 transition-colors"><i class="fas fa-lock-open"></i></button>
-                                <button @click="deleteNote(note.id)" title="Delete Note" class="text-gray-500 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-border-color dark:border-gray-600 flex items-center justify-end space-x-2">
+                                <button @click="copyToClipboard(note.decryptedContent || note.content)" title="Copy Content" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                                    <!-- SVG: Copy -->
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg>
+                                </button>
+                                <button @click="shareNote(note)" title="Share Note" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                                    <!-- SVG: Share -->
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+                                </button>
+                                <button @click="editNote(note)" title="Edit Note" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                                    <!-- SVG: Edit (Pencil) -->
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                                </button>
+                                <button v-if="note.isSecret && note.decryptedContent" @click="promptMasterKey('encrypt', note.id)" title="Re-encrypt Note" class="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">
+                                    <!-- SVG: Lock Open -->
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2zM6 10h8v8H6v-8z"></path><path d="M10 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM8 6V4a2 2 0 114 0v2H8z"></path></svg>
+                                </button>
+                                <button @click="deleteNote(note.id)" title="Delete Note" class="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                                    <!-- SVG: Trash -->
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
 
-            <!-- **** NEW: Floating Action Button (FAB) for New Note **** -->
+            <!-- Floating Action Button (FAB) for New Note -->
             <button v-if="activeView === 'notesList'" @click="goToNewNoteView" title="New Note"
-                    class="fab-button fixed bottom-6 right-6 bg-accent text-white w-14 h-14 rounded-full shadow-lg hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-accent-dark focus:ring-opacity-50 flex items-center justify-center text-2xl transition-transform hover:scale-110">
-                <i class="fas fa-plus"></i>
+                    class="fab-button fixed bottom-6 right-6 bg-primary text-text-light w-14 h-14 rounded-full shadow-lg hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 flex items-center justify-center transition-transform hover:scale-110">
+                <!-- SVG: Plus -->
+                <svg class="svg-icon-xl" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 6V18M6 12H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <!-- End FAB -->
-
         </div>
 
-        <!-- Master Key Modal (unchanged) -->
+        <!-- Master Key Modal -->
         <div v-if="showMasterKeyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
-                <h3 class="text-lg font-medium mb-4 text-dark">Master Key Required</h3>
+                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">Master Key Required</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
                     This note is {{ modalAction === 'encrypt' ? 'being secured' : 'secured' }}. Please enter your master key.
                 </p>
                 <p class="text-xs text-red-500 mb-3">Warning: The master key is NOT stored. If you forget it, encrypted notes cannot be recovered.</p>
                 <input type="password" v-model="masterKeyInput" @keyup.enter="processMasterKeyAction"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-accent focus:border-accent mb-4 text-gray-700"
+                       class="w-full px-3 py-2 border border-border-color rounded-md focus:ring-accent focus:border-accent mb-4 text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"
                        placeholder="Enter master key">
                 <div class="flex justify-end space-x-2">
                     <button @click="showMasterKeyModal = false; masterKeyInput = '';"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                            class="px-4 py-2 border border-border-color rounded-md text-sm font-medium text-text-dark hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Cancel</button>
                     <button @click="processMasterKeyAction"
-                            class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-opacity-80">
+                            class="px-4 py-2 bg-accent text-text-light rounded-md text-sm font-medium hover:opacity-80">
                         {{ modalAction === 'encrypt' ? 'Encrypt' : 'Decrypt' }}
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Import/Export Modal (unchanged) -->
+        <!-- Import/Export Modal -->
         <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
-                <h3 class="text-lg font-medium mb-4 text-dark">Import / Export Notes</h3>
+                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">Import / Export Notes</h3>
                 <div class="space-y-4">
                     <div>
-                        <h4 class="font-semibold text-dark">Export Notes</h4>
+                        <h4 class="font-semibold text-text-dark dark:text-text-light">Export Notes</h4>
                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Download all your notes as a JSON file.</p>
-                        <button @click="exportNotes" class="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
-                            <i class="fas fa-file-export mr-2"></i>Export All Notes
+                        <button @click="exportNotes" class="w-full px-4 py-2 bg-primary text-text-light rounded-md hover:bg-primary-dark transition flex items-center justify-center">
+                            <!-- SVG: Export -->
+                            <svg class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            Export All Notes
                         </button>
                     </div>
                     <div>
-                        <h4 class="font-semibold text-dark">Import Notes</h4>
+                        <h4 class="font-semibold text-text-dark dark:text-text-light">Import Notes</h4>
                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Import notes from a JSON file. This will replace existing notes if IDs match, or add new ones.</p>
-                        <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-opacity-80"/>
+                        <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-text-light hover:file:opacity-80"/>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end">
                     <button @click="showImportExportModal = false"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Close</button>
+                            class="px-4 py-2 border border-border-color rounded-md text-sm font-medium text-text-dark hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Close</button>
                 </div>
             </div>
         </div>
 
-        <!-- App Info Modal (unchanged) -->
+        <!-- App Info Modal -->
         <div v-if="showAppInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-dark">About VueNotesPro v1.0</h3>
-                    <button @click="showAppInfoModal = false" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
+                    <h3 class="text-xl font-semibold text-text-dark dark:text-text-light">About VueNotesPro v1.0</h3>
+                    <button @click="showAppInfoModal = false" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl">×</button>
                 </div>
                 <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
                     <p><strong>Author:</strong> ParisNeo</p>
@@ -339,9 +411,9 @@
                         <li>Social Sharing (basic text sharing)</li>
                         <li>Secret notes with AES-256 encryption (master key not stored)</li>
                         <li>Data stored in IndexedDB</li>
-                        <li>Easy copy/paste</li>
+                        <li>Easy copy/paste with SVG icons</li>
                         <li>Responsive design for PC, phone, and tablet</li>
-                        <li>Light/Dark theme</li>
+                        <li>Light/Dark theme with improved contrasts</li>
                         <li>Floating Action Button for new notes</li>
                     </ul>
                      <h4 class="font-semibold mt-4">Keyboard Shortcuts (in note form):</h4>
@@ -351,16 +423,18 @@
                 </div>
                  <div class="mt-6 flex justify-end">
                     <button @click="showAppInfoModal = false"
-                            class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-opacity-80">Close</button>
+                            class="px-4 py-2 bg-accent text-text-light rounded-md text-sm font-medium hover:opacity-80">Close</button>
                 </div>
             </div>
         </div>
 
-        <!-- Toast Notification (unchanged) -->
+        <!-- Toast Notification -->
         <div v-if="toast.show"
-             class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-md animate-fade-in"
+             class="fixed bottom-5 right-5 px-4 py-3 rounded-lg shadow-md animate-fade-in text-white"
              :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
-            <i class="fas mr-2" :class="toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+            <!-- SVG: Check / Exclamation Triangle -->
+            <svg v-if="toast.type === 'success'" class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <svg v-else class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.216 3.031-1.742 3.031H4.42c-1.526 0-2.493-1.697-1.743-3.031l5.58-9.92zM10 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
             {{ toast.message }}
         </div>
 
@@ -370,24 +444,16 @@
         const App = {
             data() {
                 return {
+                    // ... (notes, activeView, form, etc. remain mostly the same)
                     notes: [],
-                    activeView: 'notesList', // 'notesList', 'addNote', 'editNote'
-                    form: {
-                        id: null,
-                        title: '',
-                        content: '',
-                        category: '',
-                        subCategory: '',
-                        isSecret: false,
-                        createdAt: null,
-                        updatedAt: null,
-                    },
+                    activeView: 'notesList',
+                    form: { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null, },
                     currentCategory: null,
                     currentSubCategory: null,
                     searchTerm: '',
                     showMasterKeyModal: false,
                     masterKeyInput: '',
-                    modalAction: '', // 'encrypt' or 'decrypt'
+                    modalAction: '',
                     modalNoteId: null,
                     db: null,
                     isLoading: true,
@@ -395,18 +461,37 @@
                     showImportExportModal: false,
                     showAppInfoModal: false,
                     isDarkMode: false,
-                    toast: {
-                        show: false,
-                        message: '',
-                        type: 'success'
-                    },
+                    toast: { show: false, message: '', type: 'success' },
+                    // Refined theme colors for better contrast and semantic naming
                     themeColors: {
-                        light: { primary: '59, 130, 246', secondary: '243, 244, 246', accent: '234, 179, 8', light: '249, 250, 251', dark: '17, 24, 39' },
-                        dark: { primary: '37, 99, 235', secondary: '31, 41, 55', accent: '202, 138, 4', light: '17, 24, 39', dark: '243, 244, 246' }
+                        // Light Theme
+                        light: {
+                            primary: '29, 78, 216',        // Blue-700
+                            'primary-dark': '30, 64, 175', // Blue-800 (hover)
+                            secondary: '243, 244, 246',    // Gray-100 (sidebar bg)
+                            accent: '234, 179, 8',         // Yellow-500 (selected items, highlights)
+                            light: '249, 250, 251',        // Gray-50 (page bg)
+                            dark: '17, 24, 39',            // Gray-900 (used for dark mode text-light)
+                            'text-light': '243, 244, 246', // Gray-100 (text on dark primary/accent)
+                            'text-dark': '31, 41, 55',     // Gray-800 (main text on light bg)
+                            'border-color': '209, 213, 219' // Gray-300
+                        },
+                        // Dark Theme
+                        dark: {
+                            primary: '37, 99, 235',        // Blue-600
+                            'primary-dark': '29, 78, 216', // Blue-700 (hover)
+                            secondary: '31, 41, 55',       // Gray-800 (sidebar bg)
+                            accent: '202, 138, 4',         // Yellow-600 (selected items, highlights)
+                            light: '17, 24, 39',           // Gray-900 (page bg)
+                            dark: '243, 244, 246',         // Gray-100 (used for light mode text-dark)
+                            'text-light': '229, 231, 235', // Gray-200 (main text on dark bg)
+                            'text-dark': '17, 24, 39',     // Gray-900 (text on light primary/accent)
+                            'border-color': '55, 65, 81'   // Gray-700
+                        }
                     }
                 }
             },
-            computed: { // (Unchanged from previous version)
+            computed: { // (Unchanged)
                 filteredNotes() {
                     let notesToFilter = this.notes;
                     if (this.currentCategory) {
@@ -444,13 +529,12 @@
                     return Array.from(subCategories).sort();
                 }
             },
-            methods: {
-                // **** NEW METHOD ****
+            methods: { // (Most methods unchanged, only theme and initialization)
                 goToNewNoteView() {
                     this.setActiveView('addNote');
-                    this.selectedNote = null; // Ensure no note is selected for editing
-                    this.showSidebar = false; // Close sidebar if open (especially on mobile)
-                    this.resetForm(); // Ensure form is clean
+                    this.selectedNote = null;
+                    this.showSidebar = false;
+                    this.resetForm();
                 },
                 setThemeColors(theme) {
                     const colors = this.themeColors[theme];
@@ -460,8 +544,34 @@
                     }
                     if (theme === 'dark') {
                         document.documentElement.classList.add('dark');
+                        document.querySelector('body').classList.remove('text-text-dark');
+                        document.querySelector('body').classList.add('text-text-light');
+                        // Adjust scrollbar for dark theme if desired
+                        const styleSheet = document.styleSheets[0]; // Assuming first stylesheet
+                        // Remove previous scrollbar rules if they exist by a marker comment
+                        for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
+                            if (styleSheet.cssRules[i].cssText.includes('/* scrollbar-theme-marker */')) {
+                                styleSheet.deleteRule(i);
+                            }
+                        }
+                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #374151; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #6b7280; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #9ca3af; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+
                     } else {
                         document.documentElement.classList.remove('dark');
+                        document.querySelector('body').classList.remove('text-text-light');
+                        document.querySelector('body').classList.add('text-text-dark');
+
+                        const styleSheet = document.styleSheets[0];
+                         for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
+                            if (styleSheet.cssRules[i].cssText.includes('/* scrollbar-theme-marker */')) {
+                                styleSheet.deleteRule(i);
+                            }
+                        }
+                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #f1f1f1; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #888; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
+                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #555; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
                     }
                     this.isDarkMode = theme === 'dark';
                     localStorage.setItem('vueNotesProTheme', theme);
@@ -484,452 +594,259 @@
                 initDB() {
                     return new Promise((resolve, reject) => {
                         const request = indexedDB.open('VueNotesProDB', 1);
-                        request.onerror = (event) => {
-                            console.error("Database error:", event.target.errorCode);
-                            this.showToast('Error initializing database.', 'error');
-                            reject("Error initializing database.");
-                        };
-                        request.onsuccess = (event) => {
-                            this.db = event.target.result;
-                            console.log("Database initialized successfully.");
-                            resolve();
-                        };
+                        request.onerror = (event) => { console.error("Database error:", event.target.errorCode); this.showToast('Error initializing database.', 'error'); reject("Error initializing database."); };
+                        request.onsuccess = (event) => { this.db = event.target.result; console.log("Database initialized."); resolve(); };
                         request.onupgradeneeded = (event) => {
                             const db = event.target.result;
-                            if (!db.objectStoreNames.contains('notes')) {
-                                db.createObjectStore('notes', { keyPath: 'id' });
-                                console.log("Notes object store created.");
-                            }
+                            if (!db.objectStoreNames.contains('notes')) { db.createObjectStore('notes', { keyPath: 'id' }); console.log("Notes store created."); }
                         };
                     });
                 },
                 async loadNotes() {
                     this.isLoading = true;
-                    if (!this.db) {
-                        console.error("DB not initialized for loading notes.");
-                        this.showToast('Database not ready.', 'error');
-                        this.isLoading = false;
-                        return;
-                    }
-                    const transaction = this.db.transaction(['notes'], 'readonly');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.getAll();
-
-                    request.onsuccess = (event) => {
-                        this.notes = event.target.result.map(note => ({
-                            ...note,
-                            decryptedContent: null
-                        }));
-                        console.log("Notes loaded from IndexedDB:", this.notes.length);
+                    if (!this.db) { this.showToast('Database not ready.', 'error'); this.isLoading = false; return; }
+                    const tx = this.db.transaction(['notes'], 'readonly');
+                    const store = tx.objectStore('notes');
+                    const req = store.getAll();
+                    req.onsuccess = (event) => {
+                        this.notes = event.target.result.map(note => ({ ...note, decryptedContent: null }));
                         this.isLoading = false;
                     };
-                    request.onerror = (event) => {
-                        console.error("Error loading notes:", event.target.errorCode);
-                        this.showToast('Error loading notes.', 'error');
-                        this.isLoading = false;
-                    };
+                    req.onerror = (event) => { console.error("Error loading notes:", event.target.errorCode); this.showToast('Error loading notes.', 'error'); this.isLoading = false; };
                 },
                 async saveNoteToDB(note) {
-                    if (!this.db) {
-                        console.error("DB not initialized for saving note.");
-                        this.showToast('Database not ready.', 'error');
-                        return;
-                    }
-                    const noteToSave = { ...note };
-                    delete noteToSave.decryptedContent;
-
-                    const transaction = this.db.transaction(['notes'], 'readwrite');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.put(noteToSave);
-
-                    request.onsuccess = () => {
-                        console.log("Note saved/updated in DB:", noteToSave.id);
-                    };
-                    request.onerror = (event) => {
-                        console.error("Error saving note:", event.target.errorCode);
-                        this.showToast(`Error saving note ${noteToSave.title}.`, 'error');
-                    };
+                    if (!this.db) { this.showToast('Database not ready.', 'error'); return; }
+                    const noteToSave = { ...note }; delete noteToSave.decryptedContent;
+                    const tx = this.db.transaction(['notes'], 'readwrite');
+                    const store = tx.objectStore('notes');
+                    store.put(noteToSave).onerror = (event) => { this.showToast(`Error saving note ${noteToSave.title}.`, 'error'); };
                 },
                 async deleteNoteFromDB(noteId) {
-                    if (!this.db) {
-                        console.error("DB not initialized for deleting note.");
-                        this.showToast('Database not ready.', 'error');
-                        return;
-                    }
-                    const transaction = this.db.transaction(['notes'], 'readwrite');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.delete(noteId);
-                    request.onsuccess = () => {
-                        console.log("Note deleted from DB:", noteId);
-                    };
-                    request.onerror = (event) => {
-                        console.error("Error deleting note:", event.target.errorCode);
-                        this.showToast('Error deleting note from database.', 'error');
-                    };
+                    if (!this.db) { this.showToast('Database not ready.', 'error'); return; }
+                    const tx = this.db.transaction(['notes'], 'readwrite');
+                    tx.objectStore('notes').delete(noteId).onerror = (event) => { this.showToast('Error deleting note.', 'error');};
                 },
-                setActiveView(view) {
-                    this.activeView = view;
-                    // Removed: this.resetForm() was here, but it's better handled by goToNewNoteView for clarity
-                },
-                resetForm() {
-                    this.form = {
-                        id: null, title: '', content: '', category: '', subCategory: '', isSecret: false,
-                        createdAt: null, updatedAt: null,
-                    };
-                },
+                setActiveView(view) { this.activeView = view; },
+                resetForm() { this.form = { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null }; },
                 saveNote() {
                     if (this.form.isSecret && !this.masterKeyInput && !this.form.id) {
-                        this.showToast('A master key is required to save a new secret note.', 'info');
-                        this.promptMasterKey('encrypt', null, true);
-                        return;
+                        this.showToast('Master key required for new secret note.', 'info');
+                        this.promptMasterKey('encrypt', null, true); return;
                     }
-
                     const now = new Date().toISOString();
                     let noteToSave;
-
-                    if (this.form.id) {
+                    if (this.form.id) { // Edit
                         const index = this.notes.findIndex(n => n.id === this.form.id);
-                        if (index !== -1) {
-                            noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
-                            if ( (this.notes[index].isSecret && !this.form.isSecret) ||
-                                 (this.form.isSecret && this.form.content !== this.notes[index].content && !this.form.encryptedContent) ) {
-                                if (!this.form.isSecret) {
-                                    noteToSave.content = this.notes[index].decryptedContent || this.notes[index].content;
-                                    delete noteToSave.encryptedContent;
-                                } else if (this.form.isSecret && !this.form.encryptedContent) {
-                                     this.notes[index].decryptedContent = this.form.content;
-                                     this.promptMasterKey('encrypt', this.form.id);
-                                     return;
-                                }
+                        if (index === -1) return; // Should not happen
+                        noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
+                        const originalNote = this.notes[index];
+                        if ( (originalNote.isSecret && !this.form.isSecret) || (this.form.isSecret && this.form.content !== (originalNote.decryptedContent || originalNote.content) && !this.form.encryptedContent) ) {
+                            if (!this.form.isSecret) { // Made non-secret
+                                noteToSave.content = originalNote.decryptedContent || originalNote.content;
+                                delete noteToSave.encryptedContent;
+                            } else if (this.form.isSecret && !this.form.encryptedContent) { // Secret, content changed, needs re-encrypt
+                                 this.notes[index].decryptedContent = this.form.content; // Use form content to re-encrypt
+                                 this.promptMasterKey('encrypt', this.form.id); return;
                             }
-                            this.notes.splice(index, 1, noteToSave);
                         }
-                    } else {
-                        noteToSave = {
-                            ...this.form,
-                            id: uuidv4(),
-                            createdAt: now,
-                            updatedAt: now,
-                        };
+                        this.notes.splice(index, 1, noteToSave);
+                    } else { // New
+                        noteToSave = { ...this.form, id: uuidv4(), createdAt: now, updatedAt: now };
                         if (noteToSave.isSecret) {
-                             this.notes.push(noteToSave);
-                             this.promptMasterKey('encrypt', noteToSave.id);
-                             return;
+                             this.notes.push(noteToSave); // Add temporarily
+                             this.promptMasterKey('encrypt', noteToSave.id); return;
                         }
                         this.notes.push(noteToSave);
                     }
-
                     this.saveNoteToDB(noteToSave);
                     this.showToast(`Note "${noteToSave.title}" saved.`, 'success');
-                    this.setActiveView('notesList');
-                    this.resetForm();
-                    this.masterKeyInput = '';
+                    this.setActiveView('notesList'); this.resetForm(); this.masterKeyInput = '';
                 },
                 editNote(note) {
                     this.form = { ...note };
                     if (note.isSecret && note.encryptedContent) {
-                        this.form.content = '';
-                        this.promptMasterKey('decrypt', note.id, true);
+                        this.form.content = ''; this.promptMasterKey('decrypt', note.id, true);
                     } else {
-                        this.form.content = note.decryptedContent || note.content;
-                        this.setActiveView('editNote');
+                        this.form.content = note.decryptedContent || note.content; this.setActiveView('editNote');
                     }
-                     this.showSidebar = false;
+                    this.showSidebar = false;
                 },
                 cancelEdit() {
                     const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
-                    if (note && note.isSecret && note.decryptedContent) {
-                        this.promptMasterKey('encrypt', note.id);
-                    }
-                    this.resetForm();
-                    this.setActiveView('notesList');
+                    if (note && note.isSecret && note.decryptedContent) { this.promptMasterKey('encrypt', note.id); }
+                    this.resetForm(); this.setActiveView('notesList');
                 },
                 deleteNote(noteId) {
-                    if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
-                        const noteIndex = this.notes.findIndex(n => n.id === noteId);
-                        if (noteIndex > -1) {
-                            const title = this.notes[noteIndex].title;
-                            this.notes.splice(noteIndex, 1);
-                            this.deleteNoteFromDB(noteId);
+                    if (confirm('Delete this note? Cannot be undone.')) {
+                        const idx = this.notes.findIndex(n => n.id === noteId);
+                        if (idx > -1) {
+                            const title = this.notes[idx].title;
+                            this.notes.splice(idx, 1); this.deleteNoteFromDB(noteId);
                             this.showToast(`Note "${title}" deleted.`, 'success');
                         }
                     }
                 },
-                renderMarkdown(markdownText) {
-                    if (!markdownText) return '';
-                    return DOMPurify.sanitize(marked.parse(markdownText || ''));
-                },
-                formatDate(dateString) {
-                    if (!dateString) return '';
-                    return new Date(dateString).toLocaleDateString('en-US', {
-                        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    });
-                },
-                selectCategory(category) {
-                    this.currentCategory = category;
-                    this.currentSubCategory = null;
-                    this.activeView = 'notesList';
-                    this.showSidebar = false;
-                },
-                selectSubCategory(subCategory) {
-                    this.currentSubCategory = subCategory;
-                    this.activeView = 'notesList';
-                    this.showSidebar = false;
-                },
-                uniqueSubcategoriesForCategory(categoryName) {
-                    if (!categoryName) return [];
-                    const subCategories = new Set();
-                    this.notes.forEach(note => {
-                        if (note.category === categoryName && note.subCategory) {
-                            subCategories.add(note.subCategory);
-                        }
-                    });
-                    return Array.from(subCategories).sort();
+                renderMarkdown(md) { return md ? DOMPurify.sanitize(marked.parse(md)) : ''; },
+                formatDate(d) { return d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''; },
+                selectCategory(cat) { this.currentCategory = cat; this.currentSubCategory = null; this.activeView = 'notesList'; this.showSidebar = false; },
+                selectSubCategory(subCat) { this.currentSubCategory = subCat; this.activeView = 'notesList'; this.showSidebar = false; },
+                uniqueSubcategoriesForCategory(catName) {
+                    if (!catName) return []; const subCats = new Set();
+                    this.notes.forEach(n => { if (n.category === catName && n.subCategory) subCats.add(n.subCategory); });
+                    return Array.from(subCats).sort();
                 },
                 promptMasterKey(action, noteId, forEditing = false) {
-                    this.modalAction = action;
-                    this.modalNoteId = noteId;
-                    this.editingAfterDecrypt = forEditing;
+                    this.modalAction = action; this.modalNoteId = noteId; this.editingAfterDecrypt = forEditing;
                     this.showMasterKeyModal = true;
-                    this.$nextTick(() => {
-                        const keyInput = this.$el.querySelector('input[type="password"]');
-                        if (keyInput) keyInput.focus();
-                    });
+                    this.$nextTick(() => { this.$el.querySelector('input[type="password"]')?.focus(); });
                 },
-                processMasterKeyAction() { // (Unchanged logic from previous version, but check for `this.form` context)
-                    if (!this.masterKeyInput) {
-                        this.showToast('Master key cannot be empty.', 'error');
-                        return;
-                    }
+                processMasterKeyAction() {
+                    if (!this.masterKeyInput) { this.showToast('Master key empty.', 'error'); return; }
                     const noteIndex = this.notes.findIndex(n => n.id === this.modalNoteId);
                     let noteToProcess = noteIndex !== -1 ? this.notes[noteIndex] : null;
 
-                    if (!noteToProcess && this.modalAction === 'encrypt' && this.modalNoteId && this.form.id === this.modalNoteId && this.form.isSecret) {
-                        noteToProcess = this.form;
-                    } else if (!noteToProcess && this.modalAction === 'encrypt' && this.activeView === 'addNote' && this.form.isSecret) {
-                        noteToProcess = this.form;
-                        noteToProcess.id = this.form.id || uuidv4(); // Ensure ID before encryption if new.
-                        noteToProcess.createdAt = this.form.createdAt || new Date().toISOString();
+                    if (!noteToProcess && this.modalAction === 'encrypt') { // New note from form context
+                        if (this.activeView === 'addNote' && this.form.isSecret) {
+                            noteToProcess = this.form;
+                            if (!noteToProcess.id) noteToProcess.id = uuidv4(); // Ensure ID if not set by saveNote yet
+                            if (!noteToProcess.createdAt) noteToProcess.createdAt = new Date().toISOString();
+                        } else if (this.form.id === this.modalNoteId && this.form.isSecret) {
+                            noteToProcess = this.form;
+                        }
                     }
 
-                    if (!noteToProcess) {
-                        this.showToast('Note not found for master key action.', 'error');
-                        this.showMasterKeyModal = false;
-                        this.masterKeyInput = '';
-                        return;
-                    }
+                    if (!noteToProcess) { this.showToast('Note not found.', 'error'); this.showMasterKeyModal = false; this.masterKeyInput = ''; return; }
 
                     try {
                         if (this.modalAction === 'encrypt') {
-                            const contentToEncrypt = noteToProcess.decryptedContent || this.form.content || noteToProcess.content;
-                             if (!contentToEncrypt && noteToProcess === this.form) {
-                                // If it's a new note from the form and content is empty, this is an issue.
-                                // This scenario should be caught by form validation earlier, but as a safeguard:
-                                this.showToast('Cannot encrypt an empty note.', 'error');
-                                this.showMasterKeyModal = false;
-                                return;
-                            }
+                            const contentToEncrypt = noteToProcess.decryptedContent || (noteToProcess === this.form ? this.form.content : noteToProcess.content);
+                            if (!contentToEncrypt) { this.showToast('No content to encrypt.', 'error'); /* ... cleanup ... */ return; }
                             const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
+                            const updatedNoteData = {
+                                encryptedContent: encrypted,
+                                content: "[[ENCRYPTED CONTENT]]",
+                                decryptedContent: null,
+                                isSecret: true,
+                                updatedAt: new Date().toISOString()
+                            };
 
-                            if (noteIndex !== -1) {
-                                this.notes[noteIndex].encryptedContent = encrypted;
-                                this.notes[noteIndex].content = "[[ENCRYPTED CONTENT]]";
-                                this.notes[noteIndex].decryptedContent = null;
-                                this.notes[noteIndex].isSecret = true;
-                                this.notes[noteIndex].updatedAt = new Date().toISOString();
+                            if (noteIndex !== -1) { // Existing note
+                                Object.assign(this.notes[noteIndex], updatedNoteData);
                                 this.saveNoteToDB(this.notes[noteIndex]);
                                 this.showToast(`Note "${this.notes[noteIndex].title}" encrypted.`, 'success');
-                            } else if (noteToProcess === this.form && this.form.isSecret) { // Encrypting a new note from form
-                                this.form.encryptedContent = encrypted;
-                                this.form.content = "[[ENCRYPTED CONTENT]]";
-                                this.form.updatedAt = new Date().toISOString();
-
-                                const now = new Date().toISOString();
-                                const newNote = {
-                                    ...this.form,
-                                    id: this.form.id, // Should have been set
-                                    createdAt: this.form.createdAt || now, // Should have been set
-                                    updatedAt: now,
-                                };
-                                const existingIdx = this.notes.findIndex(n => n.id === newNote.id);
-                                if (existingIdx > -1) { // if it was pushed temporarily
-                                    this.notes.splice(existingIdx, 1, newNote);
+                            } else if (noteToProcess === this.form) { // New note from form
+                                Object.assign(this.form, updatedNoteData); // Apply to form
+                                const newNote = { ...this.form }; // this.form already has id, createdAt from saveNote path
+                                
+                                // Ensure it's in the main notes array
+                                const existingIdxInNotes = this.notes.findIndex(n => n.id === newNote.id);
+                                if (existingIdxInNotes > -1) {
+                                    this.notes.splice(existingIdxInNotes, 1, newNote);
                                 } else {
-                                     this.notes.push(newNote);
+                                    this.notes.push(newNote);
                                 }
                                 this.saveNoteToDB(newNote);
-                                this.showToast(`New note "${newNote.title}" encrypted and saved.`, 'success');
-                                this.setActiveView('notesList');
-                                this.resetForm();
+                                this.showToast(`New note "${newNote.title}" encrypted & saved.`, 'success');
+                                this.setActiveView('notesList'); this.resetForm();
                             }
-
                         } else if (this.modalAction === 'decrypt') {
-                            if (!noteToProcess.encryptedContent) {
-                                this.showToast('No encrypted content to decrypt.', 'error');
-                            } else {
-                                const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
-                                const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-                                if (!decrypted) {
-                                    throw new Error("Decryption failed. Incorrect master key or corrupted data.");
-                                }
-                                if (noteIndex !== -1) {
-                                    this.notes[noteIndex].decryptedContent = decrypted;
-                                } else if (this.form.id === noteToProcess.id) {
-                                    this.form.decryptedContent = decrypted;
-                                    this.form.content = decrypted;
-                                }
-                                this.showToast(`Note "${noteToProcess.title}" decrypted.`, 'success');
+                            if (!noteToProcess.encryptedContent) { this.showToast('No encrypted content.', 'error'); return; }
+                            const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
+                            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                            if (!decrypted) throw new Error("Decryption failed.");
 
-                                if (this.editingAfterDecrypt) {
-                                    this.form = { ...noteToProcess, content: decrypted };
-                                    this.setActiveView('editNote');
-                                    this.editingAfterDecrypt = false;
-                                }
+                            if (noteIndex !== -1) this.notes[noteIndex].decryptedContent = decrypted;
+                            else if (this.form.id === noteToProcess.id) { this.form.decryptedContent = decrypted; this.form.content = decrypted; }
+                            
+                            this.showToast(`Note "${noteToProcess.title}" decrypted.`, 'success');
+                            if (this.editingAfterDecrypt) {
+                                this.form = { ...noteToProcess, content: decrypted }; this.setActiveView('editNote'); this.editingAfterDecrypt = false;
                             }
                         }
-                    } catch (e) {
-                        console.error("Crypto action error:", e);
-                        this.showToast(this.modalAction === 'encrypt' ? 'Encryption failed.' : 'Decryption failed. Check master key.', 'error');
-                    } finally {
-                        this.showMasterKeyModal = false;
-                        // this.masterKeyInput = ''; // Consider implications for re-encryption flows
-                    }
+                    } catch (e) { console.error("Crypto error:", e); this.showToast('Crypto action failed.', 'error'); }
+                    finally { this.showMasterKeyModal = false; /* this.masterKeyInput = ''; */ }
                 },
-                exportNotes() { // (Unchanged)
+                exportNotes() { /* ... (unchanged) ... */
                     const notesToExport = JSON.parse(JSON.stringify(this.notes));
                     notesToExport.forEach(note => delete note.decryptedContent);
                     const jsonData = JSON.stringify(notesToExport, null, 2);
                     const blob = new Blob([jsonData], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    this.showToast('Notes exported successfully.', 'success');
-                    this.showImportExportModal = false;
+                    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                    a.href = url; a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                    this.showToast('Notes exported.', 'success'); this.showImportExportModal = false;
                 },
-                handleFileUpload(event) { // (Unchanged)
+                handleFileUpload(event) { /* ... (unchanged with improved validation) ... */
                     const file = event.target.files[0];
                     if (file && file.type === "application/json") {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             try {
                                 const importedNotes = JSON.parse(e.target.result);
-                                if (!Array.isArray(importedNotes)) {
-                                   throw new Error("Invalid JSON format: Not an array.");
-                                }
-                                importedNotes.forEach(note => {
-                                    if (!note.id || !note.title || typeof note.content === 'undefined') {
-                                        throw new Error(`Invalid note structure: ${JSON.stringify(note).substring(0,100)}...`);
+                                if (!Array.isArray(importedNotes)) throw new Error("Not an array.");
+                                importedNotes.forEach(note => { // Stricter validation
+                                    if (!note.id || typeof note.id !== 'string' ||
+                                        !note.title || typeof note.title !== 'string' ||
+                                        (typeof note.content !== 'string' && typeof note.encryptedContent !== 'string') ||
+                                        typeof note.isSecret !== 'boolean' ||
+                                        !note.createdAt || isNaN(new Date(note.createdAt).getTime()) ||
+                                        !note.updatedAt || isNaN(new Date(note.updatedAt).getTime()) ) {
+                                        throw new Error(`Invalid note structure near ID ${note.id || 'unknown'}`);
                                     }
-                                    note.createdAt = note.createdAt && !isNaN(new Date(note.createdAt)) ? new Date(note.createdAt).toISOString() : new Date().toISOString();
-                                    note.updatedAt = note.updatedAt && !isNaN(new Date(note.updatedAt)) ? new Date(note.updatedAt).toISOString() : new Date().toISOString();
-                                    note.isSecret = !!note.isSecret;
+                                    note.createdAt = new Date(note.createdAt).toISOString();
+                                    note.updatedAt = new Date(note.updatedAt).toISOString();
                                     delete note.decryptedContent;
                                 });
                                 importedNotes.forEach(importedNote => {
                                     const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
-                                    if (existingIndex > -1) {
-                                        this.notes[existingIndex] = { ...this.notes[existingIndex], ...importedNote };
-                                        this.saveNoteToDB(this.notes[existingIndex]);
-                                    } else {
-                                        this.notes.push(importedNote);
-                                        this.saveNoteToDB(importedNote);
-                                    }
+                                    if (existingIndex > -1) this.notes.splice(existingIndex, 1, importedNote); else this.notes.push(importedNote);
+                                    this.saveNoteToDB(importedNote);
                                 });
-                                this.showToast(`${importedNotes.length} notes imported successfully.`, 'success');
+                                this.showToast(`${importedNotes.length} notes imported.`, 'success');
                                 this.showImportExportModal = false;
-                            } catch (error) {
-                                console.error("Error importing notes:", error);
-                                this.showToast(`Error importing notes: ${error.message}`, 'error');
-                            } finally {
-                                event.target.value = null;
-                            }
+                            } catch (error) { console.error("Import error:", error); this.showToast(`Import error: ${error.message}`, 'error'); }
+                            finally { event.target.value = null; }
                         };
                         reader.readAsText(file);
-                    } else {
-                        this.showToast('Please select a valid JSON file.', 'error');
-                         event.target.value = null;
-                    }
+                    } else { this.showToast('Invalid file type.', 'error'); event.target.value = null; }
                 },
-                shareNote(note) { // (Unchanged)
+                shareNote(note) { /* ... (unchanged) ... */
                     const contentToShare = note.decryptedContent || note.content;
-                    if (note.isSecret && !note.decryptedContent) {
-                        this.showToast("Cannot share encrypted content. Decrypt it first.", "info");
-                        return;
-                    }
-                    const title = note.title;
-                    const text = `Check out this note: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
+                    if (note.isSecret && !note.decryptedContent) { this.showToast("Decrypt to share.", "info"); return; }
+                    const title = note.title; const text = `Note: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
                     if (navigator.share) {
-                        navigator.share({ title: title, text: text, })
-                        .then(() => console.log('Successful share'))
-                        .catch((error) => {
-                            console.log('Error sharing', error);
-                            this.showToast('Could not share using system dialog. Try manual copy.', 'error');
-                            this.copyToClipboardForSharing(title, text);
-                        });
-                    } else {
-                        this.copyToClipboardForSharing(title, text);
-                    }
+                        navigator.share({ title, text }).catch(e => {this.copyToClipboardForSharing(title, text);});
+                    } else { this.copyToClipboardForSharing(title, text); }
                 },
-                copyToClipboardForSharing(title, text) { // (Unchanged)
-                     const shareText = `${title}\n\n${text}`;
-                     navigator.clipboard.writeText(shareText).then(() => {
-                        this.showToast('Note content (for sharing) copied to clipboard!', 'success');
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                        this.showToast('Failed to copy content.', 'error');
-                    });
+                copyToClipboardForSharing(title, text) { /* ... (unchanged) ... */
+                     navigator.clipboard.writeText(`${title}\n\n${text}`)
+                        .then(() => this.showToast('Share text copied!', 'success'))
+                        .catch(() => this.showToast('Copy failed.', 'error'));
                 },
-                copyToClipboard(text) { // (Unchanged)
-                    if (!text) {
-                        this.showToast('Nothing to copy.', 'info');
-                        return;
-                    }
-                    navigator.clipboard.writeText(text).then(() => {
-                        this.showToast('Content copied to clipboard!', 'success');
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                        this.showToast('Failed to copy content.', 'error');
-                    });
+                copyToClipboard(text) { /* ... (unchanged) ... */
+                    if (!text) { this.showToast('Nothing to copy.', 'info'); return; }
+                    navigator.clipboard.writeText(text)
+                        .then(() => this.showToast('Copied!', 'success'))
+                        .catch(() => this.showToast('Copy failed.', 'error'));
                 },
-                toggleSidebar() {
-                    this.showSidebar = !this.showSidebar;
-                },
+                toggleSidebar() { this.showSidebar = !this.showSidebar; },
                 showToast(message, type = 'success', duration = 3000) {
-                    this.toast.message = message;
-                    this.toast.type = type;
-                    this.toast.show = true;
-                    setTimeout(() => {
-                        this.toast.show = false;
-                    }, duration);
+                    this.toast = { message, type, show: true };
+                    setTimeout(() => { this.toast.show = false; }, duration);
                 },
-                handleKeyDown(event) { // (Unchanged)
+                handleKeyDown(event) { /* ... (unchanged) ... */
                     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-                        if (this.activeView === 'addNote' || this.activeView === 'editNote') {
-                            event.preventDefault();
-                            this.saveNote();
-                        }
+                        if (this.activeView === 'addNote' || this.activeView === 'editNote') { event.preventDefault(); this.saveNote(); }
                     }
                 }
             },
             async mounted() { // (Unchanged)
                 this.loadTheme();
-                try {
-                    await this.initDB();
-                    await this.loadNotes();
-                } catch (error) {
-                    console.error("Error during mount:", error);
-                    this.showToast('Application setup failed. Please refresh.', 'error');
-                }
+                try { await this.initDB(); await this.loadNotes(); }
+                catch (error) { this.showToast('App setup failed.', 'error'); }
                 window.addEventListener('keydown', this.handleKeyDown);
             },
-            beforeUnmount() { // (Unchanged)
-                window.removeEventListener('keydown', this.handleKeyDown);
-            },
+            beforeUnmount() { window.removeEventListener('keydown', this.handleKeyDown); },
         };
 
         Vue.createApp(App).mount('#app');
