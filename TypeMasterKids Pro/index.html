@@ -49,12 +49,12 @@
             font-size: 2.8em; font-weight: bold; color: #FFF;
             background-color: rgba(0, 0, 0, 0.6); padding: 15px 30px; border-radius: 15px;
             z-index: 6; min-width: 70%; text-align: center; display: none;
-            letter-spacing: 2px; white-space: pre; /* Preserves spaces for display */
+            letter-spacing: 2px; white-space: pre;
         }
         .typed-char-correct { color: #A5D6A7; }
         .typed-char-error {
-            color: #FFCDD2; /* Light Red */
-            background-color: rgba(239, 83, 80, 0.3); /* Red background hint */
+            color: #FFCDD2;
+            background-color: rgba(239, 83, 80, 0.3);
             text-decoration: underline wavy red;
         }
         .current-target-char {
@@ -104,43 +104,52 @@
     <div id="typingArea"></div>
     <div id="charTimeIndicator"><div id="charTimeIndicatorBar"></div></div>
 
+    <!-- Profile Selection Screen -->
     <div id="profileScreen" class="ui-overlay">
         <div class="ui-panel">
             <h2 data-i18n="welcome_title">Welcome!</h2>
-            <p data-i18n="profile_select_create">Select or create a profile:</p>
+            <p data-i18n="profile_select_info">Select an existing profile or create a new one.</p>
             <select id="profileSelect"></select>
             <button id="loadProfileBtn" data-i18n="load_profile">Load Profile</button>
-            <button id="viewProgressBtnMain" data-i18n="view_progress_btn" style="display:none;">View Progress</button>
             <hr>
-            <h3 data-i18n="create_new_profile">Create New Profile</h3>
-            <input type="text" id="newProfileInputName" data-i18n-placeholder="profile_name_placeholder" placeholder="Profile Name">
-            <div>
-                <label for="keyboardLayoutSelect" data-i18n="keyboard_layout_label">Keyboard Layout:</label>
-                <select id="keyboardLayoutSelect">
-                    <option value="qwerty">QWERTY</option> <option value="azerty">AZERTY</option> <option value="arabic_101">Arabic (PC 101)</option>
-                </select>
-            </div>
-            <div>
-                <label for="uiLanguageSelect" data-i18n="language_label">UI Language:</label>
-                <select id="uiLanguageSelect">
-                    <option value="en">English</option> <option value="fr">Français</option> <option value="ar">العربية</option>
-                </select>
-            </div>
-            <div>
-                <label for="typingSpeedSelect" data-i18n="typing_speed_label">Typing Speed:</label>
-                <select id="typingSpeedSelect">
-                    <option value="slow" data-i18n="speed_slow">Slow</option>
-                    <option value="normal" selected data-i18n="speed_normal">Normal</option>
-                    <option value="fast" data-i18n="speed_fast">Fast</option>
-                </select>
-            </div>
-            <button id="createProfileBtn" data-i18n="create_profile_btn">Create Profile</button>
+            <button id="goToCreateProfileBtn" data-i18n="go_to_create_profile_btn">Create New Profile</button>
             <hr>
             <button id="exportProgressBtn" data-i18n="export_progress_btn">Export Progress</button>
             <button onclick="document.getElementById('importProgressFile').click();" data-i18n="import_progress_btn">Import Progress</button>
             <input type="file" id="importProgressFile" accept=".json">
         </div>
     </div>
+
+    <!-- Create Profile Screen -->
+    <div id="createProfileScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel">
+            <h2 data-i18n="create_new_profile_title">Create New Profile</h2>
+            <input type="text" id="newProfileInputName_create" data-i18n-placeholder="profile_name_placeholder" placeholder="Profile Name">
+            <div>
+                <label for="keyboardLayoutSelect_create" data-i18n="keyboard_layout_label">Keyboard Layout:</label>
+                <select id="keyboardLayoutSelect_create">
+                    <option value="qwerty">QWERTY</option> <option value="azerty">AZERTY</option> <option value="arabic_101">Arabic (PC 101)</option>
+                </select>
+            </div>
+            <div>
+                <label for="uiLanguageSelect_create" data-i18n="language_label">UI Language:</label>
+                <select id="uiLanguageSelect_create">
+                    <option value="en">English</option> <option value="fr">Français</option> <option value="ar">العربية</option>
+                </select>
+            </div>
+            <div>
+                <label for="typingSpeedSelect_create" data-i18n="typing_speed_label">Typing Speed:</label>
+                <select id="typingSpeedSelect_create">
+                    <option value="slow" data-i18n="speed_slow">Slow</option>
+                    <option value="normal" selected data-i18n="speed_normal">Normal</option>
+                    <option value="fast" data-i18n="speed_fast">Fast</option>
+                </select>
+            </div>
+            <button id="confirmCreateProfileBtn" data-i18n="create_profile_btn">Create Profile</button>
+            <button id="backToProfileSelectFromCreateBtn" data-i18n="back_to_profiles_btn">Back to Profiles</button>
+        </div>
+    </div>
+
 
     <div id="lessonSelectScreen" class="ui-overlay" style="display: none;">
         <div class="ui-panel">
@@ -149,6 +158,37 @@
             <div id="lessonsGrid"></div>
             <button id="backToProfilesBtn" data-i18n="back_to_profiles_btn">Back to Profiles</button>
             <button id="viewProgressBtnLessons" data-i18n="view_progress_btn">View Progress</button>
+            <button id="goToSettingsBtn" data-i18n="settings_btn">Settings</button>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settingsScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel">
+            <h2 data-i18n="settings_title">Profile Settings</h2>
+            <p><span data-i18n="current_profile">Profile</span>: <strong id="settingsProfileName"></strong></p>
+            <div>
+                <label for="settingsKeyboardLayoutSelect" data-i18n="keyboard_layout_label">Keyboard Layout:</label>
+                <select id="settingsKeyboardLayoutSelect">
+                    <option value="qwerty">QWERTY</option> <option value="azerty">AZERTY</option> <option value="arabic_101">Arabic (PC 101)</option>
+                </select>
+            </div>
+            <div>
+                <label for="settingsUiLanguageSelect" data-i18n="language_label">UI Language:</label>
+                <select id="settingsUiLanguageSelect">
+                    <option value="en">English</option> <option value="fr">Français</option> <option value="ar">العربية</option>
+                </select>
+            </div>
+            <div>
+                <label for="settingsTypingSpeedSelect" data-i18n="typing_speed_label">Typing Speed:</label>
+                <select id="settingsTypingSpeedSelect">
+                    <option value="slow" data-i18n="speed_slow">Slow</option>
+                    <option value="normal" data-i18n="speed_normal">Normal</option>
+                    <option value="fast" data-i18n="speed_fast">Fast</option>
+                </select>
+            </div>
+            <button id="saveSettingsBtn" data-i18n="save_settings_btn">Save Settings</button>
+            <button id="backFromSettingsBtn" data-i18n="back_btn">Back</button>
         </div>
     </div>
 
@@ -197,7 +237,7 @@
 
     <script>
         // --- Global Constants & Variables ---
-        const APP_DB_NAME = 'TypeMasterKidsProDB_v5';
+        const APP_DB_NAME = 'TypeMasterKidsProDB_v6'; // DB version incremented due to profile structure change (typingSpeedSetting)
         const PROFILES_STORE = 'profiles';
         let db;
         let currentProfile = null;
@@ -220,8 +260,11 @@
         // --- Localization (i18n) ---
         const i18nData = {
             en: {
-                "welcome_title": "Welcome to TypeMasterKids Pro!", "profile_select_create": "Select or create a profile:",
-                "load_profile": "Load Profile", "create_new_profile": "Create New Profile",
+                "welcome_title": "Welcome to TypeMasterKids Pro!",
+                "profile_select_info": "Select an existing profile or create a new one.",
+                "go_to_create_profile_btn": "Create New Profile",
+                "create_new_profile_title": "Create New Profile",
+                "load_profile": "Load Profile", "create_new_profile": "Create New Profile", // Kept for compatibility if used elsewhere
                 "profile_name_placeholder": "Enter Profile Name", "keyboard_layout_label": "Keyboard Layout:",
                 "language_label": "UI Language:", "create_profile_btn": "Create Profile",
                 "export_progress_btn": "Export Progress", "import_progress_btn": "Import Progress",
@@ -240,6 +283,7 @@
                 "back_btn": "Back", "lesson_length_approx": "Approx. Length:", "characters_unit": "characters", "Attempt": "Attempt",
                 "typing_speed_label": "Typing Speed:", "speed_slow": "Slow", "speed_normal": "Normal", "speed_fast": "Fast",
                 "time_per_char_label": "Time per Character:",
+                "settings_btn": "Settings", "settings_title": "Profile Settings", "save_settings_btn": "Save Settings",
                 "L_NAME_HOME_ROW_BASIC": "Home Row Basics {0}", "L_DESC_HOME_ROW_BASIC": "Practice keys: {0} with space.",
                 "L_NAME_HOME_ROW_EXTENDED": "Home Row Extended {0}", "L_DESC_HOME_ROW_EXTENDED": "More keys: {0} and longer words.",
                 "L_NAME_HOME_ROW_FULL": "Full Home Row", "L_DESC_HOME_ROW_FULL": "Master the entire home row with varied words.",
@@ -250,7 +294,10 @@
                 "L_NAME_MIXED_PRACTICE": "Mixed Practice {0}", "L_DESC_MIXED_PRACTICE": "Review all learned keys."
             },
             fr: {
-                "welcome_title": "Bienvenue à TypeMasterKids Pro !", "profile_select_create": "Sélectionnez ou créez un profil :",
+                "welcome_title": "Bienvenue à TypeMasterKids Pro !",
+                "profile_select_info": "Sélectionnez un profil existant ou créez-en un nouveau.",
+                "go_to_create_profile_btn": "Créer Nouveau Profil",
+                "create_new_profile_title": "Créer Nouveau Profil",
                 "load_profile": "Charger Profil", "create_new_profile": "Créer Nouveau Profil",
                 "profile_name_placeholder": "Nom du Profil", "keyboard_layout_label": "Disposition Clavier:",
                 "language_label": "Langue Interface:", "create_profile_btn": "Créer Profil",
@@ -270,6 +317,7 @@
                 "back_btn": "Retour", "lesson_length_approx": "Longueur Approx.:", "characters_unit": "caractères", "Attempt": "Tentative",
                 "typing_speed_label": "Vitesse de Frappe:", "speed_slow": "Lente", "speed_normal": "Normale", "speed_fast": "Rapide",
                 "time_per_char_label": "Temps par Caractère:",
+                "settings_btn": "Paramètres", "settings_title": "Paramètres du Profil", "save_settings_btn": "Enregistrer",
                 "L_NAME_HOME_ROW_BASIC": "Bases Ligne Repos {0}", "L_DESC_HOME_ROW_BASIC": "Pratiquez touches : {0} avec espace.",
                 "L_NAME_HOME_ROW_EXTENDED": "Ligne Repos Étendue {0}", "L_DESC_HOME_ROW_EXTENDED": "Plus de touches : {0} et mots plus longs.",
                 "L_NAME_HOME_ROW_FULL": "Ligne Repos Complète", "L_DESC_HOME_ROW_FULL": "Maîtrisez toute la ligne de repos.",
@@ -280,7 +328,10 @@
                 "L_NAME_MIXED_PRACTICE": "Pratique Mixte {0}", "L_DESC_MIXED_PRACTICE": "Révision de toutes les touches apprises."
             },
             ar: {
-                "welcome_title": "أهلاً بك في تايب ماستر كيدز برو!", "profile_select_create": "اختر أو أنشئ ملفًا شخصيًا:",
+                "welcome_title": "أهلاً بك في تايب ماستر كيدز برو!",
+                "profile_select_info": "اختر ملفًا شخصيًا موجودًا أو أنشئ واحدًا جديدًا.",
+                "go_to_create_profile_btn": "إنشاء ملف جديد",
+                "create_new_profile_title": "إنشاء ملف جديد",
                 "load_profile": "تحميل الملف", "create_new_profile": "إنشاء ملف جديد",
                 "profile_name_placeholder": "اسم الملف الشخصي", "keyboard_layout_label": "تخطيط لوحة المفاتيح:",
                 "language_label": "لغة الواجهة:", "create_profile_btn": "إنشاء ملف",
@@ -300,6 +351,7 @@
                 "back_btn": "رجوع", "lesson_length_approx": "الطول التقريبي:", "characters_unit": "حرفًا", "Attempt": "محاولة",
                 "typing_speed_label": "سرعة الكتابة:", "speed_slow": "بطيئة", "speed_normal": "عادية", "speed_fast": "سريعة",
                 "time_per_char_label": "الوقت لكل حرف:",
+                "settings_btn": "الإعدادات", "settings_title": "إعدادات الملف الشخصي", "save_settings_btn": "حفظ الإعدادات",
                 "L_NAME_HOME_ROW_BASIC": "أساسيات صف الارتكاز {0}", "L_DESC_HOME_ROW_BASIC": "تمرن على المفاتيح: {0} مع المسافة.",
                 "L_NAME_HOME_ROW_EXTENDED": "صف الارتكاز الموسع {0}", "L_DESC_HOME_ROW_EXTENDED": "المزيد من المفاتيح: {0} وكلمات أطول.",
                 "L_NAME_HOME_ROW_FULL": "صف الارتكاز الكامل", "L_DESC_HOME_ROW_FULL": "أتقن صف الارتكاز بأكمله.",
@@ -353,17 +405,19 @@
             document.documentElement.lang = currentLang;
             document.getElementById('appBody').className = currentLang === 'ar' ? 'rtl' : '';
 
+            // Dynamically update profile names if visible
             if (currentProfile) {
                 const activeProfileNameEl = document.getElementById('activeProfileName');
-                if(activeProfileNameEl && activeProfileNameEl.offsetParent !== null)
-                    activeProfileNameEl.textContent = currentProfile.name;
+                if(activeProfileNameEl && activeProfileNameEl.offsetParent !== null) activeProfileNameEl.textContent = currentProfile.name;
 
                 const progressProfileNameEl = document.getElementById('progressProfileName');
-                if(progressProfileNameEl && progressProfileNameEl.offsetParent !== null)
-                    progressProfileNameEl.textContent = currentProfile.name;
+                if(progressProfileNameEl && progressProfileNameEl.offsetParent !== null) progressProfileNameEl.textContent = currentProfile.name;
+
+                const settingsProfileNameEl = document.getElementById('settingsProfileName');
+                if(settingsProfileNameEl && settingsProfileNameEl.offsetParent !== null) settingsProfileNameEl.textContent = currentProfile.name;
             }
-             // Ensure dynamic options in selects are also translated if they use data-i18n
-            document.querySelectorAll('#typingSpeedSelect option').forEach(opt => {
+             // Ensure dynamic options in selects are also translated
+            document.querySelectorAll('#typingSpeedSelect_create option, #settingsTypingSpeedSelect option').forEach(opt => {
                 if (opt.dataset.i18n) {
                     opt.textContent = _t(opt.dataset.i18n);
                 }
@@ -435,11 +489,11 @@
                         return text;
                     },
                     numWords, minWLen, maxWLen,
-                    timePerChar: Math.max(800, 2500 * timeMod), // Base time, will be adjusted by profile speed
+                    timePerChar: Math.max(800, 2500 * timeMod),
                     targetAccuracy: accT, targetWPM: wpmT,
                 });
             };
-
+            // ... (rest of makeLesson calls are the same) ...
             makeLesson("L_NAME_HOME_ROW_BASIC", ['f', 'j'], 10, 1, 3, 1.0, 85, 8, "1");
             makeLesson("L_NAME_HOME_ROW_BASIC", ['d', 'k'], 12, 1, 4, 0.95, 87, 10, "2");
             makeLesson("L_NAME_HOME_ROW_BASIC", ['s', 'l'], 15, 2, 4, 0.9, 88, 12, "3");
@@ -496,7 +550,7 @@
                     lastLesson.numWords + 1,
                     lastLesson.minWLen,
                     lastLesson.maxWLen + (LESSONS.length % 3 === 0 ? 1 : 0),
-                    Math.max(0.4, lastLesson.timePerChar / 2500 * 0.97), // timeMod based on previous timePerChar
+                    Math.max(0.4, lastLesson.timePerChar / 2500 * 0.97),
                     Math.min(98, lastLesson.targetAccuracy + 0.05),
                     Math.round(lastLesson.targetWPM + (LESSONS.length % 5 === 0 ? 1 : 0.5)),
                     `AUTO_${autoLessonCounter++}`
@@ -506,13 +560,15 @@
 
         function initDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(APP_DB_NAME, 1);
+                const request = indexedDB.open(APP_DB_NAME, 1); // Version bumped to 1 for new store structure if needed
                 request.onupgradeneeded = event => {
                     const dbInstance = event.target.result;
                     if (!dbInstance.objectStoreNames.contains(PROFILES_STORE)) {
                         const store = dbInstance.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
                         store.createIndex('name', 'name', { unique: false });
                     }
+                    // If you were changing an existing store, you'd do it here.
+                    // For adding a new field (typingSpeedSetting), existing profiles will get it on load/save.
                 };
                 request.onsuccess = event => { db = event.target.result; resolve(); };
                 request.onerror = event => { console.error('DB Error:', event.target.error); reject(_t("db_error_msg")); };
@@ -646,6 +702,7 @@
             if(three.renderer && three.scene && three.camera) three.renderer.render(three.scene,three.camera);
         }, false);
 
+        // --- UI Navigation & Display ---
         function showUIScreen(screenId, callingScreen = null) {
             if(callingScreen) {
                 lastActiveScreen = callingScreen;
@@ -668,27 +725,52 @@
             try {
                 const profiles = await getAllProfilesData();
                 const selectElement = document.getElementById('profileSelect');
-                selectElement.innerHTML = `<option value="">-- ${_t('profile_select_create')} --</option>`;
+                selectElement.innerHTML = `<option value="">-- ${_t('profile_select_info')} --</option>`; // Updated key
                 profiles.forEach(p => {
                     const option = document.createElement('option');
                     option.value = p.id;
                     option.textContent = p.name;
                     selectElement.appendChild(option);
                 });
-                document.getElementById('viewProgressBtnMain').style.display = profiles.length > 0 ? 'inline-block' : 'none';
             } catch(e) {
                 console.error("Error populating profiles:", e);
-                document.getElementById('viewProgressBtnMain').style.display = 'none';
             }
 
+            // Set default language for the create profile screen if not already set
             const savedLang = localStorage.getItem('typeMasterLang') || navigator.language.split('-')[0];
             currentLang = i18nData[savedLang] ? savedLang : 'en';
-            document.getElementById('uiLanguageSelect').value = currentLang;
-            document.getElementById('typingSpeedSelect').value = 'normal'; // Default for new profile UI
+            // The language select on createProfileScreen will be set in displayCreateProfileScreen
 
             applyLocalization();
             showUIScreen('profileScreen');
         }
+
+        function displayCreateProfileScreen() {
+            // Reset fields for new profile creation
+            document.getElementById('newProfileInputName_create').value = '';
+            document.getElementById('keyboardLayoutSelect_create').value = 'qwerty';
+            document.getElementById('uiLanguageSelect_create').value = currentLang; // Pre-fill with current UI lang
+            document.getElementById('typingSpeedSelect_create').value = 'normal';
+
+            applyLocalization(); // Ensure labels and option texts are correct
+            showUIScreen('createProfileScreen', 'profileScreen');
+        }
+
+        function displaySettingsScreen() {
+            if (!currentProfile) {
+                alert("No profile loaded to configure settings.");
+                showUIScreen(lastActiveScreen || 'lessonSelectScreen'); // Go back
+                return;
+            }
+            document.getElementById('settingsProfileName').textContent = currentProfile.name;
+            document.getElementById('settingsKeyboardLayoutSelect').value = currentProfile.keyboardLayout;
+            document.getElementById('settingsUiLanguageSelect').value = currentProfile.language;
+            document.getElementById('settingsTypingSpeedSelect').value = currentProfile.typingSpeedSetting || 'normal';
+
+            applyLocalization();
+            showUIScreen('settingsScreen', 'lessonSelectScreen'); // Settings usually accessed from lesson select
+        }
+
 
         function displayLessonSelectScreen() {
             if(!currentProfile){
@@ -749,20 +831,18 @@
             currentLessonData = { ...lessonConfig };
             currentLessonData.actualChars = currentLessonData.getChars();
 
-            // Adjust timePerChar based on profile's typingSpeedSetting
             const speedSetting = (currentProfile && currentProfile.typingSpeedSetting) ? currentProfile.typingSpeedSetting : 'normal';
             let baseTimeFromConfig = lessonConfig.timePerChar;
 
             if (speedSetting === 'slow') {
-                currentLessonData.timePerChar = baseTimeFromConfig * 1.5; // 50% longer
+                currentLessonData.timePerChar = baseTimeFromConfig * 1.5;
             } else if (speedSetting === 'fast') {
-                currentLessonData.timePerChar = baseTimeFromConfig * 0.75; // 25% shorter
-            } else { // 'normal'
+                currentLessonData.timePerChar = baseTimeFromConfig * 0.75;
+            } else {
                 currentLessonData.timePerChar = baseTimeFromConfig;
             }
-            // Apply caps: min 600ms, max 5000ms
             currentLessonData.timePerChar = Math.max(600, Math.min(currentLessonData.timePerChar, 5000));
-            currentLessonData.timePerChar = Math.round(currentLessonData.timePerChar); // Keep it integer
+            currentLessonData.timePerChar = Math.round(currentLessonData.timePerChar);
 
 
             currentLessonData.targetString = currentLessonData.generateString(
@@ -793,6 +873,7 @@
             applyLocalization();
         }
 
+        // --- Game Core Logic (startGameSession, updateTypingAreaDisplay, etc. remain largely the same) ---
         function startGameSession() {
             if (!currentLessonData || !currentLessonData.targetString || currentLessonData.targetString === "error_no_chars") {
                 console.error("Cannot start game: currentLessonData or targetString is invalid.");
@@ -892,9 +973,6 @@
             sessionStats.totalPresses++;
 
             const targetChar = currentLessonData.targetString[currentTypedIdx];
-
-            // --- For Debugging the Red Highlight Issue ---
-            // Uncomment the following lines to log details of each key press
             /*
             console.log(
                 `[Input Debug] Typed: "${typedKey}" (Code: ${typedKey ? typedKey.charCodeAt(0) : 'N/A'}), ` +
@@ -920,7 +998,7 @@
                      new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.3, z:1.3 }, 100).easing(TWEEN.Easing.Quadratic.Out)
                         .chain(new TWEEN.Tween(three.active3DChar.scale).to({ y: 1.0, z:1.0 }, 200).easing(TWEEN.Easing.Bounce.Out)).start();
                 }
-            } else { // Incorrect key
+            } else {
                 currentErrorsThisSession++;
                 sessionStats.score -= 5;
                 sessionStats.errors[currentTypedIdx] = true;
@@ -937,15 +1015,11 @@
                         .start();
                 }
             }
-
-            // --- For Debugging the Red Highlight Issue ---
-            // Uncomment this to see what error state was recorded for the character
             /*
             console.log(
                 `[Input Debug] Recorded error for index ${currentTypedIdx}: ${sessionStats.errors[currentTypedIdx]}`
             );
             */
-
             currentTypedIdx++;
             updateTypingAreaDisplay();
 
@@ -1076,40 +1150,27 @@
         }
 
         // --- Event Handlers ---
-        document.getElementById('uiLanguageSelect').addEventListener('change', async (e) => {
-            currentLang = e.target.value;
-            localStorage.setItem('typeMasterLang', currentLang);
-            applyLocalization();
-            if (currentProfile) {
-                currentProfile.language = currentLang;
-                try { await saveProfileData(currentProfile); } catch (err) { console.error("Error saving profile lang:", err); }
+        document.getElementById('goToCreateProfileBtn').addEventListener('click', displayCreateProfileScreen);
+        document.getElementById('backToProfileSelectFromCreateBtn').addEventListener('click', () => showUIScreen('profileScreen', 'createProfileScreen'));
 
-                const activeOverlay = document.querySelector('.ui-overlay[style*="display: flex"]');
-                if (activeOverlay) {
-                    if (activeOverlay.id === 'lessonSelectScreen') displayLessonSelectScreen();
-                    else if (activeOverlay.id === 'lessonIntroScreen' && currentLessonData) displayLessonIntroScreen(currentLessonIdx);
-                    else if (activeOverlay.id === 'progressScreen') displayProgressScreen();
-                }
-            }
-        });
-
-        document.getElementById('createProfileBtn').addEventListener('click', async () => {
-            const name = document.getElementById('newProfileInputName').value.trim();
+        document.getElementById('confirmCreateProfileBtn').addEventListener('click', async () => {
+            const name = document.getElementById('newProfileInputName_create').value.trim();
             if (!name) { alert(_t("profile_name_placeholder")); return; }
-            const layout = document.getElementById('keyboardLayoutSelect').value;
-            const lang = document.getElementById('uiLanguageSelect').value;
-            const speed = document.getElementById('typingSpeedSelect').value;
+            const layout = document.getElementById('keyboardLayoutSelect_create').value;
+            const lang = document.getElementById('uiLanguageSelect_create').value;
+            const speed = document.getElementById('typingSpeedSelect_create').value;
             const profileId = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
 
             currentProfile = {
                 id: profileId, name: name, keyboardLayout: layout, language: lang,
-                typingSpeedSetting: speed, // Save the typing speed
+                typingSpeedSetting: speed,
                 progress: { highestLessonUnlocked: -1, lessonStats: {} }
             };
 
             try {
                 await saveProfileData(currentProfile);
                 currentLang = lang;
+                localStorage.setItem('typeMasterLang', currentLang); // Persist lang choice
                 applyLocalization();
                 generateLessons();
                 displayLessonSelectScreen();
@@ -1121,36 +1182,78 @@
 
         document.getElementById('loadProfileBtn').addEventListener('click', async () => {
             const profileId = document.getElementById('profileSelect').value;
-            if (!profileId) { alert(_t("profile_select_create")); return; }
+            if (!profileId) { alert(_t("profile_select_info")); return; }
 
             try {
                 currentProfile = await getProfileData(profileId);
                 if (currentProfile) {
                     currentLang = currentProfile.language || 'en';
-                    document.getElementById('uiLanguageSelect').value = currentLang;
-                    // For existing profiles, default typingSpeedSetting if not present
-                    if (typeof currentProfile.typingSpeedSetting === 'undefined') {
-                        currentProfile.typingSpeedSetting = 'normal';
-                    }
-                    // Note: We don't update the #typingSpeedSelect here as it's for new profile creation
-                    // If we add a profile settings screen, that's where it would be reflected/changed.
+                    localStorage.setItem('typeMasterLang', currentLang); // Persist loaded lang
 
+                    if (typeof currentProfile.typingSpeedSetting === 'undefined') {
+                        currentProfile.typingSpeedSetting = 'normal'; // Default for older profiles
+                    }
                     applyLocalization();
                     generateLessons();
                     displayLessonSelectScreen();
-                    document.getElementById('viewProgressBtnMain').style.display = 'inline-block';
                 } else {
-                    alert("Profile not found.");
-                    document.getElementById('viewProgressBtnMain').style.display = 'none';
+                    alert("Profile not found."); currentProfile = null;
                 }
             } catch (e) {
                 alert(_t("error_title") + ": " + (e.message || "Error loading profile."));
-                document.getElementById('viewProgressBtnMain').style.display = 'none';
                 currentProfile = null;
             }
         });
 
-        document.getElementById('viewProgressBtnMain').addEventListener('click', () => displayProgressScreen());
+        document.getElementById('goToSettingsBtn').addEventListener('click', displaySettingsScreen);
+        document.getElementById('backFromSettingsBtn').addEventListener('click', () => showUIScreen('lessonSelectScreen', 'settingsScreen'));
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            if (!currentProfile) return;
+
+            const oldLang = currentProfile.language;
+            const oldLayout = currentProfile.keyboardLayout;
+
+            currentProfile.keyboardLayout = document.getElementById('settingsKeyboardLayoutSelect').value;
+            currentProfile.language = document.getElementById('settingsUiLanguageSelect').value;
+            currentProfile.typingSpeedSetting = document.getElementById('settingsTypingSpeedSelect').value;
+
+            try {
+                await saveProfileData(currentProfile);
+                currentLang = currentProfile.language;
+                localStorage.setItem('typeMasterLang', currentLang); // Persist new lang choice
+
+                let refreshLessons = (oldLayout !== currentProfile.keyboardLayout);
+                let refreshLang = (oldLang !== currentProfile.language);
+
+                if (refreshLang) {
+                    applyLocalization(); // Apply first
+                }
+                if (refreshLessons) {
+                    generateLessons();
+                }
+                // Always go back to lesson select, it will re-render if lessons/lang changed
+                displayLessonSelectScreen();
+                 // If only speed changed, lesson intro needs an update if it was the last screen
+                if (!refreshLang && !refreshLessons && lastActiveScreen === 'lessonIntroScreen' && currentLessonData) {
+                    displayLessonIntroScreen(currentLessonIdx);
+                } else {
+                    showUIScreen('lessonSelectScreen', 'settingsScreen');
+                }
+
+            } catch (e) {
+                alert(_t("error_title") + ": " + (e.message || "Error saving settings."));
+            }
+        });
+
+
+        document.getElementById('uiLanguageSelect_create').addEventListener('change', (e) => {
+            currentLang = e.target.value; // Update currentLang as user changes it on create screen
+            localStorage.setItem('typeMasterLang', currentLang);
+            applyLocalization(); // Re-apply to the create screen itself
+        });
+
+
         document.getElementById('viewProgressBtnLessons').addEventListener('click', () => displayProgressScreen());
         document.getElementById('backFromProgressBtn').addEventListener('click', () => showUIScreen(lastActiveScreen || 'lessonSelectScreen'));
         document.getElementById('backToProfilesBtn').addEventListener('click', () => showUIScreen('profileScreen', 'lessonSelectScreen'));
@@ -1192,7 +1295,6 @@
                     let importedCount = 0;
                     for (const profile of profilesToImport) {
                         if (profile.id && profile.name && profile.keyboardLayout && profile.progress) {
-                             // Default typingSpeedSetting for imported profiles if missing
                             if (typeof profile.typingSpeedSetting === 'undefined') {
                                 profile.typingSpeedSetting = 'normal';
                             }
