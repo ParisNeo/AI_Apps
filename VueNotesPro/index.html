@@ -20,146 +20,71 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            overscroll-behavior-y: contain; /* Prevents pull-to-refresh on mobile */
+            overscroll-behavior-y: contain;
         }
 
-        /* Base scrollbar styles (will be overridden by theme logic in JS) */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f1f1f1; /* scrollbar-theme-marker */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #888;
+            background: #888; /* scrollbar-theme-marker */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #555; /* scrollbar-theme-marker */
         }
 
         [v-cloak] {
             display: none;
         }
 
-        /* Markdown Content Styling */
-        .markdown-content p {
-            margin-bottom: 0.5em;
-        }
+        .markdown-content p { margin-bottom: 0.5em; }
         .markdown-content h1,
         .markdown-content h2,
-        .markdown-content h3 {
-            margin-top: 1em;
-            margin-bottom: 0.5em;
-            font-weight: bold;
-        }
+        .markdown-content h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
         .markdown-content ul,
-        .markdown-content ol {
-            margin-left: 1.5em; /* LTR default */
-            margin-right: 0;    /* LTR default */
-            margin-bottom: 0.5em;
-        }
+        .markdown-content ol { margin-left: 1.5em; margin-right: 0; margin-bottom: 0.5em; }
         html[dir="rtl"] .markdown-content ul,
-        html[dir="rtl"] .markdown-content ol {
-            margin-right: 1.5em; /* RTL override */
-            margin-left: 0;      /* RTL override */
-        }
-        .markdown-content pre {
-            background-color: #f0f0f0; /* Light theme default for pre */
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-            text-align: left; /* Keep code blocks LTR even in RTL */
-        }
-        .dark .markdown-content pre {
-            background-color: #1f2937; /* Dark theme for pre */
-            color: #d1d5db;
-        }
-        .markdown-content code { /* Inline code */
-            background-color: #f0f0f0; /* Light theme default for inline code */
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        .dark .markdown-content code { /* Dark theme for inline code */
-            background-color: #374151;
-            color: #e5e7eb;
-        }
-        .markdown-content pre code { /* Code within pre, reset background */
-            background-color: transparent;
-            padding: 0;
-        }
-        .markdown-content blockquote {
-            border-left: 4px solid #ccc; /* LTR default */
-            padding-left: 10px;         /* LTR default */
-            margin-left: 0;             /* LTR default */
-            border-right: none;         /* LTR default */
-            padding-right: 0;           /* LTR default */
-            color: #666;
-        }
-        html[dir="rtl"] .markdown-content blockquote {
-            border-right: 4px solid #ccc; /* RTL override */
-            padding-right: 10px;          /* RTL override */
-            margin-right: 0;              /* RTL override */
-            border-left: none;            /* RTL override */
-            padding-left: 0;              /* RTL override */
-        }
-        .dark .markdown-content blockquote {
-            border-color: #4b5563;
-            color: #9ca3af;
-        }
-        .markdown-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 1em;
-        }
+        html[dir="rtl"] .markdown-content ol { margin-right: 1.5em; margin-left: 0; }
+        .markdown-content pre { background-color: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto; text-align: left; }
+        .dark .markdown-content pre { background-color: #1f2937; color: #d1d5db; }
+        .markdown-content code { background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        .dark .markdown-content code { background-color: #374151; color: #e5e7eb; }
+        .markdown-content pre code { background-color: transparent; padding: 0; }
+        .markdown-content blockquote { border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0; border-right: none; padding-right: 0; color: #666; }
+        html[dir="rtl"] .markdown-content blockquote { border-right: 4px solid #ccc; padding-right: 10px; margin-right: 0; border-left: none; padding-left: 0; }
+        .dark .markdown-content blockquote { border-color: #4b5563; color: #9ca3af; }
+        .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
         .markdown-content th,
-        .markdown-content td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+        .markdown-content td { border: 1px solid #ddd; padding: 8px; }
         .dark .markdown-content th,
-        .dark .markdown-content td {
-            border: 1px solid #4b5563;
-        }
-        .markdown-content th {
-            background-color: #f9f9f9;
-        }
-        .dark .markdown-content th {
-            background-color: #374151;
-        }
+        .dark .markdown-content td { border: 1px solid #4b5563; }
+        .markdown-content th { background-color: #f9f9f9; }
+        .dark .markdown-content th { background-color: #374151; }
 
-        /* FAB and SVG Icons */
-        .fab-button {
-            z-index: 35; /* Below header (40) and modals (50) */
+        .fab-button { z-index: 35; }
+        .svg-icon { width: 1em; height: 1em; display: inline-block; vertical-align: middle; }
+        .svg-icon-sm { width: 0.875em; height: 0.875em; }
+        .svg-icon-lg { width: 1.25em; height: 1.25em; }
+        .svg-icon-xl { width: 1.5em; height: 1.5em; }
+        .svg-icon-2xl { width: 2.5em; height: 2.5em; }
+        
+        /* Ensure checkbox click doesn't propagate to card click */
+        .note-card-checkbox {
+            pointer-events: all; /* Allow clicks on checkbox */
         }
-        .svg-icon {
-            width: 1em;
-            height: 1em;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        .svg-icon-sm {
-            width: 0.875em;
-            height: 0.875em;
-        }
-        .svg-icon-lg {
-            width: 1.25em;
-            height: 1.25em;
-        }
-        .svg-icon-xl {
-            width: 1.5em;
-            height: 1.5em;
-        }
-        .svg-icon-2xl {
-            width: 2.5em;
-            height: 2.5em;
+        .note-card {
+            cursor: pointer; /* Indicate card is clickable */
         }
     </style>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Enable dark mode based on class
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -167,10 +92,10 @@
                         'primary-dark': 'rgb(var(--color-primary-dark) / <alpha-value>)',
                         secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
                         accent: 'rgb(var(--color-accent) / <alpha-value>)',
-                        light: 'rgb(var(--color-light) / <alpha-value>)', // Page background in light mode
-                        dark: 'rgb(var(--color-dark) / <alpha-value>)',   // Page background in dark mode
-                        'text-light': 'rgb(var(--color-text-light) / <alpha-value>)', // Text on dark backgrounds
-                        'text-dark': 'rgb(var(--color-text-dark) / <alpha-value>)',   // Text on light backgrounds
+                        light: 'rgb(var(--color-light) / <alpha-value>)',
+                        dark: 'rgb(var(--color-dark) / <alpha-value>)',
+                        'text-light': 'rgb(var(--color-text-light) / <alpha-value>)',
+                        'text-dark': 'rgb(var(--color-text-dark) / <alpha-value>)',
                         'border-color': 'rgb(var(--color-border) / <alpha-value>)',
                     },
                     animation: {
@@ -179,18 +104,9 @@
                         'slide-in-right': 'slideInRight 0.3s ease-out',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: 0 },
-                            '100%': { opacity: 1 },
-                        },
-                        slideInLeft: { // For LTR sidebar
-                            '0%': { transform: 'translateX(-100%)' },
-                            '100%': { transform: 'translateX(0)' },
-                        },
-                        slideInRight: { // For RTL sidebar
-                            '0%': { transform: 'translateX(100%)' },
-                            '100%': { transform: 'translateX(0)' },
-                        }
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 }, },
+                        slideInLeft: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(0)' }, },
+                        slideInRight: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(0)' }, }
                     }
                 }
             },
@@ -198,7 +114,7 @@
         }
     </script>
 </head>
-<body class="bg-light antialiased"> <!-- text color set by JS theme logic -->
+<body class="bg-light antialiased">
     <div id="app" v-cloak class="flex flex-col min-h-screen">
         <title>{{ t('appTitle') }}</title>
 
@@ -224,16 +140,11 @@
                         <option value="fr">FR</option>
                         <option value="ar">AR</option>
                     </select>
-                    <button @click="goToNewNoteView" :title="t('newNoteTooltip')" class="md:hidden p-2 hover:bg-primary-dark rounded-full">
+                    <button v-if="activeView !== 'addNote' && activeView !== 'editNote' && activeView !== 'viewNote'" @click="goToNewNoteView" :title="t('newNoteTooltip')" class="md:hidden p-2 hover:bg-primary-dark rounded-full">
                         <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
                     </button>
                     <button @click="showImportExportModal = true" :title="t('importExportTooltip')" class="p-2 hover:bg-primary-dark rounded-full">
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 18V12M12 12L9 15M12 12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 18V12M12 12L9 15M12 12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                     <button @click="toggleTheme" :title="t('toggleThemeTooltip')" class="p-2 hover:bg-primary-dark rounded-full">
                         <svg v-if="isDarkMode" class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V4M12 20V21M4.92944 4.92944L5.63655 5.63655M18.364 18.364L19.0711 19.0711M3 12H4M20 12H21M4.92944 19.0711L5.63655 18.364M18.364 5.63655L19.0711 4.92944M12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -375,13 +286,20 @@
                     </div>
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
                         <div v-for="note in filteredNotes" :key="note.id"
-                             class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
+                             @click="viewNote(note)"
+                             class="note-card bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
                             <div class="p-5 flex-grow">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-lg font-semibold text-primary dark:text-blue-400 mb-1 break-all">{{ note.title }}</h3>
-                                    <span v-if="note.isSecret" :title="t('secretNoteTooltip')" class="ms-2 text-yellow-500 dark:text-yellow-400">
-                                        <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2z" clip-rule="evenodd"></path></svg>
-                                    </span>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-lg font-semibold text-primary dark:text-blue-400 break-all">{{ note.title }}</h3>
+                                    <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                                        <span v-if="note.isSecret" :title="t('secretNoteTooltip')" class="text-yellow-500 dark:text-yellow-400">
+                                            <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2z" clip-rule="evenodd"></path></svg>
+                                        </span>
+                                        <input type="checkbox" :checked="isNoteSelectedForExport(note.id)"
+                                               @click.stop="toggleNoteSelectionForExport(note.id, $event)"
+                                               :title="t('selectForExportTooltip')"
+                                               class="note-card-checkbox h-5 w-5 text-accent border-gray-300 dark:border-gray-600 rounded focus:ring-accent">
+                                    </div>
                                 </div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                     <span v-if="note.category" class="inline-flex items-center">
@@ -403,32 +321,83 @@
                                 <div v-if="note.isSecret && !note.decryptedContent"
                                      class="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 italic p-3 bg-gray-100 dark:bg-gray-700 rounded">
                                     {{ t('contentEncrypted') }}
-                                    <button @click="promptMasterKey('decrypt', note.id)" class="ms-2 text-accent hover:underline text-sm">{{ t('decryptButton') }}</button>
+                                    <button @click.stop="promptMasterKey('decrypt', note.id)" class="ms-2 text-accent hover:underline text-sm">{{ t('decryptButton') }}</button>
                                 </div>
                                 <div v-else v-html="renderMarkdown(note.decryptedContent || note.content)"
                                      class="prose prose-sm max-w-none text-text-dark dark:text-text-light markdown-content max-h-48 overflow-y-auto">
                                 </div>
                             </div>
                             <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-border-color dark:border-gray-600 flex items-center justify-end space-x-2 rtl:space-x-reverse">
-                                <button @click="copyToClipboard(note.decryptedContent || note.content)" :title="t('copyContentTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                                <button @click.stop="copyToClipboard(note.decryptedContent || note.content)" :title="t('copyContentTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
                                     <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg>
                                 </button>
-                                <button @click="shareNote(note)" :title="t('shareNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                                <button @click.stop="shareNote(note)" :title="t('shareNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
                                     <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
                                 </button>
-                                <button @click="editNote(note)" :title="t('editNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                                <button @click.stop="editNote(note)" :title="t('editNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
                                     <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
                                 </button>
-                                <button v-if="note.isSecret && note.decryptedContent" @click="promptMasterKey('encrypt', note.id)" :title="t('reEncryptTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">
+                                <button v-if="note.isSecret && note.decryptedContent" @click.stop="promptMasterKey('encrypt', note.id)" :title="t('reEncryptTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">
                                     <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2zM6 10h8v8H6v-8z"></path><path d="M10 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM8 6V4a2 2 0 114 0v2H8z"></path></svg>
                                 </button>
-                                <button @click="deleteNote(note.id)" :title="t('deleteNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                                <button @click.stop="deleteNote(note.id)" :title="t('deleteNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
                                     <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- View Note Full Page -->
+                <div v-if="activeView === 'viewNote' && currentViewedNote" class="animate-fade-in max-w-4xl mx-auto">
+                    <div class="mb-4 flex justify-between items-center">
+                        <button @click="goBackToList()" class="text-primary dark:text-blue-400 hover:underline flex items-center">
+                            <svg class="svg-icon me-1 rtl:ms-1 rtl:-scale-x-100" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+                            {{ t('backToList') }}
+                        </button>
+                        <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                             <button @click="copyToClipboard(currentViewedNote.decryptedContent || currentViewedNote.content)" :title="t('copyContentTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg>
+                            </button>
+                            <button @click="shareNote(currentViewedNote)" :title="t('shareNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+                            </button>
+                            <button @click="editNote(currentViewedNote)" :title="t('editNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-blue-500 dark:text-blue-400">
+                                <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <button @click="deleteNote(currentViewedNote.id); goBackToList();" :title="t('deleteNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-red-500 dark:text-red-400">
+                               <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h1 class="text-3xl font-bold text-primary dark:text-blue-400 break-all">{{ currentViewedNote.title }}</h1>
+                            <span v-if="currentViewedNote.isSecret" :title="t('secretNoteTooltip')" class="text-yellow-500 dark:text-yellow-400">
+                                <svg class="svg-icon-lg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2z" clip-rule="evenodd"></path></svg>
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            <p v-if="currentViewedNote.category">
+                                {{ t('categoryLabel').replace('(optional)', '').trim() }}: {{ currentViewedNote.category }}
+                                <span v-if="currentViewedNote.subCategory"> / {{ currentViewedNote.subCategory }}</span>
+                            </p>
+                            <p>{{ t('lastUpdatedLabel') }}: {{ formatDate(currentViewedNote.updatedAt) }}</p>
+                            <p>{{ t('createdLabel') }}: {{ formatDate(currentViewedNote.createdAt) }}</p>
+                        </div>
+
+                        <div v-if="currentViewedNote.isSecret && !currentViewedNote.decryptedContent"
+                             class="prose max-w-none text-gray-600 dark:text-gray-300 italic p-4 my-4 bg-gray-100 dark:bg-gray-700 rounded">
+                            {{ t('contentEncrypted') }}
+                            <button @click="promptMasterKey('decrypt', currentViewedNote.id)" class="ms-2 text-accent hover:underline text-sm">{{ t('decryptButton') }}</button>
+                        </div>
+                        <div v-else v-html="renderMarkdown(currentViewedNote.decryptedContent || currentViewedNote.content)"
+                             class="prose max-w-none text-text-dark dark:text-text-light markdown-content">
+                        </div>
+                    </div>
+                </div>
+
             </main>
 
             <!-- Floating Action Button (FAB) for New Note -->
@@ -463,20 +432,34 @@
 
         <!-- Import/Export Modal -->
         <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in">
                 <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">{{ t('importExportModalTitle') }}</h3>
                 <div class="space-y-4">
                     <div>
                         <h4 class="font-semibold text-text-dark dark:text-text-light">{{ t('exportNotesTitle') }}</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">{{ t('exportNotesDesc') }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                            {{ selectedNoteIdsForExport.length > 0 ? t('exportSelectedInfo', {count: selectedNoteIdsForExport.length}) : t('exportNotesDesc') }}
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                             <button @click="selectAllFilteredForExport" class="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-text-dark dark:text-text-light rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                                {{ t('selectAllVisibleButton') }}
+                            </button>
+                            <button v-if="currentCategory" @click="selectAllInCategoryForExport" class="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-text-dark dark:text-text-light rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                                {{ t('selectAllInCategoryButton', { category: currentCategory }) }}
+                            </button>
+                            <button @click="deselectAllForExport" :disabled="selectedNoteIdsForExport.length === 0" class="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 text-text-dark dark:text-text-light rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50">
+                                {{ t('deselectAllButton') }}
+                            </button>
+                        </div>
                         <button @click="exportNotes" class="w-full px-4 py-2 bg-primary text-text-light rounded-md hover:bg-primary-dark transition flex items-center justify-center">
                             <svg class="svg-icon me-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                            {{ t('exportAllButton') }}
+                            {{ selectedNoteIdsForExport.length > 0 ? t('exportSelectedButton') : t('exportAllButton') }}
                         </button>
                     </div>
                     <div>
                         <h4 class="font-semibold text-text-dark dark:text-text-light">{{ t('importNotesTitle') }}</h4>
                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">{{ t('importNotesDesc') }}</p>
+                         <p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">{{ t('importWarningOverwrite') }}</p>
                         <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-text-light hover:file:opacity-80"/>
                     </div>
                 </div>
@@ -487,23 +470,25 @@
             </div>
         </div>
 
-        <!-- App Info Modal -->
+        <!-- App Info Modal (Content largely translated, structure same) -->
         <div v-if="showAppInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-text-dark dark:text-text-light">{{ t('appInfoModalTitle', { version: '1.0' }) }}</h3>
+                    <h3 class="text-xl font-semibold text-text-dark dark:text-text-light">{{ t('appInfoModalTitle', { version: '1.1' }) }}</h3> <!-- Version bump for new features -->
                     <button @click="showAppInfoModal = false" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl">&times;</button>
                 </div>
                 <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
                     <p><strong>{{ t('authorLabel') }}:</strong> ParisNeo</p>
                     <p><strong>{{ t('categoryAppLabel') }}:</strong> {{ t('productivityCategory') }}</p>
-                    <p><strong>{{ t('descriptionLabel') }}:</strong> {{ t('appDescription') }}</p>
+                    <p><strong>{{ t('descriptionLabel') }}:</strong> {{ t('appDescriptionFull') }}</p>
                     <p><strong>{{ t('modelLabel') }}:</strong> Claude 3 Opus</p>
                     <p><strong>{{ t('disclaimerLabel') }}:</strong> {{ t('appDisclaimer') }}</p>
                     <h4 class="font-semibold mt-4">{{ t('featuresLabel') }}:</h4>
                     <ul>
                         <li>{{ t('featureCategories') }}</li>
                         <li>{{ t('featureMarkdown') }}</li>
+                        <li>{{ t('featureFullView') }}</li>
+                        <li>{{ t('featureSelectiveExport') }}</li>
                         <li>{{ t('featureImportExport') }}</li>
                         <li>{{ t('featureSocialSharing') }}</li>
                         <li>{{ t('featureSecretNotes') }}</li>
@@ -543,23 +528,19 @@
             data() {
                 return {
                     notes: [],
-                    activeView: 'notesList', // 'notesList', 'addNote', 'editNote'
+                    activeView: 'notesList', // 'notesList', 'addNote', 'editNote', 'viewNote'
                     form: {
-                        id: null,
-                        title: '',
-                        content: '',
-                        category: '',
-                        subCategory: '',
-                        isSecret: false,
-                        createdAt: null,
-                        updatedAt: null,
+                        id: null, title: '', content: '', category: '', subCategory: '',
+                        isSecret: false, createdAt: null, updatedAt: null,
                     },
+                    currentViewedNote: null, // For full note view
+                    selectedNoteIdsForExport: [], // For selective export
                     currentCategory: null,
                     currentSubCategory: null,
                     searchTerm: '',
                     showMasterKeyModal: false,
                     masterKeyInput: '',
-                    modalAction: '', // 'encrypt' or 'decrypt'
+                    modalAction: '',
                     modalNoteId: null,
                     db: null,
                     isLoading: true,
@@ -567,12 +548,8 @@
                     showImportExportModal: false,
                     showAppInfoModal: false,
                     isDarkMode: false,
-                    toast: {
-                        show: false,
-                        message: '',
-                        type: 'success' // 'success' or 'error'
-                    },
-                    currentLang: 'en', // Default language
+                    toast: { show: false, message: '', type: 'success' },
+                    currentLang: 'en',
                     translations: {
                         en: {
                             appTitle: "VueNotesPro - Advanced Note Taking",
@@ -620,8 +597,15 @@
                             exportNotesTitle: "Export Notes",
                             exportNotesDesc: "Download all your notes as a JSON file.",
                             exportAllButton: "Export All Notes",
+                            exportSelectedButton: "Export Selected Notes",
+                            exportSelectedInfo: "{count} notes selected for export.",
+                            selectAllVisibleButton: "Select All Visible",
+                            selectAllInCategoryButton: "Select All in '{category}'",
+                            deselectAllButton: "Deselect All",
+                            selectForExportTooltip: "Select for export",
                             importNotesTitle: "Import Notes",
-                            importNotesDesc: "Import notes from a JSON file. This will replace existing notes if IDs match, or add new ones.",
+                            importNotesDesc: "Import notes from a JSON file.",
+                            importWarningOverwrite: "Warning: Importing notes with existing IDs will overwrite them.",
                             closeButton: "Close",
                             appInfoModalTitle: "About VueNotesPro v{version}",
                             appInfoTooltip: "App Info",
@@ -629,13 +613,16 @@
                             categoryAppLabel: "Category",
                             productivityCategory: "Productivity",
                             descriptionLabel: "Description",
-                            appDescription: "A feature-rich, responsive note-taking web application built with Vue.js and Tailwind CSS. Supports categories, subcategories, Markdown rendering, import/export, social sharing, and client-side encryption for secret notes. All data is stored locally using IndexedDB.",
+                            appDescription: "A feature-rich, responsive note-taking web application.",
+                            appDescriptionFull: "A feature-rich, responsive note-taking web application built with Vue.js and Tailwind CSS. Supports categories, subcategories, Markdown rendering, import/export, social sharing, and client-side encryption for secret notes. All data is stored locally using IndexedDB.",
                             modelLabel: "Model used for assistance",
                             disclaimerLabel: "Disclaimer",
                             appDisclaimer: "This application stores data, including potentially encrypted secret notes, locally in your browser's IndexedDB. The master key for secret notes is NOT stored. Ensure you remember your master key, as there is no recovery mechanism. Use at your own risk.",
                             featuresLabel: "Features",
                             featureCategories: "Categories & Subcategories",
                             featureMarkdown: "Markdown input, HTML rendering",
+                            featureFullView: "Full note view",
+                            featureSelectiveExport: "Selective export of notes",
                             featureImportExport: "Import/Export notes (JSON)",
                             featureSocialSharing: "Social Sharing",
                             featureSecretNotes: "Secret notes with AES-256 encryption",
@@ -648,6 +635,7 @@
                             shortcutsLabel: "Keyboard Shortcuts (in note form)",
                             shortcutSave: "Save note",
                             deleteConfirmation: "Are you sure you want to delete this note? This action cannot be undone.",
+                            importConfirmation: "This will overwrite {count} existing note(s) with matching IDs. Continue?",
                             toastNoteSaved: "Note \"{title}\" saved.",
                             toastNoteDeleted: "Note \"{title}\" deleted.",
                             toastNoteEncrypted: "Note \"{title}\" encrypted.",
@@ -673,6 +661,9 @@
                             toastImportInvalidFile: "Please select a valid JSON file.",
                             toastAppSetupFailed: "Application setup failed. Please refresh.",
                             toggleThemeTooltip: "Toggle Theme",
+                            backToList: "Back to List",
+                            lastUpdatedLabel: "Last Updated",
+                            createdLabel: "Created",
                         },
                         fr: {
                             appTitle: "VueNotesPro - Prise de Notes Avancée",
@@ -720,8 +711,15 @@
                             exportNotesTitle: "Exporter les notes",
                             exportNotesDesc: "Téléchargez toutes vos notes en fichier JSON.",
                             exportAllButton: "Exporter toutes les notes",
+                            exportSelectedButton: "Exporter les notes sélectionnées",
+                            exportSelectedInfo: "{count} notes sélectionnées pour l'export.",
+                            selectAllVisibleButton: "Tout sélectionner (visible)",
+                            selectAllInCategoryButton: "Tout sélectionner dans '{category}'",
+                            deselectAllButton: "Tout désélectionner",
+                            selectForExportTooltip: "Sélectionner pour l'export",
                             importNotesTitle: "Importer les notes",
-                            importNotesDesc: "Importez des notes depuis un fichier JSON. Cela remplacera les notes existantes si les ID correspondent, ou en ajoutera de nouvelles.",
+                            importNotesDesc: "Importez des notes depuis un fichier JSON.",
+                            importWarningOverwrite: "Attention : L'importation de notes avec des ID existants les écrasera.",
                             closeButton: "Fermer",
                             appInfoModalTitle: "À propos de VueNotesPro v{version}",
                             appInfoTooltip: "Infos de l'App",
@@ -729,13 +727,16 @@
                             categoryAppLabel: "Catégorie",
                             productivityCategory: "Productivité",
                             descriptionLabel: "Description",
-                            appDescription: "Une application web de prise de notes riche en fonctionnalités, réactive, construite avec Vue.js et Tailwind CSS. Prend en charge les catégories, sous-catégories, le rendu Markdown, l'import/export, le partage social et le chiffrement côté client pour les notes secrètes. Toutes les données sont stockées localement avec IndexedDB.",
+                            appDescription: "Une application web de prise de notes riche en fonctionnalités et réactive.",
+                            appDescriptionFull: "Une application web de prise de notes riche en fonctionnalités, réactive, construite avec Vue.js et Tailwind CSS. Prend en charge les catégories, sous-catégories, le rendu Markdown, l'import/export, le partage social et le chiffrement côté client pour les notes secrètes. Toutes les données sont stockées localement avec IndexedDB.",
                             modelLabel: "Modèle utilisé pour l'assistance",
                             disclaimerLabel: "Avertissement",
                             appDisclaimer: "Cette application stocke les données, y compris les notes secrètes potentiellement chiffrées, localement dans l'IndexedDB de votre navigateur. La clé maîtresse pour les notes secrètes N'EST PAS stockée. Assurez-vous de vous souvenir de votre clé maîtresse, car il n'y a pas de mécanisme de récupération. Utilisez à vos risques et périls.",
                             featuresLabel: "Fonctionnalités",
                             featureCategories: "Catégories & Sous-catégories",
                             featureMarkdown: "Saisie Markdown, rendu HTML",
+                            featureFullView: "Vue complète des notes",
+                            featureSelectiveExport: "Exportation sélective des notes",
                             featureImportExport: "Import/Export de notes (JSON)",
                             featureSocialSharing: "Partage Social",
                             featureSecretNotes: "Notes secrètes avec chiffrement AES-256",
@@ -748,6 +749,7 @@
                             shortcutsLabel: "Raccourcis Clavier (formulaire de note)",
                             shortcutSave: "Enregistrer la note",
                             deleteConfirmation: "Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.",
+                            importConfirmation: "Cela écrasera {count} note(s) existante(s) avec des ID correspondants. Continuer ?",
                             toastNoteSaved: "Note \"{title}\" enregistrée.",
                             toastNoteDeleted: "Note \"{title}\" supprimée.",
                             toastNoteEncrypted: "Note \"{title}\" chiffrée.",
@@ -773,6 +775,9 @@
                             toastImportInvalidFile: "Veuillez sélectionner un fichier JSON valide.",
                             toastAppSetupFailed: "Échec de la configuration de l'application. Veuillez rafraîchir.",
                             toggleThemeTooltip: "Changer de Thème",
+                            backToList: "Retour à la liste",
+                            lastUpdatedLabel: "Dernière mise à jour",
+                            createdLabel: "Créé le",
                         },
                         ar: {
                             appTitle: "VueNotesPro - تدوين ملاحظات متقدم",
@@ -820,8 +825,15 @@
                             exportNotesTitle: "تصدير الملاحظات",
                             exportNotesDesc: "قم بتنزيل جميع ملاحظاتك كملف JSON.",
                             exportAllButton: "تصدير كل الملاحظات",
+                            exportSelectedButton: "تصدير الملاحظات المحددة",
+                            exportSelectedInfo: "تم تحديد {count} ملاحظات للتصدير.",
+                            selectAllVisibleButton: "تحديد الكل (المرئي)",
+                            selectAllInCategoryButton: "تحديد الكل في '{category}'",
+                            deselectAllButton: "إلغاء تحديد الكل",
+                            selectForExportTooltip: "تحديد للتصدير",
                             importNotesTitle: "استيراد الملاحظات",
-                            importNotesDesc: "استورد الملاحظات من ملف JSON. سيؤدي هذا إلى استبدال الملاحظات الحالية إذا تطابقت المعرفات، أو إضافة ملاحظات جديدة.",
+                            importNotesDesc: "استورد الملاحظات من ملف JSON.",
+                            importWarningOverwrite: "تحذير: استيراد ملاحظات بمعرفات موجودة سيؤدي إلى الكتابة فوقها.",
                             closeButton: "إغلاق",
                             appInfoModalTitle: "حول VueNotesPro الإصدار {version}",
                             appInfoTooltip: "معلومات التطبيق",
@@ -829,13 +841,16 @@
                             categoryAppLabel: "الفئة",
                             productivityCategory: "إنتاجية",
                             descriptionLabel: "الوصف",
-                            appDescription: "تطبيق ويب لتدوين الملاحظات غني بالميزات وسريع الاستجابة، مبني باستخدام Vue.js و Tailwind CSS. يدعم الفئات والفئات الفرعية وعرض Markdown والاستيراد/التصدير والمشاركة الاجتماعية والتشفير من جانب العميل للملاحظات السرية. يتم تخزين جميع البيانات محليًا باستخدام IndexedDB.",
+                            appDescription: "تطبيق ويب لتدوين الملاحظات غني بالميزات وسريع الاستجابة.",
+                            appDescriptionFull: "تطبيق ويب لتدوين الملاحظات غني بالميزات وسريع الاستجابة، مبني باستخدام Vue.js و Tailwind CSS. يدعم الفئات والفئات الفرعية وعرض Markdown والاستيراد/التصدير والمشاركة الاجتماعية والتشفير من جانب العميل للملاحظات السرية. يتم تخزين جميع البيانات محليًا باستخدام IndexedDB.",
                             modelLabel: "النموذج المستخدم للمساعدة",
                             disclaimerLabel: "إخلاء مسؤولية",
                             appDisclaimer: "يقوم هذا التطبيق بتخزين البيانات، بما في ذلك الملاحظات السرية المشفرة المحتملة، محليًا في IndexedDB الخاص بمتصفحك. لا يتم تخزين المفتاح الرئيسي للملاحظات السرية. تأكد من تذكر مفتاحك الرئيسي، حيث لا يوجد آلية استرداد. استخدم على مسؤوليتك الخاصة.",
                             featuresLabel: "الميزات",
                             featureCategories: "الفئات والفئات الفرعية",
                             featureMarkdown: "إدخال Markdown، عرض HTML",
+                            featureFullView: "عرض كامل للملاحظة",
+                            featureSelectiveExport: "تصدير انتقائي للملاحظات",
                             featureImportExport: "استيراد/تصدير الملاحظات (JSON)",
                             featureSocialSharing: "المشاركة الاجتماعية",
                             featureSecretNotes: "ملاحظات سرية بتشفير AES-256",
@@ -848,6 +863,7 @@
                             shortcutsLabel: "اختصارات لوحة المفاتيح (في نموذج الملاحظة)",
                             shortcutSave: "حفظ الملاحظة",
                             deleteConfirmation: "هل أنت متأكد أنك تريد حذف هذه الملاحظة؟ هذا الإجراء لا يمكن التراجع عنه.",
+                            importConfirmation: "سيؤدي هذا إلى الكتابة فوق {count} ملاحظة (ملاحظات) موجودة بمعرفات متطابقة. متابعة؟",
                             toastNoteSaved: "تم حفظ الملاحظة \"{title}\".",
                             toastNoteDeleted: "تم حذف الملاحظة \"{title}\".",
                             toastNoteEncrypted: "تم تشفير الملاحظة \"{title}\".",
@@ -873,31 +889,14 @@
                             toastImportInvalidFile: "الرجاء تحديد ملف JSON صالح.",
                             toastAppSetupFailed: "فشل إعداد التطبيق. الرجاء التحديث.",
                             toggleThemeTooltip: "تبديل السمة",
+                            backToList: "العودة إلى القائمة",
+                            lastUpdatedLabel: "آخر تحديث",
+                            createdLabel: "أنشئت في",
                         }
                     },
                     themeColors: {
-                        light: {
-                            primary: '29, 78, 216',        // e.g., Blue-700
-                            'primary-dark': '30, 64, 175', // e.g., Blue-800 (for hover)
-                            secondary: '243, 244, 246',    // e.g., Gray-100 (sidebar bg)
-                            accent: '234, 179, 8',         // e.g., Yellow-500 (selected items, highlights)
-                            light: '249, 250, 251',        // e.g., Gray-50 (page bg)
-                            dark: '17, 24, 39',            // e.g., Gray-900 (used for dark mode text on light bg)
-                            'text-light': '243, 244, 246', // e.g., Gray-100 (text on dark primary/accent)
-                            'text-dark': '31, 41, 55',     // e.g., Gray-800 (main text on light bg)
-                            'border-color': '209, 213, 219' // e.g., Gray-300
-                        },
-                        dark: {
-                            primary: '37, 99, 235',        // e.g., Blue-600
-                            'primary-dark': '29, 78, 216', // e.g., Blue-700 (for hover)
-                            secondary: '31, 41, 55',       // e.g., Gray-800 (sidebar bg)
-                            accent: '202, 138, 4',         // e.g., Yellow-600 (selected items, highlights)
-                            light: '17, 24, 39',           // e.g., Gray-900 (page bg) - also the value for 'dark' in light theme
-                            dark: '243, 244, 246',         // e.g., Gray-100 (used for light mode text on dark bg) - also 'text-light' in light theme
-                            'text-light': '229, 231, 235', // e.g., Gray-200 (main text on dark bg)
-                            'text-dark': '17, 24, 39',     // e.g., Gray-900 (text on light primary/accent)
-                            'border-color': '55, 65, 81'   // e.g., Gray-700
-                        }
+                        light: { primary: '29, 78, 216', 'primary-dark': '30, 64, 175', secondary: '243, 244, 246', accent: '234, 179, 8', light: '249, 250, 251', dark: '17, 24, 39', 'text-light': '243, 244, 246', 'text-dark': '31, 41, 55', 'border-color': '209, 213, 219' },
+                        dark: { primary: '37, 99, 235', 'primary-dark': '29, 78, 216', secondary: '31, 41, 55', accent: '202, 138, 4', light: '17, 24, 39', dark: '243, 244, 246', 'text-light': '229, 231, 235', 'text-dark': '17, 24, 39', 'border-color': '55, 65, 81' }
                     }
                 };
             },
@@ -940,13 +939,20 @@
                         }
                     });
                     return Array.from(subCategories).sort();
+                },
+                isNoteSelectedForExport() {
+                    return (noteId) => this.selectedNoteIdsForExport.includes(noteId);
+                },
+                areAllFilteredSelectedForExport() {
+                    if (this.filteredNotes.length === 0) return false;
+                    return this.filteredNotes.every(note => this.selectedNoteIdsForExport.includes(note.id));
                 }
             },
             methods: {
                 t(key, params = {}) {
                     let string = (this.translations[this.currentLang] && this.translations[this.currentLang][key]) ||
                                  (this.translations.en && this.translations.en[key]) ||
-                                 key; // Fallback to key if not found
+                                 key;
                     for (const param in params) {
                         string = string.replace(new RegExp(`{${param}}`, 'g'), params[param]);
                     }
@@ -956,30 +962,65 @@
                     localStorage.setItem('vueNotesProLang', this.currentLang);
                     document.documentElement.setAttribute('lang', this.currentLang);
                     document.documentElement.setAttribute('dir', this.isRTL ? 'rtl' : 'ltr');
-                    this.applyBodyTextColor(); // Ensure body text color updates with theme and lang context
+                    this.applyBodyTextColor();
                 },
                 loadLanguage() {
                     const savedLang = localStorage.getItem('vueNotesProLang');
                     if (savedLang && this.translations[savedLang]) {
                         this.currentLang = savedLang;
                     }
-                    // Initial application of lang and dir attributes
                     document.documentElement.setAttribute('lang', this.currentLang);
                     document.documentElement.setAttribute('dir', this.isRTL ? 'rtl' : 'ltr');
                 },
                 applyBodyTextColor() {
                      const body = document.querySelector('body');
                     if (this.isDarkMode) {
-                        body.classList.remove('text-text-dark');
-                        body.classList.add('text-text-light');
-                        body.classList.remove('bg-light'); // Ensure correct bg for dark
-                        body.classList.add('bg-dark');
+                        body.classList.remove('text-text-dark', 'bg-light');
+                        body.classList.add('text-text-light', 'bg-dark');
                     } else {
-                        body.classList.remove('text-text-light');
-                        body.classList.add('text-text-dark');
-                        body.classList.remove('bg-dark'); // Ensure correct bg for light
-                        body.classList.add('bg-light');
+                        body.classList.remove('text-text-light', 'bg-dark');
+                        body.classList.add('text-text-dark', 'bg-light');
                     }
+                },
+                viewNote(note) {
+                    this.currentViewedNote = note;
+                    // If the note is secret and not yet decrypted for viewing, attempt to decrypt
+                    if (note.isSecret && note.encryptedContent && !note.decryptedContent) {
+                         this.promptMasterKey('decrypt', note.id); // Will update currentViewedNote.decryptedContent on success
+                    }
+                    this.activeView = 'viewNote';
+                    this.showSidebar = false; // Hide sidebar in full note view
+                },
+                goBackToList() {
+                    this.activeView = 'notesList';
+                    this.currentViewedNote = null;
+                },
+                toggleNoteSelectionForExport(noteId, event) {
+                    // event.stopPropagation(); // Already handled by @click.stop on checkbox
+                    const index = this.selectedNoteIdsForExport.indexOf(noteId);
+                    if (index > -1) {
+                        this.selectedNoteIdsForExport.splice(index, 1);
+                    } else {
+                        this.selectedNoteIdsForExport.push(noteId);
+                    }
+                },
+                selectAllFilteredForExport() {
+                    this.filteredNotes.forEach(note => {
+                        if (!this.selectedNoteIdsForExport.includes(note.id)) {
+                            this.selectedNoteIdsForExport.push(note.id);
+                        }
+                    });
+                },
+                deselectAllForExport() {
+                    this.selectedNoteIdsForExport = [];
+                },
+                selectAllInCategoryForExport() {
+                    if (!this.currentCategory) return;
+                    this.notes.forEach(note => {
+                        if (note.category === this.currentCategory && !this.selectedNoteIdsForExport.includes(note.id)) {
+                            this.selectedNoteIdsForExport.push(note.id);
+                        }
+                    });
                 },
                 goToNewNoteView() {
                     this.setActiveView('addNote');
@@ -999,7 +1040,7 @@
                         document.documentElement.classList.remove('dark');
                     }
                     this.isDarkMode = theme === 'dark';
-                    this.applyBodyTextColor(); // Update body classes for theme
+                    this.applyBodyTextColor();
                     localStorage.setItem('vueNotesProTheme', theme);
 
                     const styleSheet = document.styleSheets[0];
@@ -1036,344 +1077,231 @@
                 initDB() {
                     return new Promise((resolve, reject) => {
                         const request = indexedDB.open('VueNotesProDB', 1);
-                        request.onerror = (event) => {
-                            console.error("Database error:", event.target.errorCode);
-                            this.showToast(this.t('toastErrorDbInit'), 'error');
-                            reject("Error initializing database.");
-                        };
-                        request.onsuccess = (event) => {
-                            this.db = event.target.result;
-                            console.log("Database initialized successfully.");
-                            resolve();
-                        };
+                        request.onerror = (event) => { console.error("Database error:", event.target.errorCode); this.showToast(this.t('toastErrorDbInit'), 'error'); reject("Error initializing database."); };
+                        request.onsuccess = (event) => { this.db = event.target.result; console.log("Database initialized."); resolve(); };
                         request.onupgradeneeded = (event) => {
                             const db = event.target.result;
-                            if (!db.objectStoreNames.contains('notes')) {
-                                db.createObjectStore('notes', { keyPath: 'id' });
-                                console.log("Notes object store created.");
-                            }
+                            if (!db.objectStoreNames.contains('notes')) { db.createObjectStore('notes', { keyPath: 'id' }); }
                         };
                     });
                 },
                 async loadNotes() {
                     this.isLoading = true;
-                    if (!this.db) {
-                        this.showToast(this.t('toastErrorDbNotReady'), 'error');
-                        this.isLoading = false;
-                        return;
-                    }
-                    const transaction = this.db.transaction(['notes'], 'readonly');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.getAll();
-
-                    request.onsuccess = (event) => {
-                        this.notes = event.target.result.map(note => ({
-                            ...note,
-                            decryptedContent: null
-                        }));
+                    if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); this.isLoading = false; return; }
+                    const tx = this.db.transaction(['notes'], 'readonly');
+                    const store = tx.objectStore('notes');
+                    const req = store.getAll();
+                    req.onsuccess = (event) => {
+                        this.notes = event.target.result.map(note => ({ ...note, decryptedContent: null }));
                         this.isLoading = false;
                     };
-                    request.onerror = (event) => {
-                        console.error("Error loading notes:", event.target.errorCode);
-                        this.showToast(this.t('toastErrorLoadingNotes'), 'error');
-                        this.isLoading = false;
-                    };
+                    req.onerror = (event) => { console.error("Error loading notes:", event.target.errorCode); this.showToast(this.t('toastErrorLoadingNotes'), 'error'); this.isLoading = false; };
                 },
                 async saveNoteToDB(note) {
-                    if (!this.db) {
-                        this.showToast(this.t('toastErrorDbNotReady'), 'error');
-                        return;
-                    }
-                    const noteToSave = { ...note };
-                    delete noteToSave.decryptedContent;
-
-                    const transaction = this.db.transaction(['notes'], 'readwrite');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.put(noteToSave);
-                    
-                    request.onerror = (event) => {
-                        console.error("Error saving note:", event.target.errorCode);
-                        this.showToast(this.t('toastErrorSavingNote', {title: noteToSave.title}), 'error');
-                    };
+                    if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); return; }
+                    const noteToSave = { ...note }; delete noteToSave.decryptedContent;
+                    const tx = this.db.transaction(['notes'], 'readwrite');
+                    const store = tx.objectStore('notes');
+                    store.put(noteToSave).onerror = (event) => { this.showToast(this.t('toastErrorSavingNote', {title: noteToSave.title}), 'error'); };
                 },
                 async deleteNoteFromDB(noteId) {
-                    if (!this.db) {
-                        this.showToast(this.t('toastErrorDbNotReady'), 'error');
-                        return;
-                    }
-                    const transaction = this.db.transaction(['notes'], 'readwrite');
-                    const objectStore = transaction.objectStore('notes');
-                    const request = objectStore.delete(noteId);
-                    request.onerror = (event) => {
-                        console.error("Error deleting note:", event.target.errorCode);
-                        this.showToast(this.t('toastErrorDeletingNote'), 'error');
-                    };
+                    if (!this.db) { this.showToast(this.t('toastErrorDbNotReady'), 'error'); return; }
+                    const tx = this.db.transaction(['notes'], 'readwrite');
+                    tx.objectStore('notes').delete(noteId).onerror = (event) => { this.showToast(this.t('toastErrorDeletingNote'), 'error');};
                 },
-                setActiveView(view) {
-                    this.activeView = view;
-                },
-                resetForm() {
-                    this.form = {
-                        id: null, title: '', content: '', category: '', subCategory: '', isSecret: false,
-                        createdAt: null, updatedAt: null,
-                    };
-                },
+                setActiveView(view) { this.activeView = view; },
+                resetForm() { this.form = { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null }; },
                 saveNote() {
                     if (this.form.isSecret && !this.masterKeyInput && !this.form.id) {
                         this.showToast(this.t('toastMasterKeyRequiredNew'), 'info');
-                        this.promptMasterKey('encrypt', null, true);
-                        return;
+                        this.promptMasterKey('encrypt', null, true); return;
                     }
                     const now = new Date().toISOString();
                     let noteToSave;
-
-                    if (this.form.id) { // Editing existing note
+                    if (this.form.id) {
                         const index = this.notes.findIndex(n => n.id === this.form.id);
-                        if (index === -1) { console.error("Note to edit not found in array"); return; } // Should not happen
-
+                        if (index === -1) { return; }
                         noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
                         const originalNote = this.notes[index];
-
-                        // Logic for handling changes in secret status or secret content
-                        if ( (originalNote.isSecret && !this.form.isSecret) || // Was secret, now not
-                             (this.form.isSecret && this.form.content !== (originalNote.decryptedContent || originalNote.content) && !this.form.encryptedContent) // Is secret, content changed, and not yet re-encrypted
-                           ) {
-                            if (!this.form.isSecret) { // Made non-secret
+                        if ( (originalNote.isSecret && !this.form.isSecret) || (this.form.isSecret && this.form.content !== (originalNote.decryptedContent || originalNote.content) && !this.form.encryptedContent) ) {
+                            if (!this.form.isSecret) {
                                 noteToSave.content = originalNote.decryptedContent || originalNote.content;
-                                delete noteToSave.encryptedContent; // Remove encrypted content if it exists
-                            } else if (this.form.isSecret && !this.form.encryptedContent) { // Secret, content changed, needs re-encrypt
-                                 // Store current form content for re-encryption
-                                 // The promptMasterKey will use note.decryptedContent or form.content
+                                delete noteToSave.encryptedContent;
+                            } else if (this.form.isSecret && !this.form.encryptedContent) {
                                  const noteForReEncrypt = this.notes.find(n => n.id === this.form.id);
-                                 if (noteForReEncrypt) {
-                                     noteForReEncrypt.decryptedContent = this.form.content; // Temporarily store for encryption
-                                 }
-                                 this.promptMasterKey('encrypt', this.form.id);
-                                 return; // Encryption process will handle saving
+                                 if (noteForReEncrypt) noteForReEncrypt.decryptedContent = this.form.content;
+                                 this.promptMasterKey('encrypt', this.form.id); return;
                             }
                         }
                         this.notes.splice(index, 1, noteToSave);
-                    } else { // New note
-                        noteToSave = {
-                            ...this.form,
-                            id: uuid.v4(), // Use uuid.v4()
-                            createdAt: now,
-                            updatedAt: now,
-                        };
+                         // If currently viewing this note, update currentViewedNote as well
+                        if (this.currentViewedNote && this.currentViewedNote.id === noteToSave.id) {
+                            this.currentViewedNote = { ...noteToSave, decryptedContent: (noteToSave.isSecret && noteToSave.encryptedContent) ? null : noteToSave.content }; // Reset decryptedContent if re-encrypted
+                        }
+                    } else {
+                        noteToSave = { ...this.form, id: uuid.v4(), createdAt: now, updatedAt: now };
                         if (noteToSave.isSecret) {
-                             this.notes.push(noteToSave); // Add temporarily, will be updated by encryption
-                             this.promptMasterKey('encrypt', noteToSave.id);
-                             return; // Encryption process will handle proper saving
+                             this.notes.push(noteToSave);
+                             this.promptMasterKey('encrypt', noteToSave.id); return;
                         }
                         this.notes.push(noteToSave);
                     }
-                    
                     this.saveNoteToDB(noteToSave);
                     this.showToast(this.t('toastNoteSaved', {title: noteToSave.title}), 'success');
-                    this.setActiveView('notesList');
-                    this.resetForm();
-                    this.masterKeyInput = '';
+                    this.setActiveView('notesList'); this.resetForm(); this.masterKeyInput = '';
                 },
                 editNote(note) {
-                    this.form = { ...note };
-                    if (note.isSecret && note.encryptedContent) {
-                        this.form.content = ''; // Clear content, will be filled by decryption
-                        this.promptMasterKey('decrypt', note.id, true); // true indicates for editing
+                    // If called from full view, use currentViewedNote, else use passed note
+                    const noteToEdit = this.activeView === 'viewNote' ? this.currentViewedNote : note;
+                    if (!noteToEdit) return;
+
+                    this.form = { ...noteToEdit };
+                    if (noteToEdit.isSecret && noteToEdit.encryptedContent) {
+                        this.form.content = '';
+                        this.promptMasterKey('decrypt', noteToEdit.id, true); // forEditing=true
                     } else {
-                        this.form.content = note.decryptedContent || note.content;
+                        this.form.content = noteToEdit.decryptedContent || noteToEdit.content;
                         this.setActiveView('editNote');
                     }
-                     this.showSidebar = false;
+                    this.showSidebar = false;
                 },
                 cancelEdit() {
                     const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
-                    if (note && note.isSecret && note.decryptedContent) {
-                        this.promptMasterKey('encrypt', note.id);
-                    }
+                    if (note && note.isSecret && note.decryptedContent) { this.promptMasterKey('encrypt', note.id); }
                     this.resetForm();
-                    this.setActiveView('notesList');
+                    // If cancelling from an edit that was initiated from 'viewNote', go back to 'viewNote'
+                    if (this.currentViewedNote && this.currentViewedNote.id === this.form.id) {
+                        this.activeView = 'viewNote';
+                    } else {
+                        this.activeView = 'notesList';
+                    }
                 },
                 deleteNote(noteId) {
                     if (confirm(this.t('deleteConfirmation'))) {
-                        const noteIndex = this.notes.findIndex(n => n.id === noteId);
-                        if (noteIndex > -1) {
-                            const title = this.notes[noteIndex].title;
-                            this.notes.splice(noteIndex, 1);
-                            this.deleteNoteFromDB(noteId);
+                        const idx = this.notes.findIndex(n => n.id === noteId);
+                        if (idx > -1) {
+                            const title = this.notes[idx].title;
+                            this.notes.splice(idx, 1); this.deleteNoteFromDB(noteId);
                             this.showToast(this.t('toastNoteDeleted', {title: title}), 'success');
+                            if (this.currentViewedNote && this.currentViewedNote.id === noteId) {
+                                this.goBackToList(); // If deleting the currently viewed note
+                            }
                         }
                     }
                 },
-                renderMarkdown(markdownText) {
-                    if (!markdownText) return '';
-                    return DOMPurify.sanitize(marked.parse(markdownText || ''));
+                renderMarkdown(md) { return md ? DOMPurify.sanitize(marked.parse(md)) : ''; },
+                formatDate(d) {
+                    if (!d) return ''; let locale = 'en-US';
+                    if (this.currentLang === 'fr') locale = 'fr-FR'; else if (this.currentLang === 'ar') locale = 'ar-EG';
+                    try { return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });}
+                    catch (e) { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
                 },
-                formatDate(dateString) {
-                    if (!dateString) return '';
-                    let locale = 'en-US'; // Default
-                    if (this.currentLang === 'fr') locale = 'fr-FR';
-                    else if (this.currentLang === 'ar') locale = 'ar-SA'; // Example Arabic locale
-                    try {
-                         return new Date(dateString).toLocaleDateString(locale, {
-                            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        });
-                    } catch (e) { // Fallback for invalid locale or date
-                        console.warn("Date formatting error with locale:", locale, e);
-                         return new Date(dateString).toLocaleDateString('en-US', {
-                            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        });
-                    }
-                },
-                selectCategory(category) {
-                    this.currentCategory = category;
-                    this.currentSubCategory = null;
-                    this.activeView = 'notesList';
-                    this.showSidebar = false;
-                },
-                selectSubCategory(subCategory) {
-                    this.currentSubCategory = subCategory;
-                    this.activeView = 'notesList';
-                    this.showSidebar = false;
-                },
-                uniqueSubcategoriesForCategory(categoryName) {
-                    if (!categoryName) return [];
-                    const subCategories = new Set();
-                    this.notes.forEach(note => {
-                        if (note.category === categoryName && note.subCategory) {
-                            subCategories.add(note.subCategory);
-                        }
-                    });
-                    return Array.from(subCategories).sort();
+                selectCategory(cat) { this.currentCategory = cat; this.currentSubCategory = null; this.activeView = 'notesList'; this.showSidebar = false; },
+                selectSubCategory(subCat) { this.currentSubCategory = subCat; this.activeView = 'notesList'; this.showSidebar = false; },
+                uniqueSubcategoriesForCategory(catName) {
+                    if (!catName) return []; const subCats = new Set();
+                    this.notes.forEach(n => { if (n.category === catName && n.subCategory) subCats.add(n.subCategory); });
+                    return Array.from(subCats).sort();
                 },
                 promptMasterKey(action, noteId, forEditing = false) {
-                    this.modalAction = action;
-                    this.modalNoteId = noteId;
-                    this.editingAfterDecrypt = forEditing;
+                    this.modalAction = action; this.modalNoteId = noteId; this.editingAfterDecrypt = forEditing;
                     this.showMasterKeyModal = true;
-                    this.$nextTick(() => {
-                        const keyInput = this.$el.querySelector('input[type="password"]');
-                        if (keyInput) keyInput.focus();
-                    });
+                    this.$nextTick(() => { this.$el.querySelector('input[type="password"]')?.focus(); });
                 },
                 processMasterKeyAction() {
-                    if (!this.masterKeyInput) {
-                        this.showToast(this.t('toastMasterKeyEmpty'), 'error');
-                        return;
-                    }
+                    if (!this.masterKeyInput) { this.showToast(this.t('toastMasterKeyEmpty'), 'error'); return; }
                     const noteIndex = this.notes.findIndex(n => n.id === this.modalNoteId);
                     let noteToProcess = noteIndex !== -1 ? this.notes[noteIndex] : null;
 
-                    // Handle new note encryption from form context
                     if (!noteToProcess && this.modalAction === 'encrypt') {
-                        if (this.activeView === 'addNote' && this.form.isSecret && this.modalNoteId === null) { // This implies it's a brand new note from form, and saveNote called this
-                            noteToProcess = this.form; // The form is the source of truth
-                             // The ID would have been set by saveNote if it got that far, or if promptMasterKey was called first for a new secret note
-                            if (!noteToProcess.id) noteToProcess.id = uuid.v4(); // Ensure ID if not set
-                            if (!noteToProcess.createdAt) noteToProcess.createdAt = new Date().toISOString(); // Ensure creation date
-                        } else if (this.form.id === this.modalNoteId && this.form.isSecret) { // If modalNoteId matches current form ID
+                        if (this.activeView === 'addNote' && this.form.isSecret && this.modalNoteId === null) {
+                            noteToProcess = this.form;
+                            if (!noteToProcess.id) noteToProcess.id = uuid.v4();
+                            if (!noteToProcess.createdAt) noteToProcess.createdAt = new Date().toISOString();
+                        } else if (this.form.id === this.modalNoteId && this.form.isSecret) {
                             noteToProcess = this.form;
                         }
                     }
-
-
-                    if (!noteToProcess) {
-                        this.showToast(this.t('toastNoteNotFoundCrypto'), 'error');
-                        this.showMasterKeyModal = false;
-                        this.masterKeyInput = '';
-                        return;
+                    // Special case for decrypting the currentViewedNote
+                    if (!noteToProcess && this.modalAction === 'decrypt' && this.currentViewedNote && this.currentViewedNote.id === this.modalNoteId) {
+                        noteToProcess = this.currentViewedNote;
                     }
-                    
+
+
+                    if (!noteToProcess) { this.showToast(this.t('toastNoteNotFoundCrypto'), 'error'); this.showMasterKeyModal = false; this.masterKeyInput = ''; return; }
+
                     try {
                         if (this.modalAction === 'encrypt') {
                             const contentToEncrypt = noteToProcess.decryptedContent || (noteToProcess === this.form ? this.form.content : noteToProcess.content);
-                            if (!contentToEncrypt && noteToProcess === this.form) { // Prevent encrypting empty new notes
-                                this.showToast(this.t('toastNothingToCopy'), 'error'); // Re-use a generic "empty" message
-                                this.showMasterKeyModal = false; masterKeyInput = ''; return;
-                            }
-
+                            if (!contentToEncrypt && noteToProcess === this.form) { this.showToast(this.t('toastNothingToCopy'), 'error'); this.showMasterKeyModal = false; masterKeyInput = ''; return; }
                             const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
-                            const updatedNoteData = {
-                                encryptedContent: encrypted,
-                                content: "[[ENCRYPTED CONTENT]]", // Placeholder for DB
-                                decryptedContent: null, // Clear temp decrypted data
-                                isSecret: true, // Ensure marked secret
-                                updatedAt: new Date().toISOString()
-                            };
+                            const updatedNoteData = { encryptedContent: encrypted, content: "[[ENCRYPTED CONTENT]]", decryptedContent: null, isSecret: true, updatedAt: new Date().toISOString() };
 
-                            if (noteIndex !== -1) { // Existing note in this.notes
+                            if (noteToProcess === this.currentViewedNote) { // If encrypting the currently viewed note
+                                Object.assign(this.currentViewedNote, updatedNoteData);
+                                this.saveNoteToDB(this.currentViewedNote);
+                                this.showToast(this.t('toastNoteEncrypted', {title: this.currentViewedNote.title }), 'success');
+                            } else if (noteIndex !== -1) { // Existing note in notes array
                                 Object.assign(this.notes[noteIndex], updatedNoteData);
                                 this.saveNoteToDB(this.notes[noteIndex]);
                                 this.showToast(this.t('toastNoteEncrypted', {title: this.notes[noteIndex].title }), 'success');
-                            } else if (noteToProcess === this.form) { // New note scenario (form is the source)
-                                Object.assign(this.form, updatedNoteData); // Update form directly
-                                const newNote = { ...this.form }; // Create the note object from the form
-
+                            } else if (noteToProcess === this.form) { // New note scenario
+                                Object.assign(this.form, updatedNoteData);
+                                const newNote = { ...this.form };
                                 const existingIdxInNotes = this.notes.findIndex(n => n.id === newNote.id);
-                                if (existingIdxInNotes > -1) { // If it was temporarily pushed
-                                    this.notes.splice(existingIdxInNotes, 1, newNote);
-                                } else {
-                                     this.notes.push(newNote); // Add if truly new to the array
-                                }
+                                if (existingIdxInNotes > -1) this.notes.splice(existingIdxInNotes, 1, newNote); else this.notes.push(newNote);
                                 this.saveNoteToDB(newNote);
                                 this.showToast(this.t('toastNoteEncrypted', {title: newNote.title}), 'success');
-                                this.setActiveView('notesList');
-                                this.resetForm();
+                                this.setActiveView('notesList'); this.resetForm();
                             }
-
                         } else if (this.modalAction === 'decrypt') {
-                            if (!noteToProcess.encryptedContent) {
-                                this.showToast(this.t('contentEncrypted'), 'error'); // Re-used a general message
-                                return;
-                            }
+                            if (!noteToProcess.encryptedContent) { this.showToast(this.t('contentEncrypted'), 'error'); return; }
                             const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
                             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-                            if (!decrypted) {
-                                throw new Error("Decryption failed. Incorrect master key or corrupted data.");
-                            }
+                            if (!decrypted) throw new Error("Decryption failed.");
+
                             // Update the reactive property for display or editing
-                            if (noteIndex !== -1) { // Existing note
+                            if (noteToProcess === this.currentViewedNote) {
+                                this.currentViewedNote.decryptedContent = decrypted;
+                            } else if (noteIndex !== -1) { // Existing note in notes array
                                 this.notes[noteIndex].decryptedContent = decrypted;
-                            } else if (this.form.id === noteToProcess.id) { // Editing scenario (noteToProcess might be this.form)
+                            } else if (this.form.id === noteToProcess.id) { // Editing scenario
                                 this.form.decryptedContent = decrypted;
-                                this.form.content = decrypted; // Populate form content for editing
+                                this.form.content = decrypted;
                             }
                             
                             this.showToast(this.t('toastNoteDecrypted', {title: noteToProcess.title}), 'success');
-                            
                             if (this.editingAfterDecrypt) {
-                                this.form = { ...noteToProcess, content: decrypted }; // Make sure form is populated with the full note object + decrypted content
-                                this.setActiveView('editNote');
-                                this.editingAfterDecrypt = false; // Reset flag
+                                this.form = { ...noteToProcess, content: decrypted }; this.setActiveView('editNote'); this.editingAfterDecrypt = false;
                             }
                         }
-                    } catch (e) {
-                        console.error("Crypto action error:", e);
-                        this.showToast(this.t('toastCryptoFailed'), 'error');
-                    } finally {
-                        this.showMasterKeyModal = false;
-                        // Consider clearing masterKeyInput based on flow, e.g., not if going into edit mode.
-                        // For now, clearing it unless it's a decrypt-to-edit action.
-                        if (!(this.modalAction === 'decrypt' && this.editingAfterDecrypt)) {
-                           // this.masterKeyInput = ''; // Potentially clear, or user clears manually
-                        }
-                    }
+                    } catch (e) { console.error("Crypto error:", e); this.showToast(this.t('toastCryptoFailed'), 'error'); }
+                    finally { this.showMasterKeyModal = false; /* this.masterKeyInput = ''; */ }
                 },
                 exportNotes() {
-                    const notesToExport = JSON.parse(JSON.stringify(this.notes));
-                    notesToExport.forEach(note => delete note.decryptedContent); // Ensure no decrypted content is exported
+                    let notesToExport;
+                    if (this.selectedNoteIdsForExport.length > 0) {
+                        notesToExport = this.notes.filter(note => this.selectedNoteIdsForExport.includes(note.id));
+                    } else {
+                        notesToExport = this.notes;
+                    }
 
-                    const jsonData = JSON.stringify(notesToExport, null, 2);
+                    if (notesToExport.length === 0) {
+                        this.showToast(this.t('noNotesToExport'), 'info'); // Add this translation
+                        return;
+                    }
+
+                    const notesData = JSON.parse(JSON.stringify(notesToExport)); // Deep copy
+                    notesData.forEach(note => delete note.decryptedContent);
+
+                    const jsonData = JSON.stringify(notesData, null, 2);
                     const blob = new Blob([jsonData], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                    a.href = url; a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                     this.showToast(this.t('toastExported'), 'success');
                     this.showImportExportModal = false;
+                    this.deselectAllForExport(); // Clear selection after export
                 },
                 handleFileUpload(event) {
                     const file = event.target.files[0];
@@ -1382,131 +1310,86 @@
                         reader.onload = (e) => {
                             try {
                                 const importedNotes = JSON.parse(e.target.result);
-                                if (!Array.isArray(importedNotes)) {
-                                   throw new Error("Invalid JSON format: Not an array.");
-                                }
-                                // Basic validation of note structure
-                                importedNotes.forEach(note => {
-                                    if (!note.id || typeof note.id !== 'string' ||
-                                        !note.title || typeof note.title !== 'string' ||
-                                        (typeof note.content !== 'string' && typeof note.encryptedContent !== 'string') || // Must have one
-                                        typeof note.isSecret !== 'boolean' ||
-                                        !note.createdAt || isNaN(new Date(note.createdAt).getTime()) ||
-                                        !note.updatedAt || isNaN(new Date(note.updatedAt).getTime())
-                                    ) {
-                                        throw new Error(`Invalid note structure for note ID ${note.id || 'unknown'}.`);
+                                if (!Array.isArray(importedNotes)) throw new Error("Not an array.");
+
+                                let overwriteCount = 0;
+                                importedNotes.forEach(importedNote => {
+                                    if (this.notes.some(existingNote => existingNote.id === importedNote.id)) {
+                                        overwriteCount++;
                                     }
-                                    // Ensure dates are valid ISO strings
-                                    note.createdAt = new Date(note.createdAt).toISOString();
-                                    note.updatedAt = new Date(note.updatedAt).toISOString();
-                                    delete note.decryptedContent; // Ensure this isn't imported
+                                     // Basic validation
+                                    if (!importedNote.id || typeof importedNote.id !== 'string' || !importedNote.title || typeof importedNote.title !== 'string' || (typeof importedNote.content !== 'string' && typeof importedNote.encryptedContent !== 'string') || typeof importedNote.isSecret !== 'boolean' || !importedNote.createdAt || isNaN(new Date(importedNote.createdAt).getTime()) || !importedNote.updatedAt || isNaN(new Date(importedNote.updatedAt).getTime()) ) {
+                                        throw new Error(`Invalid note structure for note ID ${importedNote.id || 'unknown'}.`);
+                                    }
                                 });
 
-                                importedNotes.forEach(importedNote => {
-                                    const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
-                                    if (existingIndex > -1) {
-                                        this.notes.splice(existingIndex, 1, importedNote); // Replace existing
-                                    } else {
-                                        this.notes.push(importedNote); // Add new
+                                if (overwriteCount > 0) {
+                                    if (!confirm(this.t('importConfirmation', { count: overwriteCount }))) {
+                                        event.target.value = null; // Reset file input
+                                        return;
                                     }
-                                    this.saveNoteToDB(importedNote); // Save to DB
+                                }
+
+                                importedNotes.forEach(importedNote => {
+                                    importedNote.createdAt = new Date(importedNote.createdAt).toISOString();
+                                    importedNote.updatedAt = new Date(importedNote.updatedAt).toISOString();
+                                    delete importedNote.decryptedContent;
+                                    const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
+                                    if (existingIndex > -1) this.notes.splice(existingIndex, 1, importedNote); else this.notes.push(importedNote);
+                                    this.saveNoteToDB(importedNote);
                                 });
                                 this.showToast(this.t('toastImported', {count: importedNotes.length}), 'success');
                                 this.showImportExportModal = false;
-                            } catch (error) {
-                                console.error("Error importing notes:", error);
-                                this.showToast(this.t('toastImportError', {message: error.message}), 'error');
-                            } finally {
-                                event.target.value = null; // Reset file input
-                            }
+                            } catch (error) { console.error("Import error:", error); this.showToast(this.t('toastImportError', {message: error.message}), 'error'); }
+                            finally { event.target.value = null; }
                         };
                         reader.readAsText(file);
-                    } else {
-                        this.showToast(this.t('toastImportInvalidFile'), 'error');
-                         event.target.value = null; // Reset file input
-                    }
+                    } else { this.showToast(this.t('toastImportInvalidFile'), 'error'); event.target.value = null; }
                 },
                 shareNote(note) {
                     const contentToShare = note.decryptedContent || note.content;
-                    if (note.isSecret && !note.decryptedContent) {
-                        this.showToast(this.t("toastCannotShareEncrypted"), "info");
-                        return;
-                    }
-                    
-                    const title = note.title;
-                    const text = `${this.t('appName')}: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
-                    
+                    if (note.isSecret && !note.decryptedContent) { this.showToast(this.t("toastCannotShareEncrypted"), "info"); return; }
+                    const title = note.title; const text = `${this.t('appName')}: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
                     if (navigator.share) {
-                        navigator.share({
-                            title: title,
-                            text: text,
-                        })
-                        .then(() => console.log('Successful share'))
-                        .catch((error) => {
-                            console.log('Error sharing', error);
-                            this.showToast(this.t('toastFailedToShare'), 'error');
-                            this.copyToClipboardForSharing(title, text);
-                        });
-                    } else {
-                        this.copyToClipboardForSharing(title, text);
-                    }
+                        navigator.share({ title, text }).catch(e => {this.copyToClipboardForSharing(title, text);});
+                    } else { this.copyToClipboardForSharing(title, text); }
                 },
                 copyToClipboardForSharing(title, text) {
-                     const shareText = `${this.t('appName')}: "${title}"\n\n${text}`;
-                     navigator.clipboard.writeText(shareText).then(() => {
-                        this.showToast(this.t('toastShareCopied'), 'success');
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                        this.showToast(this.t('toastFailedToCopy'), 'error');
-                    });
+                     navigator.clipboard.writeText(`${this.t('appName')}: "${title}"\n\n${text}`)
+                        .then(() => this.showToast(this.t('toastShareCopied'), 'success'))
+                        .catch(() => this.showToast(this.t('toastFailedToCopy'), 'error'));
                 },
                 copyToClipboard(text) {
-                    if (!text) {
-                        this.showToast(this.t('toastNothingToCopy'), 'info');
-                        return;
-                    }
-                    navigator.clipboard.writeText(text).then(() => {
-                        this.showToast(this.t('toastCopied'), 'success');
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                        this.showToast(this.t('toastFailedToCopy'), 'error');
-                    });
+                    if (!text) { this.showToast(this.t('toastNothingToCopy'), 'info'); return; }
+                    navigator.clipboard.writeText(text)
+                        .then(() => this.showToast(this.t('toastCopied'), 'success'))
+                        .catch(() => this.showToast(this.t('toastFailedToCopy'), 'error'));
                 },
-                toggleSidebar() {
-                    this.showSidebar = !this.showSidebar;
-                },
+                toggleSidebar() { this.showSidebar = !this.showSidebar; },
                 showToast(message, type = 'success', duration = 3000) {
-                    this.toast.message = message;
-                    this.toast.type = type;
-                    this.toast.show = true;
-                    setTimeout(() => {
-                        this.toast.show = false;
-                    }, duration);
+                    this.toast = { message, type, show: true };
+                    setTimeout(() => { this.toast.show = false; }, duration);
                 },
                 handleKeyDown(event) {
                     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-                        if (this.activeView === 'addNote' || this.activeView === 'editNote') {
-                            event.preventDefault();
-                            this.saveNote();
-                        }
+                        if (this.activeView === 'addNote' || this.activeView === 'editNote') { event.preventDefault(); this.saveNote(); }
+                    }
+                    if (event.key === 'Escape') {
+                        if (this.activeView === 'viewNote') { event.preventDefault(); this.goBackToList(); }
+                        else if (this.showMasterKeyModal) { event.preventDefault(); this.showMasterKeyModal = false; this.masterKeyInput = '';}
+                        else if (this.showImportExportModal) { event.preventDefault(); this.showImportExportModal = false;}
+                        else if (this.showAppInfoModal) { event.preventDefault(); this.showAppInfoModal = false;}
                     }
                 }
             },
             async mounted() {
-                this.loadLanguage(); // Load language first
-                this.loadTheme();    // Then load theme (which might depend on body classes set by lang)
-                try {
-                    await this.initDB();
-                    await this.loadNotes();
-                } catch (error) {
-                    console.error("Error during mount:", error);
-                    this.showToast(this.t('toastAppSetupFailed'), 'error');
-                }
+                this.loadLanguage();
+                this.loadTheme();
+                try { await this.initDB(); await this.loadNotes(); }
+                catch (error) { this.showToast(this.t('toastAppSetupFailed'), 'error'); }
                 window.addEventListener('keydown', this.handleKeyDown);
             },
-            beforeUnmount() {
-                window.removeEventListener('keydown', this.handleKeyDown);
-            },
+            beforeUnmount() { window.removeEventListener('keydown', this.handleKeyDown); },
         };
 
         Vue.createApp(App).mount('#app');
