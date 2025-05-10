@@ -2,854 +2,1036 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VueNotesPro - SVG & Dark Mode</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vue.js CDN -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Marked.js (Markdown Parser) CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- DOMPurify (XSS Sanitizer) CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-    <!-- CryptoJS (Encryption) CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <!-- UUID CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Smart List</title>
+    <link rel="shortcut icon" type="image/x-icon" href="logo.ico">
+    <meta name="description" content="A simple and smart list app, great for groceries.">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --container-bg: #ffffff;
+            --container-border: #e9ecef;
+            --text-color: #212529;
+            --text-color-muted: #6c757d;
+            --accent-color: #007bff;
+            --accent-color-darker: #0056b3;
+            --done-color-bg: #e6f7ff;
+            --done-text-color: #5a6a7e;
+            --danger-color: #dc3545;
+            --danger-color-darker: #c82333;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --border-radius: 10px;
+            --header-height: 60px;
+            --quick-add-bg: #e7f3ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { height: 100%; font-size: 16px; }
         body {
-            font-family: 'Inter', sans-serif;
-            overscroll-behavior-y: contain;
+            font-family: 'Poppins', 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color); min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start; padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        [v-cloak] { display: none; }
-        .markdown-content p { margin-bottom: 0.5em; }
-        .markdown-content h1, .markdown-content h2, .markdown-content h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
-        .markdown-content ul, .markdown-content ol { margin-left: 1.5em; margin-bottom: 0.5em; }
-        .markdown-content pre { background-color: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto;}
-        .markdown-content code { background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
-        .markdown-content pre code { background-color: transparent; padding: 0; }
-        .markdown-content blockquote { border-left: 4px solid #ccc; padding-left: 10px; margin-left: 0; color: #666; }
-        .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-        .markdown-content th, .markdown-content td { border: 1px solid #ddd; padding: 8px; }
-        .markdown-content th { background-color: #f9f9f9; }
-
-        .fab-button {
-            z-index: 35;
+        html[lang="ar"] body { direction: rtl; }
+        html[lang="ar"] .app-header h1 { flex-direction: row-reverse; }
+        html[lang="ar"] .app-header h1 i { margin-left: 10px; margin-right: 0; }
+        html[lang="ar"] #add-item-form { flex-direction: row-reverse; }
+        html[lang="ar"] #add-item-form .button-group { margin-right: auto; margin-left: 0; }
+        html[lang="ar"] #suggestions-list { right: 10px; left: auto; }
+        html[lang="ar"] .item-list li { flex-direction: row-reverse; }
+        html[lang="ar"] .drag-handle { margin-right: -5px; margin-left: 0; }
+        html[lang="ar"] .item-checkbox { margin-left: 5px; margin-right: 0; }
+        html[lang="ar"] .item-actions { gap: 5px; }
+        html[lang="ar"] footer a i { margin: 0 3px; }
+        html[lang="ar"] .settings-row { flex-direction: row-reverse; }
+        html[lang="ar"] .settings-row label:first-child { margin-left: 12px; margin-right: 0; }
+        html[lang="ar"] #settings-page .app-header { flex-direction: row-reverse; }
+        html[lang="ar"] #settings-page .app-header h1 { flex-direction: row-reverse; }
+        html[lang="ar"] #settings-page .app-header h1 i { margin-left: 10px; margin-right: 0; }
+        html[lang="ar"] #settings-page .app-header .header-button { order: -1; }
+        html[lang="ar"] #settings-page .app-header div { order: 1; }
+        #smart-list-app {
+            width: 100%; max-width: 700px; background: var(--container-bg); min-height: 100vh;
+            display: flex; flex-direction: column; position: relative; overflow-x: hidden;
         }
-        .svg-icon {
-            width: 1em;
-            height: 1em;
-            display: inline-block;
-            vertical-align: middle;
+        .page-view {
+            padding: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 20px;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            background-color: var(--container-bg); width: 100%; box-shadow: 0 3px 10px var(--shadow-color);
         }
-        .svg-icon-sm { width: 0.875em; height: 0.875em; } /* text-sm equivalent */
-        .svg-icon-lg { width: 1.25em; height: 1.25em; } /* text-xl equivalent */
-         .svg-icon-xl { width: 1.5em; height: 1.5em; } /* text-2xl equivalent for FAB */
-        .svg-icon-2xl { width: 2.5em; height: 2.5em; } /* text-4xl equivalent for empty state */
-
+        #settings-page {
+            position: absolute; top: 0; left: 0; height: 100%; z-index: 100;
+            transform: translateX(100%); opacity: 0; visibility: hidden; overflow-y: auto;
+        }
+        html[lang="ar"] #settings-page { transform: translateX(-100%); }
+        #settings-page.visible { transform: translateX(0); opacity: 1; visibility: visible; }
+        #main-view { transform: translateX(0); opacity: 1; visibility: visible; }
+        #main-view.hidden { transform: translateX(-50%); opacity: 0; visibility: hidden; }
+        html[lang="ar"] #main-view.hidden { transform: translateX(50%); }
+        .app-header {
+            display: flex; align-items: center; justify-content: space-between; padding: 15px 20px;
+            background-color: #fff; border-bottom: 1px solid var(--container-border); height: var(--header-height);
+            position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .app-header h1 {
+            font-weight: 600; color: var(--accent-color); margin: 0; display: flex;
+            align-items: center; gap: 10px; font-size: 1.5rem;
+        }
+        .app-header h1 i { margin-right: 10px; }
+        .header-button {
+            background: none; border: none; color: var(--text-color-muted); font-size: 1.4rem; padding: 8px;
+            cursor: pointer; border-radius: 50%; width: 40px; height: 40px; display: inline-flex;
+            align-items: center; justify-content: center; transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .header-button:hover { background-color: #f1f3f5; color: var(--accent-color); }
+        .header-button i { line-height: 1; }
+        #add-item-form-container {
+             padding: 10px; background-color: #f8f9fa; border-radius: var(--border-radius);
+             display: flex; flex-direction: column; gap: 10px;
+        }
+        #add-item-form { display: flex; gap: 10px; flex-wrap: wrap; position: relative; }
+        #add-item-form input[type="text"] { flex-grow: 1; min-width: 150px; }
+        #item-quantity { width: 100px; flex-shrink: 0; }
+        input[type="text"], select {
+            background: #fff; border: 1px solid var(--container-border); color: var(--text-color);
+            border-radius: var(--border-radius); padding: 12px 15px; font-size: 1rem; font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease; height: 48px;
+        }
+        input[type="text"]::placeholder { color: var(--text-color-muted); opacity: 0.9; }
+        input[type="text"]:focus, select:focus {
+            outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+        button, .button-like {
+            background-color: #fff; border: 1px solid var(--container-border); color: var(--text-color-muted);
+            border-radius: var(--border-radius); padding: 10px 15px; cursor: pointer; font-size: 1rem;
+            font-family: inherit; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500;
+            height: 48px; line-height: 1; flex-shrink: 0;
+        }
+        button:hover, .button-like:hover { border-color: var(--accent-color); color: var(--accent-color); background-color: #e7f3ff; }
+        button:active { transform: scale(0.97); }
+        button i, .button-like i { font-size: 1.1em; }
+        #submit-item-button { background-color: var(--accent-color); border-color: var(--accent-color); color: #fff; min-width: 100px; }
+        #submit-item-button:hover { background-color: var(--accent-color-darker); border-color: var(--accent-color-darker); color: #fff; }
+        #audio-input-button { min-width: 48px; }
+        #audio-input-button.recording { background-color: var(--danger-color); border-color: var(--danger-color); color: white; animation: pulse 1.5s infinite ease-in-out; }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 8px 0px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 12px 4px rgba(220, 53, 69, 0.7); } }
+        #quick-add-button {
+             background-color: var(--quick-add-bg); border-color: #b8daff; color: var(--accent-color-darker);
+             font-weight: 500; width: 100%; height: auto; padding: 10px 15px;
+        }
+        #quick-add-button:hover { background-color: #d1e7ff; border-color: var(--accent-color); }
+        #suggestions-list {
+            list-style-type: none; margin: 0; max-height: 180px; overflow-y: auto; background: #fff;
+            border: 1px solid var(--container-border); border-top: none; border-radius: 0 0 var(--border-radius) var(--border-radius);
+            position: absolute; top: calc(100% - 5px); left: 10px; width: calc(100% - 20px - 100px - 48px - 30px);
+            max-width: 400px; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.08); padding: 5px 0;
+            opacity: 0; visibility: hidden; transform: translateY(-10px);
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        }
+        #suggestions-list:not(.hidden) { opacity: 1; visibility: visible; transform: translateY(0); }
+        #suggestions-list li { padding: 10px 15px; cursor: pointer; transition: background-color 0.2s ease; font-size: 0.95rem; }
+        #suggestions-list li:hover { background-color: var(--accent-color-darker); color: white; }
+        .list-section { margin-top: 15px; }
+        .list-section h2 {
+            font-size: 1rem; font-weight: 600; color: var(--text-color-muted); margin-bottom: 10px;
+            padding: 0 5px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .item-list { list-style: none; padding: 0; }
+        .item-list li {
+            background: #fff; border: 1px solid var(--container-border); border-radius: var(--border-radius);
+            margin-bottom: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+            position: relative; transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.2s ease, border-color 0.2s ease, max-height 0.3s ease-out, transform 0.25s ease-out, padding 0.3s ease-out, margin 0.3s ease-out;
+            opacity: 1; max-height: 100px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .item-list li:hover { border-color: #adb5bd; box-shadow: 0 2px 5px rgba(0,0,0,0.06); }
+        .drag-handle {
+            cursor: grab; color: var(--text-color-muted); padding: 10px 5px; margin-left: -5px;
+            font-size: 1.3rem; opacity: 0.5; transition: opacity 0.2s ease; flex-shrink: 0;
+        }
+        .item-list li:hover .drag-handle { opacity: 1; }
+        .item-list li.dragging .drag-handle { cursor: grabbing; }
+        .item-list li.item-enter { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-width: 0; }
+        .item-list li.item-exit { opacity: 0; max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important; border-width: 0 !important; transform: translateX(-20px); }
+        html[lang="ar"] .item-list li.item-exit { transform: translateX(20px); }
+        .item-list li.dragging { opacity: 0.6; background: #eef2f5; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .item-list li.drag-over { border-bottom: 3px solid var(--accent-color); }
+        .item-checkbox {
+            appearance: none; width: 26px; height: 26px; border: 2px solid #ced4da; border-radius: var(--border-radius);
+            cursor: pointer; position: relative; flex-shrink: 0; transition: background-color 0.2s ease, border-color 0.2s ease;
+            margin-right: 5px;
+        }
+        .item-checkbox:hover { border-color: var(--accent-color); }
+        .item-checkbox:checked { background-color: var(--accent-color); border-color: var(--accent-color); }
+        .item-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 14px; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .item-details { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .item-text { font-size: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.3s ease; }
+        .item-quantity-display-wrapper { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+        .item-quantity-display { font-size: 0.85rem; color: var(--text-color-muted); }
+        .item-quantity-display:empty { display: none; }
+        .quantity-stepper button { background: none; border: none; color: var(--text-color-muted); font-size: 1rem; padding: 2px 5px; cursor: pointer; border-radius: 4px; height: auto; min-width: auto; }
+        .quantity-stepper button:hover { background-color: #e9ecef; color: var(--text-color); }
+        .item-details input[type="text"] { width: 100%; margin-bottom: 5px; padding: 8px 10px; height: auto; }
+        #done-list li { background-color: var(--done-color-bg); border-color: #b8e0ff; }
+        #done-list li .item-text, #done-list li .item-quantity-display { text-decoration: line-through; color: var(--done-text-color); opacity: 0.8; }
+        #done-list li .item-checkbox:checked { background-color: #6cbfff; border-color: #6cbfff; }
+        #done-list li .drag-handle { opacity: 0.3; }
+        .item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+        .item-actions button { padding: 8px; font-size: 1rem; background: transparent; border: none; color: var(--text-color-muted); border-radius: 50%; width: 36px; height: 36px; min-width: auto; }
+        .item-actions button:hover { background: #e9ecef; color: var(--text-color); }
+        .item-actions .remove-button { color: var(--danger-color); }
+        .item-actions .remove-button:hover { color: white; background-color: var(--danger-color); }
+        .item-actions .edit-button { color: var(--accent-color); }
+        .item-actions .edit-button:hover { color: white; background-color: var(--accent-color); }
+        .item-actions .save-button { color: #28a745; }
+        .item-actions .save-button:hover { color: white; background-color: #28a745; }
+        .item-actions .cancel-button { color: var(--text-color-muted); }
+        .item-actions .cancel-button:hover { color: white; background-color: #6c757d; }
+        #settings-page .settings-content { display: flex; flex-direction: column; gap: 18px; padding-bottom: 30px; }
+        #settings-page .settings-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        #settings-page .settings-row label:first-child { min-width: 90px; font-weight: 500; margin-right: 12px; }
+        #settings-page .settings-content button, #settings-page .settings-content label.button-like { width: 100%; justify-content: center; padding: 14px 18px; font-size: 1.05rem; height: auto; }
+        #settings-page .settings-content button.danger-button, #settings-page .settings-content button[data-key="clearHistory"] { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        #settings-page .settings-content button.danger-button:hover, #settings-page .settings-content button[data-key="clearHistory"]:hover { background-color: var(--danger-color-darker); border-color: var(--danger-color-darker); }
+        .button-like { display: inline-block; text-align: center; background: #fff; border: 1px solid var(--container-border); color: var(--text-color-muted); border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; height: auto; padding: 14px 18px; font-size: 1.05rem; }
+        .button-like:hover { border-color: var(--accent-color); color: var(--accent-color); background-color: #e7f3ff;}
+        input[type="file"] { display: none; }
+        .empty-list-message { text-align: center; color: var(--text-color-muted); padding: 35px 20px; font-style: italic; display: none; border: 1px dashed var(--container-border); border-radius: var(--border-radius); margin-top: 15px; background-color: #f8f9fa; }
+        .empty-list-message.visible { display: block; }
+        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: var(--text-color-muted); opacity: 0.8; border-top: 1px solid var(--container-border); margin-top: auto; background: #fff; }
+        footer a { color: var(--accent-color); text-decoration: none; margin: 0 5px; transition: color 0.2s ease; }
+        footer a:hover { color: var(--accent-color-darker); }
+        footer .fab { font-size: 1.2rem; vertical-align: middle; }
+        @media (max-width: 600px) {
+            .page-view { padding: 15px; }
+            .app-header { padding: 10px 15px; height: 55px; }
+            .app-header h1 { font-size: 1.3rem; gap: 8px; }
+            .header-button { font-size: 1.3rem; width: 36px; height: 36px; padding: 6px; }
+            #add-item-form-container { padding: 8px; }
+            #add-item-form { flex-direction: column; align-items: stretch; }
+            #add-item-form input[type="text"], #item-quantity { width: 100%; }
+            #item-quantity { margin-top: 8px; }
+            #add-item-form .button-group { display: flex; gap: 8px; margin-top: 8px; }
+            #add-item-form #submit-item-button { flex-grow: 1; }
+            #suggestions-list { width: calc(100% - 16px); left: 8px; top: calc(100% + 10px); }
+            html[lang="ar"] #suggestions-list { right: 8px; left: auto; }
+            .item-list li { gap: 5px; padding: 8px 10px; }
+            .drag-handle { font-size: 1.2rem; padding: 8px 4px; margin-left: -4px;}
+            html[lang="ar"] .drag-handle { margin-right: -4px; margin-left: 0;}
+            .item-checkbox { width: 24px; height: 24px; }
+            .item-text { font-size: 0.95rem; }
+            .item-quantity-display { font-size: 0.8rem; }
+            .quantity-stepper button { font-size: 0.9rem; }
+            .item-actions { gap: 3px; }
+            .item-actions button { width: 32px; height: 32px; font-size: 0.9rem; }
+            #settings-page .settings-row label:first-child { min-width: 70px; }
+            footer { font-size: 0.8rem; padding: 15px; }
+        }
+        @media (max-width: 380px) {
+            .app-header h1 { font-size: 1.2rem; }
+            #add-item-form .button-group button span { display: none; }
+            #add-item-form .button-group button i { margin: 0; }
+            #add-item-form #submit-item-button span { display: inline; }
+             .item-list li { flex-wrap: wrap; }
+             .item-details { min-width: 150px; }
+             .item-actions { margin-left: calc(24px + 5px + 8px); } /* checkbox width + margin + drag handle padding roughly */
+             html[lang="ar"] .item-actions { margin-right: calc(24px + 5px + 8px); margin-left: 0; }
+        }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: 'rgb(var(--color-primary) / <alpha-value>)', // Main actions, header
-                        'primary-dark': 'rgb(var(--color-primary-dark) / <alpha-value>)', // Hover for primary
-                        secondary: 'rgb(var(--color-secondary) / <alpha-value>)', // Sidebar bg
-                        accent: 'rgb(var(--color-accent) / <alpha-value>)', // Highlights, selected items
-                        light: 'rgb(var(--color-light) / <alpha-value>)', // Page background (light mode)
-                        dark: 'rgb(var(--color-dark) / <alpha-value>)',   // Text color (light mode), Page bg (dark mode)
-                        'text-light': 'rgb(var(--color-text-light) / <alpha-value>)', // Text on dark backgrounds
-                        'text-dark': 'rgb(var(--color-text-dark) / <alpha-value>)',   // Text on light backgrounds
-                        'border-color': 'rgb(var(--color-border) / <alpha-value>)',
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out',
-                        'slide-in-left': 'slideInLeft 0.3s ease-out',
-                    },
-                    keyframes: {
-                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 }, },
-                        slideInLeft: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(0)' }, }
-                    }
-                }
-            },
-            plugins: []
-        }
-    </script>
 </head>
-<body class="bg-light text-text-dark antialiased"> <!-- Updated text color class -->
-    <div id="app" v-cloak class="flex flex-col min-h-screen">
-        <!-- Header -->
-        <header class="bg-primary text-text-light shadow-md sticky top-0 z-40">
-            <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center">
-                    <button @click="toggleSidebar" class="lg:hidden mr-3 p-2 hover:bg-primary-dark rounded-full">
-                        <!-- SVG: Bars -->
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    </button>
-                    <h1 class="text-2xl font-bold tracking-tight flex items-center">
-                        <!-- SVG: Feather/Quill -->
-                        <svg class="svg-icon-lg mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 21C12 21 4 16.9706 4 12C4 7.02944 7 4 12 4C17 4 20 7.02944 20 12C20 16.9706 12 21 12 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12 4V2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M7 15C7 15 8.5 14 12 14C15.5 14 17 15 17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        VueNotesPro
-                    </h1>
-                </div>
-                <div class="flex items-center space-x-1 md:space-x-3">
-                    <button @click="goToNewNoteView" title="New Note"
-                            class="md:hidden p-2 hover:bg-primary-dark rounded-full">
-                        <!-- SVG: Plus -->
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                    </button>
-                    <button @click="showImportExportModal = true" title="Import/Export Notes" class="p-2 hover:bg-primary-dark rounded-full">
-                        <!-- SVG: Import/Export (Document with arrows) -->
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12 18V12M12 12L9 15M12 12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                    <button @click="toggleTheme" title="Toggle Theme" class="p-2 hover:bg-primary-dark rounded-full">
-                        <!-- SVG: Sun/Moon (Conditional) -->
-                        <svg v-if="isDarkMode" class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V4M12 20V21M4.92944 4.92944L5.63655 5.63655M18.364 18.364L19.0711 19.0711M3 12H4M20 12H21M4.92944 19.0711L5.63655 18.364M18.364 5.63655L19.0711 4.92944M12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        <svg v-else class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21C16.9706 21 21 16.9706 21 12C21 8.72892 19.4459 5.87511 17.1495 4.02325C16.6345 3.91623 16.0875 4.23229 15.9805 4.74726C15.8735 5.26224 16.1896 5.80921 16.7045 5.91623C18.4814 7.36231 19.5 9.58172 19.5 12C19.5 16.1421 16.1421 19.5 12 19.5C7.85786 19.5 4.5 16.1421 4.5 12C4.5 9.58172 5.51857 7.36231 7.29546 5.91623C7.81044 5.80921 8.12649 5.26224 8.01947 4.74726C7.91245 4.23229 7.36548 3.91623 6.8505 4.02325C4.55413 5.87511 3 8.72892 3 12C3 16.9706 7.02944 21 12 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                     <button @click="showAppInfoModal = true" title="App Info" class="p-2 hover:bg-primary-dark rounded-full">
-                        <!-- SVG: Info Circle -->
-                        <svg class="svg-icon-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                </div>
+<body>
+    <div id="smart-list-app">
+
+        <div id="main-view" class="page-view">
+            <header class="app-header">
+                <h1><i class="fas fa-list-check"></i> <span data-translate-key="title">Smart List</span></h1>
+                <button id="go-to-settings" class="header-button" data-translate-key="settingsButton" title="Settings"><i class="fas fa-cog"></i></button>
+            </header>
+
+            <div id="add-item-form-container">
+                <form id="add-item-form">
+                    <input type="text" id="add-item-input" data-translate-key="addItemPlaceholder" placeholder="Enter item" autocomplete="off" required>
+                    <ul id="suggestions-list" class="hidden"></ul>
+                    <input type="text" id="item-quantity" data-translate-key="quantityPlaceholder" placeholder="Qty (optional)">
+                    <div class="button-group">
+                        <button id="audio-input-button" type="button" data-translate-key="recordButton" title="Record Item Name"><i class="fas fa-microphone"></i></button>
+                        <button type="submit" id="submit-item-button" data-translate-key="addButton" title="Add Item"><i class="fas fa-plus"></i> <span>Add</span></button>
+                    </div>
+                </form>
+                <button id="quick-add-button" type="button" data-translate-key="quickAddButton" title="Add frequent items"><i class="fas fa-bolt"></i> <span>Quick Add Frequent</span></button>
             </div>
-        </header>
 
-        <!-- Main Content Area -->
-        <div class="flex flex-1 overflow-hidden relative">
-            <!-- Sidebar -->
-            <aside :class="{'translate-x-0': showSidebar, '-translate-x-full': !showSidebar}"
-                   class="fixed inset-y-0 left-0 z-30 lg:static lg:translate-x-0 w-64 bg-secondary text-text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto">
-                <div class="mt-16 lg:mt-0">
-                    <button @click="goToNewNoteView"
-                            class="w-full bg-accent text-text-light py-2 px-4 rounded-lg hover:opacity-80 transition duration-150 flex items-center justify-center">
-                        <!-- SVG: Plus -->
-                        <svg class="svg-icon mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                        New Note
-                    </button>
-                </div>
+            <div class="list-section">
+                <h2 data-translate-key="activeItemsHeader">Active</h2>
+                <ul id="active-list" class="item-list"></ul>
+                <p id="empty-active-list-message" class="empty-list-message" data-translate-key="emptyActiveList">No active items. Add some!</p>
+            </div>
 
-                <div>
-                    <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">Search</h3>
-                    <input type="text" v-model="searchTerm" placeholder="Search notes..."
-                           class="w-full px-3 py-2 border border-border-color rounded-lg focus:ring-accent focus:border-accent text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
-                </div>
+            <div class="list-section">
+                <h2 data-translate-key="doneItemsHeader">Completed</h2>
+                <ul id="done-list" class="item-list"></ul>
+                <p id="empty-done-list-message" class="empty-list-message" data-translate-key="emptyDoneList">No completed items yet.</p>
+            </div>
 
-                <div>
-                    <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">Categories</h3>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="#" @click.prevent="selectCategory(null)"
-                               :class="{'bg-accent text-text-light': !currentCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory}"
-                               class="block px-3 py-2 rounded-md transition duration-150 flex items-center">
-                                <!-- SVG: Inbox -->
-                                <svg class="svg-icon mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2L10 12 2 7V5zm0 5.5V15a2 2 0 002 2h12a2 2 0 002-2V10.5l-8 4.5-8-4.5z" clip-rule="evenodd"></path></svg>
-                                All Notes
-                            </a>
-                        </li>
-                        <li v-for="category in uniqueCategories" :key="category">
-                            <a href="#" @click.prevent="selectCategory(category)"
-                               :class="{'bg-accent text-text-light': currentCategory === category, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentCategory !== category}"
-                               class="block px-3 py-2 rounded-md transition duration-150 truncate flex items-center">
-                                <!-- SVG: Folder -->
-                                <svg class="svg-icon mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
-                                {{ category }}
-                            </a>
-                            <ul v-if="currentCategory === category && uniqueSubcategoriesForCurrentCategory.length > 0" class="ml-4 mt-1 space-y-1">
-                                <li>
-                                    <a href="#" @click.prevent="selectSubCategory(null)"
-                                       :class="{'bg-accent/80 text-text-light': !currentSubCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory}"
-                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 flex items-center">
-                                        <!-- SVG: Folder Open -->
-                                        <svg class="svg-icon-sm mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H2V6z" clip-rule="evenodd"></path><path d="M2 12a2 2 0 00-2 2v2a2 2 0 002 2h16a2 2 0 002-2v-2a2 2 0 00-2-2H2zm14-2a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v1a2 2 0 002 2h12z"></path></svg>
-                                        All in {{ category }}
-                                    </a>
-                                </li>
-                                <li v-for="subCategory in uniqueSubcategoriesForCurrentCategory" :key="subCategory">
-                                    <a href="#" @click.prevent="selectSubCategory(subCategory)"
-                                       :class="{'bg-accent/80 text-text-light': currentSubCategory === subCategory, 'hover:bg-gray-200 dark:hover:bg-gray-700': currentSubCategory !== subCategory}"
-                                       class="block px-3 py-1.5 rounded-md text-sm transition duration-150 truncate flex items-center">
-                                        <!-- SVG: Hashtag/Tag (for subcategory) -->
-                                        <svg class="svg-icon-sm mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a1 1 0 011-1h5a.997.997 0 01.707.293l7 7zM6 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
-                                        {{ subCategory }}
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </aside>
-
-            <!-- Content Area -->
-            <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-light">
-                <!-- Add/Edit Note View -->
-                <div v-if="activeView === 'addNote' || activeView === 'editNote'" class="animate-fade-in max-w-3xl mx-auto">
-                    <h2 class="text-2xl font-semibold mb-4 text-text-dark">{{ activeView === 'addNote' ? 'Create New Note' : 'Edit Note' }}</h2>
-                    <form @submit.prevent="saveNote" class="space-y-4">
-                        <div>
-                            <label for="noteTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                            <input type="text" id="noteTitle" v-model="form.title" required
-                                   class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="noteCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category (optional)</label>
-                                <input type="text" id="noteCategory" v-model="form.category" list="categorySuggestions"
-                                       class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600">
-                                <datalist id="categorySuggestions">
-                                    <option v-for="cat in uniqueCategories" :value="cat"></option>
-                                </datalist>
-                            </div>
-                            <div>
-                                <label for="noteSubCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subcategory (optional)</label>
-                                <input type="text" id="noteSubCategory" v-model="form.subCategory" :disabled="!form.category" list="subCategorySuggestions"
-                                       class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"
-                                       :placeholder="form.category ? 'Enter subcategory' : 'Enter category first'">
-                                <datalist id="subCategorySuggestions">
-                                    <option v-for="subCat in uniqueSubcategoriesForCategory(form.category)" :value="subCat"></option>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="noteContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Content (Markdown)</label>
-                            <textarea id="noteContent" v-model="form.content" rows="10" required
-                                      class="mt-1 block w-full px-3 py-2 border border-border-color rounded-md shadow-sm focus:ring-accent focus:border-accent sm:text-sm text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"></textarea>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="noteIsSecret" v-model="form.isSecret"
-                                   class="h-4 w-4 text-accent border-gray-300 dark:border-gray-600 rounded focus:ring-accent">
-                            <label for="noteIsSecret" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                                Secret Note (requires master key to encrypt/decrypt)
-                            </label>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" @click="cancelEdit"
-                                    class="px-4 py-2 border border-border-color rounded-md shadow-sm text-sm font-medium text-text-dark hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                                Cancel
-                            </button>
-                            <button type="submit"
-                                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-text-light bg-accent hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
-                                Save Note
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Notes List View -->
-                <div v-if="activeView === 'notesList'" class="animate-fade-in">
-                    <div v-if="filteredNotes.length === 0 && !isLoading" class="text-center py-10">
-                        <!-- SVG: Ghost -->
-                        <svg class="svg-icon-2xl text-gray-400 dark:text-gray-500 mb-4 mx-auto" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c2.5 0 4.7.9 6.4 2.3l-1.3 1.5C15.8 4.7 14 4 12 4s-3.8.7-5.1 1.8l-1.3-1.5C7.3 2.9 9.5 2 12 2zm0 18c-3.5 0-6.5-2-7.8-4.8l1.9-.8c1 2.2 3.6 3.6 5.9 3.6s4.9-1.4 5.9-3.6l1.9.8C18.5 18 15.5 20 12 20zm7.7-7.5c.2-.8.3-1.6.3-2.5s-.1-1.7-.3-2.5l2-.8c.2.9.4 1.9.4 2.9s-.2 2-.4 2.9l-2-.8zM4.3 12.5c-.2.8-.3 1.6-.3 2.5s.1 1.7.3 2.5l-2 .8c-.2-.9-.4-1.9-.4-2.9s.2-2 .4-2.9l2 .8zm4.9-5.3C10.2 6.4 11 6 12 6s1.8.4 2.8 1.2l1.3-1.5C14.7 4.2 12 3.5 12 3.5s-2.7.7-4.1 2.2l1.3 1.5zm4.9 10.6c-1-.8-1.8-1.2-2.8-1.2s-1.8.4-2.8 1.2l-1.3-1.5c1.4-1.5 4.1-2.2 4.1-2.2s2.7.7 4.1 2.2l-1.3 1.5zM12 8a2 2 0 100 4 2 2 0 000-4zm-3 2a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"></path></svg>
-                        <p class="text-xl text-gray-500 dark:text-gray-400">No notes found.</p>
-                        <p class="text-gray-400 dark:text-gray-500">Try adjusting your filters or create a new note!</p>
-                    </div>
-                     <div v-if="isLoading" class="text-center py-10">
-                        <!-- SVG: Spinner -->
-                        <svg class="svg-icon-2xl text-accent mb-4 mx-auto animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <p class="text-xl text-gray-500 dark:text-gray-400">Loading notes...</p>
-                    </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
-                        <div v-for="note in filteredNotes" :key="note.id"
-                             class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
-                            <div class="p-5 flex-grow">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-lg font-semibold text-primary dark:text-blue-400 mb-1 break-all">{{ note.title }}</h3>
-                                    <span v-if="note.isSecret" title="Secret Note" class="ml-2 text-yellow-500 dark:text-yellow-400">
-                                        <!-- SVG: Lock -->
-                                        <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2z" clip-rule="evenodd"></path></svg>
-                                    </span>
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                    <span v-if="note.category" class="inline-flex items-center">
-                                        <!-- SVG: Folder Open (small) -->
-                                        <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H2V6z" clip-rule="evenodd"></path><path d="M2 12a2 2 0 00-2 2v2a2 2 0 002 2h16a2 2 0 002-2v-2a2 2 0 00-2-2H2zm14-2a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v1a2 2 0 002 2h12z"></path></svg>
-                                        {{ note.category }}
-                                        <span v-if="note.subCategory" class="inline-flex items-center">
-                                           <span class="mx-1">/</span>
-                                            <!-- SVG: Hashtag/Tag (small) -->
-                                            <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a1 1 0 011-1h5a.997.997 0 01.707.293l7 7zM6 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
-                                            {{ note.subCategory }}
-                                        </span>
-                                    </span>
-                                    <span v-else class="inline-flex items-center">
-                                        <!-- SVG: Inbox (small) -->
-                                        <svg class="svg-icon-sm mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v2L10 12 2 7V5zm0 5.5V15a2 2 0 002 2h12a2 2 0 002-2V10.5l-8 4.5-8-4.5z" clip-rule="evenodd"></path></svg>
-                                        Uncategorized
-                                    </span>
-                                    <span class="mx-1">|</span>
-                                    <span>{{ formatDate(note.updatedAt) }}</span>
-                                </div>
-                                <div v-if="note.isSecret && !note.decryptedContent"
-                                     class="prose prose-sm max-w-none text-gray-600 dark:text-gray-300 italic p-3 bg-gray-100 dark:bg-gray-700 rounded">
-                                    Content is encrypted.
-                                    <button @click="promptMasterKey('decrypt', note.id)" class="ml-2 text-accent hover:underline text-sm">Decrypt</button>
-                                </div>
-                                <div v-else v-html="renderMarkdown(note.decryptedContent || note.content)"
-                                     class="prose prose-sm max-w-none text-text-dark dark:text-text-light markdown-content max-h-48 overflow-y-auto">
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-border-color dark:border-gray-600 flex items-center justify-end space-x-2">
-                                <button @click="copyToClipboard(note.decryptedContent || note.content)" title="Copy Content" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
-                                    <!-- SVG: Copy -->
-                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg>
-                                </button>
-                                <button @click="shareNote(note)" title="Share Note" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
-                                    <!-- SVG: Share -->
-                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
-                                </button>
-                                <button @click="editNote(note)" title="Edit Note" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
-                                    <!-- SVG: Edit (Pencil) -->
-                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
-                                </button>
-                                <button v-if="note.isSecret && note.decryptedContent" @click="promptMasterKey('encrypt', note.id)" title="Re-encrypt Note" class="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors">
-                                    <!-- SVG: Lock Open -->
-                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2zM6 10h8v8H6v-8z"></path><path d="M10 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM8 6V4a2 2 0 114 0v2H8z"></path></svg>
-                                </button>
-                                <button @click="deleteNote(note.id)" title="Delete Note" class="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
-                                    <!-- SVG: Trash -->
-                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <!-- Floating Action Button (FAB) for New Note -->
-            <button v-if="activeView === 'notesList'" @click="goToNewNoteView" title="New Note"
-                    class="fab-button fixed bottom-6 right-6 bg-primary text-text-light w-14 h-14 rounded-full shadow-lg hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 flex items-center justify-center transition-transform hover:scale-110">
-                <!-- SVG: Plus -->
-                <svg class="svg-icon-xl" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 6V18M6 12H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
+            <footer id="main-footer">
+                <span data-translate-key="footerText">Built with</span> <i class="fas fa-heart" style="color: #e06c75;"></i> & AI |
+                <a href="#" target="_blank" title="Share on Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" target="_blank" title="Share on LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="#" target="_blank" title="Share on Facebook"><i class="fab fa-facebook"></i></a>
+            </footer>
         </div>
 
-        <!-- Master Key Modal -->
-        <div v-if="showMasterKeyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
-                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">Master Key Required</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                    This note is {{ modalAction === 'encrypt' ? 'being secured' : 'secured' }}. Please enter your master key.
-                </p>
-                <p class="text-xs text-red-500 mb-3">Warning: The master key is NOT stored. If you forget it, encrypted notes cannot be recovered.</p>
-                <input type="password" v-model="masterKeyInput" @keyup.enter="processMasterKeyAction"
-                       class="w-full px-3 py-2 border border-border-color rounded-md focus:ring-accent focus:border-accent mb-4 text-text-dark bg-light dark:bg-gray-700 dark:text-text-light dark:border-gray-600"
-                       placeholder="Enter master key">
-                <div class="flex justify-end space-x-2">
-                    <button @click="showMasterKeyModal = false; masterKeyInput = '';"
-                            class="px-4 py-2 border border-border-color rounded-md text-sm font-medium text-text-dark hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Cancel</button>
-                    <button @click="processMasterKeyAction"
-                            class="px-4 py-2 bg-accent text-text-light rounded-md text-sm font-medium hover:opacity-80">
-                        {{ modalAction === 'encrypt' ? 'Encrypt' : 'Decrypt' }}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div id="settings-page" class="page-view">
+            <header class="app-header">
+                <button id="back-to-main" class="header-button" data-translate-key="backButton" title="Back to List"><i class="fas fa-arrow-left"></i></button>
+                <h1><i class="fas fa-cog"></i> <span data-translate-key="settingsTitle">Settings</span></h1>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </header>
 
-        <!-- Import/Export Modal -->
-        <div v-if="showImportExportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md animate-fade-in">
-                <h3 class="text-lg font-medium mb-4 text-text-dark dark:text-text-light">Import / Export Notes</h3>
-                <div class="space-y-4">
-                    <div>
-                        <h4 class="font-semibold text-text-dark dark:text-text-light">Export Notes</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Download all your notes as a JSON file.</p>
-                        <button @click="exportNotes" class="w-full px-4 py-2 bg-primary text-text-light rounded-md hover:bg-primary-dark transition flex items-center justify-center">
-                            <!-- SVG: Export -->
-                            <svg class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                            Export All Notes
-                        </button>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-text-dark dark:text-text-light">Import Notes</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Import notes from a JSON file. This will replace existing notes if IDs match, or add new ones.</p>
-                        <input type="file" @change="handleFileUpload" accept=".json" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-text-light hover:file:opacity-80"/>
-                    </div>
+            <div class="settings-content">
+                <div class="settings-row">
+                    <label for="ui_language" data-translate-key="languageLabel">Language:</label>
+                    <select id="ui_language">
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                        <!-- Add more languages here -->
+                    </select>
                 </div>
-                <div class="mt-6 flex justify-end">
-                    <button @click="showImportExportModal = false"
-                            class="px-4 py-2 border border-border-color rounded-md text-sm font-medium text-text-dark hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">Close</button>
+                <div class="settings-row">
+                    <label for="audio_input_language" data-translate-key="speechLanguageLabel">Speech:</label>
+                    <select id="audio_input_language">
+                        <option value="en-US">English (US)</option>
+                        <option value="fr-FR">Français (France)</option>
+                        <option value="ar-SA">العربية (Saudi Arabia)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="es-ES">Español (España)</option>
+                        <!-- Add more speech languages here -->
+                    </select>
                 </div>
+                <button id="generate-typical-list" data-key="generateTypical"><i class="fas fa-magic"></i> <span data-translate-key="generateTypical">Suggest Usual Items</span></button>
+                <label class="button-like" for="import-items" data-key="importLabel"><i class="fas fa-upload"></i> <span data-translate-key="importLabel">Import List (.json)</span></label>
+                <input type="file" id="import-items" accept=".json">
+                <button id="export-items" data-key="exportButton"><i class="fas fa-download"></i> <span data-translate-key="exportButton">Export List (.json)</span></button>
+                <button id="clear-list" class="danger-button" data-key="clearList"><i class="fas fa-trash-alt"></i> <span data-translate-key="clearList">Clear Current List</span></button>
+                <button id="clear-history" class="danger-button" data-key="clearHistory"><i class="fas fa-history"></i> <span data-translate-key="clearHistory">Clear Purchase History</span></button>
             </div>
-        </div>
-
-        <!-- App Info Modal -->
-        <div v-if="showAppInfoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg animate-fade-in max-h-[80vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-text-dark dark:text-text-light">About VueNotesPro v1.0</h3>
-                    <button @click="showAppInfoModal = false" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl">×</button>
-                </div>
-                <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
-                    <p><strong>Author:</strong> ParisNeo</p>
-                    <p><strong>Category:</strong> Productivity</p>
-                    <p><strong>Description:</strong> A feature-rich, responsive note-taking web application built with Vue.js and Tailwind CSS. Supports categories, subcategories, Markdown rendering, import/export, social sharing, and client-side encryption for secret notes. All data is stored locally using IndexedDB.</p>
-                    <p><strong>Model used for assistance:</strong> Claude 3 Opus</p>
-                    <p><strong>Disclaimer:</strong> This application stores data, including potentially encrypted secret notes, locally in your browser's IndexedDB. The master key for secret notes is NOT stored. Ensure you remember your master key, as there is no recovery mechanism. Use at your own risk.</p>
-                    <h4 class="font-semibold mt-4">Features:</h4>
-                    <ul>
-                        <li>Categories & Subcategories</li>
-                        <li>Markdown input, HTML rendering</li>
-                        <li>Import/Export notes (JSON)</li>
-                        <li>Social Sharing (basic text sharing)</li>
-                        <li>Secret notes with AES-256 encryption (master key not stored)</li>
-                        <li>Data stored in IndexedDB</li>
-                        <li>Easy copy/paste with SVG icons</li>
-                        <li>Responsive design for PC, phone, and tablet</li>
-                        <li>Light/Dark theme with improved contrasts</li>
-                        <li>Floating Action Button for new notes</li>
-                    </ul>
-                     <h4 class="font-semibold mt-4">Keyboard Shortcuts (in note form):</h4>
-                    <ul>
-                        <li><code>Ctrl+S</code> or <code>Cmd+S</code>: Save note</li>
-                    </ul>
-                </div>
-                 <div class="mt-6 flex justify-end">
-                    <button @click="showAppInfoModal = false"
-                            class="px-4 py-2 bg-accent text-text-light rounded-md text-sm font-medium hover:opacity-80">Close</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast Notification -->
-        <div v-if="toast.show"
-             class="fixed bottom-5 right-5 px-4 py-3 rounded-lg shadow-md animate-fade-in text-white"
-             :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'">
-            <!-- SVG: Check / Exclamation Triangle -->
-            <svg v-if="toast.type === 'success'" class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <svg v-else class="svg-icon mr-2" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.216 3.031-1.742 3.031H4.42c-1.526 0-2.493-1.697-1.743-3.031l5.58-9.92zM10 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-            {{ toast.message }}
         </div>
 
     </div>
 
     <script>
-        const App = {
-            data() {
-                return {
-                    // ... (notes, activeView, form, etc. remain mostly the same)
-                    notes: [],
-                    activeView: 'notesList',
-                    form: { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null, },
-                    currentCategory: null,
-                    currentSubCategory: null,
-                    searchTerm: '',
-                    showMasterKeyModal: false,
-                    masterKeyInput: '',
-                    modalAction: '',
-                    modalNoteId: null,
-                    db: null,
-                    isLoading: true,
-                    showSidebar: false,
-                    showImportExportModal: false,
-                    showAppInfoModal: false,
-                    isDarkMode: false,
-                    toast: { show: false, message: '', type: 'success' },
-                    // Refined theme colors for better contrast and semantic naming
-                    themeColors: {
-                        // Light Theme
-                        light: {
-                            primary: '29, 78, 216',        // Blue-700
-                            'primary-dark': '30, 64, 175', // Blue-800 (hover)
-                            secondary: '243, 244, 246',    // Gray-100 (sidebar bg)
-                            accent: '234, 179, 8',         // Yellow-500 (selected items, highlights)
-                            light: '249, 250, 251',        // Gray-50 (page bg)
-                            dark: '17, 24, 39',            // Gray-900 (used for dark mode text-light)
-                            'text-light': '243, 244, 246', // Gray-100 (text on dark primary/accent)
-                            'text-dark': '31, 41, 55',     // Gray-800 (main text on light bg)
-                            'border-color': '209, 213, 219' // Gray-300
-                        },
-                        // Dark Theme
-                        dark: {
-                            primary: '37, 99, 235',        // Blue-600
-                            'primary-dark': '29, 78, 216', // Blue-700 (hover)
-                            secondary: '31, 41, 55',       // Gray-800 (sidebar bg)
-                            accent: '202, 138, 4',         // Yellow-600 (selected items, highlights)
-                            light: '17, 24, 39',           // Gray-900 (page bg)
-                            dark: '243, 244, 246',         // Gray-100 (used for light mode text-dark)
-                            'text-light': '229, 231, 235', // Gray-200 (main text on dark bg)
-                            'text-dark': '17, 24, 39',     // Gray-900 (text on light primary/accent)
-                            'border-color': '55, 65, 81'   // Gray-700
-                        }
-                    }
-                }
+        // --- Translations ---
+        const translations = {
+            en: {
+                title: 'Smart List', settingsTitle: 'Settings', addItemPlaceholder: 'Enter item', quantityPlaceholder: 'Qty (optional)',
+                recordButton: 'Record Item Name', addButton: 'Add', activeItemsHeader: 'Active', doneItemsHeader: 'Completed',
+                emptyActiveList: 'No active items. Add some!', emptyDoneList: 'No completed items yet.', languageLabel: 'Language:',
+                speechLanguageLabel: 'Speech:', generateTypical: 'Suggest Usual Items', importLabel: 'Import List (.json)',
+                exportButton: 'Export List (.json)', clearList: 'Clear Current List', clearHistory: 'Clear Purchase History',
+                footerText: 'Built with', alertRemoveItem: 'Are you sure you want to remove "{itemName}"?',
+                alertClearList: 'Are you sure you want to clear all items from the current list?',
+                alertClearHistory: 'WARNING: This will permanently delete all history and suggestions data. Are you sure?',
+                alertItemExists: '"{itemName}" is already on the active list.', alertNoHistory: 'Not enough history to generate suggestions. Keep using the app!',
+                alertItemsAdded: 'Added {count} frequent items to your list.', alertItemsExist: 'Your current list already contains most of your typical items.',
+                alertExportSuccess: 'Data exported successfully!', alertExportFailed: 'Failed to export data.',
+                alertImportConfirm: 'This will replace your current list and history. Are you sure?', alertImportSuccess: 'Data imported successfully!',
+                alertImportFailed: 'Failed to import data: {error}', alertReadFileFailed: 'Failed to read the file.',
+                alertListEmpty: 'List is already empty.', alertHistoryEmpty: 'History is already empty.', alertNoInput: 'Please enter an item name.',
+                alertSpeechError: 'Speech recognition error: {error}', alertSpeechNotSupported: 'Sorry, your browser doesn\'t support Speech Recognition.',
+                editButtonTitle: 'Edit Item', saveButtonTitle: 'Save Changes', cancelButtonTitle: 'Cancel Edit', removeButtonTitle: 'Remove Item',
+                incrementQtyTitle: 'Increase Quantity', decrementQtyTitle: 'Decrease Quantity', settingsButtonTitle: 'Settings', backButtonTitle: 'Back to List',
+                quickAddButton: 'Quick Add Frequent', quickAddTitle: 'Add frequent items', alertQuickAddEmpty: 'No frequent items found in history yet.',
+                alertQuickAddMade: 'Added {count} frequent items.', alertQuickAddFoundNoneNew: 'No new frequent items to add.',
+                alertItemReactivated: '"{itemName}" was in completed items and has been reactivated.',
             },
-            computed: { // (Unchanged)
-                filteredNotes() {
-                    let notesToFilter = this.notes;
-                    if (this.currentCategory) {
-                        notesToFilter = notesToFilter.filter(note => note.category === this.currentCategory);
-                        if (this.currentSubCategory) {
-                            notesToFilter = notesToFilter.filter(note => note.subCategory === this.currentSubCategory);
-                        }
-                    }
-                    if (this.searchTerm) {
-                        const lowerSearchTerm = this.searchTerm.toLowerCase();
-                        notesToFilter = notesToFilter.filter(note =>
-                            note.title.toLowerCase().includes(lowerSearchTerm) ||
-                            (note.decryptedContent || note.content).toLowerCase().includes(lowerSearchTerm) ||
-                            (note.category && note.category.toLowerCase().includes(lowerSearchTerm)) ||
-                            (note.subCategory && note.subCategory.toLowerCase().includes(lowerSearchTerm))
-                        );
-                    }
-                    return notesToFilter.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-                },
-                uniqueCategories() {
-                    const categories = new Set();
-                    this.notes.forEach(note => {
-                        if (note.category) categories.add(note.category);
-                    });
-                    return Array.from(categories).sort();
-                },
-                uniqueSubcategoriesForCurrentCategory() {
-                    if (!this.currentCategory) return [];
-                    const subCategories = new Set();
-                    this.notes.forEach(note => {
-                        if (note.category === this.currentCategory && note.subCategory) {
-                            subCategories.add(note.subCategory);
-                        }
-                    });
-                    return Array.from(subCategories).sort();
-                }
+            fr: { // French Translations
+                title: 'Liste Futée', settingsTitle: 'Paramètres', addItemPlaceholder: 'Entrer un article', quantityPlaceholder: 'Qté (optionnel)',
+                recordButton: 'Enregistrer l\'article', addButton: 'Ajouter', activeItemsHeader: 'Actifs', doneItemsHeader: 'Terminés',
+                emptyActiveList: 'Aucun article actif. Ajoutez-en !', emptyDoneList: 'Aucun article terminé pour le moment.', languageLabel: 'Langue :',
+                speechLanguageLabel: 'Voix :', generateTypical: 'Suggérer Articles Habituels', importLabel: 'Importer Liste (.json)',
+                exportButton: 'Exporter Liste (.json)', clearList: 'Vider la Liste Actuelle', clearHistory: 'Effacer l\'Historique',
+                footerText: 'Créé avec', alertRemoveItem: 'Êtes-vous sûr de vouloir supprimer "{itemName}" ?',
+                alertClearList: 'Êtes-vous sûr de vouloir vider la liste actuelle ?',
+                alertClearHistory: 'ATTENTION : Ceci supprimera définitivement tout l\'historique et les suggestions. Êtes-vous sûr ?',
+                alertItemExists: '"{itemName}" est déjà dans la liste active.', alertNoHistory: 'Pas assez d\'historique pour générer des suggestions. Continuez à utiliser l\'app !',
+                alertItemsAdded: '{count} articles fréquents ajoutés à votre liste.', alertItemsExist: 'Votre liste actuelle contient déjà la plupart de vos articles habituels.',
+                alertExportSuccess: 'Données exportées avec succès !', alertExportFailed: 'Échec de l\'exportation des données.',
+                alertImportConfirm: 'Ceci remplacera votre liste et historique actuels. Êtes-vous sûr ?', alertImportSuccess: 'Données importées avec succès !',
+                alertImportFailed: 'Échec de l\'importation : {error}', alertReadFileFailed: 'Échec de la lecture du fichier.',
+                alertListEmpty: 'La liste est déjà vide.', alertHistoryEmpty: 'L\'historique est déjà vide.', alertNoInput: 'Veuillez entrer un nom d\'article.',
+                alertSpeechError: 'Erreur de reconnaissance vocale : {error}', alertSpeechNotSupported: 'Désolé, votre navigateur ne supporte pas la reconnaissance vocale.',
+                editButtonTitle: 'Modifier l\'article', saveButtonTitle: 'Enregistrer', cancelButtonTitle: 'Annuler', removeButtonTitle: 'Supprimer l\'article',
+                incrementQtyTitle: 'Augmenter Quantité', decrementQtyTitle: 'Diminuer Quantité', settingsButtonTitle: 'Paramètres', backButtonTitle: 'Retour à la liste',
+                quickAddButton: 'Ajout Rapide Fréquents', quickAddTitle: 'Ajouter articles fréquents', alertQuickAddEmpty: 'Aucun article fréquent trouvé dans l\'historique pour le moment.',
+                alertQuickAddMade: '{count} articles fréquents ajoutés.', alertQuickAddFoundNoneNew: 'Aucun nouvel article fréquent à ajouter.',
+                alertItemReactivated: '"{itemName}" était dans les articles terminés et a été réactivé.',
             },
-            methods: { // (Most methods unchanged, only theme and initialization)
-                goToNewNoteView() {
-                    this.setActiveView('addNote');
-                    this.selectedNote = null;
-                    this.showSidebar = false;
-                    this.resetForm();
-                },
-                setThemeColors(theme) {
-                    const colors = this.themeColors[theme];
-                    const root = document.documentElement;
-                    for (const [key, value] of Object.entries(colors)) {
-                        root.style.setProperty(`--color-${key}`, value);
-                    }
-                    if (theme === 'dark') {
-                        document.documentElement.classList.add('dark');
-                        document.querySelector('body').classList.remove('text-text-dark');
-                        document.querySelector('body').classList.add('text-text-light');
-                        // Adjust scrollbar for dark theme if desired
-                        const styleSheet = document.styleSheets[0]; // Assuming first stylesheet
-                        // Remove previous scrollbar rules if they exist by a marker comment
-                        for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
-                            if (styleSheet.cssRules[i].cssText.includes('/* scrollbar-theme-marker */')) {
-                                styleSheet.deleteRule(i);
-                            }
-                        }
-                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #374151; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #6b7280; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #9ca3af; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                        document.querySelector('body').classList.remove('text-text-light');
-                        document.querySelector('body').classList.add('text-text-dark');
-
-                        const styleSheet = document.styleSheets[0];
-                         for (let i = styleSheet.cssRules.length - 1; i >= 0; i--) {
-                            if (styleSheet.cssRules[i].cssText.includes('/* scrollbar-theme-marker */')) {
-                                styleSheet.deleteRule(i);
-                            }
-                        }
-                        styleSheet.insertRule('::-webkit-scrollbar-track { background: #f1f1f1; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-                        styleSheet.insertRule('::-webkit-scrollbar-thumb { background: #888; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-                        styleSheet.insertRule('::-webkit-scrollbar-thumb:hover { background: #555; /* scrollbar-theme-marker */ }', styleSheet.cssRules.length);
-                    }
-                    this.isDarkMode = theme === 'dark';
-                    localStorage.setItem('vueNotesProTheme', theme);
-                },
-                toggleTheme() {
-                    this.setThemeColors(this.isDarkMode ? 'light' : 'dark');
-                },
-                loadTheme() {
-                    const savedTheme = localStorage.getItem('vueNotesProTheme');
-                    if (savedTheme) {
-                        this.setThemeColors(savedTheme);
-                    } else {
-                        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                            this.setThemeColors('dark');
-                        } else {
-                            this.setThemeColors('light');
-                        }
-                    }
-                },
-                initDB() {
-                    return new Promise((resolve, reject) => {
-                        const request = indexedDB.open('VueNotesProDB', 1);
-                        request.onerror = (event) => { console.error("Database error:", event.target.errorCode); this.showToast('Error initializing database.', 'error'); reject("Error initializing database."); };
-                        request.onsuccess = (event) => { this.db = event.target.result; console.log("Database initialized."); resolve(); };
-                        request.onupgradeneeded = (event) => {
-                            const db = event.target.result;
-                            if (!db.objectStoreNames.contains('notes')) { db.createObjectStore('notes', { keyPath: 'id' }); console.log("Notes store created."); }
-                        };
-                    });
-                },
-                async loadNotes() {
-                    this.isLoading = true;
-                    if (!this.db) { this.showToast('Database not ready.', 'error'); this.isLoading = false; return; }
-                    const tx = this.db.transaction(['notes'], 'readonly');
-                    const store = tx.objectStore('notes');
-                    const req = store.getAll();
-                    req.onsuccess = (event) => {
-                        this.notes = event.target.result.map(note => ({ ...note, decryptedContent: null }));
-                        this.isLoading = false;
-                    };
-                    req.onerror = (event) => { console.error("Error loading notes:", event.target.errorCode); this.showToast('Error loading notes.', 'error'); this.isLoading = false; };
-                },
-                async saveNoteToDB(note) {
-                    if (!this.db) { this.showToast('Database not ready.', 'error'); return; }
-                    const noteToSave = { ...note }; delete noteToSave.decryptedContent;
-                    const tx = this.db.transaction(['notes'], 'readwrite');
-                    const store = tx.objectStore('notes');
-                    store.put(noteToSave).onerror = (event) => { this.showToast(`Error saving note ${noteToSave.title}.`, 'error'); };
-                },
-                async deleteNoteFromDB(noteId) {
-                    if (!this.db) { this.showToast('Database not ready.', 'error'); return; }
-                    const tx = this.db.transaction(['notes'], 'readwrite');
-                    tx.objectStore('notes').delete(noteId).onerror = (event) => { this.showToast('Error deleting note.', 'error');};
-                },
-                setActiveView(view) { this.activeView = view; },
-                resetForm() { this.form = { id: null, title: '', content: '', category: '', subCategory: '', isSecret: false, createdAt: null, updatedAt: null }; },
-                saveNote() {
-                    if (this.form.isSecret && !this.masterKeyInput && !this.form.id) {
-                        this.showToast('Master key required for new secret note.', 'info');
-                        this.promptMasterKey('encrypt', null, true); return;
-                    }
-                    const now = new Date().toISOString();
-                    let noteToSave;
-                    if (this.form.id) { // Edit
-                        const index = this.notes.findIndex(n => n.id === this.form.id);
-                        if (index === -1) return; // Should not happen
-                        noteToSave = { ...this.notes[index], ...this.form, updatedAt: now };
-                        const originalNote = this.notes[index];
-                        if ( (originalNote.isSecret && !this.form.isSecret) || (this.form.isSecret && this.form.content !== (originalNote.decryptedContent || originalNote.content) && !this.form.encryptedContent) ) {
-                            if (!this.form.isSecret) { // Made non-secret
-                                noteToSave.content = originalNote.decryptedContent || originalNote.content;
-                                delete noteToSave.encryptedContent;
-                            } else if (this.form.isSecret && !this.form.encryptedContent) { // Secret, content changed, needs re-encrypt
-                                 this.notes[index].decryptedContent = this.form.content; // Use form content to re-encrypt
-                                 this.promptMasterKey('encrypt', this.form.id); return;
-                            }
-                        }
-                        this.notes.splice(index, 1, noteToSave);
-                    } else { // New
-                        noteToSave = { ...this.form, id: uuidv4(), createdAt: now, updatedAt: now };
-                        if (noteToSave.isSecret) {
-                             this.notes.push(noteToSave); // Add temporarily
-                             this.promptMasterKey('encrypt', noteToSave.id); return;
-                        }
-                        this.notes.push(noteToSave);
-                    }
-                    this.saveNoteToDB(noteToSave);
-                    this.showToast(`Note "${noteToSave.title}" saved.`, 'success');
-                    this.setActiveView('notesList'); this.resetForm(); this.masterKeyInput = '';
-                },
-                editNote(note) {
-                    this.form = { ...note };
-                    if (note.isSecret && note.encryptedContent) {
-                        this.form.content = ''; this.promptMasterKey('decrypt', note.id, true);
-                    } else {
-                        this.form.content = note.decryptedContent || note.content; this.setActiveView('editNote');
-                    }
-                    this.showSidebar = false;
-                },
-                cancelEdit() {
-                    const note = this.form.id ? this.notes.find(n => n.id === this.form.id) : null;
-                    if (note && note.isSecret && note.decryptedContent) { this.promptMasterKey('encrypt', note.id); }
-                    this.resetForm(); this.setActiveView('notesList');
-                },
-                deleteNote(noteId) {
-                    if (confirm('Delete this note? Cannot be undone.')) {
-                        const idx = this.notes.findIndex(n => n.id === noteId);
-                        if (idx > -1) {
-                            const title = this.notes[idx].title;
-                            this.notes.splice(idx, 1); this.deleteNoteFromDB(noteId);
-                            this.showToast(`Note "${title}" deleted.`, 'success');
-                        }
-                    }
-                },
-                renderMarkdown(md) { return md ? DOMPurify.sanitize(marked.parse(md)) : ''; },
-                formatDate(d) { return d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''; },
-                selectCategory(cat) { this.currentCategory = cat; this.currentSubCategory = null; this.activeView = 'notesList'; this.showSidebar = false; },
-                selectSubCategory(subCat) { this.currentSubCategory = subCat; this.activeView = 'notesList'; this.showSidebar = false; },
-                uniqueSubcategoriesForCategory(catName) {
-                    if (!catName) return []; const subCats = new Set();
-                    this.notes.forEach(n => { if (n.category === catName && n.subCategory) subCats.add(n.subCategory); });
-                    return Array.from(subCats).sort();
-                },
-                promptMasterKey(action, noteId, forEditing = false) {
-                    this.modalAction = action; this.modalNoteId = noteId; this.editingAfterDecrypt = forEditing;
-                    this.showMasterKeyModal = true;
-                    this.$nextTick(() => { this.$el.querySelector('input[type="password"]')?.focus(); });
-                },
-                processMasterKeyAction() {
-                    if (!this.masterKeyInput) { this.showToast('Master key empty.', 'error'); return; }
-                    const noteIndex = this.notes.findIndex(n => n.id === this.modalNoteId);
-                    let noteToProcess = noteIndex !== -1 ? this.notes[noteIndex] : null;
-
-                    if (!noteToProcess && this.modalAction === 'encrypt') { // New note from form context
-                        if (this.activeView === 'addNote' && this.form.isSecret) {
-                            noteToProcess = this.form;
-                            if (!noteToProcess.id) noteToProcess.id = uuidv4(); // Ensure ID if not set by saveNote yet
-                            if (!noteToProcess.createdAt) noteToProcess.createdAt = new Date().toISOString();
-                        } else if (this.form.id === this.modalNoteId && this.form.isSecret) {
-                            noteToProcess = this.form;
-                        }
-                    }
-
-                    if (!noteToProcess) { this.showToast('Note not found.', 'error'); this.showMasterKeyModal = false; this.masterKeyInput = ''; return; }
-
-                    try {
-                        if (this.modalAction === 'encrypt') {
-                            const contentToEncrypt = noteToProcess.decryptedContent || (noteToProcess === this.form ? this.form.content : noteToProcess.content);
-                            if (!contentToEncrypt) { this.showToast('No content to encrypt.', 'error'); /* ... cleanup ... */ return; }
-                            const encrypted = CryptoJS.AES.encrypt(contentToEncrypt, this.masterKeyInput).toString();
-                            const updatedNoteData = {
-                                encryptedContent: encrypted,
-                                content: "[[ENCRYPTED CONTENT]]",
-                                decryptedContent: null,
-                                isSecret: true,
-                                updatedAt: new Date().toISOString()
-                            };
-
-                            if (noteIndex !== -1) { // Existing note
-                                Object.assign(this.notes[noteIndex], updatedNoteData);
-                                this.saveNoteToDB(this.notes[noteIndex]);
-                                this.showToast(`Note "${this.notes[noteIndex].title}" encrypted.`, 'success');
-                            } else if (noteToProcess === this.form) { // New note from form
-                                Object.assign(this.form, updatedNoteData); // Apply to form
-                                const newNote = { ...this.form }; // this.form already has id, createdAt from saveNote path
-                                
-                                // Ensure it's in the main notes array
-                                const existingIdxInNotes = this.notes.findIndex(n => n.id === newNote.id);
-                                if (existingIdxInNotes > -1) {
-                                    this.notes.splice(existingIdxInNotes, 1, newNote);
-                                } else {
-                                    this.notes.push(newNote);
-                                }
-                                this.saveNoteToDB(newNote);
-                                this.showToast(`New note "${newNote.title}" encrypted & saved.`, 'success');
-                                this.setActiveView('notesList'); this.resetForm();
-                            }
-                        } else if (this.modalAction === 'decrypt') {
-                            if (!noteToProcess.encryptedContent) { this.showToast('No encrypted content.', 'error'); return; }
-                            const bytes = CryptoJS.AES.decrypt(noteToProcess.encryptedContent, this.masterKeyInput);
-                            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-                            if (!decrypted) throw new Error("Decryption failed.");
-
-                            if (noteIndex !== -1) this.notes[noteIndex].decryptedContent = decrypted;
-                            else if (this.form.id === noteToProcess.id) { this.form.decryptedContent = decrypted; this.form.content = decrypted; }
-                            
-                            this.showToast(`Note "${noteToProcess.title}" decrypted.`, 'success');
-                            if (this.editingAfterDecrypt) {
-                                this.form = { ...noteToProcess, content: decrypted }; this.setActiveView('editNote'); this.editingAfterDecrypt = false;
-                            }
-                        }
-                    } catch (e) { console.error("Crypto error:", e); this.showToast('Crypto action failed.', 'error'); }
-                    finally { this.showMasterKeyModal = false; /* this.masterKeyInput = ''; */ }
-                },
-                exportNotes() { /* ... (unchanged) ... */
-                    const notesToExport = JSON.parse(JSON.stringify(this.notes));
-                    notesToExport.forEach(note => delete note.decryptedContent);
-                    const jsonData = JSON.stringify(notesToExport, null, 2);
-                    const blob = new Blob([jsonData], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob); const a = document.createElement('a');
-                    a.href = url; a.download = `VueNotesPro_backup_${new Date().toISOString().slice(0,10)}.json`;
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-                    this.showToast('Notes exported.', 'success'); this.showImportExportModal = false;
-                },
-                handleFileUpload(event) { /* ... (unchanged with improved validation) ... */
-                    const file = event.target.files[0];
-                    if (file && file.type === "application/json") {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const importedNotes = JSON.parse(e.target.result);
-                                if (!Array.isArray(importedNotes)) throw new Error("Not an array.");
-                                importedNotes.forEach(note => { // Stricter validation
-                                    if (!note.id || typeof note.id !== 'string' ||
-                                        !note.title || typeof note.title !== 'string' ||
-                                        (typeof note.content !== 'string' && typeof note.encryptedContent !== 'string') ||
-                                        typeof note.isSecret !== 'boolean' ||
-                                        !note.createdAt || isNaN(new Date(note.createdAt).getTime()) ||
-                                        !note.updatedAt || isNaN(new Date(note.updatedAt).getTime()) ) {
-                                        throw new Error(`Invalid note structure near ID ${note.id || 'unknown'}`);
-                                    }
-                                    note.createdAt = new Date(note.createdAt).toISOString();
-                                    note.updatedAt = new Date(note.updatedAt).toISOString();
-                                    delete note.decryptedContent;
-                                });
-                                importedNotes.forEach(importedNote => {
-                                    const existingIndex = this.notes.findIndex(n => n.id === importedNote.id);
-                                    if (existingIndex > -1) this.notes.splice(existingIndex, 1, importedNote); else this.notes.push(importedNote);
-                                    this.saveNoteToDB(importedNote);
-                                });
-                                this.showToast(`${importedNotes.length} notes imported.`, 'success');
-                                this.showImportExportModal = false;
-                            } catch (error) { console.error("Import error:", error); this.showToast(`Import error: ${error.message}`, 'error'); }
-                            finally { event.target.value = null; }
-                        };
-                        reader.readAsText(file);
-                    } else { this.showToast('Invalid file type.', 'error'); event.target.value = null; }
-                },
-                shareNote(note) { /* ... (unchanged) ... */
-                    const contentToShare = note.decryptedContent || note.content;
-                    if (note.isSecret && !note.decryptedContent) { this.showToast("Decrypt to share.", "info"); return; }
-                    const title = note.title; const text = `Note: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
-                    if (navigator.share) {
-                        navigator.share({ title, text }).catch(e => {this.copyToClipboardForSharing(title, text);});
-                    } else { this.copyToClipboardForSharing(title, text); }
-                },
-                copyToClipboardForSharing(title, text) { /* ... (unchanged) ... */
-                     navigator.clipboard.writeText(`${title}\n\n${text}`)
-                        .then(() => this.showToast('Share text copied!', 'success'))
-                        .catch(() => this.showToast('Copy failed.', 'error'));
-                },
-                copyToClipboard(text) { /* ... (unchanged) ... */
-                    if (!text) { this.showToast('Nothing to copy.', 'info'); return; }
-                    navigator.clipboard.writeText(text)
-                        .then(() => this.showToast('Copied!', 'success'))
-                        .catch(() => this.showToast('Copy failed.', 'error'));
-                },
-                toggleSidebar() { this.showSidebar = !this.showSidebar; },
-                showToast(message, type = 'success', duration = 3000) {
-                    this.toast = { message, type, show: true };
-                    setTimeout(() => { this.toast.show = false; }, duration);
-                },
-                handleKeyDown(event) { /* ... (unchanged) ... */
-                    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-                        if (this.activeView === 'addNote' || this.activeView === 'editNote') { event.preventDefault(); this.saveNote(); }
-                    }
-                }
-            },
-            async mounted() { // (Unchanged)
-                this.loadTheme();
-                try { await this.initDB(); await this.loadNotes(); }
-                catch (error) { this.showToast('App setup failed.', 'error'); }
-                window.addEventListener('keydown', this.handleKeyDown);
-            },
-            beforeUnmount() { window.removeEventListener('keydown', this.handleKeyDown); },
+            ar: { // Arabic Translations
+                title: 'قائمة ذكية', settingsTitle: 'الإعدادات', addItemPlaceholder: 'أدخل عنصر', quantityPlaceholder: 'الكمية (اختياري)',
+                recordButton: 'تسجيل اسم العنصر', addButton: 'إضافة', activeItemsHeader: 'نشط', doneItemsHeader: 'مكتمل',
+                emptyActiveList: 'لا توجد عناصر نشطة. أضف بعض!', emptyDoneList: 'لا توجد عناصر مكتملة بعد.', languageLabel: 'اللغة:',
+                speechLanguageLabel: 'الكلام:', generateTypical: 'اقترح العناصر المعتادة', importLabel: 'استيراد قائمة (.json)',
+                exportButton: 'تصدير قائمة (.json)', clearList: 'مسح القائمة الحالية', clearHistory: 'مسح سجل الشراء',
+                footerText: 'بنيت مع', alertRemoveItem: 'هل أنت متأكد أنك تريد إزالة "{itemName}"؟',
+                alertClearList: 'هل أنت متأكد أنك تريد مسح جميع العناصر من القائمة الحالية؟',
+                alertClearHistory: 'تحذير: سيؤدي هذا إلى حذف جميع بيانات السجل والاقتراحات بشكل دائم. هل أنت متأكد؟',
+                alertItemExists: '"{itemName}" موجود بالفعل في القائمة النشطة.', alertNoHistory: 'لا يوجد سجل كافٍ لإنشاء اقتراحات. استمر في استخدام التطبيق!',
+                alertItemsAdded: 'تمت إضافة {count} عناصر متكررة إلى قائمتك.', alertItemsExist: 'قائمتك الحالية تحتوي بالفعل على معظم العناصر المعتادة.',
+                alertExportSuccess: 'تم تصدير البيانات بنجاح!', alertExportFailed: 'فشل تصدير البيانات.',
+                alertImportConfirm: 'سيؤدي هذا إلى استبدال قائمتك الحالية وسجلك. هل أنت متأكد؟', alertImportSuccess: 'تم استيراد البيانات بنجاح!',
+                alertImportFailed: 'فشل استيراد البيانات: {error}', alertReadFileFailed: 'فشل قراءة الملف.',
+                alertListEmpty: 'القائمة فارغة بالفعل.', alertHistoryEmpty: 'السجل فارغ بالفعل.', alertNoInput: 'الرجاء إدخال اسم العنصر.',
+                alertSpeechError: 'خطأ في التعرف على الكلام: {error}', alertSpeechNotSupported: 'عذرًا، متصفحك لا يدعم التعرف على الكلام.',
+                editButtonTitle: 'تعديل العنصر', saveButtonTitle: 'حفظ التغييرات', cancelButtonTitle: 'إلغاء التعديل', removeButtonTitle: 'إزالة العنصر',
+                incrementQtyTitle: 'زيادة الكمية', decrementQtyTitle: 'تقليل الكمية', settingsButtonTitle: 'الإعدادات', backButtonTitle: 'العودة إلى القائمة',
+                quickAddButton: 'إضافة سريعة للمتكرر', quickAddTitle: 'إضافة العناصر المتكررة', alertQuickAddEmpty: 'لم يتم العثور على عناصر متكررة في السجل بعد.',
+                alertQuickAddMade: 'تمت إضافة {count} عناصر متكررة.', alertQuickAddFoundNoneNew: 'لا توجد عناصر متكررة جديدة لإضافتها.',
+                alertItemReactivated: '"{itemName}" كان في العناصر المكتملة وتم إعادة تنشيطه.',
+            }
         };
 
-        Vue.createApp(App).mount('#app');
+        // --- DOM Elements ---
+        const smartListApp = document.getElementById('smart-list-app');
+        const mainView = document.getElementById('main-view');
+        const settingsPage = document.getElementById('settings-page');
+        const goToSettingsButton = document.getElementById('go-to-settings');
+        const backToMainButton = document.getElementById('back-to-main');
+        const addItemFormContainer = document.getElementById('add-item-form-container');
+        const addItemForm = document.getElementById('add-item-form');
+        const itemInput = document.getElementById('add-item-input');
+        const quantityInput = document.getElementById('item-quantity');
+        const suggestionsList = document.getElementById('suggestions-list');
+        const audioButton = document.getElementById('audio-input-button');
+        const audioLangSelect = document.getElementById('audio_input_language');
+        const quickAddButton = document.getElementById('quick-add-button');
+        const activeList = document.getElementById('active-list');
+        const doneList = document.getElementById('done-list');
+        const emptyActiveListMessage = document.getElementById('empty-active-list-message');
+        const emptyDoneListMessage = document.getElementById('empty-done-list-message');
+        const uiLangSelect = document.getElementById('ui_language');
+        const generateTypicalButton = document.getElementById('generate-typical-list');
+        const importInput = document.getElementById('import-items');
+        const importLabel = document.querySelector('label[for="import-items"]');
+        const exportButton = document.getElementById('export-items');
+        const clearListButton = document.getElementById('clear-list');
+        const clearHistoryButton = document.getElementById('clear-history');
+
+        // --- State ---
+        let currentItems = [];
+        let itemPurchaseHistory = {};
+        let isSpeechRecognitionActive = false;
+        let draggedItem = null;
+        let currentLanguage = 'en';
+
+        // --- Speech Recognition ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onstart = () => {
+                isSpeechRecognitionActive = true;
+                audioButton.classList.add('recording');
+                audioButton.title = 'Stop Recording';
+            };
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                itemInput.value = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+                itemInput.focus();
+            };
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                alert(getTranslation('alertSpeechError', { error: event.error }));
+                isSpeechRecognitionActive = false;
+                audioButton.classList.remove('recording');
+                audioButton.title = getTranslation('recordButton');
+            };
+            recognition.onend = () => {
+                isSpeechRecognitionActive = false;
+                audioButton.classList.remove('recording');
+                audioButton.title = getTranslation('recordButton');
+            };
+            audioButton.addEventListener('click', () => {
+                if (!SpeechRecognition) {
+                    alert(getTranslation('alertSpeechNotSupported')); return;
+                }
+                if (isSpeechRecognitionActive) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.lang = audioLangSelect ? audioLangSelect.value : 'en-US';
+                        recognition.start();
+                    } catch (e) {
+                        console.error('Could not start recognition:', e);
+                        isSpeechRecognitionActive = false;
+                        audioButton.classList.remove('recording');
+                        audioButton.title = getTranslation('recordButton');
+                    }
+                }
+            });
+        } else {
+            audioButton.disabled = true;
+            audioButton.title = getTranslation('alertSpeechNotSupported');
+            console.warn('Speech Recognition API not supported.');
+        }
+
+        // --- Localization & Direction ---
+        const getTranslation = (key, replacements = {}) => {
+            let text = translations[currentLanguage]?.[key] || translations.en[key] || `Missing key: ${key}`;
+            for (const placeholder in replacements) {
+                text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+            }
+            return text;
+        };
+
+        const setDirection = (lang) => {
+            const isRTL = lang === 'ar';
+            document.documentElement.lang = lang;
+            document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+            // Adjust suggestion list position based on direction
+            if (suggestionsList) {
+                if (isRTL) {
+                    suggestionsList.style.left = 'auto';
+                    const formWidth = addItemForm.offsetWidth;
+                    const inputOffset = itemInput.offsetLeft + itemInput.offsetWidth; // right edge of input in RTL
+                     // The offset is calculated from the right for RTL.
+                    suggestionsList.style.right = `${formWidth - inputOffset}px`;
+
+                } else {
+                    suggestionsList.style.right = 'auto';
+                    suggestionsList.style.left = `${itemInput.offsetLeft}px`;
+                }
+                // Adjust width based on input field width
+                 if (itemInput) {
+                    suggestionsList.style.width = `${itemInput.offsetWidth}px`;
+                }
+            }
+        };
+
+        const setLanguage = (lang) => {
+            currentLanguage = lang;
+            localStorage.setItem('smartListLanguage', lang);
+            if (uiLangSelect) uiLangSelect.value = lang;
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-translate-key]').forEach(element => {
+                const key = element.dataset.translateKey;
+                const translation = getTranslation(key);
+                const span = element.querySelector('span:not(.drag-handle i)'); // Exclude icons in drag handles
+
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                    if (element.placeholder) element.placeholder = translation;
+                } else if (span && !element.classList.contains('drag-handle')) { // Ensure span is not part of drag handle's icon
+                    span.textContent = translation;
+                } else if (element.childNodes.length > 0 && element.childNodes[0].nodeType === Node.TEXT_NODE && element.childNodes[0].textContent.trim() !== '') {
+                     // Find the text node that is not just whitespace
+                    let textNode = Array.from(element.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+                    if (textNode) {
+                        textNode.textContent = translation;
+                    } else if (!element.querySelector('i')) { // If no icon, set full text
+                        element.textContent = translation;
+                    }
+                } else if (element.tagName === 'BUTTON' || element.tagName === 'H1' || element.tagName === 'H2' || element.tagName === 'P' || element.tagName === 'LABEL' || element.tagName === 'OPTION') {
+                    let icon = element.querySelector('i');
+                    let textNode = Array.from(element.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+                    
+                    if (textNode) { textNode.textContent = ` ${translation} `; }
+                    else if (!icon) { element.textContent = translation; } // If no icon and no existing text node
+                    // Re-order icon if necessary (RTL/LTR)
+                    if (icon) {
+                        element.normalize(); // Consolidate text nodes
+                        textNode = Array.from(element.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+                        if (!textNode) { // If text node was removed or not found, create one
+                             const newTextNode = document.createTextNode(` ${translation} `);
+                             if (document.documentElement.dir === 'rtl') {
+                                 element.prepend(newTextNode); // Text before icon in RTL
+                             } else {
+                                 element.append(newTextNode); // Text after icon in LTR
+                             }
+                        }
+                    }
+                }
+
+
+                // Update titles
+                let titleKey = key; // Base key for title
+                if (element.tagName === 'BUTTON' && (element.id === 'go-to-settings' || element.id === 'back-to-main' || element.id === 'quick-add-button' || element.id === 'audio-input-button' )) {
+                     if (element.id === 'go-to-settings') titleKey = 'settingsButtonTitle';
+                     else if (element.id === 'back-to-main') titleKey = 'backButtonTitle';
+                     else if (element.id === 'quick-add-button') titleKey = 'quickAddTitle';
+                     else if (element.id === 'audio-input-button' && SpeechRecognition) titleKey = 'recordButton'; // Title for record button
+                     else if (element.id === 'audio-input-button' && !SpeechRecognition) titleKey = 'alertSpeechNotSupported';
+                } else if (element.title !== undefined && translations[currentLanguage]?.[key + 'Title']) {
+                    titleKey = key + 'Title';
+                }
+                
+                const titleTranslation = getTranslation(titleKey);
+                if (titleTranslation && !titleTranslation.startsWith('Missing key:')) {
+                    element.title = titleTranslation;
+                } else if (element.title && (key.match(/Button$/) || key.match(/Label$/) || key.match(/Placeholder$/))) {
+                    // Fallback for buttons/labels if specific title key not found but base key exists
+                    if (translation && !translation.startsWith('Missing key:')) {
+                        element.title = translation;
+                    }
+                }
+            });
+            
+            setDirection(lang); // Apply RTL/LTR specific styles AFTER text is set
+            renderItems(); // Re-render items to apply new language to dynamic elements like item buttons
+        };
+
+
+        // --- Utility Functions ---
+        const generateId = () => `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const sanitizeText = (text) => text ? text.trim() : '';
+
+        // --- Local Storage ---
+        const saveState = () => {
+            try {
+                localStorage.setItem('smartListItems', JSON.stringify(currentItems));
+                localStorage.setItem('smartListItemHistory', JSON.stringify(itemPurchaseHistory));
+            } catch (e) { console.error('Error saving state:', e); }
+        };
+        const loadState = () => {
+            try {
+                const storedItems = localStorage.getItem('smartListItems');
+                const storedHistory = localStorage.getItem('smartListItemHistory');
+                currentItems = storedItems ? JSON.parse(storedItems).map(item => ({ ...item, isEditing: item.isEditing || false, completedAt: item.completedAt || null })) : [];
+                itemPurchaseHistory = storedHistory ? JSON.parse(storedHistory) : {};
+                currentLanguage = localStorage.getItem('smartListLanguage') || 'en';
+            } catch (e) {
+                console.error('Error loading state:', e);
+                currentItems = []; itemPurchaseHistory = {}; currentLanguage = 'en';
+            }
+        };
+
+        // --- History Management ---
+        const updateHistory = (itemText, isPurchase) => {
+            const text = sanitizeText(itemText).toLowerCase();
+            if (!text) return;
+            if (!itemPurchaseHistory[text]) {
+                itemPurchaseHistory[text] = { count: 0, lastPurchased: null, addedDate: new Date().toISOString() };
+            }
+            if (isPurchase) {
+                itemPurchaseHistory[text].count = (itemPurchaseHistory[text].count || 0) + 1;
+                itemPurchaseHistory[text].lastPurchased = new Date().toISOString();
+            } else if(!itemPurchaseHistory[text].addedDate) {
+                itemPurchaseHistory[text].addedDate = new Date().toISOString();
+            }
+        };
+
+        // --- Rendering ---
+        const renderItems = () => {
+            activeList.innerHTML = '';
+            doneList.innerHTML = '';
+
+            const justUncheckedItems = currentItems.filter(item => item.justUnchecked);
+            const otherItems = currentItems.filter(item => !item.justUnchecked);
+            const sortedOtherItems = [...otherItems].sort((a, b) => parseInt(a.id.split('-')[1] || 0) - parseInt(b.id.split('-')[1] || 0));
+            
+            // Place newly unchecked items at the top of the active list display by rendering them first among active items.
+            // Or, if you prefer them at the bottom, revert to: const itemsToRender = [...sortedOtherItems, ...justUncheckedItems];
+            const itemsToConsiderForRender = [...justUncheckedItems, ...sortedOtherItems];
+
+
+            let activeItemsToRender = itemsToConsiderForRender.filter(item => !item.done);
+            let doneItemsToRender = itemsToConsiderForRender.filter(item => item.done);
+            
+            // Sort done items by completion date (most recent first)
+            doneItemsToRender.sort((a, b) => {
+                const dateA = a.completedAt ? new Date(a.completedAt) : 0;
+                const dateB = b.completedAt ? new Date(b.completedAt) : 0;
+                return dateB - dateA; // Descending
+            });
+
+            activeItemsToRender.forEach(item => {
+                const el = createItemElement(item);
+                el.classList.add('item-enter');
+                activeList.appendChild(el);
+                requestAnimationFrame(() => { requestAnimationFrame(() => { el.classList.remove('item-enter'); }); });
+            });
+
+            doneItemsToRender.forEach(item => {
+                const el = createItemElement(item);
+                el.classList.add('item-enter');
+                doneList.appendChild(el);
+                requestAnimationFrame(() => { requestAnimationFrame(() => { el.classList.remove('item-enter'); }); });
+            });
+
+            currentItems.forEach(item => delete item.justUnchecked); // Clean up flag
+
+            checkEmptyMessages();
+            updateDragAndDropListeners();
+            saveState();
+        };
+
+        const createItemElement = (item) => {
+            const li = document.createElement('li');
+            li.dataset.id = item.id; li.draggable = true;
+
+            const handle = document.createElement('span');
+            handle.classList.add('drag-handle'); handle.innerHTML = '<i class="fas fa-grip-lines-vertical"></i>'; handle.title = 'Drag to reorder';
+            li.appendChild(handle);
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox'; checkbox.checked = item.done; checkbox.classList.add('item-checkbox');
+            checkbox.addEventListener('change', () => toggleDone(item.id));
+            li.appendChild(checkbox);
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.classList.add('item-details');
+            li.appendChild(detailsDiv);
+
+            if (item.isEditing) {
+                const textInput = document.createElement('input'); textInput.type = 'text'; textInput.value = item.text; textInput.classList.add('edit-item-text'); detailsDiv.appendChild(textInput);
+                const quantInput = document.createElement('input'); quantInput.type = 'text'; quantInput.value = item.quantity || ''; quantInput.placeholder = getTranslation('quantityPlaceholder'); quantInput.classList.add('edit-item-quantity'); detailsDiv.appendChild(quantInput);
+                setTimeout(() => textInput.focus(), 50);
+            } else {
+                const textSpan = document.createElement('span'); textSpan.textContent = item.text; textSpan.classList.add('item-text'); detailsDiv.appendChild(textSpan);
+                const quantWrapper = document.createElement('div'); quantWrapper.classList.add('item-quantity-display-wrapper');
+                const quantSpan = document.createElement('span'); quantSpan.textContent = item.quantity || ''; quantSpan.classList.add('item-quantity-display'); quantWrapper.appendChild(quantSpan);
+                if (!item.done && (item.quantity || item.quantity === '' || !isNaN(parseInt(item.quantity)))) {
+                    const stepperDiv = document.createElement('div'); stepperDiv.classList.add('quantity-stepper');
+                    const decreaseBtn = document.createElement('button'); decreaseBtn.innerHTML = '<i class="fas fa-minus"></i>'; decreaseBtn.title = getTranslation('decrementQtyTitle'); decreaseBtn.addEventListener('click', (e) => { e.stopPropagation(); adjustQuantity(item.id, -1); }); stepperDiv.appendChild(decreaseBtn);
+                    const increaseBtn = document.createElement('button'); increaseBtn.innerHTML = '<i class="fas fa-plus"></i>'; increaseBtn.title = getTranslation('incrementQtyTitle'); increaseBtn.addEventListener('click', (e) => { e.stopPropagation(); adjustQuantity(item.id, 1); }); stepperDiv.appendChild(increaseBtn);
+                    quantWrapper.appendChild(stepperDiv);
+                }
+                if (item.quantity || quantWrapper.querySelector('.quantity-stepper')) { detailsDiv.appendChild(quantWrapper); }
+            }
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('item-actions');
+            li.appendChild(actionsDiv);
+
+            if (item.isEditing) {
+                const saveButton = document.createElement('button'); saveButton.innerHTML = '<i class="fas fa-save"></i>'; saveButton.title = getTranslation('saveButtonTitle'); saveButton.classList.add('save-button'); saveButton.addEventListener('click', (e) => { e.stopPropagation(); const newText = li.querySelector('.edit-item-text').value; const newQuantity = li.querySelector('.edit-item-quantity').value; saveEdit(item.id, newText, newQuantity); }); actionsDiv.appendChild(saveButton);
+                const cancelButton = document.createElement('button'); cancelButton.innerHTML = '<i class="fas fa-times"></i>'; cancelButton.title = getTranslation('cancelButtonTitle'); cancelButton.classList.add('cancel-button'); cancelButton.addEventListener('click', (e) => { e.stopPropagation(); cancelEdit(item.id); }); actionsDiv.appendChild(cancelButton);
+                li.querySelectorAll('input[type="text"]').forEach(input => { input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveButton.click(); else if (e.key === 'Escape') cancelButton.click(); }); });
+            } else {
+                const editButton = document.createElement('button'); editButton.innerHTML = '<i class="fas fa-pencil-alt"></i>'; editButton.title = getTranslation('editButtonTitle'); editButton.classList.add('edit-button'); editButton.addEventListener('click', (e) => { e.stopPropagation(); startEdit(item.id); }); actionsDiv.appendChild(editButton);
+                const removeButton = document.createElement('button'); removeButton.innerHTML = '<i class="fas fa-trash-alt"></i>'; removeButton.title = getTranslation('removeButtonTitle'); removeButton.classList.add('remove-button'); removeButton.addEventListener('click', (e) => { e.stopPropagation(); removeItemWithAnimation(item.id, li); }); actionsDiv.appendChild(removeButton);
+            }
+            return li;
+        };
+
+        // --- Item CRUD ---
+        const addItem = (text, quantity) => {
+            const cleanText = sanitizeText(text);
+            const sanitizedQuantity = sanitizeText(quantity);
+
+            if (!cleanText) {
+                alert(getTranslation('alertNoInput'));
+                return;
+            }
+
+            const existingItemIndex = currentItems.findIndex(item => sanitizeText(item.text).toLowerCase() === cleanText.toLowerCase());
+
+            if (existingItemIndex > -1) {
+                const item = currentItems[existingItemIndex];
+                if (!item.done) { // Item is already active
+                    alert(getTranslation('alertItemExists', { itemName: cleanText }));
+                    return;
+                } else { // Item is in done list, reactivate it
+                    item.done = false;
+                    item.justUnchecked = true; // For animation/positioning
+                    if (sanitizedQuantity) { // Update quantity if new one provided
+                        item.quantity = sanitizedQuantity;
+                    }
+                    delete item.completedAt;
+                    // alert(getTranslation('alertItemReactivated', { itemName: cleanText })); // Optional: notify user
+                    // No need to update history here as it's becoming active, not a new purchase
+                }
+            } else { // New item
+                const newItem = { 
+                    id: generateId(), 
+                    text: cleanText, 
+                    quantity: sanitizedQuantity, 
+                    done: false, 
+                    isEditing: false,
+                    completedAt: null 
+                };
+                currentItems.unshift(newItem); // Add to the beginning of the array
+                updateHistory(cleanText, false); // Update history for suggestion
+            }
+            
+            renderItems();
+            itemInput.value = ''; // Clear input fields
+            quantityInput.value = '';
+            itemInput.focus();
+            suggestionsList.classList.add('hidden');
+        };
+
+        const removeItemWithAnimation = (id, element) => {
+            const item = currentItems.find(item => item.id === id);
+            if (!item || !confirm(getTranslation('alertRemoveItem', { itemName: item.text }))) return;
+            element.classList.add('item-exit');
+            element.addEventListener('transitionend', () => {
+                const itemIndex = currentItems.findIndex(item => item.id === id);
+                if (itemIndex > -1) { currentItems.splice(itemIndex, 1); saveState(); checkEmptyMessages(); }
+            }, { once: true });
+        };
+        const checkEmptyMessages = () => {
+            const hasActive = currentItems.some(item => !item.done);
+            const hasDone = currentItems.some(item => item.done);
+            emptyActiveListMessage.classList.toggle('visible', !hasActive);
+            emptyDoneListMessage.classList.toggle('visible', !hasDone);
+            activeList.previousElementSibling.style.display = (hasActive || currentItems.length === 0) ? 'block' : 'none'; // Show header if list is empty or has active
+            doneList.previousElementSibling.style.display = hasDone ? 'block' : 'none';
+        };
+        const toggleDone = (id) => {
+            const itemIndex = currentItems.findIndex(item => item.id === id);
+            if (itemIndex > -1) {
+                const item = currentItems[itemIndex];
+                const wasDone = item.done;
+                item.done = !item.done;
+
+                if (item.done && !wasDone) { // Item marked as done
+                    item.completedAt = new Date().toISOString();
+                    updateHistory(item.text, true); 
+                } else if (!item.done && wasDone) { // Item unmarked (became active)
+                    item.justUnchecked = true;
+                    delete item.completedAt;
+                }
+                
+                if (item.isEditing) item.isEditing = false; // Cancel edit mode if toggling done status
+                renderItems();
+            }
+        };
+        const startEdit = (id) => { currentItems.forEach(item => item.isEditing = (item.id === id)); renderItems(); };
+        const saveEdit = (id, newText, newQuantity) => {
+            const cleanText = sanitizeText(newText);
+            if (!cleanText) { alert(getTranslation('alertNoInput')); return; }
+            const itemIndex = currentItems.findIndex(item => item.id === id);
+            if (itemIndex > -1) {
+                currentItems[itemIndex] = { ...currentItems[itemIndex], text: cleanText, quantity: sanitizeText(newQuantity), isEditing: false };
+            }
+            renderItems();
+        };
+        const cancelEdit = (id) => { const itemIndex = currentItems.findIndex(item => item.id === id); if (itemIndex > -1) currentItems[itemIndex].isEditing = false; renderItems(); };
+        const adjustQuantity = (id, change) => {
+            const itemIndex = currentItems.findIndex(item => item.id === id);
+            if (itemIndex > -1) {
+                const item = currentItems[itemIndex];
+                let currentQuantity = parseInt(item.quantity || '0');
+                if (isNaN(currentQuantity)) currentQuantity = 0;
+                let newQuantity = Math.max(0, currentQuantity + change); // Quantity cannot be negative
+                item.quantity = newQuantity > 0 ? newQuantity.toString() : ''; // Store as empty string if zero for display
+                renderItems();
+            }
+        };
+
+        // --- Feature Functions ---
+        const showSuggestions = (query) => {
+            suggestionsList.innerHTML = '';
+            if (!query) { suggestionsList.classList.add('hidden'); return; }
+            const lowerQuery = query.toLowerCase();
+            const historyEntries = Object.entries(itemPurchaseHistory);
+            const sortedHistory = historyEntries.sort(([, histA], [, histB]) => (histB.count || 0) - (histA.count || 0));
+            const matchingSuggestions = sortedHistory.filter(([text]) => text.includes(lowerQuery)).slice(0, 5);
+            
+            if (matchingSuggestions.length > 0) {
+                matchingSuggestions.forEach(([text]) => {
+                    const li = document.createElement('li');
+                    li.textContent = text.charAt(0).toUpperCase() + text.slice(1);
+                    li.addEventListener('click', () => { itemInput.value = li.textContent; suggestionsList.classList.add('hidden'); suggestionsList.innerHTML = ''; quantityInput.focus(); });
+                    suggestionsList.appendChild(li);
+                });
+                // Position and size suggestions list relative to the input field
+                const inputRect = itemInput.getBoundingClientRect();
+                const formRect = addItemForm.getBoundingClientRect();
+
+                if (document.documentElement.dir === 'rtl') {
+                    suggestionsList.style.left = 'auto';
+                    // Calculate right based on the input's position within the form.
+                    // suggestionsList.style.right = (formRect.right - inputRect.right) + 'px'; // More precise
+                     suggestionsList.style.right = `${addItemForm.offsetWidth - (itemInput.offsetLeft + itemInput.offsetWidth)}px`;
+
+                } else {
+                    suggestionsList.style.right = 'auto';
+                    suggestionsList.style.left = itemInput.offsetLeft + 'px';
+                }
+                suggestionsList.style.width = itemInput.offsetWidth + 'px';
+                suggestionsList.style.top = (itemInput.offsetTop + itemInput.offsetHeight -1) + 'px'; // Position below input
+
+
+                suggestionsList.classList.remove('hidden');
+            } else { suggestionsList.classList.add('hidden'); }
+        };
+        const generateTypicalList = () => {
+            const threshold = 2; const maxItems = 15;
+            const typicalItems = Object.entries(itemPurchaseHistory).filter(([, hist]) => (hist.count || 0) >= threshold).sort(([, histA], [, histB]) => (histB.count || 0) - (histA.count || 0)).slice(0, maxItems).map(([text]) => text);
+            if (typicalItems.length === 0) { alert(getTranslation('alertNoHistory')); return; }
+            let addedCount = 0;
+            typicalItems.forEach(text => {
+                const originalCaseText = Object.keys(itemPurchaseHistory).find(k => k.toLowerCase() === text) || text;
+                // addItem will handle if it's active, done, or new
+                const itemCleanText = sanitizeText(originalCaseText.charAt(0).toUpperCase() + originalCaseText.slice(1));
+                const existingItem = currentItems.find(i => sanitizeText(i.text).toLowerCase() === itemCleanText.toLowerCase());
+                if (!existingItem || existingItem.done) { // Add if new, or reactivate if done
+                    addItem(itemCleanText, ''); 
+                    addedCount++;
+                }
+            });
+            if (addedCount === 0 && typicalItems.length > 0) alert(getTranslation('alertItemsExist'));
+            else if (addedCount > 0) { /* Optional: some feedback for added items */ }
+        };
+        const addFrequentItems = () => {
+            const maxToAdd = 5;
+            const frequentItems = Object.entries(itemPurchaseHistory).filter(([, hist]) => (hist.count || 0) > 0).sort(([, histA], [, histB]) => (histB.count || 0) - (histA.count || 0)).map(([text]) => text);
+            if (frequentItems.length === 0) { alert(getTranslation('alertQuickAddEmpty')); return; }
+            let addedCount = 0;
+            for (const text of frequentItems) {
+                if (addedCount >= maxToAdd) break;
+                const originalCaseText = Object.keys(itemPurchaseHistory).find(k => k.toLowerCase() === text) || text;
+                const itemCleanText = sanitizeText(originalCaseText.charAt(0).toUpperCase() + originalCaseText.slice(1));
+                const existingItem = currentItems.find(i => sanitizeText(i.text).toLowerCase() === itemCleanText.toLowerCase() && !i.done);
+
+                if (!existingItem) { // Only add if not already active (addItem will handle reactivating from done)
+                    addItem(itemCleanText, ''); 
+                    addedCount++;
+                }
+            }
+            if (addedCount > 0) {
+                 console.log(getTranslation('alertQuickAddMade', { count: addedCount }));
+                 quickAddButton.style.backgroundColor = '#a6d7ff';
+                 setTimeout(() => { quickAddButton.style.backgroundColor = ''; }, 500);
+            } else { alert(getTranslation('alertQuickAddFoundNoneNew')); }
+        };
+        const exportData = () => {
+            try {
+                const dataToExport = { currentList: currentItems.map(({ isEditing, justUnchecked, ...item }) => item), purchaseHistory: itemPurchaseHistory };
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.download = `smart_list_backup_${new Date().toISOString().slice(0,10)}.json`;
+                link.href = url; link.click(); URL.revokeObjectURL(url);
+            } catch (e) { console.error('Export failed:', e); alert(getTranslation('alertExportFailed')); }
+        };
+        const importData = (event) => {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData && typeof importedData === 'object') {
+                        const hasList = Array.isArray(importedData.currentList);
+                        const hasHistory = typeof importedData.purchaseHistory === 'object';
+                        if (!confirm(getTranslation('alertImportConfirm'))) { importInput.value = ''; return; }
+                        currentItems = hasList ? importedData.currentList.map(item => ({...item, isEditing: false, completedAt: item.completedAt || null })) : [];
+                        itemPurchaseHistory = hasHistory ? importedData.purchaseHistory : {};
+                        renderItems(); alert(getTranslation('alertImportSuccess')); showMainView();
+                    } else { throw new Error('Invalid file format.'); }
+                } catch (error) { console.error('Import failed:', error); alert(getTranslation('alertImportFailed', { error: error.message })); }
+                finally { importInput.value = ''; }
+            };
+            reader.onerror = () => { alert(getTranslation('alertReadFileFailed')); importInput.value = ''; };
+            reader.readAsText(file);
+        };
+        const clearCurrentList = () => {
+            if (currentItems.length > 0 && confirm(getTranslation('alertClearList'))) {
+                const allItemElements = [...activeList.children, ...doneList.children];
+                if (allItemElements.length > 0) {
+                    allItemElements.forEach(el => el.classList.add('item-exit'));
+                    // Wait for the last animation to complete before clearing data
+                    const lastAnimatedElement = allItemElements[allItemElements.length - 1];
+                    if (lastAnimatedElement) {
+                        lastAnimatedElement.addEventListener('transitionend', () => { currentItems = []; renderItems(); }, { once: true });
+                    } else { // Should not happen if allItemElements.length > 0
+                         currentItems = []; renderItems();
+                    }
+                } else { currentItems = []; renderItems(); }
+            } else if (currentItems.length === 0) { alert(getTranslation('alertListEmpty')); }
+        };
+        const clearHistory = () => {
+            if (Object.keys(itemPurchaseHistory).length > 0 && confirm(getTranslation('alertClearHistory'))) {
+                itemPurchaseHistory = {}; saveState(); // Save empty history
+                // No need to call renderItems() unless history affects display directly beyond suggestions
+            } else if (Object.keys(itemPurchaseHistory).length === 0) { alert(getTranslation('alertHistoryEmpty')); }
+        };
+
+        // --- Drag and Drop ---
+        let dragOverElement = null;
+        function handleDragStart(e) { if (!e.target.closest('.drag-handle')) { e.preventDefault(); return; } draggedItem = e.currentTarget; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', draggedItem.dataset.id); setTimeout(() => { if (draggedItem) draggedItem.classList.add('dragging'); }, 0); }
+        function handleDragEnd() { if (draggedItem) draggedItem.classList.remove('dragging'); if (dragOverElement) dragOverElement.classList.remove('drag-over'); draggedItem = null; dragOverElement = null; }
+        function handleDragOver(e) { e.preventDefault(); if (!draggedItem) return; const targetList = e.target.closest('.item-list'); const targetListItem = e.target.closest('li'); if (!targetList || targetList.id !== draggedItem.parentElement.id) { e.dataTransfer.dropEffect = 'none'; if (dragOverElement) dragOverElement.classList.remove('drag-over'); dragOverElement = null; return; } e.dataTransfer.dropEffect = 'move'; if (targetListItem && targetListItem !== draggedItem && targetListItem !== dragOverElement) { if (dragOverElement) dragOverElement.classList.remove('drag-over'); targetListItem.classList.add('drag-over'); dragOverElement = targetListItem; } }
+        function handleDragLeave(e) { if (e.target.classList.contains('item-list') || (dragOverElement && e.target === dragOverElement && !dragOverElement.contains(e.relatedTarget)) ) { if(dragOverElement) dragOverElement.classList.remove('drag-over'); dragOverElement = null; } }
+        function handleDrop(e) {
+            e.preventDefault();
+            if (dragOverElement && draggedItem && dragOverElement !== draggedItem) {
+                const draggedId = e.dataTransfer.getData('text/plain'); const targetId = dragOverElement.dataset.id;
+                const draggedIndex = currentItems.findIndex(item => item.id === draggedId); let targetIndex = currentItems.findIndex(item => item.id === targetId);
+                if (draggedIndex !== -1 && targetIndex !== -1) { const [movedItem] = currentItems.splice(draggedIndex, 1); targetIndex = currentItems.findIndex(item => item.id === targetId); currentItems.splice(targetIndex, 0, movedItem); renderItems(); }
+            }
+            if (dragOverElement) dragOverElement.classList.remove('drag-over'); if (draggedItem) draggedItem.classList.remove('dragging'); draggedItem = null; dragOverElement = null;
+        }
+        function updateDragAndDropListeners() {
+            const items = document.querySelectorAll('.item-list li');
+            items.forEach(item => {
+                item.removeEventListener('dragstart', handleDragStart); item.removeEventListener('dragend', handleDragEnd); item.removeEventListener('dragover', handleDragOver); item.removeEventListener('dragleave', handleDragLeave); item.removeEventListener('drop', handleDrop);
+                item.ontouchstart = null; item.ontouchmove = null; item.ontouchend = null;
+                item.addEventListener('dragstart', handleDragStart); item.addEventListener('dragend', handleDragEnd); item.addEventListener('dragover', handleDragOver); item.addEventListener('dragleave', handleDragLeave); item.addEventListener('drop', handleDrop);
+                const handle = item.querySelector('.drag-handle'); if (handle) { addTouchListenersToHandle(handle, item); }
+            });
+        }
+        function addTouchListenersToHandle(handle, item) {
+            let touchStartY = 0, currentTouchY = 0, touchDraggedItem = null, touchDragOverElement = null, scrollInterval = null;
+            handle.ontouchstart = (e) => { touchDraggedItem = item; touchStartY = e.touches[0].clientY; touchDraggedItem.style.opacity = '0.6'; touchDraggedItem.style.zIndex = '1000'; touchDraggedItem.style.transition = 'none'; document.addEventListener('touchmove', handleTouchMove, { passive: false }); document.addEventListener('touchend', handleTouchEnd, { once: true }); };
+            const handleTouchMove = (e) => { if (!touchDraggedItem) return; e.preventDefault(); currentTouchY = e.touches[0].clientY; const diffY = currentTouchY - touchStartY; touchDraggedItem.style.transform = `translateY(${diffY}px) scale(1.02)`; const elementUnderTouch = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY); const potentialTarget = elementUnderTouch ? elementUnderTouch.closest('li') : null; if (potentialTarget && potentialTarget !== touchDraggedItem && potentialTarget.parentElement.id === touchDraggedItem.parentElement.id) { if (touchDragOverElement && touchDragOverElement !== potentialTarget) { touchDragOverElement.classList.remove('drag-over'); } if (potentialTarget !== touchDragOverElement) { potentialTarget.classList.add('drag-over'); touchDragOverElement = potentialTarget; } } else { if (touchDragOverElement) { touchDragOverElement.classList.remove('drag-over'); touchDragOverElement = null; } } const viewportHeight = window.innerHeight; const scrollThreshold = 80; const scrollSpeed = 15; clearInterval(scrollInterval); if (currentTouchY < scrollThreshold) { scrollInterval = setInterval(() => window.scrollBy(0, -scrollSpeed), 50); } else if (currentTouchY > viewportHeight - scrollThreshold) { scrollInterval = setInterval(() => window.scrollBy(0, scrollSpeed), 50); } };
+            const handleTouchEnd = () => { document.removeEventListener('touchmove', handleTouchMove); clearInterval(scrollInterval); if (!touchDraggedItem) return; touchDraggedItem.style.opacity = '1'; touchDraggedItem.style.transform = 'translateY(0) scale(1)'; touchDraggedItem.style.zIndex = 'auto'; touchDraggedItem.style.transition = ''; if (touchDragOverElement) { touchDragOverElement.classList.remove('drag-over'); const draggedId = touchDraggedItem.dataset.id; const targetId = touchDragOverElement.dataset.id; const draggedIndex = currentItems.findIndex(item => item.id === draggedId); let targetIndex = currentItems.findIndex(item => item.id === targetId); if (draggedIndex !== -1 && targetIndex !== -1) { const [movedItem] = currentItems.splice(draggedIndex, 1); targetIndex = currentItems.findIndex(item => item.id === targetId); currentItems.splice(targetIndex, 0, movedItem); renderItems(); } } touchDraggedItem = null; touchDragOverElement = null; };
+        }
+
+        // --- Page Navigation ---
+        const showSettingsPage = () => { settingsPage.classList.add('visible'); mainView.classList.add('hidden'); window.scrollTo(0, 0); };
+        const showMainView = () => { settingsPage.classList.remove('visible'); mainView.classList.remove('hidden'); };
+
+        // --- Event Listeners ---
+        addItemForm.addEventListener('submit', (e) => { e.preventDefault(); addItem(itemInput.value, quantityInput.value); });
+        itemInput.addEventListener('input', () => showSuggestions(itemInput.value));
+        itemInput.addEventListener('focus', () => showSuggestions(itemInput.value));
+        // Global click listener to hide suggestions when clicking outside relevant areas
+        document.addEventListener('click', (e) => { 
+            const path = e.composedPath(); // Get the full event path
+            const isClickInsideFormOrSuggestions = path.some(el => 
+                el === addItemFormContainer || el === suggestionsList
+            );
+            if (!isClickInsideFormOrSuggestions) {
+                suggestionsList.classList.add('hidden');
+            }
+        });
+        quickAddButton.addEventListener('click', addFrequentItems);
+        goToSettingsButton.addEventListener('click', showSettingsPage);
+        backToMainButton.addEventListener('click', showMainView);
+        if (uiLangSelect) uiLangSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+        if (generateTypicalButton) generateTypicalButton.addEventListener('click', generateTypicalList);
+        if (exportButton) exportButton.addEventListener('click', exportData);
+        if (importInput) importInput.addEventListener('change', importData);
+        if (clearListButton) clearListButton.addEventListener('click', clearCurrentList);
+        if (clearHistoryButton) clearHistoryButton.addEventListener('click', clearHistory);
+        
+        // Adjust suggestion list on window resize
+        window.addEventListener('resize', () => {
+            if (!suggestionsList.classList.contains('hidden')) {
+                showSuggestions(itemInput.value); // Re-calculate position and width
+            }
+             setDirection(currentLanguage); // re-evaluate suggestion box position on resize too
+        });
+
+        // --- Initialization ---
+        loadState();
+        setLanguage(currentLanguage); // Applies language, direction, and initial render
+        checkEmptyMessages(); // Ensure empty messages are correct on load
+
     </script>
 </body>
 </html>
