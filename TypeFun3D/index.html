@@ -3,947 +3,832 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TypeFun3D - Kids Typing Tutor</title>
+    <title>TypeMasterKids - Structured Typing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; color: #333; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e0e0e0; color: #333; }
         #container { width: 100vw; height: 100vh; }
         .ui-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            color: white;
-            text-align: center;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10; color: white; text-align: center;
+            transition: opacity 0.3s ease-in-out;
         }
         .ui-panel {
-            background-color: #4a90e2; /* Pleasant blue */
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            min-width: 300px;
-            max-width: 90%;
+            background-color: #3f51b5; /* Indigo */
+            padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+            min-width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;
         }
-        .ui-panel h2 { margin-top: 0; color: #ffeb3b; /* Bright yellow */ }
-        .ui-panel button, .ui-panel input[type="text"], .ui-panel select {
-            padding: 10px 15px;
-            margin: 10px 5px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #ffc107; /* Amber */
-            color: #333;
+        .ui-panel h2 { margin-top: 0; color: #ffca28; /* Amber */ font-size: 2em; }
+        .ui-panel p { font-size: 1.1em; margin-bottom: 15px; }
+        .ui-panel label { display: block; margin-top:15px; color: #c5cae9; font-size: 0.9em; text-align: left;}
+        .ui-panel button, .ui-panel input, .ui-panel select {
+            padding: 12px 20px; margin: 10px 5px; border: none; border-radius: 10px;
+            font-size: 1em; cursor: pointer; background-color: #5c6bc0; /* Indigo lighter */
+            color: white; transition: background-color 0.2s;
         }
-        .ui-panel button:hover { background-color: #ffa000; /* Darker amber */ }
-        .ui-panel input[type="text"] { background-color: white; color: #333; cursor: text; }
-        .ui-panel ul { list-style: none; padding: 0; }
-        .ui-panel li { margin-bottom: 10px; }
+        .ui-panel button:hover { background-color: #7986cb; }
+        .ui-panel input[type="text"], .ui-panel select { background-color: #e8eaf6; color: #333; cursor: text; }
+        .ui-panel input[type="file"] { display: none; }
+        .ui-panel hr { border: 0; height: 1px; background-color: #5c6bc0; margin: 20px 0; }
+
         #hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0,0,0,0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 18px;
-            z-index: 5;
-            display: none; /* Hidden initially */
+            position: absolute; top: 15px; left: 15px; background-color: rgba(0,0,0,0.65);
+            color: white; padding: 12px 18px; border-radius: 10px; font-size: 1.1em; z-index: 5;
+            display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         #hud p { margin: 5px 0; }
-        #importExportButtons { margin-top: 20px; }
-        #importFile { display: none; }
-        .level-button {
-            background-color: #8bc34a; /* Green */
-            color: white;
-        }
-        .level-button.locked {
-            background-color: #9e9e9e; /* Grey for locked */
-            cursor: not-allowed;
-        }
-        .level-button:not(.locked):hover {
-            background-color: #689f38; /* Darker green */
-        }
-        .current-target-display {
+        #hudStrong { font-weight: bold; color: #ffca28; }
+
+        #typingArea {
             position: absolute;
-            bottom: 15%; /* Above catcher */
+            top: 65%; /* Position for the target string */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 48px;
+            font-size: 3em; /* Larger for visibility */
             font-weight: bold;
-            color: #ffeb3b;
-            background-color: rgba(0,0,0,0.3);
-            padding: 5px 15px;
-            border-radius: 10px;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 15px 30px;
+            border-radius: 15px;
+            z-index: 6;
+            min-width: 60%;
+            text-align: center;
+            display: none; /* Hidden initially */
+            letter-spacing: 2px;
+            white-space: pre; /* Preserve spaces */
+        }
+        .typed-char-correct { color: #a5d6a7; /* Light Green */ }
+        .current-target-char {
+            color: #ffeb3b; /* Bright Yellow */
+            text-decoration: underline;
+            text-decoration-color: #ffeb3b;
+            text-decoration-thickness: 3px;
+            padding: 0 2px;
+            display: inline-block; /* Needed for some styling consistency */
+        }
+        .typed-char-error {
+            color: #ef9a9a; /* Light Red */
+            background-color: rgba(255,0,0,0.2);
+            text-decoration: line-through;
+        }
+
+        #charTimeIndicator {
+            position: absolute;
+            bottom: 15%; /* Positioned above potential on-screen keyboard or at bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: 25px;
+            background-color: #757575; /* Grey */
+            border: 2px solid #424242;
+            border-radius: 12px;
+            overflow: hidden;
             z-index: 6;
             display: none;
         }
+        #charTimeIndicatorBar {
+            width: 100%;
+            height: 100%;
+            background-color: #66bb6a; /* Green */
+            border-radius: 10px 0 0 10px; /* Keep left radius if bar shrinks */
+            transition: width 0.1s linear; /* Smooth depletion */
+        }
+        .rtl { direction: rtl; text-align: right; }
+        .level-button { background-color: #009688; /* Teal */ margin: 5px !important; }
+        .level-button.locked { background-color: #9e9e9e; cursor: not-allowed; opacity: 0.7; }
+        .level-button:not(.locked):hover { background-color: #26a69a; }
+        .level-button small { font-size: 0.8em; color: #e0f2f1; display: block; margin-top:3px;}
     </style>
 </head>
-<body>
+<body id="appBody">
     <div id="container"></div>
 
     <div id="hud">
-        <p>Profile: <span id="hudProfile"></span></p>
-        <p>Level: <span id="hudLevel"></span></p>
-        <p>Score: <span id="hudScore">0</span></p>
-        <p>Accuracy: <span id="hudAccuracy">100</span>%</p>
-        <p>WPM: <span id="hudWPM">0</span></p>
-        <p>Streak: <span id="hudStreak">0</span></p>
+        <p><span data-i18n="profile">Profile</span>: <strong id="hudProfileName"></strong></p>
+        <p><span data-i18n="lesson">Lesson</span>: <strong id="hudLessonName"></strong></p>
+        <p><span data-i18n="score">Score</span>: <strong id="hudScore">0</strong></p>
+        <p><span data-i18n="accuracy">Accuracy</span>: <strong id="hudAccuracy">100%</strong></p>
+        <p><span data-i18n="wpm">WPM</span>: <strong id="hudWPM">0</strong></p>
+        <p><span data-i18n="target_criteria">Target</span>: <strong id="hudTargetInfo"></strong></p>
     </div>
 
-    <div id="currentTargetDisplay" class="current-target-display">A</div>
+    <div id="typingArea">
+        <!-- Content generated by JS: e.g. <span class="typed-char-correct">T</span><span class="current-target-char">y</span><span>pe This</span> -->
+    </div>
+    <div id="charTimeIndicator">
+        <div id="charTimeIndicatorBar"></div>
+    </div>
 
+    <!-- UI Screens -->
     <div id="profileScreen" class="ui-overlay">
         <div class="ui-panel">
-            <h2>Welcome to TypeFun3D!</h2>
-            <p>Select or create a profile:</p>
+            <h2 data-i18n="welcome_title">Welcome!</h2>
+            <p data-i18n="profile_select_create">Select or create a profile:</p>
             <select id="profileSelect"></select>
-            <button id="selectProfileBtn">Select Profile</button>
+            <button id="loadProfileBtn" data-i18n="load_profile">Load Profile</button>
             <hr>
-            <input type="text" id="newProfileName" placeholder="New profile name">
-            <button id="createProfileBtn">Create Profile</button>
-            <div id="importExportButtons">
-                <button id="exportDataBtn">Export All Progress</button>
-                <input type="file" id="importFile" accept=".json">
-                <button onclick="document.getElementById('importFile').click();">Import Progress</button>
+            <h3 data-i18n="create_new_profile">Create New Profile</h3>
+            <input type="text" id="newProfileInputName" data-i18n-placeholder="profile_name_placeholder" placeholder="Profile Name">
+            <div>
+                <label for="keyboardLayoutSelect" data-i18n="keyboard_layout_label">Keyboard Layout:</label>
+                <select id="keyboardLayoutSelect">
+                    <option value="qwerty">QWERTY</option>
+                    <option value="azerty">AZERTY</option>
+                    <option value="arabic_101">Arabic (PC 101)</option>
+                </select>
             </div>
+            <div>
+                <label for="uiLanguageSelect" data-i18n="language_label">UI Language:</label>
+                <select id="uiLanguageSelect">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+            <button id="createProfileBtn" data-i18n="create_profile_btn">Create Profile</button>
+            <hr>
+            <button id="exportProgressBtn" data-i18n="export_progress_btn">Export Progress</button>
+            <button onclick="document.getElementById('importProgressFile').click();" data-i18n="import_progress_btn">Import Progress</button>
+            <input type="file" id="importProgressFile" accept=".json">
         </div>
     </div>
 
-    <div id="levelSelectScreen" class="ui-overlay" style="display: none;">
+    <div id="lessonSelectScreen" class="ui-overlay" style="display: none;">
         <div class="ui-panel">
-            <h2>Select Level</h2>
-            <p>Profile: <span id="currentProfileName"></span></p>
-            <div id="levelList"></div>
-            <button id="backToProfileBtn">Back to Profiles</button>
+            <h2 data-i18n="lesson_select_title">Select a Lesson</h2>
+            <p><span data-i18n="current_profile">Current Profile</span>: <strong id="activeProfileName"></strong></p>
+            <div id="lessonsGrid"></div>
+            <button id="backToProfilesBtn" data-i18n="back_to_profiles_btn">Back to Profiles</button>
         </div>
     </div>
 
-    <div id="gameOverScreen" class="ui-overlay" style="display: none;">
+    <div id="lessonIntroScreen" class="ui-overlay" style="display: none;">
         <div class="ui-panel">
-            <h2 id="gameOverTitle">Level Complete!</h2>
-            <p>Level: <span id="summaryLevel"></span></p>
-            <p>Score: <span id="summaryScore"></span></p>
-            <p>Accuracy: <span id="summaryAccuracy"></span>%</p>
-            <p>WPM: <span id="summaryWPM"></span></p>
-            <p>High Score: <span id="summaryHighScore"></span></p>
-            <button id="nextLevelBtn">Next Level</button>
-            <button id="replayLevelBtn">Replay Level</button>
-            <button id="backToLevelsBtn">Back to Level Select</button>
+            <h2 id="introLessonTitle"></h2>
+            <p id="introLessonDescription"></p>
+            <p><strong data-i18n="keys_to_practice">Keys to Practice:</strong> <span id="introKeysList"></span></p>
+            <p><strong data-i18n="lesson_objective">Objective:</strong> <span id="introObjective"></span></p>
+            <button id="startLessonBtn" data-i18n="start_lesson_btn">Start Lesson</button>
+            <button id="backToLessonsBtn" data-i18n="back_to_lessons_btn">Back to Lessons</button>
+        </div>
+    </div>
+
+    <div id="sessionSummaryScreen" class="ui-overlay" style="display: none;">
+        <div class="ui-panel">
+            <h2 id="summaryTitleText"></h2>
+            <p><span data-i18n="lesson_name">Lesson</span>: <strong id="summaryLessonName"></strong></p>
+            <p><span data-i18n="final_score">Score</span>: <strong id="summaryScore"></strong></p>
+            <p><span data-i18n="final_accuracy">Accuracy</span>: <strong id="summaryAccuracy"></strong>%</p>
+            <p><span data-i18n="final_wpm">WPM</span>: <strong id="summaryWPM"></strong></p>
+            <p id="summaryNewHighScoreText" style="color: #ffeb3b; font-weight: bold; display:none;" data-i18n="new_high_score_text">New High Score!</p>
+            <p id="summaryCriteriaFeedback"></p>
+            <button id="replayCurrentLessonBtn" data-i18n="replay_lesson_btn">Replay Lesson</button>
+            <button id="proceedToNextLessonBtn" data-i18n="next_lesson_btn" style="display:none;">Next Lesson</button>
+            <button id="returnToLessonSelectBtn" data-i18n="return_to_lessons_btn">Return to Lessons</button>
         </div>
     </div>
 
     <script>
-        // --- Constants and Globals ---
-        const DB_NAME = 'TypeFun3DDB';
-        const PROFILES_STORE_NAME = 'profiles';
+        // --- Global Constants & Variables ---
+        const APP_DB_NAME = 'TypeMasterKidsDB_v3';
+        const PROFILES_STORE = 'profiles';
         let db;
-
-        let scene, camera, renderer, fontLoader;
-        let activeLetters = [];
-        let catcher;
-        const FALL_SPEED = 0.015; // Adjusted for playability
-        const LETTER_SPAWN_INTERVAL = 2000; // ms
-        let lastSpawnTime = 0;
-        let gameRunning = false;
         let currentProfile = null;
-        let currentLevel = null;
-        let currentLevelIndex = 0;
+        let currentLesson = null;
+        let currentLessonIndex = 0;
+        let gameActive = false;
+        let sessionStats = {};
 
-        // Game state
-        let score = 0;
-        let correctPresses = 0;
-        let totalPresses = 0;
-        let gameStartTime = 0;
-        let currentStreak = 0;
-        let currentTargetChar = '';
-        let currentFallingLetter = null;
+        let three = { scene: null, camera: null, renderer: null, font: null, active3DChar: null };
+        let audioCtx, sounds = {}; // For sounds later
 
-        // Audio Context for sounds
-        let audioCtx;
-        const sounds = {
-            correct: null,
-            incorrect: null,
-            levelComplete: null,
-            miss: null
+        // --- Localization (i18n) ---
+        const i18nData = {
+            en: {
+                // Profile Screen
+                "welcome_title": "Welcome to TypeMasterKids!", "profile_select_create": "Select or create a profile to begin:",
+                "load_profile": "Load Profile", "create_new_profile": "Create New Profile",
+                "profile_name_placeholder": "Enter Profile Name", "keyboard_layout_label": "Keyboard Layout:",
+                "language_label": "UI Language:", "create_profile_btn": "Create Profile",
+                "export_progress_btn": "Export Progress", "import_progress_btn": "Import Progress",
+                // Lesson Select
+                "lesson_select_title": "Select a Lesson", "current_profile": "Profile", "back_to_profiles_btn": "Back to Profiles",
+                // Lesson Intro
+                "keys_to_practice": "Keys:", "lesson_objective": "Objective:",
+                "start_lesson_btn": "Start Lesson", "back_to_lessons_btn": "Back to Lessons",
+                // In-Game HUD
+                "profile": "Profile", "lesson": "Lesson", "score": "Score", "accuracy": "Accuracy", "wpm": "WPM", "target_criteria": "Target",
+                // Session Summary
+                "lesson_name": "Lesson", "final_score": "Score", "final_accuracy": "Accuracy", "final_wpm": "WPM",
+                "new_high_score_text": "🎉 New High Score! 🎉", "replay_lesson_btn": "Replay Lesson",
+                "next_lesson_btn": "Next Lesson", "return_to_lessons_btn": "Return to Lessons",
+                "lesson_passed": "Excellent! You've passed this lesson.", "lesson_failed": "Keep practicing! You'll get it.",
+                // General
+                "error_title": "Error", "db_error_msg": "Database could not be initialized. Please ensure IndexedDB is enabled.",
+                "font_error_msg": "3D Font could not be loaded. The game cannot start.", "locked": "Locked",
+                "target_format": "{0}% Acc, {1} WPM",
+                // Lesson Names (examples)
+                "L1_QWERTY_FJ_NAME": "Home: F & J", "L1_QWERTY_FJ_DESC": "Practice the F and J keys with your index fingers.",
+            },
+            fr: {
+                "welcome_title": "Bienvenue à TypeMasterKids !", "profile_select_create": "Sélectionnez ou créez un profil pour commencer :",
+                "load_profile": "Charger Profil", "create_new_profile": "Créer Nouveau Profil",
+                "profile_name_placeholder": "Nom du Profil", "keyboard_layout_label": "Disposition Clavier:",
+                "language_label": "Langue Interface:", "create_profile_btn": "Créer Profil",
+                "export_progress_btn": "Exporter Progrès", "import_progress_btn": "Importer Progrès",
+                "lesson_select_title": "Choisissez une Leçon", "current_profile": "Profil", "back_to_profiles_btn": "Retour aux Profils",
+                "keys_to_practice": "Touches:", "lesson_objective": "Objectif:",
+                "start_lesson_btn": "Commencer Leçon", "back_to_lessons_btn": "Retour aux Leçons",
+                "profile": "Profil", "lesson": "Leçon", "score": "Score", "accuracy": "Précision", "wpm": "MPM", "target_criteria": "Cible",
+                "lesson_name": "Leçon", "final_score": "Score", "final_accuracy": "Précision", "final_wpm": "MPM",
+                "new_high_score_text": "🎉 Nouveau Record ! 🎉", "replay_lesson_btn": "Rejouer Leçon",
+                "next_lesson_btn": "Leçon Suivante", "return_to_lessons_btn": "Retour aux Leçons",
+                "lesson_passed": "Excellent ! Vous avez réussi cette leçon.", "lesson_failed": "Continuez à pratiquer ! Vous y arriverez.",
+                "error_title":"Erreur", "db_error_msg": "La base de données n'a pas pu être initialisée. Veuillez vérifier qu'IndexedDB est activé.",
+                "font_error_msg": "La police 3D n'a pas pu être chargée. Le jeu ne peut pas démarrer.", "locked": "Verrouillé",
+                "target_format": "{0}% Préc., {1} MPM",
+                "L1_QWERTY_FJ_NAME": "Base: F & J", "L1_QWERTY_FJ_DESC": "Entraînez-vous sur les touches F et J avec vos index.",
+            },
+            ar: { // RTL will be handled by CSS class on body/panels
+                "welcome_title": "أهلاً بك في تايب ماستر كيدز!", "profile_select_create": "اختر أو أنشئ ملفًا شخصيًا للبدء:",
+                "load_profile": "تحميل الملف", "create_new_profile": "إنشاء ملف جديد",
+                "profile_name_placeholder": "اسم الملف الشخصي", "keyboard_layout_label": "تخطيط لوحة المفاتيح:",
+                "language_label": "لغة الواجهة:", "create_profile_btn": "إنشاء ملف",
+                "export_progress_btn": "تصدير التقدم", "import_progress_btn": "استيراد التقدم",
+                "lesson_select_title": "اختر درسًا", "current_profile": "الملف الحالي", "back_to_profiles_btn": "العودة للملفات",
+                "keys_to_practice": "المفاتيح:", "lesson_objective": "الهدف:",
+                "start_lesson_btn": "ابدأ الدرس", "back_to_lessons_btn": "العودة للدروس",
+                "profile": "الملف", "lesson": "الدرس", "score": "النقاط", "accuracy": "الدقة", "wpm": "كلمة/دقيقة", "target_criteria": "الهدف",
+                "lesson_name": "الدرس", "final_score": "النقاط", "final_accuracy": "الدقة", "final_wpm": "كلمة/دقيقة",
+                "new_high_score_text": "🎉 رقم قياسي جديد! 🎉", "replay_lesson_btn": "إعادة الدرس",
+                "next_lesson_btn": "الدرس التالي", "return_to_lessons_btn": "العودة للدروس",
+                "lesson_passed": "ممتاز! لقد تجاوزت هذا الدرس.", "lesson_failed": "استمر في التدريب! ستنجح.",
+                "error_title":"خطأ", "db_error_msg": "لم يتم تهيئة قاعدة البيانات. يرجى التأكد من تفعيل IndexedDB.",
+                "font_error_msg": "لا يمكن تحميل الخط ثلاثي الأبعاد. لا يمكن بدء اللعبة.", "locked": "مغلق",
+                "target_format": "{0}% دقة, {1} ك/د",
+                "L1_QWERTY_FJ_NAME": "الأساس: F و J", "L1_QWERTY_FJ_DESC": "تمرن على مفتاحي F و J بأصابع السبابة.",
+            }
+        };
+        let currentLang = 'en';
+
+        function _t(key, ...args) {
+            const store = i18nData[currentLang] || i18nData.en;
+            let-template = store[key] || key;
+            if (args.length > 0) {
+                args.forEach((arg, i) => {
+                    let-template = template.replace(new RegExp(`\\{${i}\\}`, 'g'), arg);
+                });
+            }
+            return template;
+        }
+
+        function applyLocalization() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.textContent = _t(el.dataset.i18n);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = _t(el.dataset.i18nPlaceholder);
+            });
+            document.documentElement.lang = currentLang;
+            document.getElementById('appBody').className = currentLang === 'ar' ? 'rtl' : '';
+            // Update dynamic elements if needed
+            if(currentProfile) document.getElementById('activeProfileName').textContent = currentProfile.name;
+        }
+
+        // --- Keyboard Layouts & Lessons Data ---
+        const KEYBOARDS = {
+            qwerty: {
+                home: "asdfghjkl;", homeLeft: "asdfg", homeRight: "hjkl;",
+                upper: "qwertyuiop", upperLeft: "qwerty", upperRight: "uiop",
+                lower: "zxcvbnm,.", lowerLeft: "zxcvb", lowerRight: "nm,.",
+                numbers: "1234567890"
+            },
+            azerty: {
+                home: "qsdfghjklm", homeLeft: "qsdfg", homeRight: "hjklm",
+                upper: "azertyuiop", upperLeft: "azerty", upperRight: "uiop",
+                lower: "wxcvbn,;", lowerLeft: "wxcvb", lowerRight: "n,;",
+                numbers: "&é\"'(-è_çà)=" // Top row numbers for AZERTY
+            },
+            arabic_101: { // Simplified mapping from standard Arabic PC 101
+                home: "شسيبنتلاكم", homeLeft: "شسيب", homeRight: "نتلاكم", // More letters
+                upper: "ضصثقفغعهخحجد", upperLeft: "ضصثقف", upperRight: "غعهخحجد",
+                lower: "ئءؤرلاىةوزظ", lowerLeft: "ئءؤر", lowerRight: "لاىةوزظ",
+                numbers: "١٢٣٤٥٦٧٨٩٠" // Eastern Arabic numerals
+            }
         };
 
-        const levels = [
-            { name: "Home Row Basics", chars: "asdfjkl;", duration: 60000, targetLetters: 20 }, // 1 minute, or 20 letters
-            { name: "Top Row Practice", chars: "qwertyuiop", duration: 75000, targetLetters: 25 },
-            { name: "Bottom Row Drills", chars: "zxcvbnm", duration: 75000, targetLetters: 25 }, // removed , . / for simplicity in falling letters
-            { name: "All Lowercase", chars: "abcdefghijklmnopqrstuvwxyz", duration: 90000, targetLetters: 30 },
-            { name: "Simple Words", words: ["cat", "dog", "sun", "run", "big", "fun", "pen", "cup", "map", "top"], wordMode: true, duration: 120000, targetLetters:15 },
-            { name: "Short Sentences", sentences: [
-                "the quick brown fox", "jumps over the lazy dog", "a big red cat", "sun is fun", "run to the top"
-            ], sentenceMode: true, duration: 180000, targetLetters:5 }
+        const LESSONS_CONFIG = [
+            // Home Row - Two Fingers
+            { id: "L1_FJ", nameKey: "L1_QWERTY_FJ_NAME", descKey: "L1_QWERTY_FJ_DESC",
+              getChars: (kb) => [kb.homeLeft[3], kb.homeRight[0]], // f, j on QWERTY
+              generateString: (chars, len) => Array(len).fill(0).map((_,i) => chars[i%2]).join(''),
+              len: 20, timePerChar: 3000, targetAccuracy: 85, targetWPM: 5 },
+            { id: "L2_DK", nameKey: "L2_QWERTY_DK_NAME", descKey: "L2_QWERTY_DK_DESC",
+              getChars: (kb) => [kb.homeLeft[2], kb.homeRight[1]], // d, k on QWERTY
+              generateString: (chars, len) => Array(len).fill(0).map((_,i) => chars[i%2]).join(''),
+              len: 20, timePerChar: 2800, targetAccuracy: 88, targetWPM: 7 },
+            // Home Row - Four Fingers
+            { id: "L3_FJDK", nameKey: "L3_QWERTY_FJDK_NAME", descKey: "L3_QWERTY_FJDK_DESC",
+              getChars: (kb) => [kb.homeLeft[3], kb.homeRight[0], kb.homeLeft[2], kb.homeRight[1]], // f,j,d,k
+              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
+              len: 30, timePerChar: 2500, targetAccuracy: 90, targetWPM: 10 },
+            // Home Row - All Fingers (no G/H yet)
+            { id: "L4_ASL;", nameKey: "L4_QWERTY_ASL;_NAME", descKey: "L4_QWERTY_ASL;_DESC",
+              getChars: (kb) => [kb.homeLeft[0],kb.homeLeft[1],kb.homeRight[2],kb.homeRight[3]], // a,s,l,;
+              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
+              len: 30, timePerChar: 2200, targetAccuracy: 90, targetWPM: 12 },
+            // Home Row - Full (including G/H)
+            { id: "L5_HomeFull", nameKey: "L5_QWERTY_HomeFull_NAME", descKey: "L5_QWERTY_HomeFull_DESC",
+              getChars: (kb) => kb.home.split(''),
+              generateString: (chars, len) => Array(len).fill(0).map(() => chars[Math.floor(Math.random()*chars.length)]).join(''),
+              len: 40, timePerChar: 2000, targetAccuracy: 92, targetWPM: 15 },
+            // Home Row Words + Space
+            { id: "L6_HomeWordsSpace", nameKey: "L6_HomeWordsSpace_NAME", descKey: "L6_HomeWordsSpace_DESC",
+              getChars: (kb) => kb.home.split('').concat([' ']), // Add space
+              generateString: (chars, lesson) => {
+                  const words = [];
+                  const actualChars = chars.filter(c => c !== ' ');
+                  for(let i=0; i<lesson.numWords; i++) {
+                      let wordLen = Math.floor(Math.random() * (lesson.maxWordLen - lesson.minWordLen + 1)) + lesson.minWordLen;
+                      let word = Array(wordLen).fill(0).map(() => actualChars[Math.floor(Math.random()*actualChars.length)]).join('');
+                      words.push(word);
+                  }
+                  return words.join(' ');
+              },
+              numWords: 8, minWordLen: 3, maxWordLen: 5, // String length is variable
+              timePerChar: 1800, targetAccuracy: 95, targetWPM: 18 }
         ];
-        let letterObjectsPool = []; // For reusing Three.js text objects
+        // Add i18n keys for lesson names/descriptions to i18nData
+        // Example: i18nData.en["L2_QWERTY_DK_NAME"] = "Home: D & K"; etc.
 
-        // --- UI Elements ---
-        const profileScreen = document.getElementById('profileScreen');
-        const levelSelectScreen = document.getElementById('levelSelectScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const hud = document.getElementById('hud');
-        const currentTargetDisplay = document.getElementById('currentTargetDisplay');
 
-        // --- IndexedDB ---
-        function openDB() {
+        // --- IndexedDB Functions ---
+        function initDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                request.onerror = (event) => reject('Error opening DB: ' + event.target.errorCode);
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    resolve(db);
+                const request = indexedDB.open(APP_DB_NAME, 1);
+                request.onupgradeneeded = event => {
+                    const store = event.target.result.createObjectStore(PROFILES_STORE, { keyPath: 'id' });
+                    store.createIndex('name', 'name', { unique: false }); // Name may not be unique, ID is.
                 };
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(PROFILES_STORE_NAME)) {
-                        const store = db.createObjectStore(PROFILES_STORE_NAME, { keyPath: 'id' });
-                        store.createIndex('name', 'name', { unique: true });
-                    }
-                };
+                request.onsuccess = event => { db = event.target.result; resolve(); };
+                request.onerror = event => { console.error('DB Error:', event.target.error); reject(_t("db_error_msg")); };
             });
         }
-
-        function getProfile(profileId) {
+        // Standard save, get, getAll profile functions (promise-based)
+        async function saveProfileData(profile) {
+            const tx = db.transaction(PROFILES_STORE, 'readwrite');
+            const store = tx.objectStore(PROFILES_STORE);
             return new Promise((resolve, reject) => {
-                if (!db) { reject("DB not open"); return; }
-                const transaction = db.transaction([PROFILES_STORE_NAME], 'readonly');
-                const store = transaction.objectStore(PROFILES_STORE_NAME);
-                const request = store.get(profileId);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = (event) => reject('Error fetching profile: ' + event.target.errorCode);
+                const req = store.put(profile);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
             });
         }
-
-        function saveProfile(profileData) {
+        async function getProfileData(profileId) {
+            const tx = db.transaction(PROFILES_STORE, 'readonly');
+            const store = tx.objectStore(PROFILES_STORE);
+             return new Promise((resolve, reject) => {
+                const req = store.get(profileId);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function getAllProfilesData() {
+             const tx = db.transaction(PROFILES_STORE, 'readonly');
+            const store = tx.objectStore(PROFILES_STORE);
             return new Promise((resolve, reject) => {
-                if (!db) { reject("DB not open"); return; }
-                const transaction = db.transaction([PROFILES_STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(PROFILES_STORE_NAME);
-                const request = store.put(profileData);
-                request.onsuccess = () => resolve();
-                request.onerror = (event) => reject('Error saving profile: ' + event.target.errorCode);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
             });
         }
 
-        function getAllProfiles() {
-            return new Promise((resolve, reject) => {
-                if (!db) { reject("DB not open"); return; }
-                const transaction = db.transaction([PROFILES_STORE_NAME], 'readonly');
-                const store = transaction.objectStore(PROFILES_STORE_NAME);
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = (event) => reject('Error fetching all profiles: ' + event.target.errorCode);
-            });
-        }
-
-        // --- Sound Generation ---
-        function initAudio() {
-            if (audioCtx) return; // Already initialized
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                sounds.correct = createSound(440, 0.1, 'sine'); // A4
-                sounds.incorrect = createSound(220, 0.2, 'square'); // A3
-                sounds.levelComplete = createSoundSequence([
-                    { freq: 261.63, duration: 0.15, type: 'triangle' }, // C4
-                    { freq: 329.63, duration: 0.15, type: 'triangle' }, // E4
-                    { freq: 392.00, duration: 0.15, type: 'triangle' }, // G4
-                    { freq: 523.25, duration: 0.3, type: 'triangle' }  // C5
-                ]);
-                sounds.miss = createSound(110, 0.3, 'sawtooth'); // A2
-            } catch (e) {
-                console.warn("Web Audio API is not supported in this browser. Sounds will be disabled.");
-                // Provide dummy functions if AudioContext fails
-                const dummySound = { play: () => {} };
-                Object.keys(sounds).forEach(key => sounds[key] = dummySound);
-            }
-        }
-
-        function createSound(frequency, duration, type) {
-            return {
-                play: () => {
-                    if (!audioCtx) return;
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                    oscillator.type = type;
-                    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); // Volume
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                    oscillator.start(audioCtx.currentTime);
-                    oscillator.stop(audioCtx.currentTime + duration);
-                }
-            };
-        }
-
-        function createSoundSequence(notes) {
-            return {
-                play: () => {
-                    if (!audioCtx) return;
-                    let time = audioCtx.currentTime;
-                    notes.forEach(note => {
-                        const oscillator = audioCtx.createOscillator();
-                        const gainNode = audioCtx.createGain();
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioCtx.destination);
-                        oscillator.type = note.type;
-                        oscillator.frequency.setValueAtTime(note.freq, time);
-                        gainNode.gain.setValueAtTime(0.3, time);
-                        gainNode.gain.exponentialRampToValueAtTime(0.0001, time + note.duration);
-                        oscillator.start(time);
-                        oscillator.stop(time + note.duration);
-                        time += note.duration;
-                    });
-                }
-            };
-        }
-
-
-        // --- Three.js Setup ---
-        function initThreeJS() {
+        // --- Three.js Scene ---
+        function setupThreeScene() {
             const container = document.getElementById('container');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87CEEB); // Sky blue
+            three.scene = new THREE.Scene();
+            three.scene.background = new THREE.Color(0x455a64); // Darker Blue Grey
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 15); // Positioned to see falling letters and catcher
-            camera.lookAt(0,0,0);
+            three.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            three.camera.position.set(0, 1.5, 8);
+            three.camera.lookAt(0,1,0);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
+            three.renderer = new THREE.WebGLRenderer({ antialias: true });
+            three.renderer.setSize(window.innerWidth, window.innerHeight);
+            three.renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(three.renderer.domElement);
 
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 7.5);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            three.scene.add(ambient);
+            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+            directional.position.set(5, 10, 7);
+            three.scene.add(directional);
 
-            // Ground
-            const groundGeo = new THREE.PlaneGeometry(30, 30);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x90ee90 }); // Light green
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-
-            // Catcher (simple platform)
-            const catcherGeo = new THREE.BoxGeometry(8, 0.5, 2);
-            const catcherMat = new THREE.MeshStandardMaterial({ color: 0xffa500 }); // Orange
-            catcher = new THREE.Mesh(catcherGeo, catcherMat);
-            catcher.position.y = 0.25; // Slightly above ground
-            catcher.castShadow = true;
-            scene.add(catcher);
-
-            // Font Loader for 3D Text
-            fontLoader = new THREE.FontLoader();
-            // Using a known CDN for a Helvetiker font (Three.js example font)
-            fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-                window.threeFont = font; // Make font globally available for letter creation
-                console.log("Font loaded.");
-                // Pre-populate some letter objects if needed or create on demand
-            }, undefined, function (err) {
-                console.error('Error loading font:', err);
-                alert("Critical error: Could not load 3D font. Game cannot start.");
+            const fontLoader = new THREE.FontLoader();
+            return new Promise((resolve, reject) => {
+                fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
+                    (loadedFont) => { three.font = loadedFont; resolve(); },
+                    undefined,
+                    (error) => { console.error('Font Load Error:', error); reject(_t("font_error_msg")); }
+                );
             });
-
-            window.addEventListener('resize', onWindowResize, false);
-            animate();
         }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function renderThreeScene() {
+            if(three.renderer) three.renderer.render(three.scene, three.camera);
         }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            TWEEN.update(); // For animations
-
-            if (gameRunning) {
-                updateGame();
-            }
-            renderer.render(scene, camera);
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+            TWEEN.update();
+            renderThreeScene();
         }
+        function update3DChar(char) {
+            if (!three.font) return;
+            if (three.active3DChar) three.scene.remove(three.active3DChar);
+            if (!char || char === ' ') { three.active3DChar = null; return; }
 
-        // --- Game Logic ---
-        function createLetterObject(char) {
-            if (!window.threeFont) {
-                console.error("Font not loaded, cannot create letter object.");
-                // Fallback to a simple cube if font fails
-                const geom = new THREE.BoxGeometry(1,1,1);
-                const mat = new THREE.MeshBasicMaterial({color: 0xff0000});
-                const mesh = new THREE.Mesh(geom, mat);
-                mesh.userData.char = char; // Store char anyway
-                return mesh;
-            }
-
-            const textGeo = new THREE.TextGeometry(char, {
-                font: window.threeFont,
-                size: 1.5,
-                height: 0.3,
-                curveSegments: 4, // Lower for performance
-                bevelEnabled: true,
-                bevelThickness: 0.1,
-                bevelSize: 0.05,
-                bevelSegments: 2
+            const geometry = new THREE.TextGeometry(char, {
+                font: three.font, size: 1, height: 0.2, curveSegments: 5,
+                bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.02, bevelSegments: 3
             });
-            textGeo.center(); // Center geometry for easier positioning
-            const textMat = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
-            const letterMesh = new THREE.Mesh(textGeo, textMat);
-            letterMesh.castShadow = true;
-            letterMesh.userData = { char: char, caught: false };
-            return letterMesh;
+            geometry.center();
+            const material = new THREE.MeshStandardMaterial({ color: 0xffeb3b }); // Yellow
+            three.active3DChar = new THREE.Mesh(geometry, material);
+            three.active3DChar.position.set(0, 1.5, 0); // Centered in view
+            three.scene.add(three.active3DChar);
         }
-        
-        function getPooledLetterObject(char) {
-            let letterMesh = letterObjectsPool.find(obj => !obj.parent); // Find an object not in scene
-            if (letterMesh) {
-                // Reset and update character if necessary - for simplicity, we'll assume we create new ones if char changes
-                // For a true pool, you'd update material/geometry or have pools per char
-                if (letterMesh.userData.char !== char) { // If we need a different char
-                    scene.remove(letterMesh); // Ensure it's removed if it was somehow re-added
-                    letterMesh.geometry.dispose();
-                    letterMesh.material.dispose();
-                    letterMesh = createLetterObject(char); // Create new one
-                } else {
-                    // Reset properties for reuse
-                    letterMesh.position.set(0,0,0);
-                    letterMesh.rotation.set(0,0,0);
-                    letterMesh.scale.set(1,1,1);
-                    letterMesh.material.color.setHex(Math.random() * 0xffffff); // New color
-                    letterMesh.userData.caught = false;
-                }
-            } else {
-                letterMesh = createLetterObject(char);
-                letterObjectsPool.push(letterMesh);
-            }
-            letterMesh.userData.char = char; // Ensure char data is fresh
-            return letterMesh;
+        window.addEventListener('resize', () => {
+            if(!three.camera || !three.renderer) return;
+            three.camera.aspect = window.innerWidth / window.innerHeight;
+            three.camera.updateProjectionMatrix();
+            three.renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+
+
+        // --- UI Navigation & Management ---
+        function showUIScreen(screenId) {
+            document.querySelectorAll('.ui-overlay').forEach(s => s.style.display = 'none');
+            document.getElementById(screenId).style.display = 'flex';
+            document.getElementById('hud').style.display = (screenId === 'gameScreen') ? 'block' : 'none';
+            document.getElementById('typingArea').style.display = (screenId === 'gameScreen') ? 'block' : 'none';
+            document.getElementById('charTimeIndicator').style.display = (screenId === 'gameScreen') ? 'block' : 'none';
+            if(screenId !== 'gameScreen') gameActive = false; // Ensure game stops if navigating away
         }
 
-
-        function spawnLetter() {
-            if (!currentLevel || !window.threeFont) return; // Ensure font is loaded and level active
-            
-            let charToSpawn;
-            if (currentLevel.wordMode || currentLevel.sentenceMode) {
-                // For word/sentence mode, we spawn one letter at a time from the current word/sentence.
-                // The logic for picking the *next* char of a word/sentence is handled in `handleCorrectLetter`.
-                // Here, we just use the current `currentTargetChar`.
-                if (!currentTargetChar) { // Word/Sentence finished, or first letter
-                    if (currentLevel.wordMode) {
-                        const_currentWord = currentLevel.words[Math.floor(Math.random() * currentLevel.words.length)];
-                         currentTargetChar = _currentWord[0]; // First letter of new word
-                         wordProgress = 0; // Reset word progress
-                    } else { // sentenceMode
-                        const_currentSentence = currentLevel.sentences[Math.floor(Math.random() * currentLevel.sentences.length)];
-                         currentTargetChar = _currentSentence[0];
-                         sentenceProgress = 0;
-                    }
-                }
-                 charToSpawn = currentTargetChar;
-            } else {
-                 charToSpawn = currentLevel.chars[Math.floor(Math.random() * currentLevel.chars.length)];
-            }
-
-            // Only spawn if there isn't an active falling letter OR if it's word/sentence mode and we need the next letter
-            if (activeLetters.length > 0 && !(currentLevel.wordMode || currentLevel.sentenceMode)) return;
-            if (activeLetters.length > 0 && (currentLevel.wordMode || currentLevel.sentenceMode) && currentFallingLetter) return;
-
-
-            const letterObj = getPooledLetterObject(charToSpawn);
-            letterObj.position.set(
-                (Math.random() - 0.5) * 10, // Random X within a range
-                15, // Start high
-                0 // Keep Z fixed for simplicity
-            );
-            letterObj.rotation.y = (Math.random() - 0.5) * Math.PI; // Random rotation
-            
-            activeLetters.push(letterObj);
-            scene.add(letterObj);
-            
-            currentFallingLetter = letterObj; // Track the current letter user needs to type
-            currentTargetChar = charToSpawn; // This is the char to type for falling letters
-
-            // Update the 2D HUD display for the target character
-            currentTargetDisplay.textContent = currentTargetChar.toUpperCase();
-            currentTargetDisplay.style.display = 'block';
-        }
-
-        let _currentWord = "";
-        let wordProgress = 0;
-        let _currentSentence = "";
-        let sentenceProgress = 0;
-
-        function setupNextTargetInSequence() {
-            if (currentLevel.wordMode) {
-                if (wordProgress === 0 || wordProgress >= _currentWord.length) { // Start new word or finished previous
-                    _currentWord = currentLevel.words[Math.floor(Math.random() * currentLevel.words.length)];
-                    wordProgress = 0;
-                }
-                currentTargetChar = _currentWord[wordProgress];
-            } else if (currentLevel.sentenceMode) {
-                if (sentenceProgress === 0 || sentenceProgress >= _currentSentence.length) { // Start new sentence or finished previous
-                     _currentSentence = currentLevel.sentences[Math.floor(Math.random() * currentLevel.sentences.length)];
-                     sentenceProgress = 0;
-                }
-                // Skip spaces in sentences for typing practice
-                while (_currentSentence[sentenceProgress] === ' ' && sentenceProgress < _currentSentence.length -1) {
-                    sentenceProgress++;
-                }
-                currentTargetChar = _currentSentence[sentenceProgress];
-            }
-            // For non-sequence modes, spawnLetter will pick a random char.
-            // This function specifically sets up the *next* target char for word/sentence modes.
-            // The visual falling letter part for these modes might be simplified:
-            // e.g., one letter falls, then the next, or the whole word/sentence is displayed statically.
-            // For now, the falling letter system will use currentTargetChar set here.
-            
-            currentTargetDisplay.textContent = currentTargetChar.toUpperCase();
-            currentTargetDisplay.style.display = 'block';
-
-            // If a letter is currently falling, and it's not the new target, remove it.
-            // This is a simplification: a new letter representing currentTargetChar should spawn.
-            if (currentFallingLetter && currentFallingLetter.userData.char !== currentTargetChar) {
-                removeLetter(currentFallingLetter, false); // false = not caught
-                currentFallingLetter = null;
-            }
-            if (!currentFallingLetter) { // If no letter is falling, or previous was removed
-                spawnLetter(); // Spawn the new target letter
-            }
-        }
-
-
-        function updateGame() {
-            const currentTime = Date.now();
-
-            // Spawn new letters periodically unless in word/sentence mode where it's sequential
-            if (!currentLevel.wordMode && !currentLevel.sentenceMode && currentTime - lastSpawnTime > LETTER_SPAWN_INTERVAL && activeLetters.length < 5) {
-                spawnLetter();
-                lastSpawnTime = currentTime;
-            } else if ((currentLevel.wordMode || currentLevel.sentenceMode) && !currentFallingLetter) {
-                // If in word/sentence mode and no letter is falling (e.g., previous was caught/missed), set up next target.
-                setupNextTargetInSequence(); // This will also call spawnLetter if needed
-            }
-
-
-            for (let i = activeLetters.length - 1; i >= 0; i--) {
-                const letter = activeLetters[i];
-                letter.position.y -= FALL_SPEED * (1 + currentLevelIndex * 0.1); // Speed increases slightly with level
-
-                // Check if letter is missed (hits the ground)
-                if (letter.position.y < 0.5 && !letter.userData.caught) { // 0.5 is slightly above ground
-                    handleMissedLetter(letter);
-                }
-            }
-
-            // Check game duration
-            const elapsedTime = (currentTime - gameStartTime) / 1000; // in seconds
-            if (elapsedTime >= currentLevel.duration / 1000 || (currentLevel.targetLetters && correctPresses >= currentLevel.targetLetters)) {
-                endLevel(true); // true for level complete
-            }
-
-            // Update HUD
-            document.getElementById('hudScore').textContent = score;
-            const accuracy = totalPresses > 0 ? ((correctPresses / totalPresses) * 100).toFixed(0) : 100;
-            document.getElementById('hudAccuracy').textContent = accuracy;
-            const timeMinutes = elapsedTime / 60;
-            const wpm = timeMinutes > 0 ? Math.round((correctPresses / 5) / timeMinutes) : 0;
-            document.getElementById('hudWPM').textContent = wpm;
-            document.getElementById('hudStreak').textContent = currentStreak;
-        }
-
-        function handleKeyPress(event) {
-            if (!gameRunning || !currentTargetChar) return;
-            initAudio(); // Ensure audio is ready on first interaction
-
-            const typedChar = event.key.toLowerCase();
-            totalPresses++;
-
-            if (typedChar === currentTargetChar.toLowerCase()) {
-                score += 10 + currentStreak; // Bonus for streak
-                correctPresses++;
-                currentStreak++;
-                sounds.correct.play();
-                if(currentFallingLetter) {
-                    handleCaughtLetter(currentFallingLetter);
-                } else if (currentLevel.wordMode || currentLevel.sentenceMode) {
-                    // No falling letter, but correct key for word/sentence
-                    // Advance word/sentence progress
-                     if (currentLevel.wordMode) wordProgress++;
-                     else if (currentLevel.sentenceMode) sentenceProgress++;
-                     setupNextTargetInSequence(); // Get next char and spawn it
-                }
-
-            } else {
-                score = Math.max(0, score - 5); // Don't go below 0
-                currentStreak = 0;
-                sounds.incorrect.play();
-                // Visual feedback for incorrect key (e.g., screen shake - too complex for now, catcher color change)
-                catcher.material.color.setHex(0xff0000); // Red
-                setTimeout(() => catcher.material.color.setHex(0xffa500), 200); // Back to orange
-            }
-            updateHUD();
-        }
-
-        function handleCaughtLetter(letter) {
-            letter.userData.caught = true;
-            sounds.correct.play(); // Already played in handleKeyPress, maybe a different catch sound?
-
-            // Visual effect for caught letter (e.g., scale up and fade)
-            new TWEEN.Tween(letter.scale)
-                .to({ x: 2, y: 2, z: 2 }, 300)
-                .easing(TWEEN.Easing.Elastic.Out)
-                .onComplete(() => {
-                    new TWEEN.Tween(letter.material)
-                        .to({ opacity: 0 }, 200)
-                        .onComplete(() => {
-                            removeLetter(letter, true);
-                            currentFallingLetter = null; // Allow next letter to spawn or be targeted
-                            // If word/sentence mode, advance to next character
-                            if (currentLevel.wordMode) {
-                                wordProgress++;
-                                setupNextTargetInSequence();
-                            } else if (currentLevel.sentenceMode) {
-                                sentenceProgress++;
-                                setupNextTargetInSequence();
-                            } else {
-                                // For random letter mode, clear target until new one spawns
-                                currentTargetChar = '';
-                                currentTargetDisplay.style.display = 'none';
-                            }
-                        })
-                        .start();
-                })
-                .start();
-             letter.material.transparent = true; // Needed for opacity tween
-        }
-
-
-        function handleMissedLetter(letter) {
-            sounds.miss.play();
-            currentStreak = 0; // Reset streak on miss
-            // score -= 2; // Optional penalty for miss
-            removeLetter(letter, false);
-            currentFallingLetter = null; // Allow next letter to spawn
-            
-            // If word/sentence mode, this miss means we need to re-try current char or reset word
-            if (currentLevel.wordMode || currentLevel.sentenceMode) {
-                // For simplicity, let's just re-spawn the same target char for word/sentence modes on miss
-                setupNextTargetInSequence(); // This will re-evaluate currentTargetChar and spawn it
-            } else {
-                currentTargetChar = ''; // Clear target
-                currentTargetDisplay.style.display = 'none';
-            }
-            updateHUD();
-        }
-
-        function removeLetter(letter, caught) {
-            scene.remove(letter);
-            const index = activeLetters.indexOf(letter);
-            if (index > -1) activeLetters.splice(index, 1);
-            // Letter mesh is not disposed, it's part of the pool and will be reused.
-            // If not pooling, you would do:
-            // letter.geometry.dispose();
-            // letter.material.dispose();
-            
-            if (letter === currentFallingLetter) { // Ensure currentFallingLetter is cleared
-                currentFallingLetter = null;
-            }
-        }
-
-        function startGame(levelIdx) {
-            if (!window.threeFont) {
-                alert("Font is still loading. Please wait a moment and try again.");
-                return;
-            }
-            initAudio(); // Ensure audio context is active
-
-            currentLevelIndex = levelIdx;
-            currentLevel = levels[currentLevelIndex];
-            
-            // Reset game state
-            score = 0;
-            correctPresses = 0;
-            totalPresses = 0;
-            currentStreak = 0;
-            gameStartTime = Date.now();
-            lastSpawnTime = Date.now(); // Prevent immediate spawn if interval is short
-            activeLetters.forEach(letter => scene.remove(letter)); // Clear existing letters
-            activeLetters = [];
-            currentFallingLetter = null;
-            currentTargetChar = ''; // Reset target char
-            wordProgress = 0; // Reset for word mode
-            sentenceProgress = 0; // Reset for sentence mode
-
-            if (currentLevel.wordMode || currentLevel.sentenceMode) {
-                setupNextTargetInSequence(); // This will pick the first char and call spawnLetter
-            } else {
-                spawnLetter(); // Spawn the first letter for char-based levels
-            }
-
-            gameRunning = true;
-            levelSelectScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            hud.style.display = 'block';
-            currentTargetDisplay.style.display = 'block'; // Show target display
-            updateHUD();
-
-            // Focus window to capture key events immediately (might not always work due to browser security)
-            window.focus();
-        }
-
-        function endLevel(completed) {
-            gameRunning = false;
-            sounds.levelComplete.play();
-
-            // Clear any remaining letters from scene
-            activeLetters.forEach(letter => scene.remove(letter));
-            activeLetters = [];
-            currentFallingLetter = null;
-            currentTargetChar = '';
-            currentTargetDisplay.style.display = 'none';
-
-
-            const elapsedTimeSeconds = (Date.now() - gameStartTime) / 1000;
-            const wpm = elapsedTimeSeconds > 0 ? Math.round((correctPresses / 5) / (elapsedTimeSeconds / 60)) : 0;
-            const accuracy = totalPresses > 0 ? parseFloat(((correctPresses / totalPresses) * 100).toFixed(1)) : 100;
-
-            // Save progress
-            if (!currentProfile.progress) currentProfile.progress = {};
-            if (!currentProfile.progress[currentLevelIndex]) {
-                currentProfile.progress[currentLevelIndex] = { highScore: 0, bestWPM: 0, bestAccuracy: 0 };
-            }
-
-            let newHighScore = false;
-            if (score > (currentProfile.progress[currentLevelIndex].highScore || 0)) {
-                currentProfile.progress[currentLevelIndex].highScore = score;
-                newHighScore = true;
-            }
-            if (wpm > (currentProfile.progress[currentLevelIndex].bestWPM || 0)) {
-                currentProfile.progress[currentLevelIndex].bestWPM = wpm;
-            }
-            if (accuracy > (currentProfile.progress[currentLevelIndex].bestAccuracy || 0)) {
-                currentProfile.progress[currentLevelIndex].bestAccuracy = accuracy;
-            }
-            
-            // Unlock next level if this one was completed successfully and it's not the last level
-            if (completed && currentLevelIndex < levels.length - 1) {
-                if (!currentProfile.progress[currentLevelIndex + 1]) {
-                     // Mark next level as unlocked (even if no score yet, just to enable button)
-                    currentProfile.progress[currentLevelIndex + 1] = { highScore: -1 }; // Special value for just unlocked
-                }
-            }
-
-
-            saveProfile(currentProfile).catch(err => console.error("Error saving profile:", err));
-
-            // Show Game Over Screen
-            document.getElementById('summaryLevel').textContent = currentLevel.name;
-            document.getElementById('summaryScore').textContent = score;
-            document.getElementById('summaryAccuracy').textContent = accuracy;
-            document.getElementById('summaryWPM').textContent = wpm;
-            document.getElementById('summaryHighScore').textContent = currentProfile.progress[currentLevelIndex].highScore + (newHighScore ? " (New High Score!)" : "");
-            
-            document.getElementById('gameOverTitle').textContent = completed ? "Level Complete!" : "Game Over";
-            document.getElementById('nextLevelBtn').style.display = (completed && currentLevelIndex < levels.length - 1) ? 'inline-block' : 'none';
-            
-            hud.style.display = 'none';
-            gameOverScreen.style.display = 'block';
-        }
-
-        function updateHUD() {
-            document.getElementById('hudProfile').textContent = currentProfile.name;
-            document.getElementById('hudLevel').textContent = currentLevel.name;
-            // Other HUD elements updated in updateGame()
-        }
-
-        // --- UI Management ---
-        async function populateProfileList() {
-            const profiles = await getAllProfiles();
-            const select = document.getElementById('profileSelect');
-            select.innerHTML = '<option value="">-- Select Profile --</option>';
+        async function displayProfileScreen() {
+            const profiles = await getAllProfilesData();
+            const selectEl = document.getElementById('profileSelect');
+            selectEl.innerHTML = `<option value="">-- ${_t('profile_select_create')} --</option>`;
             profiles.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id;
-                option.textContent = p.name;
-                select.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                selectEl.appendChild(opt);
             });
+            const storedLang = localStorage.getItem('typeMasterLang') || navigator.language.split('-')[0];
+            currentLang = i18nData[storedLang] ? storedLang : 'en';
+            document.getElementById('uiLanguageSelect').value = currentLang;
+            applyLocalization();
+            showUIScreen('profileScreen');
         }
 
-        function showProfileScreen() {
-            profileScreen.style.display = 'flex';
-            levelSelectScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            hud.style.display = 'none';
-            currentTargetDisplay.style.display = 'none';
-            populateProfileList();
-        }
+        function displayLessonSelectScreen() {
+            document.getElementById('activeProfileName').textContent = currentProfile.name;
+            const grid = document.getElementById('lessonsGrid');
+            grid.innerHTML = '';
+            const currentKB = KEYBOARDS[currentProfile.keyboardLayout];
 
-        function showLevelSelectScreen() {
-            profileScreen.style.display = 'none';
-            levelSelectScreen.style.display = 'flex';
-            document.getElementById('currentProfileName').textContent = currentProfile.name;
-
-            const levelListDiv = document.getElementById('levelList');
-            levelListDiv.innerHTML = '';
-            levels.forEach((level, index) => {
+            LESSONS_CONFIG.forEach((lessonConf, index) => {
                 const button = document.createElement('button');
-                button.textContent = `Level ${index + 1}: ${level.name}`;
                 button.classList.add('level-button');
+                const lessonName = _t(lessonConf.nameKey) || lessonConf.id;
+                const isUnlocked = index <= (currentProfile.progress.highestLessonUnlocked || -1) +1; // +1 because 0 is first unlocked
                 
-                const levelProgress = currentProfile.progress ? currentProfile.progress[index] : null;
-                let isUnlocked = index === 0; // First level always unlocked
-                if (index > 0 && currentProfile.progress) {
-                    // Unlocked if previous level has any progress entry OR if current level has one (meaning it was played before)
-                    const prevLevelProgress = currentProfile.progress[index - 1];
-                    if (prevLevelProgress && (prevLevelProgress.highScore > 0 || prevLevelProgress.highScore === -1)) { // -1 for just unlocked
-                        isUnlocked = true;
-                    }
-                    if(levelProgress && levelProgress.highScore !== undefined) isUnlocked = true; // Also unlocked if played before
+                let statsText = "";
+                const lessonResult = currentProfile.progress.lessonStats ? currentProfile.progress.lessonStats[lessonConf.id] : null;
+                if(lessonResult) {
+                    statsText = `<small>${_t('target_format', lessonResult.accuracy.toFixed(0), lessonResult.wpm)}</small>`;
                 }
 
+                button.innerHTML = `${_t('lesson')} ${index + 1}: ${lessonName} ${statsText}`;
 
                 if (isUnlocked) {
-                    button.onclick = () => startGame(index);
-                    if (levelProgress && levelProgress.highScore > 0) {
-                         button.innerHTML += `<br><small>(High Score: ${levelProgress.highScore}, WPM: ${levelProgress.bestWPM || 0})</small>`;
-                    }
+                    button.onclick = () => displayLessonIntroScreen(index);
                 } else {
                     button.classList.add('locked');
                     button.disabled = true;
-                     button.innerHTML += `<br><small>(Locked)</small>`;
+                    button.innerHTML += ` <small>(${_t('locked')})</small>`;
                 }
-                levelListDiv.appendChild(button);
+                grid.appendChild(button);
             });
+            showUIScreen('lessonSelectScreen');
         }
 
-        // --- Event Listeners ---
-        document.getElementById('createProfileBtn').onclick = async () => {
-            const name = document.getElementById('newProfileName').value.trim();
-            if (name) {
-                const newProfile = { id: name.toLowerCase().replace(/\s+/g, '_'), name: name, progress: {} };
-                try {
-                    await saveProfile(newProfile);
-                    currentProfile = newProfile;
-                    document.getElementById('newProfileName').value = '';
-                    showLevelSelectScreen();
-                } catch (err) {
-                    alert('Error creating profile. Name might be taken or DB error.');
-                    console.error(err);
+        function displayLessonIntroScreen(lessonIdx) {
+            currentLessonIndex = lessonIdx;
+            currentLesson = { ...LESSONS_CONFIG[lessonIdx] }; // Clone
+            const currentKB = KEYBOARDS[currentProfile.keyboardLayout];
+            currentLesson.actualChars = currentLesson.getChars(currentKB);
+            currentLesson.targetString = currentLesson.generateString(currentLesson.actualChars, currentLesson.len || currentLesson);
+
+            document.getElementById('introLessonTitle').textContent = _t(currentLesson.nameKey) || currentLesson.id;
+            document.getElementById('introLessonDescription').textContent = _t(currentLesson.descKey) || "Practice typing.";
+            document.getElementById('introKeysList').textContent = currentLesson.actualChars.join(', ');
+            document.getElementById('introObjective').textContent = _t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM);
+            showUIScreen('lessonIntroScreen');
+        }
+
+        // --- Game Core Logic ---
+        let currentTypedIdx = 0;
+        let currentErrors = 0;
+        let charTimerTimeoutId = null;
+        let lessonStartTime = 0;
+        let totalKeyStrokes = 0; // For more precise WPM
+
+        function startGameSession() {
+            gameActive = true;
+            currentTypedIdx = 0;
+            currentErrors = 0;
+            totalKeyStrokes = 0;
+            lessonStartTime = Date.now();
+            sessionStats = { score: 0, correctPresses: 0, totalPresses: 0, charTimes: [] };
+
+            document.getElementById('hudProfileName').textContent = currentProfile.name;
+            document.getElementById('hudLessonName').textContent = _t(currentLesson.nameKey);
+            document.getElementById('hudTargetInfo').textContent = _t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM);
+            
+            updateTypingAreaDisplay();
+            startCharTimer();
+            showUIScreen('gameScreen'); // Special ID for game, not a standard UI overlay
+        }
+
+        function updateTypingAreaDisplay() {
+            const typingAreaEl = document.getElementById('typingArea');
+            let html = '';
+            for(let i=0; i < currentLesson.targetString.length; i++) {
+                const char = currentLesson.targetString[i];
+                if (i < currentTypedIdx) { // Already typed
+                    // This needs more logic if we want to show past errors
+                    html += `<span class="typed-char-correct">${char}</span>`;
+                } else if (i === currentTypedIdx) {
+                    html += `<span class="current-target-char">${char}</span>`;
+                    update3DChar(char); // Update 3D representation
+                } else { // Remaining
+                    html += `<span>${char}</span>`;
+                }
+            }
+            typingAreaEl.innerHTML = html;
+            updateHUD();
+        }
+        
+        function startCharTimer() {
+            clearTimeout(charTimerTimeoutId);
+            const timerBar = document.getElementById('charTimeIndicatorBar');
+            timerBar.style.width = '100%';
+            timerBar.style.backgroundColor = '#66bb6a'; // Green
+
+            if (!gameActive || currentTypedIdx >= currentLesson.targetString.length) return;
+
+            let charStartTime = Date.now();
+            function depleteBar() {
+                if (!gameActive) return;
+                let elapsed = Date.now() - charStartTime;
+                let progress = Math.max(0, 100 - (elapsed / currentLesson.timePerChar * 100));
+                timerBar.style.width = progress + '%';
+
+                if (progress <= 0) {
+                    handleCharacterMiss(true); // Timed out
+                } else {
+                    charTimerTimeoutId = setTimeout(depleteBar, 50);
+                }
+            }
+            charTimerTimeoutId = setTimeout(depleteBar, 50);
+        }
+
+        function handleCharacterInput(typedKey) {
+            if (!gameActive || currentTypedIdx >= currentLesson.targetString.length) return;
+            
+            clearTimeout(charTimerTimeoutId); // Stop timer for current char
+            totalKeyStrokes++;
+            sessionStats.totalPresses++;
+            const targetChar = currentLesson.targetString[currentTypedIdx];
+
+            if (typedKey === targetChar) {
+                sessionStats.correctPresses++;
+                sessionStats.score += 10; // Basic score
+                // Animate 3D char for correct
+                if(three.active3DChar) {
+                    new TWEEN.Tween(three.active3DChar.scale)
+                        .to({ y: 1.5 }, 100).easing(TWEEN.Easing.Elastic.Out)
+                        .to({ y: 1.0 }, 200).start();
                 }
             } else {
-                alert('Please enter a profile name.');
+                currentErrors++;
+                sessionStats.score -= 5; // Penalty
+                // Flash timer bar red
+                document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#ef5350'; // Red
+                if(three.active3DChar) three.active3DChar.material.color.setHex(0xff0000); // Flash 3D red
+                setTimeout(() => {
+                    if(three.active3DChar) three.active3DChar.material.color.setHex(0xffeb3b);
+                    document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#66bb6a'; // Back to Green
+                }, 200);
             }
-        };
-
-        document.getElementById('selectProfileBtn').onclick = async () => {
-            const profileId = document.getElementById('profileSelect').value;
-            if (profileId) {
-                currentProfile = await getProfile(profileId);
-                showLevelSelectScreen();
+            
+            currentTypedIdx++;
+            if (currentTypedIdx >= currentLesson.targetString.length) {
+                endGameSession();
             } else {
-                alert('Please select a profile.');
-            }
-        };
-
-        document.getElementById('backToProfileBtn').onclick = showProfileScreen;
-        document.getElementById('replayLevelBtn').onclick = () => startGame(currentLevelIndex);
-        document.getElementById('nextLevelBtn').onclick = () => {
-            if (currentLevelIndex < levels.length - 1) {
-                startGame(currentLevelIndex + 1);
-            }
-        };
-        document.getElementById('backToLevelsBtn').onclick = showLevelSelectScreen;
-
-        window.addEventListener('keydown', handleKeyPress);
-
-        // Import/Export
-        document.getElementById('exportDataBtn').onclick = async () => {
-            const allData = await getAllProfiles();
-            if (allData && allData.length > 0) {
-                const jsonData = JSON.stringify(allData, null, 2);
-                const blob = new Blob([jsonData], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'typefun3d_progress.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                alert('All profiles exported!');
-            } else {
-                alert('No data to export.');
-            }
-        };
-
-        document.getElementById('importFile').onchange = async (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const importedData = JSON.parse(e.target.result);
-                        if (Array.isArray(importedData)) { // Expecting an array of profiles
-                            let importedCount = 0;
-                            for (const profile of importedData) {
-                                // Basic validation
-                                if (profile.id && profile.name) {
-                                    // Merge or overwrite. For simplicity, we overwrite.
-                                    // A more advanced merge would compare scores, etc.
-                                    await saveProfile(profile);
-                                    importedCount++;
-                                }
-                            }
-                            alert(`${importedCount} profiles imported/updated! Please refresh if necessary or re-select profile.`);
-                            populateProfileList(); // Refresh list
-                        } else {
-                            alert('Invalid file format. Expected an array of profiles.');
-                        }
-                    } catch (err) {
-                        alert('Error importing file: ' + err.message);
-                        console.error(err);
-                    } finally {
-                        // Reset file input to allow re-importing the same file if needed
-                        event.target.value = null;
-                    }
-                };
-                reader.readAsText(file);
-            }
-        };
-
-
-        // --- Initialization ---
-        async function main() {
-            try {
-                await openDB();
-                initThreeJS(); // Start Three.js rendering
-                showProfileScreen(); // Start with profile selection
-            } catch (err) {
-                console.error("Initialization failed:", err);
-                document.body.innerHTML = `<div class="ui-overlay"><div class="ui-panel"><h2>Error</h2><p>Could not initialize the application. ${err}</p><p>Please ensure IndexedDB is enabled in your browser.</p></div></div>`;
+                updateTypingAreaDisplay();
+                startCharTimer();
             }
         }
 
-        main();
+        function handleCharacterMiss(timedOut = false) { // Called if timed out or wrong key for too long
+            if (!gameActive || currentTypedIdx >= currentLesson.targetString.length) return;
+            
+            clearTimeout(charTimerTimeoutId);
+            totalKeyStrokes++; // Still an attempt
+            sessionStats.totalPresses++;
+            currentErrors++;
+            sessionStats.score -= timedOut ? 2 : 5; // Smaller penalty for timeout
+
+            // Visual feedback for miss
+            document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#ef5350';
+            if(three.active3DChar) three.active3DChar.material.color.setHex(0xff0000);
+            setTimeout(() => {
+                if(three.active3DChar) three.active3DChar.material.color.setHex(0xffeb3b);
+                document.getElementById('charTimeIndicatorBar').style.backgroundColor = '#66bb6a';
+            }, 200);
+
+            currentTypedIdx++;
+            if (currentTypedIdx >= currentLesson.targetString.length) {
+                endGameSession();
+            } else {
+                updateTypingAreaDisplay();
+                startCharTimer();
+            }
+        }
+        
+        function updateHUD() {
+            document.getElementById('hudScore').textContent = sessionStats.score;
+            const accuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
+            document.getElementById('hudAccuracy').textContent = accuracy.toFixed(0) + '%';
+
+            const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
+            // WPM: (typed chars / 5) / minutes
+            const wpm = timeElapsedMinutes > 0 ? Math.round((currentTypedIdx / 5) / timeElapsedMinutes) : 0;
+            document.getElementById('hudWPM').textContent = wpm;
+        }
+
+        function endGameSession() {
+            gameActive = false;
+            clearTimeout(charTimerTimeoutId);
+            update3DChar(null); // Clear 3D char
+
+            const finalAccuracy = sessionStats.totalPresses > 0 ? (sessionStats.correctPresses / sessionStats.totalPresses * 100) : 100;
+            const timeElapsedMinutes = (Date.now() - lessonStartTime) / 60000;
+            const finalWPM = timeElapsedMinutes > 0 ? Math.round((currentLesson.targetString.length / 5) / timeElapsedMinutes) : 0; // Based on target string length
+
+            // Save stats to profile
+            if (!currentProfile.progress.lessonStats) currentProfile.progress.lessonStats = {};
+            const prevStats = currentProfile.progress.lessonStats[currentLesson.id] || { score: -Infinity, accuracy: 0, wpm: 0 };
+            let newHighScore = false;
+            if (sessionStats.score > prevStats.score) {
+                prevStats.score = sessionStats.score;
+                newHighScore = true;
+            }
+            prevStats.accuracy = Math.max(prevStats.accuracy, finalAccuracy); // Keep best accuracy
+            prevStats.wpm = Math.max(prevStats.wpm, finalWPM); // Keep best WPM
+            currentProfile.progress.lessonStats[currentLesson.id] = prevStats;
+
+            const passed = finalAccuracy >= currentLesson.targetAccuracy && finalWPM >= currentLesson.targetWPM;
+            if (passed && currentLessonIndex >= (currentProfile.progress.highestLessonUnlocked || -1) ) {
+                currentProfile.progress.highestLessonUnlocked = currentLessonIndex;
+            }
+            saveProfileData(currentProfile);
+
+            // Display Summary Screen
+            document.getElementById('summaryTitleText').textContent = passed ? _t('lesson_passed') : _t('lesson_failed');
+            document.getElementById('summaryLessonName').textContent = _t(currentLesson.nameKey);
+            document.getElementById('summaryScore').textContent = sessionStats.score;
+            document.getElementById('summaryAccuracy').textContent = finalAccuracy.toFixed(1);
+            document.getElementById('summaryWPM').textContent = finalWPM;
+            document.getElementById('summaryNewHighScoreText').style.display = newHighScore ? 'block' : 'none';
+            document.getElementById('summaryCriteriaFeedback').textContent = 
+                `${_t('target_criteria')}: ${_t('target_format', currentLesson.targetAccuracy, currentLesson.targetWPM)}`;
+            document.getElementById('proceedToNextLessonBtn').style.display = (passed && currentLessonIndex < LESSONS_CONFIG.length - 1) ? 'inline-block' : 'none';
+            
+            showUIScreen('sessionSummaryScreen');
+        }
+
+        // --- Event Handlers & Input ---
+        document.getElementById('uiLanguageSelect').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            localStorage.setItem('typeMasterLang', currentLang);
+            applyLocalization();
+            if(currentProfile) { // Update profile's language pref
+                currentProfile.language = currentLang;
+                saveProfileData(currentProfile);
+            }
+        });
+
+        document.getElementById('createProfileBtn').addEventListener('click', async () => {
+            const name = document.getElementById('newProfileInputName').value.trim();
+            if (!name) { alert("Please enter a profile name."); return; }
+            const layout = document.getElementById('keyboardLayoutSelect').value;
+            const lang = document.getElementById('uiLanguageSelect').value;
+            const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+
+            currentProfile = {
+                id, name, keyboardLayout: layout, language: lang,
+                progress: { highestLessonUnlocked: -1, lessonStats: {} } // -1 means first lesson (index 0) is next
+            };
+            await saveProfileData(currentProfile);
+            currentLang = lang; // Set global lang based on new profile
+            applyLocalization();
+            displayLessonSelectScreen();
+        });
+        
+        document.getElementById('loadProfileBtn').addEventListener('click', async () => {
+            const id = document.getElementById('profileSelect').value;
+            if (!id) { alert("Please select a profile."); return; }
+            currentProfile = await getProfileData(id);
+            currentLang = currentProfile.language || 'en'; // Load profile's language
+            document.getElementById('uiLanguageSelect').value = currentLang;
+            applyLocalization();
+            displayLessonSelectScreen();
+        });
+
+        document.getElementById('backToProfilesBtn').addEventListener('click', displayProfileScreen);
+        document.getElementById('startLessonBtn').addEventListener('click', startGameSession);
+        document.getElementById('backToLessonsBtn').addEventListener('click', displayLessonSelectScreen);
+        document.getElementById('replayCurrentLessonBtn').addEventListener('click', () => displayLessonIntroScreen(currentLessonIndex));
+        document.getElementById('proceedToNextLessonBtn').addEventListener('click', () => {
+            if (currentLessonIndex < LESSONS_CONFIG.length - 1) {
+                displayLessonIntroScreen(currentLessonIndex + 1);
+            }
+        });
+        document.getElementById('returnToLessonSelectBtn').addEventListener('click', displayLessonSelectScreen);
+
+        // Import/Export (basic, needs robust error handling)
+        document.getElementById('exportProgressBtn').addEventListener('click', async () => {
+            const data = await getAllProfilesData();
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'typeMasterKids_progress.json';
+            a.click(); URL.revokeObjectURL(a.href);
+        });
+        document.getElementById('importProgressFile').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            try {
+                const profilesToImport = JSON.parse(text);
+                if(Array.isArray(profilesToImport)) {
+                    for(const p of profilesToImport) {
+                        // Basic validation, could be more thorough
+                        if(p.id && p.name && p.keyboardLayout && p.progress) {
+                             await saveProfileData(p);
+                        }
+                    }
+                    alert(`${profilesToImport.length} profiles imported/updated.`);
+                    displayProfileScreen(); // Refresh list
+                } else { alert("Invalid file format."); }
+            } catch (e) { alert("Error importing file: " + e.message); }
+            event.target.value = null; // Reset file input
+        });
+
+
+        window.addEventListener('keydown', (event) => {
+            if (!gameActive) return;
+            // Handle Shift, Ctrl, Alt, Meta, CapsLock, etc.
+            if (event.key.length > 1 && event.key !== ' ' && event.key !== 'Backspace') { // Allow Space and Backspace (if implemented)
+                 //console.log("Ignoring special key:", event.key);
+                return;
+            }
+            event.preventDefault(); // Prevent default browser actions for keys like space, arrows
+            handleCharacterInput(event.key);
+        });
+
+
+        // --- Application Initialization ---
+        async function initializeApp() {
+            try {
+                await initDB();
+                await setupThreeScene(); // Wait for font to load
+                animateThree(); // Start render loop
+                displayProfileScreen();
+            } catch (error) {
+                console.error("App Init Error:", error);
+                document.body.innerHTML = `<div class="ui-overlay" style="display:flex;"><div class="ui-panel"><h2>${_t('error_title')}</h2><p>${error}</p></div></div>`;
+            }
+        }
+
+        initializeApp();
 
     </script>
 </body>
