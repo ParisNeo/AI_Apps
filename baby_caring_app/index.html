@@ -1,1618 +1,927 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Baby Caring</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Comic Neue', cursive;
-      -webkit-user-select: none;
-      user-select: none;
-      overscroll-behavior: none;
-      background: linear-gradient(135deg, #e0f7fa, #fce4ec, #fff9c4);
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-    .slide { transition: transform 0.3s ease-in-out; }
-    .slide.hidden { transform: translateX(100%); display: none; }
-    .slide-left.hidden { transform: translateX(-100%); display: none; }
-    .btn-icon { transition: transform 0.2s; }
-    .btn-icon:hover { transform: scale(1.1); }
-    .shadow-glow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); }
-    .rounded-xl { border-radius: 1.5rem; }
-    .btn-gradient { background: linear-gradient(90deg, #60a5fa, #a78bfa); transition: all 0.3s; }
-    .btn-gradient:hover { filter: brightness(1.1); }
-    .dashboard-card { transition: all 0.3s; background: white; }
-    .dashboard-card:hover { transform: translateY(-8px); box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2); }
-    .tooltip { position: relative; }
-    .tooltip:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 110%; left: 50%; transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8); color: white; padding: 6px 12px; border-radius: 6px;
-      font-size: 0.9rem; white-space: nowrap; z-index: 10;
-    }
-    .tip-box { animation: fadeIn 1s ease-in-out; border: 2px dashed #60a5fa; }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); }}
-    .sync-status { font-size: 0.9rem; font-style: italic; }
-    dialog { border: none; border-radius: 1.5rem; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25); background: #fff; padding: 2rem; }
-    dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
-    .dashboard-grid { display: grid; gap: 2rem; }
-    .slider { background-color: #a78bfa; }
-    #add-feed-type-hybrid:checked + .slider { background-color: #60a5fa; }
-    #add-feed-type-hybrid:checked + .slider:before { transform: translateX(2rem); }
-    .dashboard-card { padding: 2.5rem; border: 1px solid #e5e7eb; }
-    .dashboard-card h3 { font-size: 2rem; }
-    .dashboard-card p { font-size: 1.25rem; }
-    button, input, select { font-size: 1.125rem; padding: 0.75rem; transition: all 0.2s; }
-    button:hover { transform: scale(1.05); }
-    input:focus, select:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 5px rgba(96, 165, 250, 0.5); }
-    .btn-icon { width: 2.5rem; height: 2.5rem; }
-    .warning { color: #e11d48; font-weight: bold; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #e11d48; color: white; padding: 10px 20px; border-radius: 8px; z-index: 1000; animation: slideUp 0.5s ease-in-out, fadeOut 0.5s ease-in-out 2.5s forwards; }
-    @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
-    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-    @media (max-width: 640px) {
-      .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-      .dashboard-grid { grid-template-columns: 1fr; }
-      .dashboard-card { padding: 1.5rem; }
-      button, input, select { font-size: 1rem; padding: 0.5rem; }
-    }
-    @media (min-width: 641px) {
-      .dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Care Hub 🍼</title>
+    <style>
+        :root {
+            --primary-color: #63b3ed; /* Light Blue */
+            --secondary-color: #f6e05e; /* Soft Yellow */
+            --accent-color: #68d391; /* Soft Green */
+            --text-color: #2d3748; /* Dark Gray */
+            --bg-color: #f7fafc; /* Light Gray */
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --danger-color: #f56565; /* Red for alerts/deletions */
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            text-align: center;
+        }
+        h1 { font-size: 2.2em; margin-bottom: 20px; }
+        h2 { font-size: 1.8em; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px;}
+        h3 { font-size: 1.4em; margin-top: 20px; margin-bottom: 10px; color: var(--accent-color); }
+
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #4299e1; /* Darker Blue */
+        }
+
+        button.secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        button.secondary:hover {
+            background-color: #f6d02e; /* Darker Yellow */
+        }
+        button.danger {
+            background-color: var(--danger-color);
+        }
+        button.danger:hover {
+            background-color: #e53e3e; /* Darker Red */
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        input[type="url"],
+        select,
+        textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .baby-selector {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .baby-selector label { display: inline-block; margin-right: 10px; }
+
+        .baby-profile, .add-baby-form, .log-entry-form {
+            background-color: #fdfdff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .profile-header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 20px;
+            object-fit: cover;
+            border: 3px solid var(--secondary-color);
+        }
+
+        .event-log {
+            list-style: none;
+            padding: 0;
+        }
+        .event-log li {
+            background-color: var(--bg-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.95em;
+        }
+        .event-log li strong { color: var(--primary-color); }
+
+        .hidden {
+            display: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            color: var(--text-color);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--danger-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .notification-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .notification-granted { background-color: #c6f6d5; color: #2f855a; } /* Green */
+        .notification-denied { background-color: #fed7d7; color: #c53030; } /* Red */
+        .notification-default { background-color: #feebc8; color: #975a16; } /* Yellow */
+
+        .summary-item {
+            background: #e9f5ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+        .summary-item strong { color: var(--primary-color); }
+
+        .baby-actions button {
+            width: calc(33% - 10px); /* Adjust for margins */
+            margin: 5px;
+        }
+        .baby-actions {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .timer-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+    <!-- Using simple emoji for icons to avoid external library for this single file constraint -->
 </head>
-<body class="safe-area">
-  <div class="flex flex-col md:flex-row h-full">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-1/4 bg-white p-6 shadow-glow slide-left fixed md:static h-full z-20 rounded-r-xl hidden md:block">
-      <header class="flex justify-between items-center mb-6">
-        <h1 id="app-title" class="text-4xl font-bold text-blue-600"></h1>
-        <div class="flex space-x-4">
-          <button id="menu-toggle" class="text-gray-600 tooltip" data-tooltip="">
-            <i class="fas fa-bars w-8 h-8"></i>
-          </button>
-          <button id="sidebar-close" class="md:hidden text-gray-600 tooltip" data-tooltip="">
-            <i class="fas fa-times w-8 h-8"></i>
-          </button>
+<body>
+    <div class="container">
+        <h1>Baby Care Hub 🍼</h1>
+
+        <div id="notificationStatus" class="notification-status">Checking notification permissions...</div>
+
+        <div class="baby-selector">
+            <label for="babySelect">Select Baby:</label>
+            <select id="babySelect"></select>
+            <button onclick="showAddBabyForm()">➕ Add New Baby</button>
+            <button class="danger" onclick="deleteCurrentBaby()">🗑️ Delete Current Baby</button>
         </div>
-      </header>
-      <h2 id="children-title" class="text-2xl font-semibold text-blue-600 mb-4"></h2>
-      <ul id="child-list" class="space-y-4 mb-6"></ul>
-      <button id="add-child" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow flex justify-center items-center tooltip" data-tooltip="">
-        <i class="fas fa-plus btn-icon mr-2"></i> <span></span>
-      </button>
-      <div id="menu" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
-        <div class="flex justify-end mb-6">
-          <button id="menu-close" class="text-gray-600 tooltip" data-tooltip="">
-            <i class="fas fa-times w-8 h-8"></i>
-          </button>
+
+        <div id="addBabyForm" class="add-baby-form hidden">
+            <h2>Add New Baby Profile</h2>
+            <label for="babyName">Name:</label>
+            <input type="text" id="babyName" placeholder="e.g., Baby A">
+            <label for="babyDob">Date of Birth:</label>
+            <input type="date" id="babyDob">
+            <label for="babyPhoto">Photo URL (optional):</label>
+            <input type="url" id="babyPhoto" placeholder="https://example.com/baby.jpg">
+            <button onclick="addBaby()">Save Baby Profile</button>
+            <button class="secondary" onclick="hideAddBabyForm()">Cancel</button>
         </div>
-        <div class="space-y-4">
-          <button id="export-data" class="w-full p-4 bg-blue-400 text-white rounded-full flex justify-center items-center hover:bg-blue-500 tooltip" data-tooltip="">
-            <i class="fas fa-download btn-icon mr-2"></i> <span></span>
-          </button>
-          <input type="file" id="import-file" class="hidden" accept=".json">
-          <button id="import-data" class="w-full p-4 bg-green-400 text-white rounded-full flex justify-center items-center hover:bg-green-500 tooltip" data-tooltip="">
-            <i class="fas fa-upload btn-icon mr-2"></i> <span></span>
-          </button>
-          <button id="share-data" class="w-full p-4 bg-yellow-400 text-white rounded-full flex justify-center items-center hover:bg-yellow-500 tooltip" data-tooltip="">
-            <i class="fas fa-share-alt btn-icon mr-2"></i> <span></span>
-          </button>
-          <button id="toggle-lang" class="w-full p-4 bg-gray-400 text-white rounded-full flex justify-center items-center hover:bg-gray-500 tooltip" data-tooltip="">
-            <i class="fas fa-language btn-icon mr-2"></i> <span></span>
-          </button>
-          <button id="sync-bluetooth" class="w-full p-4 bg-indigo-400 text-white rounded-full flex justify-center items-center hover:bg-indigo-500 tooltip" data-tooltip="">
-            <i class="fas fa-bluetooth btn-icon mr-2"></i> <span></span>
-          </button>
-          <button id="settings-toggle" class="w-full p-4 bg-purple-400 text-white rounded-full flex justify-center items-center hover:bg-purple-500 tooltip" data-tooltip="">
-            <i class="fas fa-cog btn-icon mr-2"></i> <span></span>
-          </button>
+
+        <div id="babyProfile" class="baby-profile hidden">
+            <div class="profile-header">
+                <img id="profilePhoto" src="https://via.placeholder.com/80?text=Baby" alt="Baby Photo">
+                <div>
+                    <h2 id="profileName"></h2>
+                    <p id="profileDob"></p>
+                    <p id="profileAge"></p>
+                </div>
+            </div>
+
+            <h3>Quick Actions</h3>
+            <div class="baby-actions">
+                <button onclick="showLogModal('milk')">🥛 Log Milk</button>
+                <button onclick="showLogModal('diaper')">👶 Log Diaper</button>
+                <button onclick="showLogModal('sleep')">😴 Log Sleep</button>
+            </div>
+            <button onclick="showLogModal('note')" class="secondary" style="width: calc(100% - 10px); margin-top:10px;">📝 Add Note</button>
+
+
+            <h3>Summary</h3>
+            <div id="babySummary">
+                <p class="summary-item"><strong>Last Milk:</strong> <span id="lastMilk">N/A</span></p>
+                <p class="summary-item"><strong>Last Diaper:</strong> <span id="lastDiaper">N/A</span> (<span id="nextDiaperCheck">Schedule: N/A</span>)</p>
+                <p class="summary-item"><strong>Last Sleep:</strong> <span id="lastSleep">N/A</span></p>
+            </div>
+
+            <div id="breastfeedingTimerSection" class="hidden">
+                <h3>🤱 Breastfeeding Timer</h3>
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <button id="startTimerBtn" onclick="startTimer()">Start Timer</button>
+                <button id="pauseTimerBtn" onclick="pauseTimer()" class="hidden">Pause Timer</button>
+                <button id="resetTimerBtn" onclick="resetTimer()" class="secondary">Reset Timer</button>
+                <button id="logTimerBtn" onclick="logTimerAsMilk()" class="accent hidden">Log as Milk Intake</button>
+            </div>
+
+
+            <h3>Event Log</h3>
+            <ul id="eventLog" class="event-log">
+                <!-- Events will be populated here -->
+            </ul>
         </div>
-      </div>
-      <div id="settings" class="slide hidden fixed top-0 right-0 w-3/4 md:w-1/4 h-full bg-white p-6 shadow-glow z-30 rounded-l-xl">
-        <div class="flex justify-end mb-6">
-          <button id="settings-close" class="text-gray-600 tooltip" data-tooltip="">
-            <i class="fas fa-times w-8 h-8"></i>
-          </button>
+
+        <div id="noBabiesMessage" style="text-align:center; padding: 20px; background-color: var(--secondary-color); border-radius: 8px;">
+            <h2>Welcome!</h2>
+            <p>No babies added yet. Click "Add New Baby" to get started.</p>
         </div>
-        <h3 id="settings-title" class="text-2xl font-semibold text-blue-600 mb-4"></h3>
-        <div class="space-y-6">
-          <label id="milk-interval-label" class="block text-blue-600 text-lg"></label>
-          <input type="number" id="milk-interval" min="1" max="24" class="w-full p-3 border border-blue-200 rounded-lg bg-blue-50">
-          <label id="notify-enable-label" class="block text-blue-600 text-lg"></label>
-          <input type="checkbox" id="notify-enable" class="h-6 w-6 text-blue-600">
-          <button id="save-settings" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-        </div>
-      </div>
-    </aside>
-    <!-- Main Content -->
-    <main id="main-content" class="w-full md:w-3/4 p-8 relative"></main>
-    <!-- Edit Dialogs -->
-    <dialog id="edit-milk-dialog">
-      <h3 id="edit-milk-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-      <form id="edit-milk-form" class="space-y-6">
-        <div>
-          <label id="edit-milk-time-label" class="block text-blue-600 text-lg"></label>
-          <input type="datetime-local" id="edit-milk-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div>
-          <label id="edit-milk-type-label" class="block text-blue-600 text-lg"></label>
-          <select id="edit-milk-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-            <option value="breast"></option>
-            <option value="bottle"></option>
-            <option value="hybrid"></option>
-          </select>
-        </div>
-        <div id="edit-milk-breast" class="hidden">
-          <label id="edit-milk-duration-label" class="block text-blue-600 text-lg"></label>
-          <input type="number" id="edit-milk-duration" min="0" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div id="edit-milk-bottle" class="hidden">
-          <label id="edit-milk-amount-label" class="block text-blue-600 text-lg"></label>
-          <input type="number" id="edit-milk-amount" min="0" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div class="flex space-x-4">
-          <button type="submit" id="edit-milk-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-          <button type="button" id="edit-milk-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
-        </div>
-      </form>
-    </dialog>
-    <dialog id="edit-diaper-dialog">
-      <h3 id="edit-diaper-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-      <form id="edit-diaper-form" class="space-y-6">
-        <div>
-          <label id="edit-diaper-time-label" class="block text-blue-600 text-lg"></label>
-          <input type="datetime-local" id="edit-diaper-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div>
-          <label id="edit-diaper-type-label" class="block text-blue-600 text-lg"></label>
-          <select id="edit-diaper-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-            <option value="wet"></option>
-            <option value="dirty"></option>
-            <option value="both"></option>
-          </select>
-        </div>
-        <div class="flex space-x-4">
-          <button type="submit" id="edit-diaper-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-          <button type="button" id="edit-diaper-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
-        </div>
-      </form>
-    </dialog>
-    <dialog id="edit-child-dialog">
-      <h3 id="edit-child-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-      <form id="edit-child-form" class="space-y-6">
-        <div>
-          <label id="edit-child-name-label" class="block text-blue-600 text-lg"></label>
-          <input type="text" id="edit-child-name" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div>
-          <label id="edit-child-gender-label" class="block text-blue-600 text-lg"></label>
-          <select id="edit-child-gender" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-            <option value="boy"></option>
-            <option value="girl"></option>
-          </select>
-        </div>
-        <div>
-          <label id="edit-child-birthdate-label" class="block text-blue-600 text-lg"></label>
-          <input type="date" id="edit-child-birthdate" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div class="flex space-x-4">
-          <button type="submit" id="edit-child-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-          <button type="button" id="edit-child-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
-        </div>
-      </form>
-    </dialog>
-    <!-- Add Modals -->
-    <dialog id="add-diaper-dialog">
-      <h3 id="add-diaper-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-      <form id="add-diaper-form" class="space-y-6">
-        <div>
-          <label id="add-diaper-time-label" class="block text-blue-600 text-lg"></label>
-          <input type="datetime-local" id="add-diaper-time" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        </div>
-        <div>
-          <label id="add-diaper-type-label" class="block text-blue-600 text-lg"></label>
-          <select id="add-diaper-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-            <option value="wet"></option>
-            <option value="dirty"></option>
-            <option value="both"></option>
-          </select>
-        </div>
-        <div class="flex space-x-4">
-          <button type="submit" id="add-diaper-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-          <button type="button" id="add-diaper-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
-        </div>
-      </form>
-    </dialog>
-<!-- Replace the existing addChildFromDashboard function and related dialog with this -->
-<dialog id="add-child-dialog">
-  <h3 id="add-child-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-  <form id="add-child-form" class="space-y-6">
-    <div>
-      <label id="add-child-name-label" class="block text-blue-600 text-lg"></label>
-      <input type="text" id="add-child-name" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
     </div>
-    <div>
-      <label id="add-child-gender-label" class="block text-blue-600 text-lg"></label>
-      <select id="add-child-gender" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
-        <option value="boy"></option>
-        <option value="girl"></option>
-      </select>
+
+    <!-- Generic Modal for Logging -->
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLogModal()">×</span>
+            <h2 id="modalTitle">Log Entry</h2>
+            <form id="logEntryForm">
+                <!-- Dynamic fields will be inserted here by JS -->
+                <div id="modalFields"></div>
+                <button type="button" onclick="saveLogEntry()">Save Entry</button>
+            </form>
+        </div>
     </div>
-    <div>
-      <label id="add-child-birthdate-label" class="block text-blue-600 text-lg"></label>
-      <input type="date" id="add-child-birthdate" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50" required>
-    </div>
-    <div class="flex space-x-4">
-      <button type="submit" id="add-child-save" class="w-full p-4 btn-gradient text-white rounded-full shadow-glow"></button>
-      <button type="button" id="add-child-cancel" class="w-full p-4 bg-gray-400 text-white rounded-full shadow-glow"></button>
-    </div>
-  </form>
-</dialog>
-
-<!-- Replace the existing add-milk-dialog with this -->
-<dialog id="add-milk-dialog">
-  <h3 id="add-milk-title" class="text-2xl font-semibold text-blue-600 mb-6"></h3>
-  <form id="add-milk-form" class="space-y-6">
-    <div>
-      <label id="add-milk-time-label" class="block text-blue-600 text-lg"></label>
-      <input type="datetime-local" id="add-milk-time" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50" required>
-    </div>
-    <div>
-      <label id="add-milk-type-label" class="block text-blue-600 text-lg"></label>
-      <select id="add-milk-type" class="w-full p-4 border border-blue-200 rounded-lg bg-blue-50">
-        <option value="breast"></option>
-        <option value="bottle"></option>
-        <option value="hybrid"></option>
-      </select>
-    </div>
-    <div id="add-milk-breast" class="hidden">
-      <label id="add-milk-duration-label" class="block text-blue-600 text-lg"></label>
-      <input type="number" id="add-milk-duration" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
-    </div>
-    <div id="add-milk-bottle" class="hidden">
-      <label id="add-milk-amount-label" class="block text-blue-600 text-lg"></label>
-      <input type="number" id="add-milk-amount" min="0" class="w-full p-4 text-lg border border-blue-200 rounded-lg bg-blue-50">
-    </div>
-    <div class="flex space-x-4">
-      <button type="submit" id="add-milk-save" class="w-full p-4 btn-gradient text-white text-lg rounded-full shadow-glow"></button>
-      <button type="button" id="add-milk-cancel" class="w-full p-4 bg-gray-400 text-white text-lg rounded-full shadow-glow"></button>
-    </div>
-  </form>
-</dialog>    
-    <div id="toast-container"></div>
-  </div>
-
-<script>
-  // Translations
-  const translations = {
-    en: {
-      appTitle: "Baby Caring",
-      childrenTitle: "Children",
-      addChild: "Add Child",
-      dashboard: "Dashboard",
-      atHome: "At Home",
-      nextMilk: "Next Feeding",
-      milkTitle: "Feeding",
-      milkAmount: "Amount (ml)",
-      milkDuration: "Duration (min)",
-      milkAdd: "Add Feeding",
-      breastFeed: "Breastfeed",
-      bottleFeed: "Bottle Feed",
-      hybridFeed: "Hybrid Feed",
-      diaperTitle: "Diaper Changes",
-      diaperWet: "Wet",
-      diaperDirty: "Dirty",
-      diaperBoth: "Both",
-      diaperAdd: "Add Diaper Change",
-      exportData: "Export Data",
-      importData: "Import Data",
-      shareData: "Share Data",
-      toggleLang: "Switch to French",
-      syncBluetooth: "Sync via Bluetooth",
-      settings: "Settings",
-      gender: "Gender",
-      birthdate: "Birthdate",
-      boy: "Boy",
-      girl: "Girl",
-      milkIntervals: "Feeding Intervals",
-      milkReminder: "Milk Reminder Interval (hours)",
-      enableNotifications: "Enable Notifications",
-      save: "Save",
-      cancel: "Cancel",
-      editFeeding: "Edit Feeding",
-      editDiaper: "Edit Diaper Change",
-      editChild: "Edit Child",
-      time: "Time",
-      type: "Type",
-      name: "Name",
-      stats: "Stats",
-      feedsToday: "Feeds Today",
-      avgInterval: "Avg. Interval (hrs)",
-      warnings: "Warnings",
-      irregularFeeding: "Irregular feeding detected! Last interval too long/short.",
-      noChildren: "No children added yet. Click the '+' button to begin.",
-      back: "Back",
-      details: "Details",
-      edit: "Edit",
-      delete: "Delete",
-      menu: "Menu",
-      close: "Close",
-      addChildPrompt: "Enter child's name:",
-      genderPrompt: "Select gender (Boy/Girl):",
-      birthdatePrompt: "Enter birthdate (YYYY-MM-DD):",
-      selectChildAlert: "Please select a child first.",
-      milkValidation: "Please fill in valid time and amount/duration.",
-      diaperValidation: "Please fill in a valid time.",
-      importSuccess: "Data imported successfully.",
-      importFormat: "Invalid data format.",
-      importError: "Error parsing JSON: ",
-      deleteConfirm: "Are you sure you want to delete this child?",
-      shareSuccess: "Data copied to clipboard! Paste it anywhere or use the email link.",
-      shareError: "Sharing not supported. Data copied to clipboard instead.",
-      bluetoothNotSupported: "Bluetooth not supported on this device.",
-      bluetoothSyncSuccess: "Data synced successfully!",
-      bluetoothSyncError: "Error during Bluetooth sync.",
-      invalidInput: "Please enter valid name, gender (Boy/Girl), and birthdate (YYYY-MM-DD).",
-      invalidGender: "Please enter 'Boy' or 'Girl'.",
-      invalidDate: "Invalid date format. Use YYYY-MM-DD.",
-      errorOccurred: "An error occurred: ",
-      addChildTitle: "Add New Child",          // For add-child-dialog title
-      addMilkType: "Feeding Type"             // For add-milk-type label
-    },
-    fr: {
-      appTitle: "Soins Bébé",
-      childrenTitle: "Enfants",
-      addChild: "Ajouter un enfant",
-      dashboard: "Tableau de bord",
-      atHome: "À la maison",
-      nextMilk: "Prochain repas",
-      milkTitle: "Alimentation",
-      milkAmount: "Quantité (ml)",
-      milkDuration: "Durée (min)",
-      milkAdd: "Ajouter une alimentation",
-      breastFeed: "Allaitement",
-      bottleFeed: "Biberon",
-      hybridFeed: "Alimentation Mixte",
-      diaperTitle: "Changements de couche",
-      diaperWet: "Mouillée",
-      diaperDirty: "Sale",
-      diaperBoth: "Les deux",
-      diaperAdd: "Ajouter un changement de couche",
-      exportData: "Exporter les données",
-      importData: "Importer les données",
-      shareData: "Partager les données",
-      toggleLang: "Passer à l'anglais",
-      syncBluetooth: "Synchroniser via Bluetooth",
-      settings: "Paramètres",
-      gender: "Genre",
-      birthdate: "Date de naissance",
-      boy: "Garçon",
-      girl: "Fille",
-      milkIntervals: "Intervalles d'alimentation",
-      milkReminder: "Intervalle de rappel d'alimentation (heures)",
-      enableNotifications: "Activer les notifications",
-      save: "Sauvegarder",
-      cancel: "Annuler",
-      editFeeding: "Modifier l'alimentation",
-      editDiaper: "Modifier le changement de couche",
-      editChild: "Modifier l'enfant",
-      time: "Heure",
-      type: "Type",
-      name: "Nom",
-      stats: "Statistiques",
-      feedsToday: "Repas aujourd'hui",
-      avgInterval: "Intervalle moyen (h)",
-      warnings: "Avertissements",
-      irregularFeeding: "Alimentation irrégulière détectée ! Dernier intervalle trop long/court.",
-      noChildren: "Aucun enfant ajouté pour l'instant. Cliquez sur le bouton '+' pour commencer.",
-      back: "Retour",
-      details: "Détails",
-      edit: "Modifier",
-      delete: "Supprimer",
-      menu: "Menu",
-      close: "Fermer",
-      addChildPrompt: "Entrez le nom de l'enfant :",
-      genderPrompt: "Sélectionnez le genre (Garçon/Fille) :",
-      birthdatePrompt: "Entrez la date de naissance (AAAA-MM-JJ) :",
-      selectChildAlert: "Veuillez d'abord sélectionner un enfant.",
-      milkValidation: "Veuillez remplir une heure et une quantité/durée valides.",
-      diaperValidation: "Veuillez remplir une heure valide.",
-      importSuccess: "Données importées avec succès.",
-      importFormat: "Format de données invalide.",
-      importError: "Erreur lors de l'analyse JSON : ",
-      deleteConfirm: "Êtes-vous sûr de vouloir supprimer cet enfant ?",
-      shareSuccess: "Données copiées dans le presse-papiers ! Collez-les n'importe où ou utilisez le lien email.",
-      shareError: "Partage non supporté. Données copiées dans le presse-papiers à la place.",
-      bluetoothNotSupported: "Bluetooth non supporté sur cet appareil.",
-      bluetoothSyncSuccess: "Données synchronisées avec succès !",
-      bluetoothSyncError: "Erreur lors de la synchronisation Bluetooth.",
-      invalidInput: "Veuillez entrer un nom valide, un genre (Garçon/Fille) et une date de naissance (AAAA-MM-JJ).",
-      invalidGender: "Veuillez entrer 'Garçon' ou 'Fille'.",
-      invalidDate: "Format de date invalide. Utilisez AAAA-MM-JJ.",
-      errorOccurred: "Une erreur s'est produite : ",
-      addChildTitle: "Ajouter un Nouvel Enfant",  // For add-child-dialog title
-      addMilkType: "Type d'Alimentation"         // For add-milk-type label      
-    }
-  };
-
-  // Parenting Tips
-  const tips = {
-    en: [
-      "Sing to your baby to help them feel calm and secure!",
-      "A warm bath before bedtime can improve sleep.",
-      "Track feeding times to spot patterns in your baby’s routine.",
-      "Skin-to-skin contact boosts bonding and comfort.",
-      "Keep a small toy handy to distract during diaper changes.",
-      "Babies love routine—try to keep nap times consistent.",
-      "A gentle massage can soothe a fussy baby.",
-      "Stay hydrated yourself—it helps with milk supply if breastfeeding!"
-    ],
-    fr: [
-      "Chantez à votre bébé pour l'aider à se sentir calme et en sécurité !",
-      "Un bain chaud avant le coucher peut améliorer le sommeil.",
-      "Suivez les heures d'alimentation pour repérer les habitudes de votre bébé.",
-      "Le contact peau à peau renforce le lien et le confort.",
-      "Gardez un petit jouet à portée de main pour distraire pendant le changement de couche.",
-      "Les bébés aiment la routine—essayez de garder des heures de sieste constantes.",
-      "Un massage doux peut apaiser un bébé agité.",
-      "Restez hydraté(e)—cela aide à la production de lait si vous allaitez !"
-    ]
-  };
-
-  // State
-  let appData = { nextId: 1, children: [] };
-  let activeChildId = null;
-  let language = localStorage.getItem('language') || 'en';
-  let settings = {
-    milkInterval: parseInt(localStorage.getItem('milkInterval')) || 3,
-    notifications: localStorage.getItem('notifications') === 'true'
-  };
-  let db;
-
-  // Utility Functions (Defined First)
-  const showToast = (message) => {
-    try {
-      console.error(`Toast message: ${message}`)
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = message;
-      const container = document.getElementById('toast-container');
-      if (container) container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    } catch (err) {
-      console.error('Toast error:', err);
-    }
-  };
-
-  const toggleSidebar = () => {
-    try {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) sidebar.classList.toggle('hidden');
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const toggleMenu = () => {
-    try {
-      const menu = document.getElementById('menu');
-      if (menu) menu.classList.toggle('hidden');
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const toggleSettings = () => {
-    try {
-      const settingsPanel = document.getElementById('settings');
-      if (settingsPanel) settingsPanel.classList.toggle('hidden');
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const addTouchAndClick = (element, handler) => {
-    if (!element) return;
-    element.addEventListener('click', (e) => {
-      try {
-        handler(e);
-      } catch (err) {
-        showToast(translations[language].errorOccurred + err.message);
-      }
-    });
-    element.addEventListener('touchstart', (e) => {
-      try {
-        e.preventDefault();
-        handler(e);
-      } catch (err) {
-        showToast(translations[language].errorOccurred + err.message);
-      }
-    });
-  };
-
-  // IndexedDB Setup
-  const initDB = () => new Promise((resolve, reject) => {
-    try {
-      const request = indexedDB.open("BabyCareDB", 1);
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => { db = request.result; resolve(); };
-      request.onupgradeneeded = (e) => {
-        e.target.result.createObjectStore("data", { keyPath: "id" });
-      };
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-      reject(err);
-    }
-  });
-
-  const loadData = () => new Promise((resolve) => {
-    try {
-      if (!db) return resolve();
-      const tx = db.transaction("data", "readonly");
-      const store = tx.objectStore("data");
-      const req = store.get("appData");
-      req.onsuccess = () => {
-        if (req.result && req.result.value) appData = req.result.value;
-        resolve();
-      };
-      req.onerror = () => resolve();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-      resolve();
-    }
-  });
-
-  const saveData = () => {
-    try {
-      if (!db) return;
-      const tx = db.transaction("data", "readwrite");
-      const store = tx.objectStore("data");
-      store.put({ id: "appData", value: appData });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // UI Updates
-  const updateUI = () => {
-    try {
-      const t = translations[language];
-      const appTitle = document.getElementById('app-title');
-      if (appTitle) appTitle.textContent = t.appTitle;
-      const childrenTitle = document.getElementById('children-title');
-      if (childrenTitle) childrenTitle.textContent = t.childrenTitle;
-      const addChildBtn = document.getElementById('add-child');
-      if (addChildBtn) {
-        addChildBtn.querySelector('span').textContent = t.addChild;
-        addChildBtn.dataset.tooltip = t.addChild;
-      }
-      const menuToggle = document.getElementById('menu-toggle');
-      if (menuToggle) menuToggle.dataset.tooltip = t.menu;
-      const sidebarClose = document.getElementById('sidebar-close');
-      if (sidebarClose) sidebarClose.dataset.tooltip = t.close;
-      const exportData = document.getElementById('export-data');
-      if (exportData) {
-        exportData.querySelector('span').textContent = t.exportData;
-        exportData.dataset.tooltip = t.exportData;
-      }
-      const importData = document.getElementById('import-data');
-      if (importData) {
-        importData.querySelector('span').textContent = t.importData;
-        importData.dataset.tooltip = t.importData;
-      }
-      const shareData = document.getElementById('share-data');
-      if (shareData) {
-        shareData.querySelector('span').textContent = t.shareData;
-        shareData.dataset.tooltip = t.shareData;
-      }
-      const toggleLang = document.getElementById('toggle-lang');
-      if (toggleLang) {
-        toggleLang.querySelector('span').textContent = t.toggleLang;
-        toggleLang.dataset.tooltip = t.toggleLang;
-      }
-      const syncBluetooth = document.getElementById('sync-bluetooth');
-      if (syncBluetooth) {
-        syncBluetooth.querySelector('span').textContent = t.syncBluetooth;
-        syncBluetooth.dataset.tooltip = t.syncBluetooth;
-      }
-      const settingsToggle = document.getElementById('settings-toggle');
-      if (settingsToggle) {
-        settingsToggle.querySelector('span').textContent = t.settings;
-        settingsToggle.dataset.tooltip = t.settings;
-      }
-      const menuClose = document.getElementById('menu-close');
-      if (menuClose) menuClose.dataset.tooltip = t.close;
-      const settingsTitle = document.getElementById('settings-title');
-      if (settingsTitle) settingsTitle.textContent = t.settings;
-      const settingsClose = document.getElementById('settings-close');
-      if (settingsClose) settingsClose.dataset.tooltip = t.close;
-      const milkIntervalLabel = document.getElementById('milk-interval-label');
-      if (milkIntervalLabel) milkIntervalLabel.textContent = t.milkReminder;
-      const notifyEnableLabel = document.getElementById('notify-enable-label');
-      if (notifyEnableLabel) notifyEnableLabel.textContent = t.enableNotifications;
-      const saveSettings = document.getElementById('save-settings');
-      if (saveSettings) saveSettings.textContent = t.save;
-      const editMilkTitle = document.getElementById('edit-milk-title');
-      if (editMilkTitle) editMilkTitle.textContent = t.editFeeding;
-      const editMilkTimeLabel = document.getElementById('edit-milk-time-label');
-      if (editMilkTimeLabel) editMilkTimeLabel.textContent = t.time;
-      const editMilkTypeLabel = document.getElementById('edit-milk-type-label');
-      if (editMilkTypeLabel) editMilkTypeLabel.textContent = t.type;
-      const editMilkType = document.getElementById('edit-milk-type');
-      if (editMilkType) {
-        editMilkType.options[0].textContent = t.breastFeed;
-        editMilkType.options[1].textContent = t.bottleFeed;
-        editMilkType.options[2].textContent = t.hybridFeed;
-      }
-      const editMilkDurationLabel = document.getElementById('edit-milk-duration-label');
-      if (editMilkDurationLabel) editMilkDurationLabel.textContent = t.milkDuration;
-      const editMilkAmountLabel = document.getElementById('edit-milk-amount-label');
-      if (editMilkAmountLabel) editMilkAmountLabel.textContent = t.milkAmount;
-      const editMilkSave = document.getElementById('edit-milk-save');
-      if (editMilkSave) editMilkSave.textContent = t.save;
-      const editMilkCancel = document.getElementById('edit-milk-cancel');
-      if (editMilkCancel) editMilkCancel.textContent = t.cancel;
-      const editDiaperTitle = document.getElementById('edit-diaper-title');
-      if (editDiaperTitle) editDiaperTitle.textContent = t.editDiaper;
-      const editDiaperTimeLabel = document.getElementById('edit-diaper-time-label');
-      if (editDiaperTimeLabel) editDiaperTimeLabel.textContent = t.time;
-      const editDiaperTypeLabel = document.getElementById('edit-diaper-type-label');
-      if (editDiaperTypeLabel) editDiaperTypeLabel.textContent = t.type;
-      const editDiaperType = document.getElementById('edit-diaper-type');
-      if (editDiaperType) {
-        editDiaperType.options[0].textContent = t.diaperWet;
-        editDiaperType.options[1].textContent = t.diaperDirty;
-        editDiaperType.options[2].textContent = t.diaperBoth;
-      }
-      const editDiaperSave = document.getElementById('edit-diaper-save');
-      if (editDiaperSave) editDiaperSave.textContent = t.save;
-      const editDiaperCancel = document.getElementById('edit-diaper-cancel');
-      if (editDiaperCancel) editDiaperCancel.textContent = t.cancel;
-      const editChildTitle = document.getElementById('edit-child-title');
-      if (editChildTitle) editChildTitle.textContent = t.editChild;
-      const editChildNameLabel = document.getElementById('edit-child-name-label');
-      if (editChildNameLabel) editChildNameLabel.textContent = t.name;
-      const editChildGenderLabel = document.getElementById('edit-child-gender-label');
-      if (editChildGenderLabel) editChildGenderLabel.textContent = t.gender;
-      const editChildGender = document.getElementById('edit-child-gender');
-      if (editChildGender) {
-        editChildGender.options[0].textContent = t.boy;
-        editChildGender.options[1].textContent = t.girl;
-      }
-      const editChildBirthdateLabel = document.getElementById('edit-child-birthdate-label');
-      if (editChildBirthdateLabel) editChildBirthdateLabel.textContent = t.birthdate;
-      const editChildSave = document.getElementById('edit-child-save');
-      if (editChildSave) editChildSave.textContent = t.save;
-      const editChildCancel = document.getElementById('edit-child-cancel');
-      if (editChildCancel) editChildCancel.textContent = t.cancel;
-      const addMilkTitle = document.getElementById('add-milk-title');
-      if (addMilkTitle) addMilkTitle.textContent = t.milkAdd;
-      const addMilkBottleLabel = document.getElementById('add-milk-bottle-label');
-      if (addMilkBottleLabel) addMilkBottleLabel.textContent = t.bottleFeed;
-      const addMilkHybridLabel = document.getElementById('add-milk-hybrid-label');
-      if (addMilkHybridLabel) addMilkHybridLabel.textContent = t.hybridFeed;
-      const addMilkTimeLabel = document.getElementById('add-milk-time-label');
-      if (addMilkTimeLabel) addMilkTimeLabel.textContent = t.time;
-      const addMilkDurationLabel = document.getElementById('add-milk-duration-label');
-      if (addMilkDurationLabel) addMilkDurationLabel.textContent = t.milkDuration;
-      const addMilkAmountLabel = document.getElementById('add-milk-amount-label');
-      if (addMilkAmountLabel) addMilkAmountLabel.textContent = t.milkAmount;
-      const addMilkSave = document.getElementById('add-milk-save');
-      if (addMilkSave) addMilkSave.textContent = t.save;
-      const addMilkCancel = document.getElementById('add-milk-cancel');
-      if (addMilkCancel) addMilkCancel.textContent = t.cancel;
-      const addDiaperTitle = document.getElementById('add-diaper-title');
-      if (addDiaperTitle) addDiaperTitle.textContent = t.diaperAdd;
-      const addDiaperTimeLabel = document.getElementById('add-diaper-time-label');
-      if (addDiaperTimeLabel) addDiaperTimeLabel.textContent = t.time;
-      const addDiaperTypeLabel = document.getElementById('add-diaper-type-label');
-      if (addDiaperTypeLabel) addDiaperTypeLabel.textContent = t.type;
-      const addDiaperType = document.getElementById('add-diaper-type');
-      if (addDiaperType) {
-        addDiaperType.options[0].textContent = t.diaperWet;
-        addDiaperType.options[1].textContent = t.diaperDirty;
-        addDiaperType.options[2].textContent = t.diaperBoth;
-      }
-      const addDiaperSave = document.getElementById('add-diaper-save');
-      if (addDiaperSave) addDiaperSave.textContent = t.save;
-      const addDiaperCancel = document.getElementById('add-diaper-cancel');
-      if (addDiaperCancel) addDiaperCancel.textContent = t.cancel;
-      renderChildren();
-      renderDashboard();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // Render Functions
-  const renderChildren = () => {
-    try {
-      const list = document.getElementById('child-list');
-      if (!list) return;
-      list.innerHTML = '';
-      appData.children.forEach(child => {
-        const li = document.createElement('li');
-        li.className = 'flex justify-between items-center p-4 bg-blue-100 rounded-lg hover:bg-blue-200 transition-all';
-        li.innerHTML = `
-          <span onclick="selectChild('${child.id}')" class="cursor-pointer flex-1 text-lg">${child.name}</span>
-          <button onclick="editChild('${child.id}')" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="${translations[language].edit}">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-          </button>
-          <button onclick="deleteChild('${child.id}')" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="${translations[language].delete}">
-            <i class="fas fa-trash btn-icon"></i>
-          </button>
-        `;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const renderDashboard = () => {
-    try {
-      const main = document.getElementById('main-content');
-      if (!main) return;
-      const t = translations[language];
-      main.innerHTML = `
-        <header class="flex justify-between items-center mb-8">
-          <h2 class="text-3xl font-bold text-blue-600">${t.dashboard}</h2>
-          <div class="flex space-x-4 items-center">
-            <span id="sync-status" class="sync-status text-gray-600">Sync: Offline</span>
-            <button id="sidebar-open" class="md:hidden text-gray-600 tooltip" data-tooltip="${t.menu}">
-              <i class="fas fa-bars w-8 h-8"></i>
-            </button>
-          </div>
-        </header>
-        <div id="dashboard" class="dashboard-grid"></div>
-        <button id="dashboard-add-child" class="fixed bottom-8 right-8 p-4 btn-gradient text-white rounded-full shadow-glow flex items-center tooltip" data-tooltip="${t.addChild}">
-          <i class="fas fa-plus btn-icon"></i>
-        </button>
-        <div id="tip-box" class="absolute bottom-4 right-4 bg-yellow-100 p-4 rounded-xl shadow-glow text-blue-600 hidden tip-box"></div>
-      `;
-      
-      const dashboard = document.getElementById('dashboard');
-      if (!dashboard) return;
-      dashboard.innerHTML = '';
-
-      if (appData.children.length === 0) {
-        dashboard.innerHTML = `<p class="text-gray-600 text-center text-lg">${t.noChildren}</p>`;
-      } else {
-        appData.children.forEach(child => {
-          try {
-            const lastMilk = child.milkIntake.length ? new Date(child.milkIntake[child.milkIntake.length - 1].timestamp) : null;
-            const nextMilk = lastMilk ? new Date(lastMilk.getTime() + settings.milkInterval * 60 * 60 * 1000) : null;
-            const now = new Date();
-            const timeLeft = nextMilk && nextMilk > now ? Math.floor((nextMilk - now) / (1000 * 60)) : 0;
-            const timeLeftText = lastMilk ? (timeLeft > 0 ? `${timeLeft} min` : 'Now') : 'N/A';
-            const percentageLeft = lastMilk && nextMilk > now ? (timeLeft / (settings.milkInterval * 60)) : 0;
-            const redValue = Math.floor(255 * (1 - percentageLeft));
-            const color = timeLeft > 0 ? `rgb(${redValue}, 100, 100)` : '#ff0000';
-            const genderIcon = child.gender === 'boy' ? 'fa-mars' : 'fa-venus';
-            const stats = calculateStats(child);
-
-            const card = document.createElement('div');
-            card.className = 'dashboard-card bg-white p-6 rounded-xl shadow-glow flex flex-col items-center';
-            card.innerHTML = `
-              <i class="fas fa-baby text-5xl text-blue-600 mb-4"></i>
-              <h3 class="text-2xl font-bold text-blue-600">${child.name}</h3>
-              <p class="text-gray-600"><i class="fas ${genderIcon} mr-2"></i> ${t.gender}: ${t[child.gender]}</p>
-              <p class="text-gray-600"><i class="fas fa-birthday-cake mr-2"></i> ${t.birthdate}: ${child.birthdate || 'N/A'}</p>
-              <p class="text-gray-600"><i class="fas fa-home mr-2"></i> ${t.atHome}</p>
-              <p class="text-gray-600" style="color: ${color};"><i class="fas fa-bottle-baby mr-2"></i> ${t.nextMilk}: ${timeLeftText}</p>
-              <div class="mt-4 w-full">
-                <h4 class="text-lg font-semibold text-blue-600">${t.stats}</h4>
-                <p>${t.feedsToday}: ${stats.feedsToday}</p>
-                <p>${t.avgInterval}: ${stats.avgInterval.toFixed(1)}</p>
-                ${stats.warnings.length ? `<p class="warning">${t.warnings}: ${stats.warnings.join(', ')}</p>` : ''}
-              </div>
-              <canvas id="chart-${child.id}" class="w-full h-40 mt-4"></canvas>
-              <div class="flex space-x-4 mt-6">
-                <button onclick="showDetails('${child.id}')" class="p-3 btn-gradient text-white rounded-full flex items-center tooltip" data-tooltip="${t.details}">
-                  <i class="fas fa-info-circle mr-2"></i> ${t.details}
-                </button>
-                <button onclick="showEditChildDialog('${child.id}')" class="p-3 bg-blue-500 text-white rounded-full flex items-center tooltip" data-tooltip="${t.edit}">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                </button>
-              </div>
-            `;
-            dashboard.appendChild(card);
-            renderChart(child);
-            if (timeLeft === 0 && lastMilk) notifyFeedingTime(child);
-          } catch (err) {
-            showToast(translations[language].errorOccurred + err.message);
-          }
-        });
-      }
-
-      addTouchAndClick(document.getElementById('sidebar-open'), toggleSidebar);
-      addTouchAndClick(document.getElementById('dashboard-add-child'), addChildFromDashboard);
-      showRandomTip();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const calculateStats = (child) => {
-    try {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const feedsToday = child.milkIntake.filter(m => new Date(m.timestamp) >= today).length;
-      const intervals = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b)
-        .reduce((acc, curr, i, arr) => i > 0 ? [...acc, (curr - arr[i - 1]) / (1000 * 60 * 60)] : acc, []);
-      const avgInterval = intervals.length ? intervals.reduce((a, b) => a + b, 0) / intervals.length : 0;
-      const warnings = [];
-      if (intervals.length > 1) {
-        const lastInterval = intervals[intervals.length - 1];
-        if (lastInterval > settings.milkInterval * 1.5 || lastInterval < settings.milkInterval * 0.5) {
-          warnings.push(translations[language].irregularFeeding);
-        }
-      }
-      return { feedsToday, avgInterval, warnings };
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-      return { feedsToday: 0, avgInterval: 0, warnings: [] };
-    }
-  };
-
-  const renderChart = (child) => {
-    try {
-      const canvas = document.getElementById(`chart-${child.id}`);
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const timestamps = child.milkIntake.map(m => new Date(m.timestamp)).sort((a, b) => a - b);
-      const intervals = [];
-      for (let i = 1; i < timestamps.length; i++) {
-        intervals.push((timestamps[i] - timestamps[i - 1]) / (1000 * 60 * 60));
-      }
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: intervals.map((_, i) => `Feed ${i + 1}`),
-          datasets: [{
-            label: translations[language].milkIntervals,
-            data: intervals,
-            borderColor: '#60a5fa',
-            fill: false,
-            tension: 0.1
-          }]
-        },
-        options: {
-          scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
-          plugins: { legend: { display: false } }
-        }
-      });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const showDetails = (id) => {
-    try {
-      activeChildId = id;
-      const child = appData.children.find(c => c.id === id);
-      const t = translations[language];
-      const main = document.getElementById('main-content');
-      if (!main) return;
-      main.innerHTML = `
-        <header class="flex justify-between items-center mb-8">
-          <h2 class="text-3xl font-bold text-blue-600">${child.name}</h2>
-          <button id="back-to-dashboard" class="text-gray-600 tooltip" data-tooltip="${t.back}">
-            <i class="fas fa-arrow-left w-8 h-8"></i>
-          </button>
-        </header>
-        <section class="mb-8 bg-white p-6 rounded-xl shadow-glow">
-          <div class="flex justify-between items-center mb-4">
-            <h4 class="text-xl font-semibold text-blue-600">${t.milkTitle}</h4>
-            <button onclick="showAddMilkDialog()" class="text-blue-600 tooltip" data-tooltip="${t.milkAdd}">
-              <i class="fas fa-plus w-6 h-6"></i>
-            </button>
-          </div>
-          <ul id="milk-list" class="list-disc pl-5 space-y-3"></ul>
-        </section>
-        <section class="bg-white p-6 rounded-xl shadow-glow">
-          <div class="flex justify-between items-center mb-4">
-            <h4 class="text-xl font-semibold text-blue-600">${t.diaperTitle}</h4>
-            <button onclick="showAddDiaperDialog()" class="text-blue-600 tooltip" data-tooltip="${t.diaperAdd}">
-              <i class="fas fa-plus w-6 h-6"></i>
-            </button>
-          </div>
-          <ul id="diaper-list" class="list-disc pl-5 space-y-3"></ul>
-        </section>
-      `;
-      renderMilk();
-      renderDiapers();
-      addTouchAndClick(document.getElementById('back-to-dashboard'), () => {
-        activeChildId = null;
-        renderDashboard();
-      });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const renderMilk = () => {
-    try {
-      const list = document.getElementById('milk-list');
-      if (!list) return;
-      list.innerHTML = '';
-      const t = translations[language];
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      child.milkIntake.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      child.milkIntake.forEach((intake, idx) => {
-        const li = document.createElement('li');
-        li.className = 'flex justify-between items-center text-blue-600 text-lg';
-        const valueText = intake.type === 'breast' ? `${intake.duration} min` : intake.type === 'bottle' ? `${intake.amount} ml` : `${intake.duration} min + ${intake.amount} ml`;
-        li.innerHTML = `
-          ${new Date(intake.timestamp).toLocaleString()} - ${t[intake.type + 'Feed']} - ${valueText}
-          <div class="flex space-x-3">
-            <button onclick="showEditMilkDialog(${idx})" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="${t.edit}">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </button>
-            <button onclick="deleteMilk(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="${t.delete}">
-              <i class="fas fa-trash btn-icon"></i>
-            </button>
-          </div>
-        `;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const renderDiapers = () => {
-    try {
-      const list = document.getElementById('diaper-list');
-      if (!list) return;
-      list.innerHTML = '';
-      const t = translations[language];
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      child.diaperChanges.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      child.diaperChanges.forEach((change, idx) => {
-        const li = document.createElement('li');
-        li.className = 'flex justify-between items-center text-blue-600 text-lg';
-        const type = t[`diaper${change.type.charAt(0).toUpperCase() + change.type.slice(1)}`];
-        li.innerHTML = `
-          ${new Date(change.timestamp).toLocaleString()} - ${type}
-          <div class="flex space-x-3">
-            <button onclick="showEditDiaperDialog(${idx})" class="text-blue-500 hover:text-blue-600 tooltip" data-tooltip="${t.edit}">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            </button>
-            <button onclick="deleteDiaper(${idx})" class="text-red-500 hover:text-red-600 tooltip" data-tooltip="${t.delete}">
-              <i class="fas fa-trash btn-icon"></i>
-            </button>
-          </div>
-        `;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // Event Handlers
-  const selectChild = (id) => {
-    try {
-      activeChildId = id;
-      showDetails(id);
-      toggleSidebar();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const deleteChild = (id) => {
-    try {
-      if (confirm(translations[language].deleteConfirm)) {
-        appData.children = appData.children.filter(c => c.id !== id);
-        if (activeChildId === id) activeChildId = null;
-        saveData();
-        updateUI();
-      }
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const editChild = (id) => {
-    try {
-      showEditChildDialog(id);
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const showEditChildDialog = (id) => {
-    try {
-      const child = appData.children.find(c => c.id === id);
-      if (!child) return;
-      const dialog = document.getElementById('edit-child-dialog');
-      if (!dialog) return;
-      document.getElementById('edit-child-name').value = child.name;
-      document.getElementById('edit-child-gender').value = child.gender;
-      document.getElementById('edit-child-birthdate').value = child.birthdate || '';
-      document.getElementById('edit-child-form').onsubmit = (e) => {
-        try {
-          e.preventDefault();
-          const name = document.getElementById('edit-child-name').value.trim();
-          const gender = document.getElementById('edit-child-gender').value;
-          const birthdate = document.getElementById('edit-child-birthdate').value;
-          if (name && (gender === 'boy' || gender === 'girl') && /^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
-            child.name = name;
-            child.gender = gender;
-            child.birthdate = birthdate;
-            saveData();
-            updateUI();
-            dialog.close();
-          } else {
-            alert(translations[language].invalidInput);
-          }
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      document.getElementById('edit-child-cancel').onclick = () => dialog.close();
-      dialog.showModal();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const deleteMilk = (idx) => {
-    try {
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      child.milkIntake.splice(idx, 1);
-      saveData();
-      renderMilk();
-      renderDashboard();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const deleteDiaper = (idx) => {
-    try {
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      child.diaperChanges.splice(idx, 1);
-      saveData();
-      renderDiapers();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const showEditMilkDialog = (idx) => {
-    try {
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      const intake = child.milkIntake[idx];
-      const dialog = document.getElementById('edit-milk-dialog');
-      if (!dialog) return;
-      document.getElementById('edit-milk-time').value = intake.timestamp.slice(0, 16);
-      document.getElementById('edit-milk-type').value = intake.type;
-      document.getElementById('edit-milk-duration').value = intake.duration || '';
-      document.getElementById('edit-milk-amount').value = intake.amount || '';
-      const breastDiv = document.getElementById('edit-milk-breast');
-      const bottleDiv = document.getElementById('edit-milk-bottle');
-      breastDiv.classList.toggle('hidden', intake.type === 'bottle');
-      bottleDiv.classList.toggle('hidden', intake.type === 'breast');
-      document.getElementById('edit-milk-type').onchange = (e) => {
-        breastDiv.classList.toggle('hidden', e.target.value === 'bottle');
-        bottleDiv.classList.toggle('hidden', e.target.value === 'breast');
-      };
-      document.getElementById('edit-milk-form').onsubmit = (e) => {
-        try {
-          e.preventDefault();
-          intake.timestamp = new Date(document.getElementById('edit-milk-time').value).toISOString();
-          intake.type = document.getElementById('edit-milk-type').value;
-          if (intake.type === 'breast') {
-            intake.duration = parseInt(document.getElementById('edit-milk-duration').value) || 0;
-            delete intake.amount;
-          } else if (intake.type === 'bottle') {
-            intake.amount = parseInt(document.getElementById('edit-milk-amount').value) || 0;
-            delete intake.duration;
-          } else {
-            intake.duration = parseInt(document.getElementById('edit-milk-duration').value) || 0;
-            intake.amount = parseInt(document.getElementById('edit-milk-amount').value) || 0;
-          }
-          saveData();
-          renderMilk();
-          renderDashboard();
-          dialog.close();
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      document.getElementById('edit-milk-cancel').onclick = () => dialog.close();
-      dialog.showModal();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const showEditDiaperDialog = (idx) => {
-    try {
-      const child = appData.children.find(c => c.id === activeChildId);
-      if (!child) return;
-      const change = child.diaperChanges[idx];
-      const dialog = document.getElementById('edit-diaper-dialog');
-      if (!dialog) return;
-      document.getElementById('edit-diaper-time').value = change.timestamp.slice(0, 16);
-      document.getElementById('edit-diaper-type').value = change.type;
-      document.getElementById('edit-diaper-form').onsubmit = (e) => {
-        try {
-          e.preventDefault();
-          change.timestamp = new Date(document.getElementById('edit-diaper-time').value).toISOString();
-          change.type = document.getElementById('edit-diaper-type').value;
-          saveData();
-          renderDiapers();
-          dialog.close();
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      document.getElementById('edit-diaper-cancel').onclick = () => dialog.close();
-      dialog.showModal();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-  
-  const showAddDiaperDialog = () => {
-    try {
-      const dialog = document.getElementById('add-diaper-dialog');
-      if (!dialog) return;
-      document.getElementById('add-diaper-time').value = '';
-      document.getElementById('add-diaper-type').value = 'wet';
-      document.getElementById('add-diaper-form').onsubmit = (e) => {
-        try {
-          e.preventDefault();
-          if (!activeChildId) return alert(translations[language].selectChildAlert);
-          const time = document.getElementById('add-diaper-time').value;
-          const type = document.getElementById('add-diaper-type').value;
-          if (!time) return alert(translations[language].diaperValidation);
-          const child = appData.children.find(c => c.id === activeChildId);
-          if (!child) return;
-          child.diaperChanges.push({ timestamp: new Date(time).toISOString(), type });
-          saveData();
-          renderDiapers();
-          dialog.close();
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      document.getElementById('add-diaper-cancel').onclick = () => dialog.close();
-      dialog.showModal();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // Notifications
-  const notifyFeedingTime = (child) => {
-    try {
-      if (settings.notifications && Notification.permission === 'granted') {
-        new Notification(`Time to feed ${child.name}!`, { body: 'It’s feeding time now.' });
-      }
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  const scheduleReminder = (child) => {
-    try {
-      if (settings.notifications && Notification.permission === 'granted') {
-        const lastFeed = child.milkIntake[child.milkIntake.length - 1];
-        const nextFeedTime = new Date(lastFeed.timestamp).getTime() + settings.milkInterval * 60 * 60 * 1000;
-        const delay = nextFeedTime - Date.now();
-        if (delay > 0) {
-          setTimeout(() => {
-            new Notification(`Time to feed ${child.name}!`, { body: `It’s been ${settings.milkInterval} hours since the last feed.` });
-          }, delay);
-        }
-      } else if (settings.notifications && Notification.permission !== 'denied') {
-        Notification.requestPermission();
-      }
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // Additional Event Handlers
-const showAddChildDialog = () => {
-  try {
-    const dialog = document.getElementById('add-child-dialog');
-    if (!dialog) return;
-    const t = translations[language];
-    
-    document.getElementById('add-child-title').textContent = t.addChild;
-    document.getElementById('add-child-name-label').textContent = t.name;
-    document.getElementById('add-child-gender-label').textContent = t.gender;
-    document.getElementById('add-child-gender').options[0].textContent = t.boy;
-    document.getElementById('add-child-gender').options[1].textContent = t.girl;
-    document.getElementById('add-child-birthdate-label').textContent = t.birthdate;
-    document.getElementById('add-child-save').textContent = t.save;
-    document.getElementById('add-child-cancel').textContent = t.cancel;
-
-    document.getElementById('add-child-name').value = '';
-    document.getElementById('add-child-gender').value = 'boy';
-    document.getElementById('add-child-birthdate').value = '';
-
-    document.getElementById('add-child-form').onsubmit = (e) => {
-      try {
-        e.preventDefault();
-        const name = document.getElementById('add-child-name').value.trim();
-        const gender = document.getElementById('add-child-gender').value;
-        const birthdate = document.getElementById('add-child-birthdate').value;
-        if (name && (gender === 'boy' || gender === 'girl') && /^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
-          const id = `child${appData.nextId++}`;
-          appData.children.push({ id, name, gender, birthdate, milkIntake: [], diaperChanges: [] });
-          saveData();
-          updateUI();
-          dialog.close();
-        } else {
-          alert(t.invalidInput);
-        }
-      } catch (err) {
-        showToast(t.errorOccurred + err.message);
-      }
-    };
-    
-    document.getElementById('add-child-cancel').onclick = () => dialog.close();
-    dialog.showModal();
-  } catch (err) {
-    showToast(translations[language].errorOccurred + err.message);
-  }
-};
-
-const addChildFromDashboard = () => {
-  showAddChildDialog();
-};
-
-const showAddMilkDialog = () => {
-  try {
-    const dialog = document.getElementById('add-milk-dialog');
-    if (!dialog) return;
-    const t = translations[language];
-    
-    // Set all text content including select options
-    document.getElementById('add-milk-title').textContent = t.milkAdd;
-    document.getElementById('add-milk-time-label').textContent = t.time;
-    document.getElementById('add-milk-type-label').textContent = t.addMilkType;
-    const typeSelect = document.getElementById('add-milk-type');
-    typeSelect.options[0].textContent = t.breastFeed;  // Set breast option text
-    typeSelect.options[1].textContent = t.bottleFeed;  // Set bottle option text
-    typeSelect.options[2].textContent = t.hybridFeed;  // Set hybrid option text
-    document.getElementById('add-milk-duration-label').textContent = t.milkDuration;
-    document.getElementById('add-milk-amount-label').textContent = t.milkAmount;
-    document.getElementById('add-milk-save').textContent = t.save;
-    document.getElementById('add-milk-cancel').textContent = t.cancel;
-
-    // Initialize form values
-    document.getElementById('add-milk-time').value = new Date().toISOString().slice(0, 16);
-    document.getElementById('add-milk-duration').value = '';
-    document.getElementById('add-milk-amount').value = '';
-    
-    const breastDiv = document.getElementById('add-milk-breast');
-    const bottleDiv = document.getElementById('add-milk-bottle');
-    
-    // Reset visibility based on initial selection
-    typeSelect.value = 'bottle';  // Set default value
-    breastDiv.classList.add('hidden');
-    bottleDiv.classList.remove('hidden');
-
-    typeSelect.onchange = (e) => {
-      breastDiv.classList.toggle('hidden', e.target.value === 'bottle');
-      bottleDiv.classList.toggle('hidden', e.target.value === 'breast');
-    };
-
-    document.getElementById('add-milk-form').onsubmit = (e) => {
-      try {
-        e.preventDefault();
-        if (!activeChildId) return alert(t.selectChildAlert);
-        const time = document.getElementById('add-milk-time').value;
-        const type = document.getElementById('add-milk-type').value;
-        const duration = parseInt(document.getElementById('add-milk-duration').value) || 0;
-        const amount = parseInt(document.getElementById('add-milk-amount').value) || 0;
-        
-        if (!time || (type === 'breast' && !duration) || (type === 'bottle' && !amount) || (type === 'hybrid' && (!duration || !amount))) {
-          return alert(t.milkValidation);
-        }
-        
-        const child = appData.children.find(c => c.id === activeChildId);
-        if (!child) return;
-        
-        const entry = { 
-          timestamp: new Date(time).toISOString(), 
-          type 
-        };
-        
-        if (type === 'breast') {
-          entry.duration = duration;
-        } else if (type === 'bottle') {
-          entry.amount = amount;
-        } else { // hybrid
-          entry.duration = duration;
-          entry.amount = amount;
-        }
-        
-        child.milkIntake.push(entry);
-        saveData();
-        renderMilk();
-        renderDashboard();
-        scheduleReminder(child);
-        dialog.close();
-      } catch (err) {
-        showToast(t.errorOccurred + err.message);
-      }
-    };
-    
-    document.getElementById('add-milk-cancel').onclick = () => dialog.close();
-    dialog.showModal();
-  } catch (err) {
-    showToast(translations[language].errorOccurred + err.message);
-  }
-};
 
 
-  const exportDataHandler = () => {
-    try {
-      const t = translations[language];
-      let md = `# ${t.appTitle} Data\n\n`;
-      appData.children.forEach(c => {
-        md += `## ${c.name}\n- **${t.gender}**: ${t[c.gender]}\n- **${t.birthdate}**: ${c.birthdate || 'N/A'}\n\n### ${t.milkTitle}\n`;
-        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${t[m.type + 'Feed']} - ${m.type === 'breast' ? `${m.duration} min` : m.type === 'bottle' ? `${m.amount} ml` : `${m.duration} min + ${m.amount} ml`}\n`);
-        md += `\n### ${t.diaperTitle}\n`;
-        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${t[`diaper${d.type.charAt(0).toUpperCase() + d.type.slice(1)}`]}\n`);
-        md += "\n";
-      });
-      const blob = new Blob([md], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'baby_caring.md';
-      a.click();
-      URL.revokeObjectURL(url);
-      toggleMenu();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+    <script>
+        let babies = [];
+        let events = [];
+        let currentBabyId = null;
+        let notificationPermission = 'default';
+        let diaperCheckIntervalId = null;
 
-  const importDataHandler = () => {
-    try {
-      const importFile = document.getElementById('import-file');
-      if (importFile) importFile.click();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+        // Timer variables
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let timerRunning = false;
 
-  const shareDataHandler = () => {
-    try {
-      const t = translations[language];
-      let md = `# ${t.appTitle} Data\n\n`;
-      appData.children.forEach(c => {
-        md += `## ${c.name}\n- **${t.gender}**: ${t[c.gender]}\n- **${t.birthdate}**: ${c.birthdate || 'N/A'}\n\n### ${t.milkTitle}\n`;
-        c.milkIntake.forEach(m => md += `- ${new Date(m.timestamp).toLocaleString()} - ${t[m.type + 'Feed']} - ${m.type === 'breast' ? `${m.duration} min` : m.type === 'bottle' ? `${m.amount} ml` : `${m.duration} min + ${m.amount} ml`}\n`);
-        md += `\n### ${t.diaperTitle}\n`;
-        c.diaperChanges.forEach(d => md += `- ${new Date(d.timestamp).toLocaleString()} - ${t[`diaper${d.type.charAt(0).toUpperCase() + d.type.slice(1)}`]}\n`);
-        md += "\n";
-      });
-      if (navigator.share) {
-        navigator.share({ title: t.appTitle + ' Data', text: md })
-          .catch(() => fallbackShare(md));
-      } else {
-        fallbackShare(md);
-      }
-      toggleMenu();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+        const DB_NAME = 'babyCareAppDB';
 
-  const fallbackShare = (text) => {
-    try {
-      const t = translations[language];
-      navigator.clipboard.writeText(text).then(() => {
-        const email = `mailto:?subject=${t.appTitle} Data&body=${encodeURIComponent(text)}`;
-        const a = document.createElement('a');
-        a.href = email;
-        a.click();
-        alert(t.shareSuccess);
-      }).catch(() => alert(t.shareError));
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+        // DOM Elements
+        const babySelect = document.getElementById('babySelect');
+        const addBabyForm = document.getElementById('addBabyForm');
+        const babyProfileDiv = document.getElementById('babyProfile');
+        const noBabiesMessage = document.getElementById('noBabiesMessage');
+        const eventLogUl = document.getElementById('eventLog');
+        const profileNameH2 = document.getElementById('profileName');
+        const profileDobP = document.getElementById('profileDob');
+        const profileAgeP = document.getElementById('profileAge');
+        const profilePhotoImg = document.getElementById('profilePhoto');
 
-  const toggleLangHandler = () => {
-    try {
-      language = language === 'en' ? 'fr' : 'en';
-      localStorage.setItem('language', language);
-      updateUI();
-      toggleMenu();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+        const lastMilkSpan = document.getElementById('lastMilk');
+        const lastDiaperSpan = document.getElementById('lastDiaper');
+        const nextDiaperCheckSpan = document.getElementById('nextDiaperCheck');
+        const lastSleepSpan = document.getElementById('lastSleep');
 
-  const syncBluetoothHandler = async () => {
-    try {
-      const t = translations[language];
-      if (!navigator.bluetooth) {
-        alert(t.bluetoothNotSupported);
-        return;
-      }
-      const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
-      const server = await device.gatt.connect();
-      const syncStatus = document.getElementById('sync-status');
-      if (syncStatus) syncStatus.textContent = `Sync: Connected to ${device.name}`;
-      const dataToSend = JSON.stringify(appData);
-      console.log("Sending data:", dataToSend);
-      const receivedData = prompt("Simulated Bluetooth receive: Paste JSON data from other device (or cancel to skip):");
-      if (receivedData) {
-        try {
-          const newData = JSON.parse(receivedData);
-          if (newData.nextId && Array.isArray(newData.children)) {
-            appData = mergeData(appData, newData);
-            saveData();
-            updateUI();
-            alert(t.bluetoothSyncSuccess);
-          } else {
-            alert(t.importFormat);
-          }
-        } catch (err) {
-          showToast(t.bluetoothSyncError + err.message);
-        }
-      }
-      server.disconnect();
-      if (syncStatus) syncStatus.textContent = "Sync: Offline";
-      toggleMenu();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
+        const logModal = document.getElementById('logModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalFields = document.getElementById('modalFields');
+        let currentLogType = '';
 
-  const mergeData = (localData, remoteData) => {
-    try {
-      const merged = { nextId: Math.max(localData.nextId, remoteData.nextId), children: [] };
-      const allChildren = [...localData.children, ...remoteData.children];
-      const uniqueIds = new Set(allChildren.map(c => c.id));
-      uniqueIds.forEach(id => {
-        const localChild = localData.children.find(c => c.id === id) || {};
-        const remoteChild = remoteData.children.find(c => c.id === id) || {};
-        merged.children.push({
-          ...localChild,
-          ...remoteChild,
-          milkIntake: [...(localChild.milkIntake || []), ...(remoteChild.milkIntake || [])],
-          diaperChanges: [...(localChild.diaperChanges || []), ...(remoteChild.diaperChanges || [])]
-        });
-      });
-      return merged;
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-      return localData;
-    }
-  };
+        // Timer DOM Elements
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const pauseTimerBtn = document.getElementById('pauseTimerBtn');
+        const resetTimerBtn = document.getElementById('resetTimerBtn');
+        const logTimerBtn = document.getElementById('logTimerBtn');
+        const breastfeedingTimerSection = document.getElementById('breastfeedingTimerSection');
 
-  const settingsToggleHandler = () => {
-    try {
-      const dialog = document.getElementById('settings');
-      if (!dialog) return;
-      document.getElementById('milk-interval').value = settings.milkInterval;
-      document.getElementById('notify-enable').checked = settings.notifications;
-      document.getElementById('save-settings').onclick = () => {
-        try {
-          settings.milkInterval = parseInt(document.getElementById('milk-interval').value) || 3;
-          settings.notifications = document.getElementById('notify-enable').checked;
-          localStorage.setItem('milkInterval', settings.milkInterval);
-          localStorage.setItem('notifications', settings.notifications);
-          saveData();
-          updateUI();
-          toggleSettings();
-        } catch (err) {
-          showToast(translations[language].errorOccurred + err.message);
-        }
-      };
-      toggleSettings();
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
 
-  const showRandomTip = () => {
-    try {
-      const tipBox = document.getElementById('tip-box');
-      if (!tipBox) return;
-      const randomTip = tips[language][Math.floor(Math.random() * tips[language].length)];
-      tipBox.textContent = randomTip;
-      tipBox.classList.remove('hidden');
-      setTimeout(() => tipBox.classList.add('hidden'), 10000);
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  };
-
-  // Event Listeners
-  addTouchAndClick(document.getElementById('add-child'), showAddChildDialog);
-  addTouchAndClick(document.getElementById('dashboard-add-child'), showAddChildDialog);
-
-  addTouchAndClick(document.getElementById('export-data'), exportDataHandler);
-  addTouchAndClick(document.getElementById('import-data'), importDataHandler);
-  addTouchAndClick(document.getElementById('share-data'), shareDataHandler);
-  addTouchAndClick(document.getElementById('toggle-lang'), toggleLangHandler);
-  addTouchAndClick(document.getElementById('sync-bluetooth'), syncBluetoothHandler);
-  addTouchAndClick(document.getElementById('settings-toggle'), settingsToggleHandler);
-  addTouchAndClick(document.getElementById('menu-toggle'), toggleMenu);
-  addTouchAndClick(document.getElementById('menu-close'), toggleMenu);
-  addTouchAndClick(document.getElementById('sidebar-close'), toggleSidebar);
-  addTouchAndClick(document.getElementById('settings-close'), toggleSettings);
-
-  document.getElementById('import-file').addEventListener('change', (e) => {
-    try {
-      const t = translations[language];
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const imported = JSON.parse(event.target.result);
-            if (imported.nextId && Array.isArray(imported.children)) {
-              appData = imported;
-              saveData();
-              activeChildId = null;
-              updateUI();
-              alert(t.importSuccess);
+        // --- Initialization ---
+        window.onload = () => {
+            loadData();
+            updateBabySelect();
+            if (babies.length > 0) {
+                currentBabyId = babies[0].id;
+                babySelect.value = currentBabyId;
+                displayBabyProfile(currentBabyId);
+                noBabiesMessage.classList.add('hidden');
             } else {
-              alert(t.importFormat);
+                babyProfileDiv.classList.add('hidden');
+                noBabiesMessage.classList.remove('hidden');
             }
-          } catch (err) {
-            showToast(t.importError + err.message);
-          }
-          toggleMenu();
+            setupNotificationPermission();
+            startDiaperCheckScheduler();
         };
-        reader.readAsText(file);
-      }
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  });
 
-  // Initialization
-  initDB().then(() => loadData()).then(() => {
-    try {
-      appData.children.forEach(child => {
-        if (!child.diaperChanges) child.diaperChanges = [];
-        if (!child.milkIntake) child.milkIntake = [];
-      });
-      updateUI();
-      if (settings.notifications && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-        Notification.requestPermission();
-      }
-    } catch (err) {
-      showToast(translations[language].errorOccurred + err.message);
-    }
-  }).catch(err => {
-    showToast(translations[language].errorOccurred + err.message);
-  });
-</script>
+        // --- Data Persistence (localStorage) ---
+        function saveData() {
+            const dataToSave = {
+                babies: babies,
+                events: events,
+                currentBabyId: currentBabyId // Save last selected baby
+            };
+            localStorage.setItem(DB_NAME, JSON.stringify(dataToSave));
+        }
+
+        function loadData() {
+            const data = localStorage.getItem(DB_NAME);
+            if (data) {
+                const parsedData = JSON.parse(data);
+                babies = parsedData.babies || [];
+                events = parsedData.events || [];
+                currentBabyId = parsedData.currentBabyId || (babies.length > 0 ? babies[0].id : null);
+            }
+        }
+
+        // --- Baby Management ---
+        function showAddBabyForm() {
+            addBabyForm.classList.remove('hidden');
+            document.getElementById('babyName').value = '';
+            document.getElementById('babyDob').value = '';
+            document.getElementById('babyPhoto').value = '';
+        }
+
+        function hideAddBabyForm() {
+            addBabyForm.classList.add('hidden');
+        }
+
+        function addBaby() {
+            const name = document.getElementById('babyName').value.trim();
+            const dob = document.getElementById('babyDob').value;
+            let photo = document.getElementById('babyPhoto').value.trim();
+
+            if (!name || !dob) {
+                alert('Please enter baby name and date of birth.');
+                return;
+            }
+            if (!photo) {
+                photo = `https://via.placeholder.com/80?text=${name.charAt(0)}`;
+            }
+
+            const newBaby = {
+                id: 'baby_' + Date.now(),
+                name: name,
+                dob: dob,
+                photo: photo,
+                nextDiaperCheck: null
+            };
+            babies.push(newBaby);
+            saveData();
+            updateBabySelect();
+            babySelect.value = newBaby.id; // Select the new baby
+            currentBabyId = newBaby.id;
+            displayBabyProfile(newBaby.id);
+            hideAddBabyForm();
+            noBabiesMessage.classList.add('hidden');
+            alert(`Baby ${name} added successfully!`);
+        }
+
+        function deleteCurrentBaby() {
+            if (!currentBabyId) {
+                alert("No baby selected to delete.");
+                return;
+            }
+            const babyToDelete = babies.find(b => b.id === currentBabyId);
+            if (!babyToDelete) return;
+
+            if (confirm(`Are you sure you want to delete ${babyToDelete.name} and all their data? This cannot be undone.`)) {
+                babies = babies.filter(baby => baby.id !== currentBabyId);
+                events = events.filter(event => event.babyId !== currentBabyId); // Also delete associated events
+                
+                if (babies.length > 0) {
+                    currentBabyId = babies[0].id;
+                } else {
+                    currentBabyId = null;
+                }
+                
+                saveData();
+                updateBabySelect();
+
+                if (currentBabyId) {
+                    displayBabyProfile(currentBabyId);
+                } else {
+                    babyProfileDiv.classList.add('hidden');
+                    noBabiesMessage.classList.remove('hidden');
+                }
+                alert(`${babyToDelete.name} has been deleted.`);
+            }
+        }
+
+        function updateBabySelect() {
+            babySelect.innerHTML = '';
+            if (babies.length === 0) {
+                const option = document.createElement('option');
+                option.textContent = 'No babies yet';
+                option.disabled = true;
+                babySelect.appendChild(option);
+                document.querySelector('.baby-selector button.danger').classList.add('hidden'); // Hide delete button
+                return;
+            }
+             document.querySelector('.baby-selector button.danger').classList.remove('hidden');
+
+
+            babies.forEach(baby => {
+                const option = document.createElement('option');
+                option.value = baby.id;
+                option.textContent = baby.name;
+                babySelect.appendChild(option);
+            });
+            if (currentBabyId) {
+                babySelect.value = currentBabyId;
+            }
+        }
+
+        babySelect.addEventListener('change', (e) => {
+            currentBabyId = e.target.value;
+            saveData(); // Save the new currentBabyId
+            displayBabyProfile(currentBabyId);
+            resetTimer(); // Reset timer when switching babies
+        });
+
+        function displayBabyProfile(babyId) {
+            const baby = babies.find(b => b.id === babyId);
+            if (!baby) {
+                babyProfileDiv.classList.add('hidden');
+                noBabiesMessage.classList.remove('hidden');
+                return;
+            }
+
+            babyProfileDiv.classList.remove('hidden');
+            noBabiesMessage.classList.add('hidden');
+
+            profileNameH2.textContent = baby.name;
+            profileDobP.textContent = `DOB: ${new Date(baby.dob).toLocaleDateString()}`;
+            profileAgeP.textContent = `Age: ${calculateAge(baby.dob)}`;
+            profilePhotoImg.src = baby.photo || `https://via.placeholder.com/80?text=${baby.name.charAt(0)}`;
+            profilePhotoImg.alt = `${baby.name}'s photo`;
+            
+            breastfeedingTimerSection.classList.remove('hidden'); // Show timer section for selected baby
+
+            renderEventLog(babyId);
+            updateSummary(babyId);
+        }
+
+        function calculateAge(dobString) {
+            const dob = new Date(dobString);
+            const today = new Date();
+            let ageMonths = (today.getFullYear() - dob.getFullYear()) * 12;
+            ageMonths -= dob.getMonth();
+            ageMonths += today.getMonth();
+            
+            if (ageMonths < 0) ageMonths = 0; // Should not happen if DOB is in past
+
+            if (ageMonths < 1) {
+                const ageDays = Math.floor((today - dob) / (1000 * 60 * 60 * 24));
+                return `${ageDays} days`;
+            }
+            if (ageMonths < 24) {
+                return `${ageMonths} months`;
+            }
+            const ageYears = Math.floor(ageMonths / 12);
+            const remainingMonths = ageMonths % 12;
+            return `${ageYears} years, ${remainingMonths} months`;
+        }
+
+        // --- Event Logging ---
+        function showLogModal(type) {
+            if (!currentBabyId) {
+                alert("Please select or add a baby first.");
+                return;
+            }
+            currentLogType = type;
+            modalFields.innerHTML = ''; // Clear previous fields
+            let fieldsHtml = '';
+            const now = new Date();
+            const currentTime = now.toTimeString().substring(0,5); // HH:MM
+            const currentDate = now.toISOString().substring(0,10); // YYYY-MM-DD
+
+            fieldsHtml += `
+                <label for="logDate">Date:</label>
+                <input type="date" id="logDate" value="${currentDate}">
+                <label for="logTime">Time:</label>
+                <input type="time" id="logTime" value="${currentTime}">
+            `;
+
+            switch (type) {
+                case 'milk':
+                    modalTitle.textContent = '🥛 Log Milk Intake';
+                    fieldsHtml += `
+                        <label for="milkAmount">Amount (ml):</label>
+                        <input type="number" id="milkAmount" placeholder="e.g., 120">
+                        <label for="milkType">Type:</label>
+                        <select id="milkType">
+                            <option value="breast_left">Breast (Left)</option>
+                            <option value="breast_right">Breast (Right)</option>
+                            <option value="breast_both">Breast (Both)</option>
+                            <option value="formula">Formula</option>
+                            <option value="expressed_milk">Expressed Milk</option>
+                        </select>
+                        <label for="milkNotes">Notes (optional):</label>
+                        <textarea id="milkNotes" placeholder="e.g., Baby was fussy"></textarea>
+                    `;
+                    break;
+                case 'diaper':
+                    modalTitle.textContent = '👶 Log Diaper Change';
+                    fieldsHtml += `
+                        <label for="diaperType">Type:</label>
+                        <select id="diaperType">
+                            <option value="wet">Wet</option>
+                            <option value="dirty">Dirty</option>
+                            <option value="both">Wet & Dirty</option>
+                        </select>
+                        <label for="diaperNotes">Notes (optional):</label>
+                        <textarea id="diaperNotes" placeholder="e.g., Rash cream applied"></textarea>
+                    `;
+                    break;
+                case 'sleep':
+                    modalTitle.textContent = '😴 Log Sleep';
+                    fieldsHtml += `
+                        <label for="sleepDuration">Duration (minutes):</label>
+                        <input type="number" id="sleepDuration" placeholder="e.g., 90">
+                        <label for="sleepNotes">Notes (optional):</label>
+                        <textarea id="sleepNotes" placeholder="e.g., Slept soundly in crib"></textarea>
+                    `;
+                    break;
+                case 'note':
+                    modalTitle.textContent = '📝 Add Note';
+                     fieldsHtml += `
+                        <label for="generalNote">Note:</label>
+                        <textarea id="generalNote" placeholder="e.g., First smile today!"></textarea>
+                    `;
+                    break;
+            }
+            modalFields.innerHTML = fieldsHtml;
+            logModal.style.display = 'flex';
+        }
+
+        function closeLogModal() {
+            logModal.style.display = 'none';
+        }
+
+        function saveLogEntry() {
+            if (!currentBabyId) return;
+
+            const date = document.getElementById('logDate').value;
+            const time = document.getElementById('logTime').value;
+            if (!date || !time) {
+                alert("Please enter date and time for the log.");
+                return;
+            }
+            const timestamp = new Date(`${date}T${time}`).toISOString();
+
+            const eventData = {
+                id: 'event_' + Date.now(),
+                babyId: currentBabyId,
+                type: currentLogType,
+                timestamp: timestamp,
+            };
+
+            switch (currentLogType) {
+                case 'milk':
+                    eventData.amount = document.getElementById('milkAmount').value;
+                    eventData.milkType = document.getElementById('milkType').value;
+                    eventData.notes = document.getElementById('milkNotes').value;
+                    if (!eventData.amount) { alert("Please enter milk amount."); return; }
+                    break;
+                case 'diaper':
+                    eventData.diaperType = document.getElementById('diaperType').value;
+                    eventData.notes = document.getElementById('diaperNotes').value;
+                    scheduleNextDiaperCheck(currentBabyId, timestamp);
+                    break;
+                case 'sleep':
+                    eventData.duration = document.getElementById('sleepDuration').value;
+                    eventData.notes = document.getElementById('sleepNotes').value;
+                    if (!eventData.duration) { alert("Please enter sleep duration."); return; }
+                    break;
+                case 'note':
+                    eventData.noteText = document.getElementById('generalNote').value;
+                    if (!eventData.noteText) { alert("Please enter your note."); return; }
+                    break;
+            }
+
+            events.push(eventData);
+            saveData();
+            renderEventLog(currentBabyId);
+            updateSummary(currentBabyId);
+            closeLogModal();
+        }
+        
+        function deleteEvent(eventId) {
+            if (confirm("Are you sure you want to delete this event?")) {
+                events = events.filter(event => event.id !== eventId);
+                saveData();
+                renderEventLog(currentBabyId); // Re-render for the current baby
+                updateSummary(currentBabyId);   // Update summary as well
+            }
+        }
+
+
+        function renderEventLog(babyId) {
+            eventLogUl.innerHTML = '';
+            const babyEvents = events
+                .filter(event => event.babyId === babyId)
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+
+            if (babyEvents.length === 0) {
+                eventLogUl.innerHTML = '<li>No events logged yet.</li>';
+                return;
+            }
+
+            babyEvents.forEach(event => {
+                const li = document.createElement('li');
+                const eventTime = new Date(event.timestamp).toLocaleString();
+                let details = '';
+                switch (event.type) {
+                    case 'milk':
+                        details = `🥛 Milk: ${event.amount}ml (${event.milkType}). ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        break;
+                    case 'diaper':
+                        details = `👶 Diaper: ${event.diaperType}. ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        break;
+                    case 'sleep':
+                        details = `😴 Sleep: ${event.duration} minutes. ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        break;
+                    case 'note':
+                        details = `📝 Note: ${event.noteText}`;
+                        break;
+                }
+                li.innerHTML = `<strong>${eventTime}</strong>: ${details} <button class="danger" style="float: right; padding: 3px 6px; font-size: 0.8em;" onclick="deleteEvent('${event.id}')">X</button>`;
+                eventLogUl.appendChild(li);
+            });
+        }
+
+        function updateSummary(babyId) {
+            const babyEvents = events
+                .filter(event => event.babyId === babyId)
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const lastMilkEvent = babyEvents.find(e => e.type === 'milk');
+            const lastDiaperEvent = babyEvents.find(e => e.type === 'diaper');
+            const lastSleepEvent = babyEvents.find(e => e.type === 'sleep');
+
+            lastMilkSpan.textContent = lastMilkEvent ? `${new Date(lastMilkEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastMilkEvent.amount}ml ${lastMilkEvent.milkType})` : 'N/A';
+            lastDiaperSpan.textContent = lastDiaperEvent ? `${new Date(lastDiaperEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastDiaperEvent.diaperType})` : 'N/A';
+            lastSleepSpan.textContent = lastSleepEvent ? `${new Date(lastSleepEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastSleepEvent.duration} min)` : 'N/A';
+            
+            const baby = babies.find(b => b.id === babyId);
+            if (baby && baby.nextDiaperCheck) {
+                nextDiaperCheckSpan.textContent = `Next check: ${new Date(baby.nextDiaperCheck).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                nextDiaperCheckSpan.style.color = new Date(baby.nextDiaperCheck) < new Date() ? 'var(--danger-color)' : 'var(--accent-color)';
+            } else {
+                nextDiaperCheckSpan.textContent = 'Schedule: N/A';
+                nextDiaperCheckSpan.style.color = 'inherit';
+            }
+        }
+
+        // --- Notifications & Scheduling ---
+        function setupNotificationPermission() {
+            const statusDiv = document.getElementById('notificationStatus');
+            if (!('Notification' in window)) {
+                statusDiv.textContent = 'This browser does not support desktop notifications.';
+                statusDiv.className = 'notification-status notification-denied';
+                notificationPermission = 'denied';
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                notificationPermission = 'granted';
+                statusDiv.textContent = '✅ Notifications enabled.';
+                statusDiv.className = 'notification-status notification-granted';
+            } else if (Notification.permission === 'denied') {
+                notificationPermission = 'denied';
+                statusDiv.textContent = '❌ Notifications denied. Please enable in browser settings if desired.';
+                statusDiv.className = 'notification-status notification-denied';
+            } else {
+                notificationPermission = 'default';
+                statusDiv.innerHTML = '🔔 <button onclick="requestNotificationPermission()">Enable Notifications</button> for reminders.';
+                statusDiv.className = 'notification-status notification-default';
+            }
+        }
+
+        function requestNotificationPermission() {
+            Notification.requestPermission().then(permission => {
+                notificationPermission = permission;
+                setupNotificationPermission(); // Update UI based on new permission
+                if (permission === 'granted') {
+                    showNotification('Baby Care Hub', 'Notifications are now enabled!');
+                }
+            });
+        }
+
+        function showNotification(title, body, babyName = null) {
+            if (notificationPermission === 'granted') {
+                const options = {
+                    body: body,
+                    icon: 'https://via.placeholder.com/48?text=🍼' // A generic icon
+                };
+                if (babyName) { // Add baby name to notification if provided
+                    title = `${babyName}: ${title}`;
+                }
+                new Notification(title, options);
+            }
+        }
+
+        function scheduleNextDiaperCheck(babyId, lastDiaperTimestamp) {
+            const baby = babies.find(b => b.id === babyId);
+            if (!baby) return;
+
+            // Schedule next check 3 hours from last change (configurable)
+            const DIAPER_CHECK_INTERVAL_HOURS = 3;
+            const nextCheckTime = new Date(lastDiaperTimestamp);
+            nextCheckTime.setHours(nextCheckTime.getHours() + DIAPER_CHECK_INTERVAL_HOURS);
+            
+            baby.nextDiaperCheck = nextCheckTime.toISOString();
+            saveData();
+            updateSummary(babyId); // Update summary immediately
+        }
+        
+        function startDiaperCheckScheduler() {
+            if (diaperCheckIntervalId) clearInterval(diaperCheckIntervalId); // Clear existing interval
+
+            diaperCheckIntervalId = setInterval(() => {
+                const now = new Date();
+                babies.forEach(baby => {
+                    if (baby.nextDiaperCheck) {
+                        const nextCheck = new Date(baby.nextDiaperCheck);
+                        if (nextCheck <= now) {
+                            // Time for a diaper check!
+                            showNotification('Diaper Check Time!', `Time to check ${baby.name}'s diaper. Last change was at ${new Date(events.filter(e => e.babyId === baby.id && e.type === 'diaper').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0].timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}.`, baby.name);
+                            
+                            // Reschedule for 15 mins later if user doesn't log new one, or clear if they do.
+                            // For simplicity, we'll just clear it. New log will set a new schedule.
+                            // Or, for persistence, we could nag every 15 mins:
+                            // baby.nextDiaperCheck = new Date(now.getTime() + 15 * 60000).toISOString(); 
+                            // For now, let's just clear it so it doesn't re-notify until a new diaper is logged.
+                            // A better approach might be a "snooze" or "checked" button on the notification.
+                            baby.nextDiaperCheck = null; // Clear it to prevent immediate re-notification
+                            saveData();
+                            if (baby.id === currentBabyId) { // If current baby, update their summary
+                                updateSummary(baby.id);
+                            }
+                        }
+                    }
+                });
+            }, 60000); // Check every minute
+        }
+
+        // --- Breastfeeding Timer ---
+        function formatTime(totalSeconds) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.textContent = formatTime(timerSeconds);
+        }
+
+        function startTimer() {
+            if (timerRunning) return;
+            timerRunning = true;
+            startTimerBtn.classList.add('hidden');
+            pauseTimerBtn.classList.remove('hidden');
+            logTimerBtn.classList.add('hidden'); // Hide log button until paused/reset
+
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!timerRunning) return;
+            timerRunning = false;
+            clearInterval(timerInterval);
+            startTimerBtn.classList.remove('hidden');
+            startTimerBtn.textContent = "Resume Timer";
+            pauseTimerBtn.classList.add('hidden');
+            if (timerSeconds > 0) logTimerBtn.classList.remove('hidden');
+        }
+
+        function resetTimer() {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            timerSeconds = 0;
+            updateTimerDisplay();
+            startTimerBtn.classList.remove('hidden');
+            startTimerBtn.textContent = "Start Timer";
+            pauseTimerBtn.classList.add('hidden');
+            logTimerBtn.classList.add('hidden');
+        }
+        
+        function logTimerAsMilk() {
+            if (!currentBabyId || timerSeconds === 0) return;
+
+            const durationMinutes = Math.round(timerSeconds / 60);
+            if (durationMinutes === 0) {
+                alert("Timer duration is too short to log meaningfully.");
+                return;
+            }
+
+            // Pre-fill modal for milk logging
+            showLogModal('milk');
+            // Note: The modal fields are generated dynamically, so we set values after showLogModal
+            // A slight delay or direct DOM manipulation might be needed if elements aren't ready.
+            // For simplicity, we'll assume they are available.
+            setTimeout(() => { // Ensure modal fields are populated
+                document.getElementById('milkAmount').value = durationMinutes; // Use minutes as "amount" for timed feeds
+                document.getElementById('milkType').value = 'breast_both'; // Default, user can change
+                document.getElementById('milkNotes').value = `Timed feed: ${formatTime(timerSeconds)}`;
+                
+                // Optionally, add a new milkType like 'breast_timed_feed'
+                const milkTypeSelect = document.getElementById('milkType');
+                let timedFeedOption = milkTypeSelect.querySelector('option[value="breast_timed"]');
+                if (!timedFeedOption) {
+                    timedFeedOption = document.createElement('option');
+                    timedFeedOption.value = "breast_timed";
+                    timedFeedOption.textContent = "Breast (Timed)";
+                    milkTypeSelect.appendChild(timedFeedOption);
+                }
+                milkTypeSelect.value = "breast_timed";
+
+            }, 100); // Small delay to ensure modal is ready
+
+            // Don't automatically save, let user confirm in modal.
+            // Reset timer after opening log modal
+            resetTimer();
+        }
+
+
+        // Close modal on escape key
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeLogModal();
+            }
+        });
+
+        // Close modal on outside click
+        window.addEventListener('click', (event) => {
+            if (event.target === logModal) {
+                closeLogModal();
+            }
+        });
+
+    </script>
 </body>
 </html>
