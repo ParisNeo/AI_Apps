@@ -81,7 +81,7 @@
         input[type="number"],
         input[type="date"],
         input[type="time"],
-        input[type="url"],
+        input[type="file"], /* Changed from URL */
         select,
         textarea {
             width: calc(100% - 22px);
@@ -223,7 +223,6 @@
             margin: 10px 0;
         }
     </style>
-    <!-- Using simple emoji for icons to avoid external library for this single file constraint -->
 </head>
 <body>
     <div class="container">
@@ -244,9 +243,9 @@
             <input type="text" id="babyName" placeholder="e.g., Baby A">
             <label for="babyDob">Date of Birth:</label>
             <input type="date" id="babyDob">
-            <label for="babyPhoto">Photo URL (optional):</label>
-            <input type="url" id="babyPhoto" placeholder="https://example.com/baby.jpg">
-            <button onclick="addBaby()">Save Baby Profile</button>
+            <label for="babyPhoto">Photo Upload (optional):</label>
+            <input type="file" id="babyPhoto" accept="image/*">
+            <button onclick="saveBabyProfileHandler()">Save Baby Profile</button>
             <button class="secondary" onclick="hideAddBabyForm()">Cancel</button>
         </div>
 
@@ -268,12 +267,15 @@
             </div>
             <button onclick="showLogModal('note')" class="secondary" style="width: calc(100% - 10px); margin-top:10px;">📝 Add Note</button>
 
-
             <h3>Summary</h3>
             <div id="babySummary">
-                <p class="summary-item"><strong>Last Milk:</strong> <span id="lastMilk">N/A</span></p>
-                <p class="summary-item"><strong>Last Diaper:</strong> <span id="lastDiaper">N/A</span> (<span id="nextDiaperCheck">Schedule: N/A</span>)</p>
-                <p class="summary-item"><strong>Last Sleep:</strong> <span id="lastSleep">N/A</span></p>
+                <p class="summary-item"><strong>Last Milk:</strong> <span id="lastMilk">N/A</span> (<span id="timeSinceLastMilk"></span>)</p>
+                <p class="summary-item"><strong>Next Feed:</strong> <span id="nextFeedSuggestion">N/A</span></p>
+                <p class="summary-item"><strong>Daily Average Milk:</strong> <span id="dailyMilkAverage">N/A</span></p>
+                <p class="summary-item"><strong>Last Diaper:</strong> <span id="lastDiaper">N/A</span> (<span id="timeSinceLastDiaper"></span>)</p>
+                <p class="summary-item"><strong>Next Diaper Check:</strong> <span id="nextDiaperCheck">N/A</span></p>
+                <p class="summary-item"><strong>Daily Average Diapers:</strong> <span id="dailyDiaperAverage">N/A</span></p>
+                <p class="summary-item"><strong>Last Sleep:</strong> <span id="lastSleep">N/A</span> (<span id="timeSinceLastSleep"></span>)</p>
             </div>
 
             <div id="breastfeedingTimerSection" class="hidden">
@@ -284,7 +286,6 @@
                 <button id="resetTimerBtn" onclick="resetTimer()" class="secondary">Reset Timer</button>
                 <button id="logTimerBtn" onclick="logTimerAsMilk()" class="accent hidden">Log as Milk Intake</button>
             </div>
-
 
             <h3>Event Log</h3>
             <ul id="eventLog" class="event-log">
@@ -311,13 +312,14 @@
         </div>
     </div>
 
-
     <script>
         let babies = [];
         let events = [];
         let currentBabyId = null;
         let notificationPermission = 'default';
+
         let diaperCheckIntervalId = null;
+        let feedCheckIntervalId = null; // New interval for feed reminders
 
         // Timer variables
         let timerInterval = null;
@@ -337,11 +339,20 @@
         const profileAgeP = document.getElementById('profileAge');
         const profilePhotoImg = document.getElementById('profilePhoto');
 
+        // Summary Spans
         const lastMilkSpan = document.getElementById('lastMilk');
-        const lastDiaperSpan = document.getElementById('lastDiaper');
-        const nextDiaperCheckSpan = document.getElementById('nextDiaperCheck');
-        const lastSleepSpan = document.getElementById('lastSleep');
+        const timeSinceLastMilkSpan = document.getElementById('timeSinceLastMilk');
+        const nextFeedSuggestionSpan = document.getElementById('nextFeedSuggestion');
+        const dailyMilkAverageSpan = document.getElementById('dailyMilkAverage');
 
+        const lastDiaperSpan = document.getElementById('lastDiaper');
+        const timeSinceLastDiaperSpan = document.getElementById('timeSinceLastDiaper');
+        const nextDiaperCheckSpan = document.getElementById('nextDiaperCheck');
+        const dailyDiaperAverageSpan = document.getElementById('dailyDiaperAverage');
+
+        const lastSleepSpan = document.getElementById('lastSleep');
+        const timeSinceLastSleepSpan = document.getElementById('timeSinceLastSleep');
+        
         const logModal = document.getElementById('logModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalFields = document.getElementById('modalFields');
@@ -361,16 +372,18 @@
             loadData();
             updateBabySelect();
             if (babies.length > 0) {
-                currentBabyId = babies[0].id;
-                babySelect.value = currentBabyId;
-                displayBabyProfile(currentBabyId);
+                // If a previous baby was selected, try to load that one
+                const initialBabyId = babies.some(b => b.id === currentBabyId) ? currentBabyId : babies[0].id;
+                currentBabyId = initialBabyId;
+                babySelect.value = initialBabyId;
+                displayBabyProfile(initialBabyId);
                 noBabiesMessage.classList.add('hidden');
             } else {
                 babyProfileDiv.classList.add('hidden');
                 noBabiesMessage.classList.remove('hidden');
             }
             setupNotificationPermission();
-            startDiaperCheckScheduler();
+            startDiaperAndFeedCheckSchedulers(); // Start all background schedulers
         };
 
         // --- Data Persistence (localStorage) ---
@@ -378,7 +391,7 @@
             const dataToSave = {
                 babies: babies,
                 events: events,
-                currentBabyId: currentBabyId // Save last selected baby
+                currentBabyId: currentBabyId
             };
             localStorage.setItem(DB_NAME, JSON.stringify(dataToSave));
         }
@@ -398,42 +411,75 @@
             addBabyForm.classList.remove('hidden');
             document.getElementById('babyName').value = '';
             document.getElementById('babyDob').value = '';
-            document.getElementById('babyPhoto').value = '';
+            document.getElementById('babyPhoto').value = ''; // Clear file input
         }
 
         function hideAddBabyForm() {
             addBabyForm.classList.add('hidden');
         }
 
+        // Handles the promise returned by addBaby()
+        function saveBabyProfileHandler() {
+            addBaby().then(() => {
+                hideAddBabyForm();
+                noBabiesMessage.classList.add('hidden');
+                // Baby is already selected and displayed by addBaby()
+                alert(`Baby added successfully!`);
+            }).catch(error => {
+                if (error) alert(error);
+            });
+        }
+
+        // Modified addBaby to handle file input as Base64
         function addBaby() {
-            const name = document.getElementById('babyName').value.trim();
-            const dob = document.getElementById('babyDob').value;
-            let photo = document.getElementById('babyPhoto').value.trim();
+            return new Promise((resolve, reject) => {
+                const name = document.getElementById('babyName').value.trim();
+                const dob = document.getElementById('babyDob').value;
+                const photoFile = document.getElementById('babyPhoto').files[0]; // Get the file
 
-            if (!name || !dob) {
-                alert('Please enter baby name and date of birth.');
-                return;
-            }
-            if (!photo) {
-                photo = `https://via.placeholder.com/80?text=${name.charAt(0)}`;
-            }
+                if (!name || !dob) {
+                    reject('Please enter baby name and date of birth.');
+                    return;
+                }
 
+                let photoBase64 = `https://via.placeholder.com/80?text=${name.charAt(0)}`; // Default placeholder
+
+                if (photoFile) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        photoBase64 = reader.result; // This is the Base64 string
+                        createBabyObjectAndSave(name, dob, photoBase64, resolve);
+                    };
+                    reader.onerror = (error) => {
+                        console.error("FileReader error:", error);
+                        reject('Error reading photo file.');
+                    };
+                    reader.readAsDataURL(photoFile);
+                } else {
+                    // No photo file, proceed with default placeholder
+                    createBabyObjectAndSave(name, dob, photoBase64, resolve);
+                }
+            });
+        }
+
+        function createBabyObjectAndSave(name, dob, photo, resolve) {
             const newBaby = {
                 id: 'baby_' + Date.now(),
                 name: name,
                 dob: dob,
-                photo: photo,
-                nextDiaperCheck: null
+                photo: photo, // This now stores Base64 or URL
+                nextDiaperCheck: null, // Track next diaper check time
+                nextFeedSuggestion: null, // Track next feed suggestion time
+                notifiedForFeed: false // Flag to prevent repeated notifications for the same suggestion
             };
             babies.push(newBaby);
             saveData();
             updateBabySelect();
-            babySelect.value = newBaby.id; // Select the new baby
+            // Automatically select the new baby and display its profile
             currentBabyId = newBaby.id;
+            babySelect.value = newBaby.id;
             displayBabyProfile(newBaby.id);
-            hideAddBabyForm();
-            noBabiesMessage.classList.add('hidden');
-            alert(`Baby ${name} added successfully!`);
+            resolve();
         }
 
         function deleteCurrentBaby() {
@@ -449,9 +495,9 @@
                 events = events.filter(event => event.babyId !== currentBabyId); // Also delete associated events
                 
                 if (babies.length > 0) {
-                    currentBabyId = babies[0].id;
+                    currentBabyId = babies[0].id; // Select the first baby remaining
                 } else {
-                    currentBabyId = null;
+                    currentBabyId = null; // No babies left
                 }
                 
                 saveData();
@@ -464,6 +510,7 @@
                     noBabiesMessage.classList.remove('hidden');
                 }
                 alert(`${babyToDelete.name} has been deleted.`);
+                resetTimer(); // Reset timer if current baby was deleted
             }
         }
 
@@ -512,7 +559,7 @@
             profileNameH2.textContent = baby.name;
             profileDobP.textContent = `DOB: ${new Date(baby.dob).toLocaleDateString()}`;
             profileAgeP.textContent = `Age: ${calculateAge(baby.dob)}`;
-            profilePhotoImg.src = baby.photo || `https://via.placeholder.com/80?text=${baby.name.charAt(0)}`;
+            profilePhotoImg.src = baby.photo; // Use Base64 string directly
             profilePhotoImg.alt = `${baby.name}'s photo`;
             
             breastfeedingTimerSection.classList.remove('hidden'); // Show timer section for selected baby
@@ -566,13 +613,14 @@
                 case 'milk':
                     modalTitle.textContent = '🥛 Log Milk Intake';
                     fieldsHtml += `
-                        <label for="milkAmount">Amount (ml):</label>
-                        <input type="number" id="milkAmount" placeholder="e.g., 120">
+                        <label for="milkAmount">Amount (ml) / Duration (min):</label>
+                        <input type="number" id="milkAmount" placeholder="e.g., 120 or 15 for duration">
                         <label for="milkType">Type:</label>
                         <select id="milkType">
                             <option value="breast_left">Breast (Left)</option>
                             <option value="breast_right">Breast (Right)</option>
                             <option value="breast_both">Breast (Both)</option>
+                            <option value="breast_timed">Breast (Timed)</option>
                             <option value="formula">Formula</option>
                             <option value="expressed_milk">Expressed Milk</option>
                         </select>
@@ -636,12 +684,15 @@
                 timestamp: timestamp,
             };
 
+            const baby = babies.find(b => b.id === currentBabyId);
+
             switch (currentLogType) {
                 case 'milk':
                     eventData.amount = document.getElementById('milkAmount').value;
                     eventData.milkType = document.getElementById('milkType').value;
                     eventData.notes = document.getElementById('milkNotes').value;
-                    if (!eventData.amount) { alert("Please enter milk amount."); return; }
+                    if (!eventData.amount) { alert("Please enter milk amount/duration."); return; }
+                    if (baby) baby.notifiedForFeed = false; // Reset notification flag for this baby
                     break;
                 case 'diaper':
                     eventData.diaperType = document.getElementById('diaperType').value;
@@ -675,7 +726,6 @@
             }
         }
 
-
         function renderEventLog(babyId) {
             eventLogUl.innerHTML = '';
             const babyEvents = events
@@ -693,7 +743,7 @@
                 let details = '';
                 switch (event.type) {
                     case 'milk':
-                        details = `🥛 Milk: ${event.amount}ml (${event.milkType}). ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        details = `🥛 Milk: ${event.amount}ml ${event.milkType === 'breast_timed' ? '(Timed)' : ''} (${event.milkType}). ${event.notes ? 'Notes: ' + event.notes : ''}`;
                         break;
                     case 'diaper':
                         details = `👶 Diaper: ${event.diaperType}. ${event.notes ? 'Notes: ' + event.notes : ''}`;
@@ -710,27 +760,104 @@
             });
         }
 
+        // Helper to format time differences (e.g., "5m ago", "2h from now")
+        function formatTimeDifference(ms) {
+            const absMs = Math.abs(ms);
+            const sign = ms < 0 ? 'from now' : 'ago';
+            const seconds = Math.floor(absMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days}d ${hours % 24}h ${sign}`;
+            if (hours > 0) return `${hours}h ${minutes % 60}m ${sign}`;
+            if (minutes > 0) return `${minutes}m ${seconds % 60}s ${sign}`;
+            if (seconds > 0) return `${seconds}s ${sign}`;
+            return 'just now';
+        }
+
+        // Calculates average interval between consecutive events (newest to oldest)
+        function calculateAverageInterval(eventsArray) {
+            if (eventsArray.length < 2) return null; // Need at least two events for an interval
+            
+            let totalInterval = 0;
+            for (let i = 0; i < eventsArray.length - 1; i++) {
+                const currentEventTime = new Date(eventsArray[i].timestamp).getTime();
+                const nextEventTime = new Date(eventsArray[i+1].timestamp).getTime();
+                totalInterval += (currentEventTime - nextEventTime);
+            }
+            return totalInterval / (eventsArray.length - 1); // Average interval in ms
+        }
+
         function updateSummary(babyId) {
             const babyEvents = events
                 .filter(event => event.babyId === babyId)
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
 
             const lastMilkEvent = babyEvents.find(e => e.type === 'milk');
             const lastDiaperEvent = babyEvents.find(e => e.type === 'diaper');
             const lastSleepEvent = babyEvents.find(e => e.type === 'sleep');
+            const now = new Date();
 
+            // Last Milk
             lastMilkSpan.textContent = lastMilkEvent ? `${new Date(lastMilkEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastMilkEvent.amount}ml ${lastMilkEvent.milkType})` : 'N/A';
+            timeSinceLastMilkSpan.textContent = lastMilkEvent ? formatTimeDifference(now - new Date(lastMilkEvent.timestamp)) : '';
+
+            // Next Feed Suggestion
+            const milkEventsForBaby = babyEvents.filter(e => e.type === 'milk');
+            if (lastMilkEvent && milkEventsForBaby.length > 0) {
+                const averageFeedInterval = calculateAverageInterval(milkEventsForBaby); // in ms
+                let nextFeedTime;
+                if (averageFeedInterval) {
+                    nextFeedTime = new Date(new Date(lastMilkEvent.timestamp).getTime() + averageFeedInterval);
+                } else {
+                    // If only one milk event, suggest a default (e.g., 3 hours from last)
+                    nextFeedTime = new Date(new Date(lastMilkEvent.timestamp).getTime() + 3 * 60 * 60 * 1000); // 3 hours
+                }
+                nextFeedSuggestionSpan.textContent = `${nextFeedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${formatTimeDifference(nextFeedTime - now)})`;
+                nextFeedSuggestionSpan.style.color = nextFeedTime < now ? 'var(--danger-color)' : 'var(--accent-color)';
+
+                // Update baby's nextFeedSuggestion in data for scheduler
+                const baby = babies.find(b => b.id === babyId);
+                if (baby) {
+                    baby.nextFeedSuggestion = nextFeedTime.toISOString();
+                    saveData(); // Save updated baby object with new suggestion
+                }
+            } else {
+                nextFeedSuggestionSpan.textContent = 'N/A (Log a feed to estimate)';
+                nextFeedSuggestionSpan.style.color = 'inherit';
+            }
+
+            // Daily Average Milk
+            const twentyFourHoursAgo = now.getTime() - (24 * 60 * 60 * 1000);
+            const milkEventsLast24h = milkEventsForBaby.filter(e => new Date(e.timestamp).getTime() >= twentyFourHoursAgo);
+            const totalMilkAmount = milkEventsLast24h.reduce((sum, e) => sum + (parseInt(e.amount) || 0), 0);
+            dailyMilkAverageSpan.textContent = milkEventsLast24h.length > 0 ? `${totalMilkAmount}ml / ${milkEventsLast24h.length} feeds (last 24h)` : 'N/A';
+
+
+            // Last Diaper
             lastDiaperSpan.textContent = lastDiaperEvent ? `${new Date(lastDiaperEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastDiaperEvent.diaperType})` : 'N/A';
-            lastSleepSpan.textContent = lastSleepEvent ? `${new Date(lastSleepEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastSleepEvent.duration} min)` : 'N/A';
-            
+            timeSinceLastDiaperSpan.textContent = lastDiaperEvent ? formatTimeDifference(now - new Date(lastDiaperEvent.timestamp)) : '';
+
+            // Next Diaper Check
             const baby = babies.find(b => b.id === babyId);
             if (baby && baby.nextDiaperCheck) {
-                nextDiaperCheckSpan.textContent = `Next check: ${new Date(baby.nextDiaperCheck).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                nextDiaperCheckSpan.style.color = new Date(baby.nextDiaperCheck) < new Date() ? 'var(--danger-color)' : 'var(--accent-color)';
+                const nextCheckTime = new Date(baby.nextDiaperCheck);
+                nextDiaperCheckSpan.textContent = `${nextCheckTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${formatTimeDifference(nextCheckTime - now)})`;
+                nextDiaperCheckSpan.style.color = nextCheckTime < now ? 'var(--danger-color)' : 'var(--accent-color)';
             } else {
-                nextDiaperCheckSpan.textContent = 'Schedule: N/A';
+                nextDiaperCheckSpan.textContent = 'N/A (Log a diaper to schedule)';
                 nextDiaperCheckSpan.style.color = 'inherit';
             }
+
+            // Daily Average Diapers
+            const diaperEventsLast24h = babyEvents.filter(e => e.type === 'diaper' && new Date(e.timestamp).getTime() >= twentyFourHoursAgo);
+            dailyDiaperAverageSpan.textContent = diaperEventsLast24h.length > 0 ? `${diaperEventsLast24h.length} changes (last 24h)` : 'N/A';
+
+
+            // Last Sleep
+            lastSleepSpan.textContent = lastSleepEvent ? `${new Date(lastSleepEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastSleepEvent.duration} min)` : 'N/A';
+            timeSinceLastSleepSpan.textContent = lastSleepEvent ? formatTimeDifference(now - new Date(lastSleepEvent.timestamp)) : '';
         }
 
         // --- Notifications & Scheduling ---
@@ -774,7 +901,7 @@
                     body: body,
                     icon: 'https://via.placeholder.com/48?text=🍼' // A generic icon
                 };
-                if (babyName) { // Add baby name to notification if provided
+                if (babyName) {
                     title = `${babyName}: ${title}`;
                 }
                 new Notification(title, options);
@@ -795,8 +922,10 @@
             updateSummary(babyId); // Update summary immediately
         }
         
-        function startDiaperCheckScheduler() {
-            if (diaperCheckIntervalId) clearInterval(diaperCheckIntervalId); // Clear existing interval
+        function startDiaperAndFeedCheckSchedulers() {
+            // Clear existing intervals to prevent duplicates if function is called again
+            if (diaperCheckIntervalId) clearInterval(diaperCheckIntervalId);
+            if (feedCheckIntervalId) clearInterval(feedCheckIntervalId);
 
             diaperCheckIntervalId = setInterval(() => {
                 const now = new Date();
@@ -804,24 +933,41 @@
                     if (baby.nextDiaperCheck) {
                         const nextCheck = new Date(baby.nextDiaperCheck);
                         if (nextCheck <= now) {
-                            // Time for a diaper check!
-                            showNotification('Diaper Check Time!', `Time to check ${baby.name}'s diaper. Last change was at ${new Date(events.filter(e => e.babyId === baby.id && e.type === 'diaper').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0].timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}.`, baby.name);
+                            showNotification('Diaper Check Time!', `It's time to check ${baby.name}'s diaper!`, baby.name);
                             
-                            // Reschedule for 15 mins later if user doesn't log new one, or clear if they do.
-                            // For simplicity, we'll just clear it. New log will set a new schedule.
-                            // Or, for persistence, we could nag every 15 mins:
-                            // baby.nextDiaperCheck = new Date(now.getTime() + 15 * 60000).toISOString(); 
-                            // For now, let's just clear it so it doesn't re-notify until a new diaper is logged.
-                            // A better approach might be a "snooze" or "checked" button on the notification.
-                            baby.nextDiaperCheck = null; // Clear it to prevent immediate re-notification
+                            // Clear `nextDiaperCheck` to prevent immediate re-notification until a new diaper is logged.
+                            // A real app might offer a snooze or 'checked' action for the notification itself.
+                            baby.nextDiaperCheck = null; 
                             saveData();
-                            if (baby.id === currentBabyId) { // If current baby, update their summary
-                                updateSummary(baby.id);
+                            if (baby.id === currentBabyId) {
+                                updateSummary(baby.id); // Update UI for the current baby
                             }
                         }
                     }
                 });
-            }, 60000); // Check every minute
+            }, 30 * 1000); // Check every 30 seconds for pending notifications
+
+            feedCheckIntervalId = setInterval(() => {
+                const now = new Date();
+                babies.forEach(baby => {
+                    // Check if baby.nextFeedSuggestion exists and is in the past, AND we haven't notified yet
+                    if (baby.nextFeedSuggestion) {
+                        const nextFeed = new Date(baby.nextFeedSuggestion);
+                        if (nextFeed <= now && !baby.notifiedForFeed) {
+                            showNotification('Feeding Time Reminder!', `It's likely time to feed ${baby.name}!`, baby.name);
+                            baby.notifiedForFeed = true; // Mark as notified
+                            saveData(); // Save the updated baby object
+                            if (baby.id === currentBabyId) {
+                                updateSummary(baby.id); // Update UI
+                            }
+                        } else if (nextFeed > now && baby.notifiedForFeed) {
+                            // If the suggestion moves to the future (e.g., new feed logged), reset the flag
+                            baby.notifiedForFeed = false;
+                            saveData();
+                        }
+                    }
+                });
+            }, 30 * 1000); // Check every 30 seconds
         }
 
         // --- Breastfeeding Timer ---
@@ -874,37 +1020,21 @@
             if (!currentBabyId || timerSeconds === 0) return;
 
             const durationMinutes = Math.round(timerSeconds / 60);
-            if (durationMinutes === 0) {
+            if (durationMinutes === 0 && timerSeconds < 30) { // Allow logging if duration is short but not zero
                 alert("Timer duration is too short to log meaningfully.");
                 return;
             }
 
-            // Pre-fill modal for milk logging
             showLogModal('milk');
-            // Note: The modal fields are generated dynamically, so we set values after showLogModal
-            // A slight delay or direct DOM manipulation might be needed if elements aren't ready.
-            // For simplicity, we'll assume they are available.
-            setTimeout(() => { // Ensure modal fields are populated
-                document.getElementById('milkAmount').value = durationMinutes; // Use minutes as "amount" for timed feeds
-                document.getElementById('milkType').value = 'breast_both'; // Default, user can change
+            
+            // Pre-fill modal fields after they are rendered
+            setTimeout(() => {
+                document.getElementById('milkAmount').value = durationMinutes;
+                document.getElementById('milkType').value = 'breast_timed';
                 document.getElementById('milkNotes').value = `Timed feed: ${formatTime(timerSeconds)}`;
-                
-                // Optionally, add a new milkType like 'breast_timed_feed'
-                const milkTypeSelect = document.getElementById('milkType');
-                let timedFeedOption = milkTypeSelect.querySelector('option[value="breast_timed"]');
-                if (!timedFeedOption) {
-                    timedFeedOption = document.createElement('option');
-                    timedFeedOption.value = "breast_timed";
-                    timedFeedOption.textContent = "Breast (Timed)";
-                    milkTypeSelect.appendChild(timedFeedOption);
-                }
-                milkTypeSelect.value = "breast_timed";
+            }, 100);
 
-            }, 100); // Small delay to ensure modal is ready
-
-            // Don't automatically save, let user confirm in modal.
-            // Reset timer after opening log modal
-            resetTimer();
+            resetTimer(); // Reset timer after preparing the log entry
         }
 
 
