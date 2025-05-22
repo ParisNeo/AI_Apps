@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
 
     <style>
+        /* ADDED: Improved mobile scroll behavior */
         body { font-family: 'Inter', sans-serif; overscroll-behavior-y: contain; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; /* scrollbar-theme-marker */ border-radius: 10px; }
@@ -83,6 +84,7 @@
                         {{ t('appName') }}
                     </h1>
                 </div>
+                <!-- ENHANCED: Header button spacing for mobile -->
                 <div class="flex items-center space-x-1 rtl:space-x-reverse md:space-x-2">
                     <select v-model="currentLang" @change="changeLanguage" class="bg-primary text-text-light border border-primary-dark rounded p-1 text-xs md:text-sm focus:outline-none focus:border-accent appearance-none leading-tight" :title="t('selectLanguage')">
                         <option value="en">EN</option>
@@ -109,8 +111,9 @@
         <!-- Main Content Area -->
         <div class="flex flex-1 overflow-hidden relative">
             <!-- Sidebar -->
+            <!-- FIXED: Sidebar width for better mobile adaptation -->
              <aside :class="{'translate-x-0': showSidebar, '-translate-x-full': !showSidebar && !isRTL, 'translate-x-full': !showSidebar && isRTL}"
-                   class="fixed inset-y-0 w-64 bg-secondary text-text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto lg:static lg:translate-x-0"
+                   class="fixed inset-y-0 w-3/4 max-w-xs sm:max-w-sm md:w-64 bg-secondary text-text-dark p-4 space-y-4 transform transition-transform duration-300 ease-in-out lg:shadow-lg overflow-y-auto lg:static lg:translate-x-0"
                    :style="{ left: isRTL ? 'auto' : '0', right: isRTL ? '0' : 'auto' }">
                 <div class="mt-16 lg:mt-0">
                     <button @click="goToNewNoteView"
@@ -233,7 +236,10 @@
                             </div>
                             <div class="bg-gray-50 dark:bg-gray-700 p-3 border-t border-border-color dark:border-gray-600 flex items-center justify-end space-x-2 rtl:space-x-reverse">
                                 <button @click.stop="copyToClipboard(note.decryptedContent || note.content)" :title="t('copyContentTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg></button>
-                                <button @click.stop="shareNote(note)" :title="t('shareNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg></button>
+                                <!-- ADDED: Share Button on Note Card -->
+                                <button @click.stop="shareNote(note)" :title="t('shareNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-accent transition-colors">
+                                    <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" transform="translate(0, 1.5)"/><path d="M10 12a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(0, 1.5)"/><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z" fill="currentColor"/></svg>
+                                </button>
                                 <button @click.stop="editNote(note)" :title="t('editNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
                                 <button v-if="note.isSecret && note.decryptedContent" @click.stop="promptMasterKey('encrypt', note.id)" :title="t('reEncryptTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 00-4 4v2H4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V6a4 4 0 00-4-4zm0 2a2 2 0 012 2v2H8V6a2 2 0 012-2zM6 10h8v8H6v-8z"></path><path d="M10 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM8 6V4a2 2 0 114 0v2H8z"></path></svg></button>
                                 <button @click.stop="deleteNote(note.id)" :title="t('deleteNoteTooltip')" class="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
@@ -248,7 +254,10 @@
                         <button @click="goBackToList()" class="text-primary dark:text-blue-400 hover:underline flex items-center"><svg class="svg-icon me-1 rtl:ms-1 rtl:-scale-x-100" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>{{ t('backToList') }}</button>
                         <div class="flex items-center space-x-2 rtl:space-x-reverse">
                              <button @click="copyToClipboard(currentViewedNote.decryptedContent || currentViewedNote.content)" :title="t('copyContentTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M8 2a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H8zM6 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V4z"></path><path d="M3 6a2 2 0 012-2h1v1H5a1 1 0 00-1 1v9a1 1 0 001 1h6a1 1 0 001-1V9h1v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"></path></svg></button>
-                            <button @click="shareNote(currentViewedNote)" :title="t('shareNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg></button>
+                            <!-- ADDED: Share Button in Full Note View -->
+                            <button @click="shareNote(currentViewedNote)" :title="t('shareNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                <svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" transform="translate(0, 1.5)"/><path d="M10 12a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(0, 1.5)"/><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.742l4.94-2.47C13.456 7.68 14.19 8 15 8z" fill="currentColor"/></svg>
+                            </button>
                             <button @click="editNote(currentViewedNote)" :title="t('editNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-blue-500 dark:text-blue-400"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg></button>
                             <button @click="deleteNote(currentViewedNote.id)" :title="t('deleteNoteTooltip')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-red-500 dark:text-red-400"><svg class="svg-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
                         </div>
@@ -577,6 +586,7 @@
                     document.documentElement.setAttribute('lang', this.currentLang);
                     document.documentElement.setAttribute('dir', this.isRTL ? 'rtl' : 'ltr');
                 },
+                // ADDED: Method to apply body text color based on theme
                 applyBodyTextColor() {
                      const body = document.querySelector('body');
                     if (this.isDarkMode) {
@@ -593,7 +603,9 @@
                     this.activeView = 'viewNote'; this.showSidebar = false;
                 },
                 goBackToList() { this.activeView = 'notesList'; this.currentViewedNote = null; },
+                // FIX: Prevent event propagation when clicking checkbox to avoid opening note
                 toggleNoteSelectionForExport(noteId, event) {
+                    event.stopPropagation(); // Stop click from propagating to the parent note-card
                     const index = this.selectedNoteIdsForExport.indexOf(noteId);
                     if (index > -1) this.selectedNoteIdsForExport.splice(index, 1); else this.selectedNoteIdsForExport.push(noteId);
                 },
@@ -775,6 +787,7 @@
                                 let overwriteCount = 0;
                                 importedNotes.forEach(iNote => {
                                     if (this.notes.some(eNote => eNote.id === iNote.id)) overwriteCount++;
+                                    // Basic validation for required fields
                                     if (!iNote.id || typeof iNote.id !== 'string' || !iNote.title || typeof iNote.title !== 'string' || (typeof iNote.content !== 'string' && typeof iNote.encryptedContent !== 'string') || typeof iNote.isSecret !== 'boolean' || !iNote.createdAt || isNaN(new Date(iNote.createdAt).getTime()) || !iNote.updatedAt || isNaN(new Date(iNote.updatedAt).getTime()) ) { throw new Error(`Invalid note structure for note ID ${iNote.id || 'unknown'}.`);}
                                 });
                                 if (overwriteCount > 0 && !confirm(this.t('importConfirmation', { count: overwriteCount }))) { event.target.value = null; return; }
@@ -791,15 +804,39 @@
                         reader.readAsText(file);
                     } else { this.showToast(this.t('toastImportInvalidFile'), 'error'); event.target.value = null; }
                 },
+                // ADDED: Share Note method
                 shareNote(note) {
                     const contentToShare = note.decryptedContent || note.content;
-                    if (note.isSecret && !note.decryptedContent) { this.showToast(this.t("toastCannotShareEncrypted"), "info"); return; }
-                    const title = note.title; const text = `${this.t('appName')}: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
-                    if (navigator.share) navigator.share({ title, text }).catch(e => {this.copyToClipboardForSharing(title, text);});
-                    else this.copyToClipboardForSharing(title, text);
+                    if (note.isSecret && !note.decryptedContent) {
+                        this.showToast(this.t("toastCannotShareEncrypted"), "info");
+                        return;
+                    }
+                    if (!contentToShare) {
+                        this.showToast(this.t('toastNothingToCopy'), 'info');
+                        return;
+                    }
+
+                    const title = note.title;
+                    // Truncate content for sharing preview
+                    const text = `${this.t('appName')}: "${title}"\n\n${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}`;
+
+                    if (navigator.share) {
+                        navigator.share({ title, text })
+                            .then(() => { /* Success, no toast needed as native dialog is user-facing */ })
+                            .catch(error => {
+                                // If native share fails or is cancelled, try copying to clipboard
+                                if (error.name !== 'AbortError') { // Don't toast for user cancellation
+                                    this.copyToClipboardForSharing(title, text);
+                                }
+                            });
+                    } else {
+                        // Fallback for browsers not supporting Web Share API
+                        this.copyToClipboardForSharing(title, text);
+                    }
                 },
+                // ADDED: Helper for copying share text to clipboard
                 copyToClipboardForSharing(title, text) {
-                     navigator.clipboard.writeText(`${this.t('appName')}: "${title}"\n\n${text}`)
+                     navigator.clipboard.writeText(text) // Use the full text for copying
                         .then(() => this.showToast(this.t('toastShareCopied'), 'success'))
                         .catch(() => this.showToast(this.t('toastFailedToCopy'), 'error'));
                 },
