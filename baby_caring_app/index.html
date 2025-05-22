@@ -109,7 +109,10 @@
             text-align: center;
         }
         .baby-selector label { display: inline-block; margin-right: 10px; }
+        .baby-selector button { margin-left: 0px; margin-right: 0px;} /* Adjust button margin for selector */
 
+
+        /* Reusing .add-baby-form class for babyForm (add/edit) */
         .baby-profile, .add-baby-form, .log-entry-form {
             background-color: #fdfdff;
             padding: 20px;
@@ -117,6 +120,22 @@
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
         }
+        /* Specific style for the generic babyForm */
+        #babyForm {
+             margin-bottom: 20px;
+        }
+        #babyFormPhotoPreview {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #babyFormPhotoPreview img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--secondary-color);
+        }
+
 
         .profile-header {
             display: flex;
@@ -233,20 +252,24 @@
         <div class="baby-selector">
             <label for="babySelect">Select Baby:</label>
             <select id="babySelect"></select>
-            <button onclick="showAddBabyForm()">➕ Add New Baby</button>
+            <button onclick="showBabyForm('add')">➕ Add New Baby</button>
+            <button onclick="showBabyForm('edit')" id="editBabyButton">✏️ Edit Baby</button>
             <button class="danger" onclick="deleteCurrentBaby()">🗑️ Delete Current Baby</button>
         </div>
 
-        <div id="addBabyForm" class="add-baby-form hidden">
-            <h2>Add New Baby Profile</h2>
+        <div id="babyForm" class="add-baby-form hidden">
+            <h2 id="babyFormTitle"></h2>
+            <div id="babyFormPhotoPreview" style="text-align: center; margin-bottom: 15px;">
+                <img id="formPhoto" src="https://via.placeholder.com/80?text=Baby" alt="Baby Photo">
+            </div>
             <label for="babyName">Name:</label>
             <input type="text" id="babyName" placeholder="e.g., Baby A">
             <label for="babyDob">Date of Birth:</label>
             <input type="date" id="babyDob">
             <label for="babyPhoto">Photo Upload (optional):</label>
             <input type="file" id="babyPhoto" accept="image/*">
-            <button onclick="saveBabyProfileHandler()">Save Baby Profile</button>
-            <button class="secondary" onclick="hideAddBabyForm()">Cancel</button>
+            <button id="saveBabyButton" onclick="saveBabyProfileHandler()"></button>
+            <button class="secondary" onclick="hideBabyForm()">Cancel</button>
         </div>
 
         <div id="babyProfile" class="baby-profile hidden">
@@ -317,6 +340,7 @@
         let events = [];
         let currentBabyId = null;
         let notificationPermission = 'default';
+        let isEditing = false; // New flag for add/edit mode
 
         let diaperCheckIntervalId = null;
         let feedCheckIntervalId = null; // New interval for feed reminders
@@ -330,7 +354,16 @@
 
         // DOM Elements
         const babySelect = document.getElementById('babySelect');
-        const addBabyForm = document.getElementById('addBabyForm');
+        const babyForm = document.getElementById('babyForm'); // Renamed from addBabyForm
+        const babyFormTitle = document.getElementById('babyFormTitle'); // New
+        const babyFormPhotoPreview = document.getElementById('babyFormPhotoPreview'); // New
+        const formPhoto = document.getElementById('formPhoto'); // New
+        const saveBabyButton = document.getElementById('saveBabyButton'); // New
+
+        const babyNameInput = document.getElementById('babyName');
+        const babyDobInput = document.getElementById('babyDob');
+        const babyPhotoInput = document.getElementById('babyPhoto');
+
         const babyProfileDiv = document.getElementById('babyProfile');
         const noBabiesMessage = document.getElementById('noBabiesMessage');
         const eventLogUl = document.getElementById('eventLog');
@@ -338,6 +371,7 @@
         const profileDobP = document.getElementById('profileDob');
         const profileAgeP = document.getElementById('profileAge');
         const profilePhotoImg = document.getElementById('profilePhoto');
+        const editBabyButton = document.getElementById('editBabyButton'); // New
 
         // Summary Spans
         const lastMilkSpan = document.getElementById('lastMilk');
@@ -381,6 +415,7 @@
             } else {
                 babyProfileDiv.classList.add('hidden');
                 noBabiesMessage.classList.remove('hidden');
+                editBabyButton.classList.add('hidden'); // Hide edit button if no babies
             }
             setupNotificationPermission();
             startDiaperAndFeedCheckSchedulers(); // Start all background schedulers
@@ -406,80 +441,131 @@
             }
         }
 
-        // --- Baby Management ---
-        function showAddBabyForm() {
-            addBabyForm.classList.remove('hidden');
-            document.getElementById('babyName').value = '';
-            document.getElementById('babyDob').value = '';
-            document.getElementById('babyPhoto').value = ''; // Clear file input
-        }
+        // --- Baby Management (Add/Edit) ---
 
-        function hideAddBabyForm() {
-            addBabyForm.classList.add('hidden');
-        }
-
-        // Handles the promise returned by addBaby()
-        function saveBabyProfileHandler() {
-            addBaby().then(() => {
-                hideAddBabyForm();
-                noBabiesMessage.classList.add('hidden');
-                // Baby is already selected and displayed by addBaby()
-                alert(`Baby added successfully!`);
-            }).catch(error => {
-                if (error) alert(error);
-            });
-        }
-
-        // Modified addBaby to handle file input as Base64
-        function addBaby() {
+        // Helper to process photo upload (returns a Promise for Base64 string or default URL)
+        function processPhotoFile(photoFile, existingPhotoUrl, babyName) {
             return new Promise((resolve, reject) => {
-                const name = document.getElementById('babyName').value.trim();
-                const dob = document.getElementById('babyDob').value;
-                const photoFile = document.getElementById('babyPhoto').files[0]; // Get the file
-
-                if (!name || !dob) {
-                    reject('Please enter baby name and date of birth.');
-                    return;
-                }
-
-                let photoBase64 = `https://via.placeholder.com/80?text=${name.charAt(0)}`; // Default placeholder
-
                 if (photoFile) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                        photoBase64 = reader.result; // This is the Base64 string
-                        createBabyObjectAndSave(name, dob, photoBase64, resolve);
+                        resolve(reader.result); // Base64 string
                     };
                     reader.onerror = (error) => {
                         console.error("FileReader error:", error);
                         reject('Error reading photo file.');
                     };
                     reader.readAsDataURL(photoFile);
-                } else {
-                    // No photo file, proceed with default placeholder
-                    createBabyObjectAndSave(name, dob, photoBase64, resolve);
+                } else if (existingPhotoUrl && existingPhotoUrl.startsWith('data:image/')) {
+                    resolve(existingPhotoUrl); // Keep existing Base64 photo
+                } else if (existingPhotoUrl && existingPhotoUrl.startsWith('http')) {
+                    resolve(existingPhotoUrl); // Keep existing placeholder URL
+                }
+                else {
+                    resolve(`https://via.placeholder.com/80?text=${babyName ? babyName.charAt(0) : '👶'}`); // Default placeholder
                 }
             });
         }
 
-        function createBabyObjectAndSave(name, dob, photo, resolve) {
-            const newBaby = {
-                id: 'baby_' + Date.now(),
-                name: name,
-                dob: dob,
-                photo: photo, // This now stores Base64 or URL
-                nextDiaperCheck: null, // Track next diaper check time
-                nextFeedSuggestion: null, // Track next feed suggestion time
-                notifiedForFeed: false // Flag to prevent repeated notifications for the same suggestion
-            };
-            babies.push(newBaby);
-            saveData();
-            updateBabySelect();
-            // Automatically select the new baby and display its profile
-            currentBabyId = newBaby.id;
-            babySelect.value = newBaby.id;
-            displayBabyProfile(newBaby.id);
-            resolve();
+        function showBabyForm(mode) {
+            isEditing = (mode === 'edit');
+            babyForm.classList.remove('hidden');
+
+            if (isEditing) {
+                const baby = babies.find(b => b.id === currentBabyId);
+                if (!baby) {
+                    alert("Please select a baby to edit.");
+                    hideBabyForm();
+                    return;
+                }
+                babyFormTitle.textContent = '✏️ Edit Baby Profile';
+                saveBabyButton.textContent = 'Update Baby Profile';
+                babyNameInput.value = baby.name;
+                babyDobInput.value = baby.dob;
+                formPhoto.src = baby.photo; // Display current photo
+                babyPhotoInput.value = ''; // Clear file input for a new selection
+                babyFormPhotoPreview.classList.remove('hidden'); // Show photo preview
+            } else {
+                babyFormTitle.textContent = '➕ Add New Baby Profile';
+                saveBabyButton.textContent = 'Save Baby Profile';
+                babyNameInput.value = '';
+                babyDobInput.value = '';
+                babyPhotoInput.value = '';
+                formPhoto.src = `https://via.placeholder.com/80?text=👶`; // Default placeholder
+                babyFormPhotoPreview.classList.remove('hidden'); // Keep photo preview visible
+            }
+        }
+
+        function hideBabyForm() {
+            babyForm.classList.add('hidden');
+        }
+
+        function saveBabyProfileHandler() {
+            const name = babyNameInput.value.trim();
+            const dob = babyDobInput.value;
+            const photoFile = babyPhotoInput.files[0];
+
+            if (!name || !dob) {
+                alert('Please enter baby name and date of birth.');
+                return;
+            }
+
+            if (isEditing) {
+                updateBaby(name, dob, photoFile);
+            } else {
+                addNewBaby(name, dob, photoFile);
+            }
+        }
+
+        function addNewBaby(name, dob, photoFile) {
+            processPhotoFile(photoFile, null, name)
+                .then(photoBase64 => {
+                    const newBaby = {
+                        id: 'baby_' + Date.now(),
+                        name: name,
+                        dob: dob,
+                        photo: photoBase64,
+                        nextDiaperCheck: null,
+                        nextFeedSuggestion: null,
+                        notifiedForFeed: false
+                    };
+                    babies.push(newBaby);
+                    saveData();
+                    updateBabySelect();
+                    currentBabyId = newBaby.id; // Automatically select the new baby
+                    babySelect.value = newBaby.id;
+                    displayBabyProfile(newBaby.id);
+                    hideBabyForm();
+                    noBabiesMessage.classList.add('hidden');
+                    alert(`Baby "${name}" added successfully!`);
+                })
+                .catch(error => {
+                    alert(`Error adding baby: ${error}`);
+                });
+        }
+
+        function updateBaby(name, dob, photoFile) {
+            const baby = babies.find(b => b.id === currentBabyId);
+            if (!baby) {
+                alert("Error: Baby not found for update.");
+                hideBabyForm();
+                return;
+            }
+
+            processPhotoFile(photoFile, baby.photo, name)
+                .then(photoBase64 => {
+                    baby.name = name;
+                    baby.dob = dob;
+                    baby.photo = photoBase64; // Update photo
+                    saveData();
+                    updateBabySelect(); // Update select if name changed
+                    displayBabyProfile(currentBabyId); // Re-render profile
+                    hideBabyForm();
+                    alert(`Baby "${name}" updated successfully!`);
+                })
+                .catch(error => {
+                    alert(`Error updating baby: ${error}`);
+                });
         }
 
         function deleteCurrentBaby() {
@@ -508,6 +594,7 @@
                 } else {
                     babyProfileDiv.classList.add('hidden');
                     noBabiesMessage.classList.remove('hidden');
+                    editBabyButton.classList.add('hidden'); // Hide edit button
                 }
                 alert(`${babyToDelete.name} has been deleted.`);
                 resetTimer(); // Reset timer if current baby was deleted
@@ -522,9 +609,11 @@
                 option.disabled = true;
                 babySelect.appendChild(option);
                 document.querySelector('.baby-selector button.danger').classList.add('hidden'); // Hide delete button
+                editBabyButton.classList.add('hidden'); // Hide edit button
                 return;
             }
-             document.querySelector('.baby-selector button.danger').classList.remove('hidden');
+            document.querySelector('.baby-selector button.danger').classList.remove('hidden');
+            editBabyButton.classList.remove('hidden'); // Show edit button
 
 
             babies.forEach(baby => {
@@ -550,11 +639,13 @@
             if (!baby) {
                 babyProfileDiv.classList.add('hidden');
                 noBabiesMessage.classList.remove('hidden');
+                editBabyButton.classList.add('hidden'); // Hide edit button
                 return;
             }
 
             babyProfileDiv.classList.remove('hidden');
             noBabiesMessage.classList.add('hidden');
+            editBabyButton.classList.remove('hidden'); // Show edit button
 
             profileNameH2.textContent = baby.name;
             profileDobP.textContent = `DOB: ${new Date(baby.dob).toLocaleDateString()}`;
@@ -932,11 +1023,13 @@
                 babies.forEach(baby => {
                     if (baby.nextDiaperCheck) {
                         const nextCheck = new Date(baby.nextDiaperCheck);
-                        if (nextCheck <= now) {
+                        // Give a small buffer (e.g., 5 seconds) past the scheduled time before notifying
+                        if (nextCheck <= now && (now.getTime() - nextCheck.getTime() < 5000)) { 
                             showNotification('Diaper Check Time!', `It's time to check ${baby.name}'s diaper!`, baby.name);
                             
-                            // Clear `nextDiaperCheck` to prevent immediate re-notification until a new diaper is logged.
-                            // A real app might offer a snooze or 'checked' action for the notification itself.
+                            // Prevent re-notification until a new diaper is logged.
+                            // A real app might set nextDiaperCheck to null or a much later time.
+                            // For this example, we clear it.
                             baby.nextDiaperCheck = null; 
                             saveData();
                             if (baby.id === currentBabyId) {
@@ -953,6 +1046,7 @@
                     // Check if baby.nextFeedSuggestion exists and is in the past, AND we haven't notified yet
                     if (baby.nextFeedSuggestion) {
                         const nextFeed = new Date(baby.nextFeedSuggestion);
+                        // Trigger if passed the suggested time, but only if not already notified for this specific suggestion
                         if (nextFeed <= now && !baby.notifiedForFeed) {
                             showNotification('Feeding Time Reminder!', `It's likely time to feed ${baby.name}!`, baby.name);
                             baby.notifiedForFeed = true; // Mark as notified
@@ -1017,22 +1111,28 @@
         }
         
         function logTimerAsMilk() {
-            if (!currentBabyId || timerSeconds === 0) return;
-
-            const durationMinutes = Math.round(timerSeconds / 60);
-            if (durationMinutes === 0 && timerSeconds < 30) { // Allow logging if duration is short but not zero
-                alert("Timer duration is too short to log meaningfully.");
+            if (!currentBabyId || timerSeconds === 0) {
+                alert("Timer not running or duration is zero.");
                 return;
             }
 
+            const durationMinutes = Math.round(timerSeconds / 60);
+            if (durationMinutes === 0 && timerSeconds < 30) { // Allow logging if duration is short but not zero
+                alert("Timer duration is too short to log meaningfully (less than 30 seconds).");
+                return;
+            }
+
+            // Temporarily store these values as showLogModal will reset modalFields
+            const logDuration = timerSeconds; 
+
             showLogModal('milk');
             
-            // Pre-fill modal fields after they are rendered
+            // Pre-fill modal fields after they are rendered by showLogModal
             setTimeout(() => {
-                document.getElementById('milkAmount').value = durationMinutes;
+                document.getElementById('milkAmount').value = durationMinutes; // Log in minutes
                 document.getElementById('milkType').value = 'breast_timed';
-                document.getElementById('milkNotes').value = `Timed feed: ${formatTime(timerSeconds)}`;
-            }, 100);
+                document.getElementById('milkNotes').value = `Timed feed: ${formatTime(logDuration)}`;
+            }, 100); // Small delay to ensure modal fields are ready
 
             resetTimer(); // Reset timer after preparing the log entry
         }
@@ -1042,6 +1142,7 @@
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeLogModal();
+                hideBabyForm(); // Also close baby form
             }
         });
 
@@ -1049,6 +1150,9 @@
         window.addEventListener('click', (event) => {
             if (event.target === logModal) {
                 closeLogModal();
+            }
+            if (event.target === babyForm) { // Close babyForm if clicked outside
+                hideBabyForm();
             }
         });
 
