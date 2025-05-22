@@ -514,7 +514,8 @@
                 this.cameras.main.setBackgroundColor('#a5d6a7'); // Light green playing field
 
                 // Initialize physics groups first
-                this.playerUnits = this.physics.add.group({ classType: UnitGameObject, runChildUpdate: false }); // We'll call update manually
+                // These are re-created each time create() is called, which is correct
+                this.playerUnits = this.physics.add.group({ classType: UnitGameObject, runChildUpdate: false });
                 this.enemyUnits = this.physics.add.group({ classType: UnitGameObject, runChildUpdate: false });
                 this.obstacles = this.physics.add.staticGroup();
 
@@ -540,7 +541,7 @@
                  this.physics.add.collider(this.playerUnits, this.playerUnits);
                  this.physics.add.collider(this.enemyUnits, this.enemyUnits);
 
-                // Set up Timers using Phaser's timer events
+                // Setup Timers using Phaser's timer events
                 this.setupTimers();
 
                 // Setup UI Button Listeners
@@ -549,6 +550,60 @@
 
 
                 this.updateStatusDisplay(); // Initial display
+            }
+
+            // This method is crucial for cleaning up when the scene restarts
+            shutdown() {
+                console.log("GameScene shutdown called.");
+
+                // Stop all active timers and clear references
+                if (this.playerSpawnTimer) {
+                    this.playerSpawnTimer.remove();
+                    this.playerSpawnTimer = null;
+                }
+                if (this.enemySpawnTimer) {
+                    this.enemySpawnTimer.remove();
+                    this.enemySpawnTimer = null;
+                }
+                if (this.resourceTimer) {
+                    this.resourceTimer.remove();
+                    this.resourceTimer = null;
+                }
+
+                // Destroy all game objects within groups
+                // The 'true, true' arguments mean 'destroy all children' and 'remove them from the group'
+                if (this.playerUnits) {
+                    this.playerUnits.clear(true, true);
+                    this.playerUnits = null; // Clear reference to the group
+                }
+                if (this.enemyUnits) {
+                    this.enemyUnits.clear(true, true);
+                    this.enemyUnits = null;
+                }
+                if (this.obstacles) {
+                    this.obstacles.clear(true, true);
+                    this.obstacles = null;
+                }
+
+                // Destroy individual game objects (bases)
+                if (this.playerBase) {
+                    this.playerBase.destroy();
+                    this.playerBase = null;
+                }
+                if (this.enemyBase) {
+                    this.enemyBase.destroy();
+                    this.enemyBase = null;
+                }
+
+                // Destroy any graphics objects used for debugging paths
+                this.children.each(child => {
+                    if (child instanceof Phaser.GameObjects.Graphics) {
+                        child.destroy();
+                    }
+                });
+
+                // Ensure global gameScene reference is nullified so the new scene can be assigned
+                gameScene = null;
             }
 
 
@@ -641,7 +696,8 @@
 
 
             setupTimers() {
-                // Clear existing timers if restarting
+                // Clear existing timers if they somehow weren't cleared by shutdown
+                // This provides an extra layer of safety, but shutdown is the main place.
                  if (this.playerSpawnTimer) this.playerSpawnTimer.remove();
                  if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
                  if (this.resourceTimer) this.resourceTimer.remove();
@@ -763,11 +819,11 @@
                 this.gameOver = true;
                 this.winner = winnerTeam;
 
-                 // Stop physics? Stop timers?
+                 // Stop physics, pause timers
                  this.physics.pause();
-                 this.playerSpawnTimer.paused = true;
-                 this.enemySpawnTimer.paused = true;
-                 this.resourceTimer.paused = true;
+                 if (this.playerSpawnTimer) this.playerSpawnTimer.paused = true;
+                 if (this.enemySpawnTimer) this.enemySpawnTimer.paused = true;
+                 if (this.resourceTimer) this.resourceTimer.paused = true;
 
 
                  // Show Game Over Overlay
@@ -782,10 +838,11 @@
 
             restartGame() {
                  console.log("Restarting game...");
-                 // Reset state variables explicitly (important!)
-                 this.gameOver = false;
-                 this.winner = null;
-                 this.playerResources = CONFIG.STARTING_RESOURCES;
+                 // No need to manually reset these here; `create()` will handle it
+                 // and `shutdown()` cleans up the old state.
+                 // this.gameOver = false;
+                 // this.winner = null;
+                 // this.playerResources = CONFIG.STARTING_RESOURCES;
 
 
                 // Hide overlay
