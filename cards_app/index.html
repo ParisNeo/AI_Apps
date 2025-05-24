@@ -14,13 +14,23 @@
         /* Basic Reset & Mobile First Styles */
         :root {
             --primary-color: #4CAF50;
+            --primary-color-dark: #388E3C;
             --secondary-color: #FFC107;
-            --background-color: #f4f4f4;
+            --secondary-color-dark: #FBC02D; /* For hover on secondary if needed */
+            --background-color: #f4f4f8; /* Slightly bluish gray */
             --text-color: #333;
+            --text-color-medium: #555;
+            --text-color-light: #777;
             --light-text: #fff;
             --card-bg: #fff;
             --danger-color: #f44336;
-            --accent-color: #007bff; /* For torch icon, etc. */
+            --danger-color-dark: #D32F2F;
+            --accent-color: #007bff;
+            --border-color: #e0e0e0;
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 3px 8px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 20px rgba(0,0,0,0.12);
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -30,16 +40,34 @@
             color: var(--text-color);
             overscroll-behavior-y: contain; /* Prevent pull-to-refresh */
             -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlight on iOS */
+            font-size: 16px; /* Base font size */
+            line-height: 1.6;
         }
         * {
             box-sizing: border-box;
         }
 
+        /* Icons */
+        .icon {
+            width: 1.2em; /* Slightly larger for better visibility */
+            height: 1.2em;
+            fill: currentColor;
+            vertical-align: middle;
+            margin-right: 0.4em;
+        }
+        button .icon {
+             margin-right: 0.5em; /* Spacing between icon and text in button */
+        }
+        .icon-only .icon {
+            margin-right: 0;
+        }
+
+
         /* Layout & Views */
         .view {
             display: none; /* Hide all views by default */
             padding: 15px;
-            min-height: 100vh;
+            min-height: calc(100vh - 60px); /* Account for header height */
         }
         .view.active {
             display: block;
@@ -47,136 +75,198 @@
         header {
             background-color: var(--primary-color);
             color: var(--light-text);
-            padding: 15px;
+            padding: 0 15px;
+            height: 60px; /* Fixed header height */
             text-align: center;
             position: sticky;
             top: 0;
             z-index: 100;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: center; /* Default for single h1 */
+            box-shadow: var(--shadow-sm);
         }
         header h1 {
             margin: 0;
-            font-size: 1.5em;
+            font-size: 1.3em;
+            font-weight: 500;
             flex-grow: 1;
+            text-align: center; /* Ensure title is centered if back button is present */
         }
         .header-back-button {
             background: none;
             border: none;
             color: var(--light-text);
-            font-size: 1.8em;
-            padding: 0 10px 0 0;
+            font-size: 1.5em; /* For icon sizing */
+            padding: 0;
+            margin-right: 10px; /* Space between button and title */
             cursor: pointer;
+            line-height: 1; /* Important for icon alignment */
+            display: flex; /* For icon alignment */
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            position: absolute; /* Position it absolutely to the left */
+            left: 10px;
         }
+        .header-back-button .icon { margin-right: 0; }
+
 
         /* Buttons */
         button, .button {
-            display: inline-block;
-            padding: 10px 15px;
+            display: inline-flex; /* For icon and text alignment */
+            align-items: center;
+            justify-content: center;
+            padding: 10px 18px;
             font-size: 1em;
+            font-weight: 500;
             cursor: pointer;
             text-align: center;
             text-decoration: none;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px; /* Softer corners */
             background-color: var(--primary-color);
             color: var(--light-text);
             margin: 5px;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
             -webkit-appearance: none; /* For iOS buttons */
+            box-shadow: var(--shadow-sm);
         }
         button:hover, .button:hover {
-            background-color: #45a049;
+            background-color: var(--primary-color-dark);
+            box-shadow: var(--shadow-md);
         }
         button:active, .button:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
+            box-shadow: none;
         }
         .button-secondary {
             background-color: var(--secondary-color);
-            color: var(--text-color);
+            color: var(--text-color); /* Ensure good contrast */
         }
         .button-secondary:hover {
-            background-color: #ecb100;
+            background-color: var(--secondary-color-dark);
         }
         .button-danger {
             background-color: var(--danger-color);
         }
         .button-danger:hover {
-            background-color: #da190b;
+            background-color: var(--danger-color-dark);
         }
         .fab { /* Floating Action Button */
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background-color: var(--secondary-color);
             color: var(--text-color);
-            font-size: 24px;
-            line-height: 56px; /* Center '+' vertically */
+            font-size: 28px;
+            line-height: 60px; /* Center '+' vertically */
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow-lg);
             z-index: 10;
+            transition: transform 0.2s ease-out, background-color 0.2s ease;
+        }
+        .fab:hover {
+            background-color: var(--secondary-color-dark);
+            transform: scale(1.05);
         }
         .action-buttons-group {
             display: flex;
-            justify-content: center;
+            justify-content: space-around; /* Better spacing for grouped buttons */
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 25px;
+            gap: 10px; /* Spacing between buttons */
         }
         .action-buttons-group button {
             flex-grow: 1;
-            margin: 5px;
-            max-width: 150px; /* Limit width in multi-button groups */
+            margin: 0; /* Remove individual margins if using gap */
+            min-width: 130px; /* Ensure buttons don't get too small */
         }
 
 
         /* Card List */
         #cards-container {
-            padding-top: 10px;
+            padding-top: 15px;
         }
         .card-item {
             background-color: var(--card-bg);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px; /* More rounded */
+            padding: 18px 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-md);
             cursor: pointer;
-            transition: transform 0.1s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.12);
         }
         .card-item:active {
             transform: scale(0.98);
+            box-shadow: var(--shadow-sm);
         }
         .card-item h3 {
-            margin: 0 0 5px 0;
+            margin: 0 0 8px 0;
+            font-size: 1.15em;
+            color: var(--text-color);
         }
         .card-item p {
             margin: 0;
-            color: #666;
+            color: var(--text-color-medium);
             font-size: 0.9em;
             word-break: break-all;
+        }
+        .no-cards-message {
+            text-align: center;
+            color: var(--text-color-medium);
+            padding: 40px 20px;
+            font-size: 1.1em;
+        }
+        .no-cards-message .fab-inline { /* Style the '+' sign like the FAB */
+            display: inline-block;
+            width: 28px; height: 28px;
+            line-height: 28px; text-align: center;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin: 0 2px;
         }
 
         /* Card Detail */
         #card-detail-view h2 {
-            margin-top: 0;
-            margin-bottom: 5px;
+            margin-top: 10px; /* Space from header */
+            margin-bottom: 8px;
+            font-size: 1.6em;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+         #card-detail-view p {
+            font-size: 1em;
+            color: var(--text-color-medium);
+            margin-bottom: 15px;
         }
         #detail-card-number {
             font-size: 1.1em;
             font-weight: bold;
+            color: var(--text-color);
+            word-break: break-all;
         }
         #barcode-display {
             background-color: white;
-            padding: 20px 10px;
-            margin: 20px auto;
+            padding: 25px 15px;
+            margin: 25px auto;
             text-align: center;
             max-width: 100%;
             overflow-x: auto; /* Handle wide barcodes */
-            border-radius: 8px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+            border-radius: 10px;
+            box-shadow: var(--shadow-md);
+            cursor: pointer; /* Indicate it's clickable */
         }
         #barcode-display svg, #barcode-display canvas, #barcode-display img {
              max-width: 100%;
@@ -185,61 +275,84 @@
              margin: 0 auto;
         }
         .card-photos {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
         }
         .card-photos h4 {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            color: var(--text-color-medium);
         }
         .card-photos img {
             max-width: 100%;
+            max-height: 250px; /* Limit height for very tall card images */
             height: auto;
             margin-top: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
         }
-        .detail-actions {
-            margin-top: 20px;
+        .detail-actions { /* This class was present but not styled, using action-buttons-group now */
+            margin-top: 25px;
             text-align: center;
         }
 
         /* Add/Edit Form */
         #add-edit-card-view form label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.95em;
+            color: var(--text-color-medium);
         }
         #add-edit-card-view form input[type="text"],
         #add-edit-card-view form select {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             font-size: 1em;
+            background-color: #fff; /* Ensure white background */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        #add-edit-card-view form input[type="text"]:focus,
+        #add-edit-card-view form select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
         }
         .photo-preview {
-            max-width: 120px;
-            max-height: 120px;
-            margin: 10px auto;
+            max-width: 150px;
+            max-height: 150px;
+            margin: 15px auto;
             display: block;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            object-fit: contain;
         }
         .photo-capture-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px dashed #ccc;
-            border-radius: 8px;
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .photo-capture-area label {
+            font-weight: 500;
+            color: var(--text-color-medium);
+            margin-bottom: 10px;
         }
         .photo-capture-area button {
             margin-bottom: 10px;
+            width: calc(100% - 10px); /* Full width with margin */
+            max-width: 280px;
         }
+
 
         /* Scanner Modal */
         #scanner-modal {
@@ -254,12 +367,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 10px;
         }
         #scanner-video {
-            width: 90%;
-            max-width: 500px; /* Wider for better scanning on large screens */
+            width: 100%;
+            max-width: 600px; /* Wider for better scanning on large screens */
             height: auto; /* Maintain aspect ratio */
-            border: 2px solid var(--primary-color);
+            border: 3px solid var(--primary-color);
+            border-radius: 8px;
             margin-bottom: 15px;
             background-color: black; /* To hide flickering before stream loads */
         }
@@ -267,144 +382,146 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 15px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 8px;
         }
-        .scanner-controls button {
-            margin-top: 10px;
-        }
+        .scanner-controls p { color: white; margin-top: 0; margin-bottom: 10px; }
+        .scanner-controls button { margin-top: 10px; }
         #scan-area {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 70%;
-            max-width: 350px;
-            height: 200px; /* Adjust height as needed */
-            border: 2px solid var(--secondary-color);
-            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6); /* Darkens outside the box */
+            width: 80%;
+            max-width: 400px;
+            height: 180px; /* Adjust height as needed */
+            border: 3px solid var(--secondary-color);
+            border-radius: 8px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7); /* Darkens outside the box */
             pointer-events: none; /* Allow clicks to pass through */
         }
         .torch-button {
             background-color: var(--accent-color);
             color: var(--light-text);
-            font-size: 1.2em;
+            font-size: 1.1em; /* Slightly larger */
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 12px;
+            padding: 10px 15px;
         }
         .torch-button.active {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Darker blue */
         }
-        .torch-button svg {
-            margin-right: 5px;
-        }
+        .torch-button svg { margin-right: 8px; }
 
         /* Photo Capture Modal */
         #photo-capture-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.9);
-            z-index: 210;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            z-index: 210; display: none; flex-direction: column;
+            align-items: center; justify-content: center; padding:10px;
         }
         #photo-video {
-            width: 90%;
-            max-width: 500px;
-            margin-bottom: 10px;
-            border: 2px solid var(--primary-color);
+            width: 100%; max-width: 600px; margin-bottom: 15px;
+            border: 3px solid var(--primary-color); border-radius: 8px;
             background-color: black;
         }
-        #photo-capture-modal p {
-            color: var(--light-text);
-            margin-bottom: 15px;
+        #photo-capture-modal p { color: var(--light-text); margin-bottom: 15px; }
+        #photo-canvas { display: none; } /* Always hidden */
+
+        /* Barcode Zoom Modal */
+        #barcode-zoom-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95); /* Darker overlay */
+            z-index: 250;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 15px;
         }
-        #photo-canvas {
-            display: none; /* Always hidden */
+        #barcode-zoom-content {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            width: 95%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+        }
+        #close-barcode-zoom-modal-btn {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: none; border: none;
+            font-size: 2.2em; /* Larger close button */
+            color: var(--text-color-light);
+            line-height: 1; padding: 5px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        #close-barcode-zoom-modal-btn:hover { color: var(--danger-color); }
+        #zoomed-barcode-display svg {
+            max-width: 100%;
+            height: auto; /* Maintain aspect ratio */
+            display: block;
+            margin: 10px auto 20px auto; /* More margin at bottom */
+        }
+        #barcode-zoom-modal p {
+            color: var(--text-color-medium);
+            font-size: 0.95em;
+            margin-top: 10px;
         }
 
         /* Export Selection Modal */
         #export-selection-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 220;
-            display: none;
-            justify-content: center;
-            align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7); z-index: 220;
+            display: none; justify-content: center; align-items: center; padding: 15px;
         }
         #export-selection-modal > div {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-height: 80vh;
-            overflow-y: auto;
-            min-width: 300px;
-            width: 90%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background: white; padding: 25px; border-radius: 12px;
+            max-height: 85vh; overflow-y: auto; min-width: 300px;
+            width: 90%; max-width: 500px; box-shadow: var(--shadow-lg);
         }
+        #export-selection-modal h3 { margin-top: 0; margin-bottom: 15px; }
         #export-selection-modal label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+            display: flex; align-items: center; margin-bottom: 10px;
+            padding: 8px; border-radius: 6px; transition: background-color 0.2s;
         }
+        #export-selection-modal label:hover { background-color: #f0f0f0; }
         #export-selection-modal input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
+            margin-right: 12px; transform: scale(1.3);
         }
         #export-cards-list {
-            max-height: 300px; /* Scrollable list */
-            overflow-y: auto;
-            border: 1px solid #eee;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            max-height: 350px; overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 10px; border-radius: 8px; margin-bottom: 20px;
         }
 
 
         /* Utility */
-        .hidden {
-            display: none !important; /* Force hide */
-        }
-        .text-center {
-            text-align: center;
-        }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
         #loading-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
+            position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0,0,0,0.7);
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            z-index: 300;
-            display: none; /* Hidden by default */
+            background-color: rgba(40,40,40,0.85);
+            color: white; padding: 20px 25px;
+            border-radius: 10px; z-index: 300;
+            display: none; font-size: 1.1em;
+            box-shadow: var(--shadow-lg);
         }
         #error-message {
-            background-color: var(--danger-color);
-            color: white;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            text-align: center;
-            display: none; /* Hidden by default */
+            background-color: var(--danger-color); color: white;
+            padding: 12px 15px; margin-bottom: 15px;
+            border-radius: 8px; text-align: center;
+            display: none; box-shadow: var(--shadow-md);
+            position: sticky; top: 65px; /* Below header */
+            z-index: 90;
         }
     </style>
 
-    <!-- 3. External Libraries (CDN recommended for single file) -->
-    <!-- JsBarcode -->
+    <!-- 3. External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <!-- zxing-js (Barcode Scanner) -->
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
 
 </head>
@@ -412,10 +529,7 @@
 
     <!-- 4. HTML Structure -->
 
-    <!-- Loading Indicator -->
     <div id="loading-indicator">Loading...</div>
-
-    <!-- Error Message Area -->
     <div id="error-message"></div>
 
     <!-- View: Card List -->
@@ -423,14 +537,14 @@
         <header>
             <h1>My Loyalty Cards</h1>
         </header>
-        <div style="text-align: center; margin-bottom: 10px;">
+        <div style="text-align: center; margin: 15px 0;">
              <input type="file" id="import-file" accept=".json" class="hidden">
              <button onclick="app.triggerImport()">Import</button>
              <button onclick="app.showExportSelection()">Export</button>
         </div>
         <div id="cards-container">
-            <!-- Card items will be dynamically added here -->
-            <p class="text-center">No cards yet. Add one!</p>
+            <!-- Card items dynamically added here -->
+            <p class="no-cards-message">No cards yet. Tap the <span class="fab-inline">+</span> button to add one!</p>
         </div>
         <button class="fab" onclick="app.showAddCardView()">+</button>
     </div>
@@ -438,16 +552,19 @@
     <!-- View: Card Detail -->
     <div id="card-detail-view" class="view">
         <header>
-            <button class="header-back-button" onclick="app.goBack()">←</button>
+            <button class="header-back-button icon-only" onclick="app.goBack()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
             <h1 id="detail-header">Card Details</h1>
         </header>
         <h2 id="detail-card-name">Card Name</h2>
         <p><strong>Number:</strong> <span id="detail-card-number">12345...</span></p>
 
-        <div id="barcode-display">
-            <!-- Barcode will be rendered here (SVG or Canvas) -->
+        <div id="barcode-display" onclick="app.showZoomedBarcode()">
             <p>Generating Barcode...</p>
         </div>
+        <p class="text-center" style="font-size: 0.85em; color: var(--text-color-light); margin-top: -15px; margin-bottom: 25px;">Tap barcode to enlarge.</p>
+
 
         <div class="card-photos">
             <h4>Photos:</h4>
@@ -457,20 +574,27 @@
         </div>
 
         <div class="action-buttons-group">
-            <button class="button-secondary" onclick="app.goBack()">Back to List</button>
-            <button class="button-secondary" onclick="app.showEditCardView()">Edit Card</button>
-            <button class="button-danger" onclick="app.confirmDeleteCard()">Delete Card</button>
+            <button class="button-secondary" onclick="app.showEditCardView()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                Edit Card
+            </button>
+            <button class="button-danger" onclick="app.confirmDeleteCard()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                Delete Card
+            </button>
         </div>
     </div>
 
     <!-- View: Add/Edit Card Form -->
     <div id="add-edit-card-view" class="view">
         <header>
-            <button class="header-back-button" onclick="app.cancelAddEdit()">←</button>
+            <button class="header-back-button icon-only" onclick="app.cancelAddEdit()">
+                 <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
             <h1 id="form-header">Add New Card</h1>
         </header>
         <form id="card-form">
-            <input type="hidden" id="edit-card-id"> <!-- For editing -->
+            <input type="hidden" id="edit-card-id">
 
             <label for="card-name">Card Name:</label>
             <input type="text" id="card-name" required placeholder="e.g., Starbucks Rewards">
@@ -480,7 +604,6 @@
 
             <label for="barcode-format">Barcode Format:</label>
             <select id="barcode-format">
-                <!-- Common formats supported by JsBarcode -->
                 <option value="CODE128" selected>CODE 128 (Recommended)</option>
                 <option value="EAN13">EAN-13</option>
                 <option value="UPC">UPC (UPC-A)</option>
@@ -492,21 +615,29 @@
                 <option value="codabar">Codabar</option>
             </select>
 
-            <button type="button" class="button-secondary" style="width: 100%; margin-bottom: 20px;" onclick="app.startScanner()">Scan Barcode from Card</button>
+            <button type="button" class="button-secondary" style="width: 100%; margin-bottom: 25px;" onclick="app.startScanner()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M4 7h2v10H4V7zm4 0h2v10H8V7zm4 0h2v10h-2V7zm4 0h2v10h-2V7zm2-3h2v16h-2V4zM2 4h2v16H2V4zm18 0h2v16h-2V4z"/></svg> <!-- Simple barcode lines -->
+                Scan Barcode from Card
+            </button>
 
             <div class="photo-capture-area">
                 <label>Card Front Photo (Optional):</label>
-                <button type="button" class="button-secondary" onclick="app.capturePhoto('front')">Take Front Photo</button>
+                <button type="button" class="button-secondary" id="capture-front-photo-btn" onclick="app.capturePhoto('front')">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                    Take Front Photo
+                </button>
                 <img id="photo-front-preview" class="photo-preview hidden" alt="Front Preview">
                 <button type="button" class="button-danger hidden" id="clear-front-photo" onclick="app.clearPhoto('front')">Clear Front Photo</button>
             </div>
             <div class="photo-capture-area">
                 <label>Card Back Photo (Optional):</label>
-                <button type="button" class="button-secondary" onclick="app.capturePhoto('back')">Take Back Photo</button>
+                <button type="button" class="button-secondary" id="capture-back-photo-btn" onclick="app.capturePhoto('back')">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                    Take Back Photo
+                </button>
                 <img id="photo-back-preview" class="photo-preview hidden" alt="Back Preview">
                 <button type="button" class="button-danger hidden" id="clear-back-photo" onclick="app.clearPhoto('back')">Clear Back Photo</button>
             </div>
-
 
             <div class="action-buttons-group">
                 <button type="submit">Save Card</button>
@@ -517,12 +648,12 @@
 
      <!-- Scanner Modal -->
      <div id="scanner-modal">
-         <video id="scanner-video" playsinline></video> <!-- playsinline is important for iOS -->
-         <div id="scan-area"></div> <!-- Visual scan area -->
+         <video id="scanner-video" playsinline></video>
+         <div id="scan-area"></div>
          <div class="scanner-controls">
-             <p style="color: white; margin-top: 0;">Point camera at barcode</p>
+             <p>Point camera at barcode</p>
              <button id="torch-toggle-button" class="torch-button hidden" onclick="app.toggleTorch()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
                     <path d="M10 2a1 1 0 011 1v7h2V3a1 1 0 012 0v7.586l1.293-1.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 011.414-1.414L10 10.586V3a1 1 0 011-1zm-1 12h6a1 1 0 011 1v6a1 1 0 01-1 1H8a1 1 0 01-1-1v-6a1 1 0 011-1zM9 16v4h4v-4H9z"/>
                 </svg>
                 <span>Torch</span>
@@ -533,14 +664,23 @@
 
      <!-- Photo Capture Modal -->
      <div id="photo-capture-modal">
-         <p id="photo-capture-message" style="color: white; margin-bottom: 10px;">Aim at card front</p>
+         <p id="photo-capture-message">Aim at card front</p>
          <video id="photo-video" playsinline></video>
-         <canvas id="photo-canvas" class="hidden"></canvas> <!-- Hidden canvas for processing -->
+         <canvas id="photo-canvas" class="hidden"></canvas>
          <div class="action-buttons-group" style="width: 100%; max-width: 400px; margin-top: 0;">
             <button onclick="app.triggerPhotoCapture()">Capture Photo</button>
             <button class="button-secondary" onclick="app.cancelPhotoCapture()">Cancel</button>
          </div>
      </div>
+
+    <!-- Barcode Zoom Modal -->
+    <div id="barcode-zoom-modal">
+        <div id="barcode-zoom-content">
+            <button id="close-barcode-zoom-modal-btn" onclick="app.hideZoomedBarcode()">×</button>
+            <div id="zoomed-barcode-display"></div>
+            <p>Present this barcode to the cashier.</p>
+        </div>
+    </div>
 
       <!-- Export Selection Modal -->
     <div id="export-selection-modal">
@@ -564,18 +704,19 @@
             let currentView = 'card-list-view';
             let db;
             const DB_NAME = 'FidelityCardsDB';
-            const DB_VERSION = 2; // Increment version for schema changes (like new photo fields)
+            const DB_VERSION = 2;
             const STORE_NAME = 'cards';
-            let scannerControls = null; // To hold ZXing controls
-            let currentTorchTrack = null; // To control camera torch
-            let photoStream = null; // To hold camera stream for photos
-            let photoCaptureType = 'front'; // 'front' or 'back'
-            let photoFrontBlob = null; // Store blobs temporarily during add/edit
-            let photoBackBlob = null; // Store blobs temporarily during add/edit
-            let currentCardId = null; // Used for editing and deleting the currently viewed card
-            let screenWakeLock = null; // For PWA screen wake lock
+            let scannerControls = null;
+            let currentTorchTrack = null;
+            let photoStream = null;
+            let photoCaptureType = 'front';
+            let photoFrontBlob = null;
+            let photoBackBlob = null;
+            let currentCardId = null;
+            let screenWakeLock = null;
+            let currentZoomedCard = null; // Store data for zoomed barcode
 
-            // --- DOM Elements (Cache frequently used ones) ---
+            // --- DOM Elements ---
             const views = document.querySelectorAll('.view');
             const cardForm = document.getElementById('card-form');
             const cardsContainer = document.getElementById('cards-container');
@@ -591,7 +732,11 @@
             const photoBackPreview = document.getElementById('photo-back-preview');
             const clearFrontPhotoBtn = document.getElementById('clear-front-photo');
             const clearBackPhotoBtn = document.getElementById('clear-back-photo');
+            const captureFrontPhotoBtn = document.getElementById('capture-front-photo-btn');
+            const captureBackPhotoBtn = document.getElementById('capture-back-photo-btn');
             const torchToggleButton = document.getElementById('torch-toggle-button');
+            const barcodeZoomModal = document.getElementById('barcode-zoom-modal');
+            const zoomedBarcodeDisplay = document.getElementById('zoomed-barcode-display');
 
 
             // --- Utility Functions ---
@@ -605,18 +750,23 @@
             const showError = (message) => {
                 errorMessage.textContent = message;
                 errorMessage.style.display = 'block';
-                setTimeout(() => errorMessage.style.display = 'none', 7000); // Hide after 7s
+                // Auto-hide after a delay, but ensure it's visible if sticky
+                // The sticky nature from CSS handles visibility on scroll
+                setTimeout(() => {
+                    if (errorMessage.style.display === 'block') { // Check if still visible
+                         errorMessage.style.display = 'none';
+                    }
+                }, 7000);
                 console.error(message);
             };
             const hideError = () => {
                 errorMessage.style.display = 'none';
             };
-            const vibrate = (pattern = 200) => {
+            const vibrate = (pattern = 100) => { // Shorter vibration
                 if (navigator.vibrate) {
                     navigator.vibrate(pattern);
                 }
             };
-            // Helper for escaping HTML to prevent XSS
             const escapeHTML = (str) => {
                 if (typeof str !== 'string') return '';
                 const div = document.createElement('div');
@@ -626,24 +776,24 @@
 
             // --- View Management ---
             const showView = (viewId) => {
-                hideError(); // Hide errors on view change
+                hideError();
                 views.forEach(view => view.classList.remove('active'));
                 const nextView = document.getElementById(viewId);
                 if (nextView) {
                     nextView.classList.add('active');
                     currentView = viewId;
-                    window.scrollTo(0, 0); // Scroll to top on view change
+                    window.scrollTo(0, 0);
                 } else {
                     console.error(`View with ID ${viewId} not found.`);
                 }
             };
 
             const goBack = () => {
-                // Simple back logic based on current view
                 if (currentView === 'card-detail-view' || currentView === 'add-edit-card-view') {
                     showView('card-list-view');
-                    resetAddEditForm(); // Clear form state when navigating back
-                    releaseWakeLock(); // Release wake lock when leaving detail view
+                    resetAddEditForm();
+                    releaseWakeLock();
+                    currentZoomedCard = null; // Clear zoomed card data
                 }
             };
 
@@ -651,18 +801,15 @@
             const initDB = () => {
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(DB_NAME, DB_VERSION);
-
                     request.onerror = (event) => {
                         showError('Database error: ' + event.target.errorCode);
                         reject('Database error: ' + event.target.errorCode);
                     };
-
                     request.onsuccess = (event) => {
                         db = event.target.result;
                         console.log('Database initialized successfully');
                         resolve(db);
                     };
-
                     request.onupgradeneeded = (event) => {
                         console.log('Database upgrade needed');
                         db = event.target.result;
@@ -672,11 +819,7 @@
                             objectStore.createIndex('cardNumber', 'cardNumber', { unique: false });
                             console.log('Object store "cards" created');
                         } else {
-                            // If upgrading from a previous version without photo fields, add them
-                            const objectStore = event.target.transaction.objectStore(STORE_NAME);
-                            // No explicit schema upgrade needed for new properties, IndexedDB is schema-less.
-                            // But if existing data needs migration/default values, do it here.
-                            console.log('Existing object store "cards" found, no explicit migration needed for photo fields.');
+                            console.log('Existing object store "cards" found.');
                         }
                     };
                 });
@@ -696,9 +839,9 @@
                 return new Promise((resolve, reject) => {
                     const store = getStore('readwrite');
                     if (!store) return reject("Failed to get store");
-                    cardData.createdAt = new Date(); // Add timestamp
+                    cardData.createdAt = new Date();
                     const request = store.add(cardData);
-                    request.onsuccess = (event) => resolve(event.target.result); // Returns the new key
+                    request.onsuccess = (event) => resolve(event.target.result);
                     request.onerror = (event) => {
                         showError('Error adding card: ' + event.target.error);
                         reject(event.target.error);
@@ -710,8 +853,8 @@
                 return new Promise((resolve, reject) => {
                     const store = getStore('readwrite');
                     if (!store) return reject("Failed to get store");
-                    cardData.updatedAt = new Date(); // Add timestamp
-                    const request = store.put(cardData); // Use put for update/insert
+                    cardData.updatedAt = new Date();
+                    const request = store.put(cardData);
                     request.onsuccess = (event) => resolve(event.target.result);
                     request.onerror = (event) => {
                         showError('Error updating card: ' + event.target.error);
@@ -746,7 +889,7 @@
                 });
             };
 
-            const deleteCard = (id) => {
+            const deleteCardDB = (id) => { // Renamed to avoid conflict with app.deleteCard
                  return new Promise((resolve, reject) => {
                     const store = getStore('readwrite');
                      if (!store) return reject("Failed to get store");
@@ -759,20 +902,18 @@
                 });
             };
 
-             // --- UI Rendering ---
+            // --- UI Rendering ---
             const renderCardList = (cards) => {
-                cardsContainer.innerHTML = ''; // Clear existing list
+                cardsContainer.innerHTML = '';
                 if (cards.length === 0) {
-                    cardsContainer.innerHTML = '<p class="text-center" style="margin-top: 20px;">No cards yet. Tap the <span style="font-weight: bold;">+</span> button to add your first loyalty card!</p>';
+                    cardsContainer.innerHTML = '<p class="no-cards-message">No cards yet. Tap the <span class="fab-inline">+</span> button to add your first loyalty card!</p>';
                     return;
                 }
-                // Sort by name for consistency
                 cards.sort((a, b) => a.name.localeCompare(b.name));
-
                 cards.forEach(card => {
                     const cardItem = document.createElement('div');
                     cardItem.className = 'card-item';
-                    cardItem.dataset.id = card.id; // Store ID for click handling
+                    cardItem.dataset.id = card.id;
                     cardItem.innerHTML = `
                         <h3>${escapeHTML(card.name)}</h3>
                         <p>${escapeHTML(card.cardNumber)}</p>
@@ -782,7 +923,7 @@
                 });
             };
 
-             const loadAndRenderCards = async () => {
+            const loadAndRenderCards = async () => {
                 showLoading('Loading cards...');
                 try {
                     const cards = await getAllCards();
@@ -805,86 +946,110 @@
                         showView('card-list-view');
                         return;
                     }
-                    currentCardId = card.id; // Store current card ID for edit/delete
+                    currentCardId = card.id;
+                    currentZoomedCard = { number: card.cardNumber, format: card.barcodeFormat || "CODE128" }; // Store for zoom
 
                     document.getElementById('detail-header').textContent = escapeHTML(card.name);
                     document.getElementById('detail-card-name').textContent = escapeHTML(card.name);
                     document.getElementById('detail-card-number').textContent = escapeHTML(card.cardNumber);
 
-                    // Barcode Display
                     const barcodeContainer = document.getElementById('barcode-display');
-                    barcodeContainer.innerHTML = ''; // Clear previous
-                    const barcodeElement = document.createElement('svg'); // Use SVG for scalability
-                    barcodeElement.id = 'barcode-svg';
+                    barcodeContainer.innerHTML = '';
+                    const barcodeElement = document.createElement('svg');
+                    barcodeElement.id = 'barcode-svg-detail'; // Unique ID for detail view barcode
                     barcodeContainer.appendChild(barcodeElement);
 
                     try {
                         JsBarcode(barcodeElement, card.cardNumber, {
-                            format: card.barcodeFormat || "CODE128", // Default to CODE128 if format missing
-                            displayValue: true, // Show number below barcode
+                            format: card.barcodeFormat || "CODE128",
+                            displayValue: true,
                             lineColor: "#000",
-                            width: 2,
-                            height: 100,
+                            width: 2, // Bar width
+                            height: 120, // Increased height for better visibility
                             fontSize: 18,
                             margin: 10,
-                            background: "#ffffff", // Ensure white background
+                            background: "#ffffff",
                             textMargin: 5,
-                            font: "monospace" // Good for numbers
+                            font: "monospace"
                         });
-                        // Request screen wake lock to keep screen on while barcode is displayed
                         requestWakeLock();
                     } catch (e) {
-                        console.error("JsBarcode error:", e);
-                        barcodeContainer.innerHTML = `<p style="color: red;">Error generating barcode: ${escapeHTML(e.message)}. Check format and number.</p>`;
+                        console.error("JsBarcode error (detail):", e);
+                        barcodeContainer.innerHTML = `<p style="color: red;">Error generating barcode: ${escapeHTML(e.message)}.</p>`;
                     }
 
-                    // Photo Display
                     const imgFront = document.getElementById('detail-photo-front');
                     const imgBack = document.getElementById('detail-photo-back');
                     const noPhotosMsg = document.getElementById('no-photos-message');
-
-                    // Revoke previous URLs to prevent memory leaks
                     if (imgFront.src && imgFront.src.startsWith('blob:')) URL.revokeObjectURL(imgFront.src);
                     if (imgBack.src && imgBack.src.startsWith('blob:')) URL.revokeObjectURL(imgBack.src);
-
-                    imgFront.classList.add('hidden');
-                    imgBack.classList.add('hidden');
-                    imgFront.src = '#'; // Reset src
-                    imgBack.src = '#'; // Reset src
-
+                    imgFront.classList.add('hidden'); imgBack.classList.add('hidden');
+                    imgFront.src = '#'; imgBack.src = '#';
                     let hasPhotos = false;
                     if (card.photoFront && card.photoFront instanceof Blob) {
                         imgFront.src = URL.createObjectURL(card.photoFront);
-                        imgFront.classList.remove('hidden');
-                        hasPhotos = true;
+                        imgFront.classList.remove('hidden'); hasPhotos = true;
                     }
                      if (card.photoBack && card.photoBack instanceof Blob) {
                         imgBack.src = URL.createObjectURL(card.photoBack);
-                        imgBack.classList.remove('hidden');
-                         hasPhotos = true;
+                        imgBack.classList.remove('hidden'); hasPhotos = true;
                     }
                     noPhotosMsg.classList.toggle('hidden', hasPhotos);
-
                     showView('card-detail-view');
-
                 } catch (error) {
                     showError('Failed to load card details.');
-                    goBack(); // Go back to list if detail fails
+                    goBack();
                 } finally {
                     hideLoading();
                 }
             };
 
-            const confirmDeleteCard = async () => {
-                // currentCardId should be set by showCardDetail
-                if (!currentCardId) {
-                    showError("No card selected for deletion.");
+            const showZoomedBarcode = () => {
+                if (!currentZoomedCard || !currentZoomedCard.number) {
+                    showError("No card data available to zoom barcode.");
                     return;
                 }
-                const cardToDelete = await getCard(currentCardId);
-                const cardName = cardToDelete ? cardToDelete.name : 'this card';
+                zoomedBarcodeDisplay.innerHTML = ''; // Clear previous
+                const zoomedSvg = document.createElement('svg');
+                zoomedSvg.id = 'barcode-svg-zoomed'; // Unique ID for zoomed barcode
 
-                if (confirm(`Are you sure you want to delete the card "${escapeHTML(cardName)}"? This cannot be undone.`)) {
+                try {
+                    JsBarcode(zoomedSvg, currentZoomedCard.number, {
+                        format: currentZoomedCard.format,
+                        displayValue: true,
+                        lineColor: "#000000",
+                        width: 3, // Thicker bars for zoomed view
+                        height: 200, // Much taller
+                        fontSize: 22,
+                        margin: 15, // More margin
+                        background: "#ffffff",
+                        textMargin: 10,
+                        font: "monospace"
+                    });
+                    zoomedBarcodeDisplay.appendChild(zoomedSvg);
+                    barcodeZoomModal.style.display = 'flex';
+                    requestWakeLock(); // Ensure screen stays on
+                } catch (e) {
+                    console.error("JsBarcode error (zoom):", e);
+                    zoomedBarcodeDisplay.innerHTML = `<p style="color: red;">Error generating zoomed barcode: ${escapeHTML(e.message)}.</p>`;
+                    barcodeZoomModal.style.display = 'flex'; // Show modal even with error to allow closing
+                }
+            };
+
+            const hideZoomedBarcode = () => {
+                barcodeZoomModal.style.display = 'none';
+                zoomedBarcodeDisplay.innerHTML = '';
+                // Don't release wake lock here if the detail view itself needs it.
+                // Wake lock is released when navigating away from detail view (goBack).
+            };
+
+
+            const confirmDeleteCard = async () => {
+                if (!currentCardId) {
+                    showError("No card selected for deletion."); return;
+                }
+                const cardToDelete = await getCard(currentCardId);
+                if (confirm(`Are you sure you want to delete "${escapeHTML(cardToDelete ? cardToDelete.name : 'this card')}"? This cannot be undone.`)) {
                     performDelete(currentCardId);
                 }
             };
@@ -892,11 +1057,10 @@
             const performDelete = async (id) => {
                 showLoading('Deleting card...');
                 try {
-                    await deleteCard(id);
-                    console.log(`Card ${id} deleted.`);
-                    await loadAndRenderCards(); // Refresh list
-                    showView('card-list-view'); // Go back to list
-                    currentCardId = null; // Clear active card ID
+                    await deleteCardDB(id); // Use renamed DB function
+                    await loadAndRenderCards();
+                    showView('card-list-view');
+                    currentCardId = null;
                 } catch (error) {
                     showError('Failed to delete card.');
                 } finally {
@@ -909,10 +1073,9 @@
                 cardForm.reset();
                 document.getElementById('edit-card-id').value = '';
                 document.getElementById('form-header').textContent = 'Add New Card';
-                // Clear photo previews and stored blobs
-                clearPhoto('front', true); // Pass true to only reset form elements
+                clearPhoto('front', true);
                 clearPhoto('back', true);
-                currentCardId = null; // Ensure ID is cleared for new card
+                currentCardId = null;
             };
 
             const showAddCardView = () => {
@@ -922,44 +1085,39 @@
 
             const showEditCardView = async () => {
                 if (!currentCardId) {
-                    showError('No card selected for editing.');
-                    return;
+                    showError('No card selected for editing.'); return;
                 }
                 showLoading('Loading card for editing...');
                 try {
                     const card = await getCard(currentCardId);
                     if (!card) {
                         showError('Card not found for editing.');
-                        showView('card-list-view');
-                        return;
+                        showView('card-list-view'); return;
                     }
-
                     document.getElementById('edit-card-id').value = card.id;
                     document.getElementById('card-name').value = card.name;
                     document.getElementById('card-number').value = card.cardNumber;
                     document.getElementById('barcode-format').value = card.barcodeFormat || "CODE128";
                     document.getElementById('form-header').textContent = `Edit Card: ${escapeHTML(card.name)}`;
 
-                    // Load existing photos into previews and blobs
                     if (card.photoFront instanceof Blob) {
                         photoFrontBlob = card.photoFront;
-                        const url = URL.createObjectURL(photoFrontBlob);
-                        photoFrontPreview.src = url;
+                        photoFrontPreview.src = URL.createObjectURL(photoFrontBlob);
                         photoFrontPreview.classList.remove('hidden');
                         clearFrontPhotoBtn.classList.remove('hidden');
+                        captureFrontPhotoBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Retake Front Photo`;
                     } else {
                         clearPhoto('front', true);
                     }
                     if (card.photoBack instanceof Blob) {
                         photoBackBlob = card.photoBack;
-                        const url = URL.createObjectURL(photoBackBlob);
-                        photoBackPreview.src = url;
+                        photoBackPreview.src = URL.createObjectURL(photoBackBlob);
                         photoBackPreview.classList.remove('hidden');
                         clearBackPhotoBtn.classList.remove('hidden');
+                        captureBackPhotoBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Retake Back Photo`;
                     } else {
                         clearPhoto('back', true);
                     }
-
                     showView('add-edit-card-view');
                 } catch (error) {
                     showError('Failed to load card for editing.');
@@ -977,190 +1135,133 @@
             const handleFormSubmit = async (event) => {
                 event.preventDefault();
                 showLoading('Saving card...');
-
                 const isEdit = document.getElementById('edit-card-id').value !== '';
                 const cardData = {
                     name: document.getElementById('card-name').value.trim(),
                     cardNumber: document.getElementById('card-number').value.trim(),
                     barcodeFormat: document.getElementById('barcode-format').value,
-                    photoFront: photoFrontBlob, // Use the blobs stored during capture/edit
-                    photoBack: photoBackBlob
+                    photoFront: photoFrontBlob, photoBack: photoBackBlob
                 };
-
-                // Basic validation
                 if (!cardData.name || !cardData.cardNumber) {
                     showError("Card Name and Number are required.");
-                    hideLoading();
-                    return;
+                    hideLoading(); return;
                 }
-
                 try {
                     if (isEdit) {
                         cardData.id = parseInt(document.getElementById('edit-card-id').value, 10);
                         await updateCard(cardData);
-                        console.log('Card updated with ID:', cardData.id);
                     } else {
-                        const newId = await addCard(cardData);
-                        console.log('Card added with ID:', newId);
+                        await addCard(cardData);
                     }
-
-                    await loadAndRenderCards(); // Refresh the list
-                    showView('card-list-view'); // Go back to list
+                    await loadAndRenderCards();
+                    showView('card-list-view');
                 } catch (error) {
                     showError('Failed to save card: ' + error.message);
                 } finally {
                     hideLoading();
-                    resetAddEditForm(); // Ensure blobs are cleared after successful save or error
+                    resetAddEditForm();
                 }
             };
-
             cardForm.addEventListener('submit', handleFormSubmit);
 
             // --- Barcode Scanning (ZXing) ---
             const startScanner = async () => {
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    showError("Camera access is not supported by this browser.");
-                    return;
+                    showError("Camera access is not supported by this browser."); return;
                 }
-
                 try {
                     showLoading('Starting camera...');
-                    // Request an appropriate resolution for scanning, and prefer back camera
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: 'environment', // Prefer back camera
-                            width: { ideal: 1280 }, // Ideal width for better scanning
-                            height: { ideal: 720 }  // Ideal height
-                        }
+                        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
                     });
-
                     scannerVideo.srcObject = stream;
-                    await scannerVideo.play(); // Wait for video to start playing
-                    scannerModal.style.display = 'flex'; // Show modal
+                    await scannerVideo.play();
+                    scannerModal.style.display = 'flex';
                     hideLoading();
 
                     currentTorchTrack = stream.getVideoTracks()[0];
                     if (currentTorchTrack && typeof currentTorchTrack.getCapabilities === 'function') {
                         const capabilities = currentTorchTrack.getCapabilities();
-                        if (capabilities.torch) {
-                            torchToggleButton.classList.remove('hidden');
-                        } else {
-                            torchToggleButton.classList.add('hidden');
-                        }
+                        torchToggleButton.classList.toggle('hidden', !capabilities.torch);
                     } else {
                         torchToggleButton.classList.add('hidden');
                     }
 
-
                     const codeReader = new ZXing.BrowserMultiFormatReader();
                     scannerControls = await codeReader.decodeFromVideoDevice(undefined, scannerVideo, (result, error) => {
                          if (result) {
-                             console.log('Scan result:', result);
                              document.getElementById('card-number').value = result.getText();
-                             // Attempt to autodetect format (ZXing provides format info)
                              const zxingFormat = result.getBarcodeFormat();
                              const jsBarcodeFormat = mapZxingToJsBarcodeFormat(zxingFormat);
-                             if (jsBarcodeFormat) {
-                                 document.getElementById('barcode-format').value = jsBarcodeFormat;
-                             } else {
-                                 console.warn(`Scanned format ${zxingFormat} not directly mapped to JsBarcode.`);
-                                 // Keep default or previously selected format
-                             }
-                             vibrate(); // Vibrate on success
-                             stopScanner(); // Stop scanner on success
+                             if (jsBarcodeFormat) document.getElementById('barcode-format').value = jsBarcodeFormat;
+                             vibrate();
+                             stopScanner();
                          }
-                         // Only log persistent errors, not NotFoundException which is constant
-                         if (error && !(error instanceof ZXing.NotFoundException)) {
+                         if (error && !(error instanceof ZXing.NotFoundException) && !(error instanceof ZXing.ChecksumException) && !(error instanceof ZXing.FormatException)) {
                              console.error('Scanner error:', error);
-                             // showError("Scanning error occurred."); // Might be too aggressive for transient errors
                          }
                     });
-
                 } catch (err) {
                     hideLoading();
                     console.error("Error accessing camera for scanning:", err);
-                    if (err.name === 'NotAllowedError') {
-                        showError("Camera permission denied. Please allow camera access in your browser settings.");
-                    } else if (err.name === 'NotFoundError') {
-                         showError("No suitable camera found. Ensure your device has a camera.");
-                    } else if (err.name === 'NotReadableError') {
-                         showError("Camera is busy or not accessible. Please close other apps using the camera.");
-                    }
-                    else {
-                        showError("Could not start camera for scanning: " + err.message);
-                    }
-                    scannerModal.style.display = 'none'; // Hide modal on error
+                    if (err.name === 'NotAllowedError') showError("Camera permission denied.");
+                    else if (err.name === 'NotFoundError') showError("No suitable camera found.");
+                    else if (err.name === 'NotReadableError') showError("Camera is busy or not accessible.");
+                    else showError("Could not start camera: " + err.message);
+                    scannerModal.style.display = 'none';
                 }
             };
 
             const stopScanner = () => {
                 if (scannerControls) {
-                    scannerControls.stop();
-                    scannerControls = null;
+                    scannerControls.stop(); scannerControls = null;
                 }
                 if (scannerVideo.srcObject) {
-                    scannerVideo.srcObject.getTracks().forEach(track => {
-                        if (track.readyState === 'live') {
-                            track.stop();
-                        }
-                    });
+                    scannerVideo.srcObject.getTracks().forEach(track => track.stop());
                     scannerVideo.srcObject = null;
                 }
                 currentTorchTrack = null;
-                torchToggleButton.classList.add('hidden'); // Hide torch button
-                torchToggleButton.classList.remove('active'); // Reset torch state
+                torchToggleButton.classList.add('hidden');
+                torchToggleButton.classList.remove('active');
                 scannerModal.style.display = 'none';
-                console.log('Scanner stopped.');
             };
 
             const toggleTorch = async () => {
-                if (!currentTorchTrack) return;
-
+                if (!currentTorchTrack || !currentTorchTrack.getCapabilities().torch) return;
                 try {
-                    const capabilities = currentTorchTrack.getCapabilities();
-                    if (!capabilities.torch) {
-                        showError("Torch is not supported on this camera.");
-                        return;
-                    }
                     const isTorchOn = torchToggleButton.classList.contains('active');
-                    await currentTorchTrack.applyConstraints({
-                        advanced: [{ torch: !isTorchOn }]
-                    });
+                    await currentTorchTrack.applyConstraints({ advanced: [{ torch: !isTorchOn }] });
                     torchToggleButton.classList.toggle('active', !isTorchOn);
-                    console.log(`Torch turned ${!isTorchOn ? 'on' : 'off'}.`);
                 } catch (err) {
                     console.error("Error toggling torch:", err);
-                    showError("Failed to toggle torch. Device might not support it.");
+                    showError("Failed to toggle torch.");
                 }
             };
 
-            // Helper to map ZXing format enum/name to JsBarcode format string
-            const mapZxingToJsBarcodeFormat = (zxingFormatEnum) => {
-                switch (zxingFormatEnum) {
-                    case ZXing.BarcodeFormat.CODE_128: return 'CODE128';
-                    case ZXing.BarcodeFormat.CODE_39: return 'CODE39';
-                    case ZXing.BarcodeFormat.EAN_13: return 'EAN13';
-                    case ZXing.BarcodeFormat.EAN_8: return 'EAN8';
-                    case ZXing.BarcodeFormat.UPC_A:
-                    case ZXing.BarcodeFormat.UPC_E: return 'UPC'; // JsBarcode often treats UPC-A/E as 'UPC'
-                    case ZXing.BarcodeFormat.ITF: return 'ITF'; // JsBarcode supports ITF (Interleaved 2 of 5)
-                    case ZXing.BarcodeFormat.CODABAR: return 'codabar';
-                    case ZXing.BarcodeFormat.MSI: return 'MSI';
-                    default: return null;
+            const mapZxingToJsBarcodeFormat = (zxFormatEnum) => {
+                const { BarcodeFormat } = ZXing; // Destructure for easier access
+                switch (zxFormatEnum) {
+                    case BarcodeFormat.CODE_128: return 'CODE128';
+                    case BarcodeFormat.CODE_39: return 'CODE39';
+                    case BarcodeFormat.EAN_13: return 'EAN13';
+                    case BarcodeFormat.EAN_8: return 'EAN8';
+                    case BarcodeFormat.UPC_A: return 'UPC';
+                    case BarcodeFormat.UPC_E: return 'UPC'; // JsBarcode's "UPC" handles both A and E generally
+                    case BarcodeFormat.ITF: return 'ITF';
+                    case BarcodeFormat.CODABAR: return 'codabar';
+                    case BarcodeFormat.MSI: return 'MSI';
+                    // Add more mappings if needed and supported by JsBarcode
+                    default: return null; // Or return a default like "CODE128"
                 }
             };
-
 
             // --- Photo Capture ---
-            const capturePhoto = async (type) => { // type = 'front' or 'back'
+            const capturePhoto = async (type) => {
                 photoCaptureType = type;
                 document.getElementById('photo-capture-message').textContent = `Aim at card ${type}`;
-
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    showError("Camera access is not supported for photos.");
-                    return;
+                    showError("Camera access is not supported for photos."); return;
                 }
-
                 try {
                     showLoading('Starting camera...');
                     photoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -1169,125 +1270,86 @@
                     photoCaptureModal.style.display = 'flex';
                     hideLoading();
                 } catch (err) {
-                     hideLoading();
-                     console.error("Error accessing camera for photo:", err);
-                     if (err.name === 'NotAllowedError') {
-                        showError("Camera permission denied. Allow access in settings.");
-                    } else if (err.name === 'NotFoundError') {
-                         showError("No suitable camera found for photo.");
-                    } else {
-                        showError("Could not start camera for photo: " + err.message);
-                    }
+                     hideLoading(); console.error("Error accessing camera for photo:", err);
+                     if (err.name === 'NotAllowedError') showError("Camera permission denied.");
+                     else if (err.name === 'NotFoundError') showError("No suitable camera found for photo.");
+                     else showError("Could not start camera for photo: " + err.message);
                      photoCaptureModal.style.display = 'none';
                 }
             };
 
             const triggerPhotoCapture = () => {
-                const video = photoVideo;
-                const canvas = photoCanvas;
-                const context = canvas.getContext('2d');
-
-                // Set canvas dimensions to match video feed
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                canvas.toBlob(blob => {
+                const context = photoCanvas.getContext('2d');
+                photoCanvas.width = photoVideo.videoWidth;
+                photoCanvas.height = photoVideo.videoHeight;
+                context.drawImage(photoVideo, 0, 0, photoCanvas.width, photoCanvas.height);
+                photoCanvas.toBlob(blob => {
                     if (blob) {
-                        console.log(`Photo captured (${photoCaptureType}), size:`, (blob.size / 1024).toFixed(2), 'KB');
-                        // Show preview
                         const previewImg = photoCaptureType === 'front' ? photoFrontPreview : photoBackPreview;
                         const clearBtn = photoCaptureType === 'front' ? clearFrontPhotoBtn : clearBackPhotoBtn;
+                        const captureBtn = photoCaptureType === 'front' ? captureFrontPhotoBtn : captureBackPhotoBtn;
 
-                         // Revoke previous URL if any
-                         if (previewImg.src && previewImg.src.startsWith('blob:')) {
-                             URL.revokeObjectURL(previewImg.src);
-                         }
+                         if (previewImg.src && previewImg.src.startsWith('blob:')) URL.revokeObjectURL(previewImg.src);
                         previewImg.src = URL.createObjectURL(blob);
                         previewImg.classList.remove('hidden');
                         clearBtn.classList.remove('hidden');
+                        captureBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Retake ${photoCaptureType === 'front' ? 'Front' : 'Back'} Photo`;
 
-                        // Store the blob for saving later
-                        if (photoCaptureType === 'front') {
-                            photoFrontBlob = blob;
-                        } else {
-                            photoBackBlob = blob;
-                        }
-
+                        if (photoCaptureType === 'front') photoFrontBlob = blob;
+                        else photoBackBlob = blob;
                     } else {
                         showError("Failed to create image blob.");
                     }
-                    cancelPhotoCapture(); // Close modal after capture
-                }, 'image/jpeg', 0.8); // Use JPEG with quality 80%
+                    cancelPhotoCapture();
+                }, 'image/jpeg', 0.85); // Slightly higher quality
             };
 
              const cancelPhotoCapture = () => {
                  if (photoStream) {
-                     photoStream.getTracks().forEach(track => {
-                         if (track.readyState === 'live') {
-                             track.stop();
-                         }
-                     });
+                     photoStream.getTracks().forEach(track => track.stop());
                      photoStream = null;
                  }
                  photoVideo.srcObject = null;
                  photoCaptureModal.style.display = 'none';
-                 console.log('Photo capture cancelled/finished.');
             };
 
             const clearPhoto = (type, isResettingForm = false) => {
                 const previewImg = type === 'front' ? photoFrontPreview : photoBackPreview;
                 const clearBtn = type === 'front' ? clearFrontPhotoBtn : clearBackPhotoBtn;
+                const captureBtn = type === 'front' ? captureFrontPhotoBtn : captureBackPhotoBtn;
 
-                if (previewImg.src && previewImg.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(previewImg.src); // Revoke the object URL
-                }
+                if (previewImg.src && previewImg.src.startsWith('blob:')) URL.revokeObjectURL(previewImg.src);
                 previewImg.src = '#';
                 previewImg.classList.add('hidden');
                 clearBtn.classList.add('hidden');
+                captureBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg> Take ${type === 'front' ? 'Front' : 'Back'} Photo`;
 
-                if (type === 'front') {
-                    photoFrontBlob = null;
-                } else {
-                    photoBackBlob = null;
-                }
-                if (!isResettingForm) {
-                    showError(`Photo ${type} cleared. Remember to save the card!`);
+                if (type === 'front') photoFrontBlob = null;
+                else photoBackBlob = null;
+
+                if (!isResettingForm && document.getElementById('edit-card-id').value) { // Only show if editing
+                    showError(`Photo ${type} cleared. Remember to save the card changes!`);
                 }
             };
-
 
             // --- Import / Export ---
-            const triggerImport = () => {
-                importFileInput.click();
-            };
-
-            const handleImportFile = (event) => {
+            const triggerImport = () => importFileInput.click();
+            importFileInput.addEventListener('change', async (event) => {
                  const file = event.target.files[0];
                  if (!file) return;
-
                 if (file.type !== 'application/json') {
                     showError('Invalid file type. Please select a JSON file.');
-                    importFileInput.value = ''; // Reset file input
-                    return;
+                    importFileInput.value = ''; return;
                 }
-
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     try {
                         const importedData = JSON.parse(e.target.result);
-
-                        if (!Array.isArray(importedData)) {
-                            throw new Error("Imported file is not a valid card array.");
-                        }
-
+                        if (!Array.isArray(importedData)) throw new Error("Imported file is not a valid card array.");
                         let importCount = 0;
                         showLoading(`Importing cards...`);
-
                          for (const card of importedData) {
                             if (card.name && card.cardNumber) {
-                                // Convert Base64 photos back to Blobs for IndexedDB
                                 if (card.photoFrontBase64) {
                                     card.photoFront = base64ToBlob(card.photoFrontBase64, 'image/jpeg');
                                     delete card.photoFrontBase64;
@@ -1296,48 +1358,40 @@
                                     card.photoBack = base64ToBlob(card.photoBackBase64, 'image/jpeg');
                                     delete card.photoBackBase64;
                                 }
-                                // Ensure existing IDs are respected for update, or add new
+                                // Remove ID if it exists to ensure new entries are created,
+                                // or handle updates differently if desired (e.g. by checking card number)
+                                // For simplicity, this import always adds as new or updates if ID matches existing.
                                 if (card.id) {
-                                    await updateCard(card); // Use put to handle existing IDs
+                                    await updateCard(card); // Will update if ID exists, add if not (though addCard is better for new)
                                 } else {
-                                     await addCard(card); // Add new entry if no ID
+                                     await addCard(card);
                                 }
                                 importCount++;
-                            } else {
-                                console.warn("Skipping invalid card during import (missing name/number):", card);
                             }
                          }
                         hideLoading();
                         alert(`Successfully imported/updated ${importCount} cards.`);
-                        await loadAndRenderCards(); // Refresh list
+                        await loadAndRenderCards();
                     } catch (err) {
-                        hideLoading();
-                        showError(`Import failed: ${err.message}`);
+                        hideLoading(); showError(`Import failed: ${err.message}`);
                     } finally {
-                        importFileInput.value = ''; // Reset file input
+                        importFileInput.value = '';
                     }
                 };
-                reader.onerror = () => {
-                     showError('Failed to read import file.');
-                     importFileInput.value = ''; // Reset file input
-                };
+                reader.onerror = () => { showError('Failed to read import file.'); importFileInput.value = ''; };
                 reader.readAsText(file);
-            };
-
-             importFileInput.addEventListener('change', handleImportFile);
+            });
 
              const showExportSelection = async () => {
                  const modal = document.getElementById('export-selection-modal');
                  const listContainer = document.getElementById('export-cards-list');
                  listContainer.innerHTML = 'Loading cards...';
                  modal.style.display = 'flex';
-
                  try {
                      const cards = await getAllCards();
-                     listContainer.innerHTML = ''; // Clear loading message
+                     listContainer.innerHTML = '';
                      if (cards.length === 0) {
-                         listContainer.innerHTML = '<p>No cards to export.</p>';
-                         return;
+                         listContainer.innerHTML = '<p>No cards to export.</p>'; return;
                      }
                      cards.sort((a, b) => a.name.localeCompare(b.name));
                      cards.forEach(card => {
@@ -1345,7 +1399,7 @@
                          div.innerHTML = `
                              <label>
                                  <input type="checkbox" name="export-card" value="${card.id}" checked>
-                                 ${escapeHTML(card.name)} (<small>${escapeHTML(card.cardNumber)}</small>)
+                                 ${escapeHTML(card.name)} (<small>${escapeHTML(card.cardNumber.slice(0,15))}...</small>)
                              </label>
                          `;
                          listContainer.appendChild(div);
@@ -1355,76 +1409,49 @@
                      showError("Could not load cards for export.");
                  }
              };
-
-             const hideExportSelection = () => {
-                  document.getElementById('export-selection-modal').style.display = 'none';
-             };
-
-            const performExport = async () => {
+             const hideExportSelection = () => document.getElementById('export-selection-modal').style.display = 'none';
+             const performExport = async () => {
                  const checkboxes = document.querySelectorAll('#export-cards-list input[name="export-card"]:checked');
                  const idsToExport = Array.from(checkboxes).map(cb => parseInt(cb.value, 10));
-
-                 if (idsToExport.length === 0) {
-                     alert("Please select at least one card to export.");
-                     return;
-                 }
-
+                 if (idsToExport.length === 0) { alert("Please select at least one card to export."); return; }
                  showLoading('Preparing export...');
                  try {
                      const allCards = await getAllCards();
                      const cardsToExport = allCards.filter(card => idsToExport.includes(card.id));
-
-                    // Convert Blobs to Base64 Data URLs for export
                      const exportableCards = await Promise.all(cardsToExport.map(async card => {
-                         const exportableCard = { ...card }; // Clone
+                         const exportableCard = { ...card };
                          if (card.photoFront instanceof Blob) {
                              exportableCard.photoFrontBase64 = await blobToBase64(card.photoFront);
-                             delete exportableCard.photoFront; // Remove blob from export
+                             delete exportableCard.photoFront;
                          }
                           if (card.photoBack instanceof Blob) {
                              exportableCard.photoBackBase64 = await blobToBase64(card.photoBack);
-                             delete exportableCard.photoBack; // Remove blob from export
+                             delete exportableCard.photoBack;
                          }
                          return exportableCard;
                      }));
-
-
-                     const jsonString = JSON.stringify(exportableCards, null, 2); // Pretty print JSON
+                     const jsonString = JSON.stringify(exportableCards, null, 2);
                      const blob = new Blob([jsonString], { type: 'application/json' });
                      const url = URL.createObjectURL(blob);
-
                      const a = document.createElement('a');
                      a.href = url;
-                     const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                     const timestamp = new Date().toISOString().slice(0, 10);
                      a.download = `loyalty-cards-export-${timestamp}.json`;
-                     document.body.appendChild(a); // Required for Firefox
-                     a.click();
-                     document.body.removeChild(a);
-                     URL.revokeObjectURL(url); // Clean up blob URL
-
-                     console.log(`Exported ${cardsToExport.length} cards.`);
+                     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                     URL.revokeObjectURL(url);
                      hideExportSelection();
                      alert(`Successfully exported ${cardsToExport.length} cards.`);
-
-                 } catch (error) {
-                     showError(`Export failed: ${error.message}`);
-                 } finally {
-                     hideLoading();
-                 }
+                 } catch (error) { showError(`Export failed: ${error.message}`);
+                 } finally { hideLoading(); }
              };
 
-            // --- Helper Functions for Blob/Base64 conversion ---
-            const blobToBase64 = (blob) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result); // result is Base64 Data URL
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            };
-
-             // Function to convert Base64 Data URL back to Blob (needed for import)
-             const base64ToBlob = (base64, contentType = '') => {
+            const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            const base64ToBlob = (base64, contentType = '') => {
                  const parts = base64.split(';base64,');
                  const actualContentType = parts[0].split(':')[1] || contentType;
                  const byteCharacters = atob(parts[1]);
@@ -1432,224 +1459,120 @@
                  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
                      const slice = byteCharacters.slice(offset, offset + 512);
                      const byteNumbers = new Array(slice.length);
-                     for (let i = 0; i < slice.length; i++) {
-                         byteNumbers[i] = slice.charCodeAt(i);
-                     }
-                     const byteArray = new Uint8Array(byteNumbers);
-                     byteArrays.push(byteArray);
+                     for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                     byteArrays.push(new Uint8Array(byteNumbers));
                  }
                  return new Blob(byteArrays, { type: actualContentType });
-             };
+            };
 
-             // --- PWA Screen Wake Lock ---
+            // --- PWA Screen Wake Lock ---
              const requestWakeLock = async () => {
-                 if ('wakeLock' in navigator) {
+                 if ('wakeLock' in navigator && !screenWakeLock) { // Only request if not already active
                      try {
                          screenWakeLock = await navigator.wakeLock.request('screen');
                          screenWakeLock.addEventListener('release', () => {
-                             console.log('Screen Wake Lock was released');
+                             console.log('Screen Wake Lock released');
+                             screenWakeLock = null; // Important to reset
                          });
                          console.log('Screen Wake Lock active.');
-                     } catch (err) {
-                         console.warn('Screen Wake Lock failed:', err.name, err.message);
-                         // This is not critical, so just warn
-                     }
-                 } else {
-                     console.log('Wake Lock API not supported.');
+                     } catch (err) { console.warn('Screen Wake Lock failed:', err.name, err.message); }
                  }
              };
-
              const releaseWakeLock = () => {
                  if (screenWakeLock) {
-                     screenWakeLock.release();
-                     screenWakeLock = null;
-                     console.log('Screen Wake Lock released.');
+                     screenWakeLock.release(); // This will set screenWakeLock to null via its event listener
                  }
              };
-
 
             // --- PWA Setup (Service Worker & Manifest) ---
             const registerSW = () => {
                 if ('serviceWorker' in navigator) {
-                    // Define SW code inline as a string
                     const swCode = `
-                        const CACHE_NAME = 'loyalty-cards-cache-v2'; // Increment version for new caches
+                        const CACHE_NAME = 'loyalty-cards-cache-v3'; // Updated cache version
                         const urlsToCache = [
-                            '/', // Cache the main index.html (which is this file)
-                            'index.html', // Also cache index.html explicitly
+                            '/', 'index.html',
                             'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js',
                             'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js'
                         ];
-
                         self.addEventListener('install', event => {
-                            console.log('SW Install event');
                             event.waitUntil(
                                 caches.open(CACHE_NAME)
-                                    .then(cache => {
-                                        console.log('SW Opened cache');
-                                        return cache.addAll(urlsToCache.map(url => new Request(url, { cache: 'reload' })))
-                                            .catch(error => {
-                                                console.error('SW Failed to cache initial assets:', error);
-                                                // It's crucial for PWA if CDN resources fail to cache.
-                                                // Consider if you want to fail installation or just warn.
-                                            });
-                                    })
-                                    .then(() => self.skipWaiting()) // Activate new SW immediately
+                                    .then(cache => cache.addAll(urlsToCache.map(url => new Request(url, { cache: 'reload' }))))
+                                    .then(() => self.skipWaiting())
+                                    .catch(err => console.error('SW Cache addAll failed:', err))
                             );
                         });
-
                         self.addEventListener('activate', event => {
-                             console.log('SW Activate event');
                              event.waitUntil(
-                                 caches.keys().then(cacheNames => {
-                                     return Promise.all(
-                                         cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
-                                                 .map(cacheName => caches.delete(cacheName))
-                                     );
-                                 }).then(() => self.clients.claim()) // Take control of pages immediately
+                                 caches.keys().then(cacheNames => Promise.all(
+                                     cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
+                                 )).then(() => self.clients.claim())
                              );
                          });
-
                         self.addEventListener('fetch', event => {
-                            // Only respond to GET requests
                             if (event.request.method !== 'GET') return;
-
                             event.respondWith(
-                                caches.match(event.request)
-                                    .then(response => {
-                                        if (response) {
-                                            return response; // Serve from cache
-                                        }
-                                        // Try to fetch from network
-                                        return fetch(event.request).then(networkResponse => {
-                                            // Optional: Cache successful network responses for later offline use
-                                            // if (networkResponse.ok && networkResponse.type === 'basic') { // 'basic' for same-origin requests
-                                            //     const clonedResponse = networkResponse.clone();
-                                            //     caches.open(CACHE_NAME).then(cache => {
-                                            //         cache.put(event.request, clonedResponse);
-                                            //     });
-                                            // }
-                                            return networkResponse;
-                                        }).catch(error => {
-                                            console.error('SW Fetch failed for:', event.request.url, error);
-                                            // Fallback for navigation requests when offline
-                                            if (event.request.mode === 'navigate') {
-                                                // return caches.match('/offline.html'); // Requires an offline.html to be cached
-                                            }
-                                            throw error; // Propagate the error
-                                        });
-                                    })
-                                    .catch(error => {
-                                        console.error('SW Caching/Fetch error:', error);
-                                    })
+                                caches.match(event.request).then(response => {
+                                    if (response) return response;
+                                    return fetch(event.request).catch(error => {
+                                        console.error('SW Fetch failed:', event.request.url, error);
+                                        throw error;
+                                    });
+                                })
                             );
                         });
                     `;
-
-                     // Create Blob and Object URL for the SW code
                      try {
                         const blob = new Blob([swCode], { type: 'application/javascript' });
                         const swUrl = URL.createObjectURL(blob);
-
                         navigator.serviceWorker.register(swUrl)
-                            .then(registration => {
-                                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                                // The URL won't be revoked here as the SW needs to live.
-                            })
-                            .catch(err => {
-                                console.error('ServiceWorker registration failed: ', err);
-                            });
-                     } catch (e) {
-                         console.error("Error creating/registering inline SW:", e);
-                     }
-
-                } else {
-                    console.warn('Service workers are not supported in this browser.');
+                            .then(reg => console.log('SW registration successful: ', reg.scope))
+                            .catch(err => console.error('SW registration failed: ', err));
+                     } catch (e) { console.error("Error creating/registering inline SW:", e); }
                 }
             };
-
             const setupManifest = () => {
                  const manifest = {
-                     name: "Loyalty Cards Wallet",
-                     short_name: "Cards",
+                     name: "Loyalty Cards Wallet", short_name: "Cards",
                      description: "Store your loyalty cards locally and offline.",
-                     start_url: ".",
-                     display: "standalone",
-                     background_color: "#f4f4f4",
-                     theme_color: "#4CAF50",
-                     icons: [
-                         // For a truly single-file solution, these would be data URIs (Base64 encoded images).
-                         // However, this significantly bloats the HTML. It's generally better to serve these as separate files.
-                         // For demonstration, these are left commented out as they would make the HTML huge.
-                         // If you want proper PWA icons, you'd generate them and embed their Base64 data here.
-                         // Example (replace with actual Base64 data):
-                         // {
-                         //   "src": "data:image/png;base64,...",
-                         //   "sizes": "192x192",
-                         //   "type": "image/png"
-                         // },
-                         // {
-                         //   "src": "data:image/png;base64,...",
-                         //   "sizes": "512x512",
-                         //   "type": "image/png"
-                         // }
+                     start_url: ".", display: "standalone",
+                     background_color: "#f4f4f8", theme_color: "#4CAF50",
+                     icons: [ /* Placeholder for actual Base64 icons */
+                        // { "src": "icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+                        // { "src": "icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
                      ]
                  };
-
                  const manifestJson = JSON.stringify(manifest);
-                 // Using btoa(unescape(encodeURIComponent(manifestJson))) for proper UTF-8 Base64 encoding
                  const base64Manifest = btoa(unescape(encodeURIComponent(manifestJson)));
-                 const manifestHref = `data:application/manifest+json;base64,${base64Manifest}`;
-
                  const link = document.createElement('link');
                  link.rel = 'manifest';
-                 link.href = manifestHref;
+                 link.href = `data:application/manifest+json;base64,${base64Manifest}`;
                  document.head.appendChild(link);
-                 console.log("Manifest link injected.");
              };
 
             // --- Initialization ---
             const init = async () => {
-                setupManifest(); // Inject manifest link
-                registerSW(); // Register the inline service worker
-
+                setupManifest();
+                registerSW();
                 try {
                     await initDB();
                     await loadAndRenderCards();
-                    showView('card-list-view'); // Show initial view
+                    showView('card-list-view');
                 } catch (error) {
-                    showError("Initialization failed. Please ensure your browser supports IndexedDB.");
-                    // App might be unusable here, consider a fallback message
+                    showError("Initialization failed. IndexedDB might not be supported.");
                 }
             };
 
-            // --- Public API ---
             return {
-                init,
-                showView,
-                goBack,
-                showAddCardView,
-                showEditCardView, // Exposed for editing
-                cancelAddEdit,
-                showCardDetail,
-                confirmDeleteCard,
-                startScanner,
-                stopScanner,
-                toggleTorch, // Exposed for torch button
-                capturePhoto,
-                triggerPhotoCapture,
-                cancelPhotoCapture,
-                clearPhoto, // Exposed for clear photo button
-                triggerImport,
-                showExportSelection,
-                hideExportSelection,
-                performExport
+                init, showView, goBack, showAddCardView, showEditCardView, cancelAddEdit,
+                showCardDetail, confirmDeleteCard, startScanner, stopScanner, toggleTorch,
+                capturePhoto, triggerPhotoCapture, cancelPhotoCapture, clearPhoto,
+                triggerImport, showExportSelection, hideExportSelection, performExport,
+                showZoomedBarcode, hideZoomedBarcode // Expose zoom functions
             };
         })();
 
-        // --- Start the app ---
         document.addEventListener('DOMContentLoaded', app.init);
-
     </script>
 </body>
 </html>
