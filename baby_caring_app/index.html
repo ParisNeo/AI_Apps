@@ -42,9 +42,22 @@
             color: var(--primary-color);
             text-align: center;
         }
-        h1 { font-size: 2.2em; margin-bottom: 20px; }
+        h1 { font-size: 2.2em; margin-bottom: 10px; }
         h2 { font-size: 1.8em; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px;}
         h3 { font-size: 1.4em; margin-top: 20px; margin-bottom: 10px; color: var(--accent-color); }
+
+        .language-switcher {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .language-switcher button {
+            background-color: var(--accent-color);
+            margin: 0 5px;
+        }
+        .language-switcher button.active {
+            background-color: var(--primary-color);
+            font-weight: bold;
+        }
 
 
         button {
@@ -76,12 +89,19 @@
         button.danger:hover {
             background-color: #e53e3e; /* Darker Red */
         }
+        button.accent { /* Added for consistency */
+            background-color: var(--accent-color);
+        }
+        button.accent:hover {
+            background-color: #48bb78; /* Darker Green */
+        }
+
 
         input[type="text"],
         input[type="number"],
         input[type="date"],
         input[type="time"],
-        input[type="file"], /* Changed from URL */
+        input[type="file"],
         select,
         textarea {
             width: calc(100% - 22px);
@@ -104,15 +124,24 @@
             color: var(--primary-color);
         }
 
-        .baby-selector {
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .baby-selector {
             text-align: center;
+            flex-grow: 1;
         }
         .baby-selector label { display: inline-block; margin-right: 10px; }
-        .baby-selector button { margin-left: 0px; margin-right: 0px;} /* Adjust button margin for selector */
+        .baby-selector button { margin-left: 0px; margin-right: 0px;}
 
+        .settings-button-container {
+            text-align: right;
+        }
 
-        /* Reusing .add-baby-form class for babyForm (add/edit) */
         .baby-profile, .add-baby-form, .log-entry-form {
             background-color: #fdfdff;
             padding: 20px;
@@ -120,7 +149,6 @@
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
         }
-        /* Specific style for the generic babyForm */
         #babyForm {
              margin-bottom: 20px;
         }
@@ -213,9 +241,9 @@
             margin-bottom: 15px;
             border-radius: 5px;
         }
-        .notification-granted { background-color: #c6f6d5; color: #2f855a; } /* Green */
-        .notification-denied { background-color: #fed7d7; color: #c53030; } /* Red */
-        .notification-default { background-color: #feebc8; color: #975a16; } /* Yellow */
+        .notification-granted { background-color: #c6f6d5; color: #2f855a; }
+        .notification-denied { background-color: #fed7d7; color: #c53030; }
+        .notification-default { background-color: #feebc8; color: #975a16; }
 
         .summary-item {
             background: #e9f5ff;
@@ -225,15 +253,22 @@
         }
         .summary-item strong { color: var(--primary-color); }
 
-        .baby-actions button {
-            width: calc(33% - 10px); /* Adjust for margins */
-            margin: 5px;
-        }
         .baby-actions {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-around; /* Distribute space for main actions */
             flex-wrap: wrap;
+            margin-bottom: 10px; /* Add some space below action groups */
         }
+        .baby-actions button {
+            /* flex-basis ensures buttons try to take up space but can shrink/grow */
+            flex-basis: calc(33.333% - 10px); /* For 3 buttons per row roughly */
+            margin: 5px;
+        }
+        .fast-logging-actions button {
+            flex-basis: calc(25% - 10px); /* For 4 buttons per row */
+        }
+
+
         .timer-display {
             font-size: 1.5em;
             font-weight: bold;
@@ -241,35 +276,63 @@
             text-align: center;
             margin: 10px 0;
         }
+
+        #developmentalAdviceSection {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6fffa; /* Light teal background */
+            border-radius: 8px;
+            border-left: 5px solid var(--accent-color);
+        }
+        #developmentalAdviceSection h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+        #adviceText {
+            font-style: italic;
+            color: var(--text-color);
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Baby Care Hub 🍼</h1>
+        <h1 data-lang="appName">Baby Care Hub 🍼</h1>
 
-        <div id="notificationStatus" class="notification-status">Checking notification permissions...</div>
-
-        <div class="baby-selector">
-            <label for="babySelect">Select Baby:</label>
-            <select id="babySelect"></select>
-            <button onclick="showBabyForm('add')">➕ Add New Baby</button>
-            <button onclick="showBabyForm('edit')" id="editBabyButton">✏️ Edit Baby</button>
-            <button class="danger" onclick="deleteCurrentBaby()">🗑️ Delete Current Baby</button>
+        <div class="language-switcher">
+            <button id="langEnBtn" onclick="setLanguage('en')">English</button>
+            <button id="langFrBtn" onclick="setLanguage('fr')">Français</button>
         </div>
+
+        <div id="notificationStatus" class="notification-status" data-lang-notification="checking">Checking notification permissions...</div>
+
+        <div class="top-controls">
+            <div class="baby-selector">
+                <label for="babySelect" data-lang="selectBaby">Select Baby:</label>
+                <select id="babySelect"></select>
+                <button onclick="showBabyForm('add')" data-lang="addNewBabyBtn">➕ Add New Baby</button>
+                <button onclick="showBabyForm('edit')" id="editBabyButton" data-lang="editBabyBtn">✏️ Edit Baby</button>
+                <button class="danger" onclick="deleteCurrentBaby()" data-lang="deleteBabyBtn">🗑️ Delete Current Baby</button>
+            </div>
+            <div class="settings-button-container">
+                <button onclick="showSettingsModal()" data-lang="settingsBtn">⚙️ Settings</button>
+            </div>
+        </div>
+
 
         <div id="babyForm" class="add-baby-form hidden">
             <h2 id="babyFormTitle"></h2>
             <div id="babyFormPhotoPreview" style="text-align: center; margin-bottom: 15px;">
                 <img id="formPhoto" src="https://via.placeholder.com/80?text=Baby" alt="Baby Photo">
             </div>
-            <label for="babyName">Name:</label>
-            <input type="text" id="babyName" placeholder="e.g., Baby A">
-            <label for="babyDob">Date of Birth:</label>
+            <label for="babyName" data-lang="babyNameLabel">Name:</label>
+            <input type="text" id="babyName" data-lang-placeholder="babyNamePlaceholder">
+            <label for="babyDob" data-lang="babyDobLabel">Date of Birth:</label>
             <input type="date" id="babyDob">
-            <label for="babyPhoto">Photo Upload (optional):</label>
+            <label for="babyPhoto" data-lang="babyPhotoLabel">Photo Upload (optional):</label>
             <input type="file" id="babyPhoto" accept="image/*">
             <button id="saveBabyButton" onclick="saveBabyProfileHandler()"></button>
-            <button class="secondary" onclick="hideBabyForm()">Cancel</button>
+            <button class="secondary" onclick="hideBabyForm()" data-lang="cancelBtn">Cancel</button>
         </div>
 
         <div id="babyProfile" class="baby-profile hidden">
@@ -282,43 +345,55 @@
                 </div>
             </div>
 
-            <h3>Quick Actions</h3>
+            <h3 data-lang="quickActionsTitle">Quick Actions</h3>
             <div class="baby-actions">
-                <button onclick="showLogModal('milk')">🥛 Log Milk</button>
-                <button onclick="showLogModal('diaper')">👶 Log Diaper</button>
-                <button onclick="showLogModal('sleep')">😴 Log Sleep</button>
+                <button onclick="showLogModal('milk')" data-lang="logMilkBtn">🥛 Log Milk</button>
+                <button onclick="showLogModal('diaper')" data-lang="logDiaperBtn">👶 Log Diaper</button>
+                <button onclick="showLogModal('sleep')" data-lang="logSleepBtn">😴 Log Sleep</button>
             </div>
-            <button onclick="showLogModal('note')" class="secondary" style="width: calc(100% - 10px); margin-top:10px;">📝 Add Note</button>
+            <button onclick="showLogModal('note')" class="secondary" style="width: calc(100% - 10px); margin-top:10px;" data-lang="addNoteBtn">📝 Add Note</button>
 
-            <h3>Summary</h3>
+            <h3 data-lang="fastLoggingTitle">⚡️ Fast Logging</h3>
+            <div class="baby-actions fast-logging-actions">
+                <button id="fastLogMilkBtn" onclick="fastLogMilk()" data-lang="fastLogMilkBtn">🥛 Milk (Default)</button>
+                <button id="fastLogPeeBtn" onclick="fastLogDiaper('wet')" data-lang="fastLogPeeBtn">💧 Pee</button>
+                <button id="fastLogPooBtn" onclick="fastLogDiaper('dirty')" data-lang="fastLogPooBtn">💩 Poo</button>
+                <button id="fastLogVitaminDBtn" onclick="fastLogVitaminD()" data-lang="fastLogVitaminDBtn">☀️ Vit. D</button>
+            </div>
+
+            <h3 data-lang="summaryTitle">Summary</h3>
             <div id="babySummary">
-                <p class="summary-item"><strong>Last Milk:</strong> <span id="lastMilk">N/A</span> (<span id="timeSinceLastMilk"></span>)</p>
-                <p class="summary-item"><strong>Next Feed:</strong> <span id="nextFeedSuggestion">N/A</span></p>
-                <p class="summary-item"><strong>Daily Average Milk:</strong> <span id="dailyMilkAverage">N/A</span></p>
-                <p class="summary-item"><strong>Last Diaper:</strong> <span id="lastDiaper">N/A</span> (<span id="timeSinceLastDiaper"></span>)</p>
-                <p class="summary-item"><strong>Next Diaper Check:</strong> <span id="nextDiaperCheck">N/A</span></p>
-                <p class="summary-item"><strong>Daily Average Diapers:</strong> <span id="dailyDiaperAverage">N/A</span></p>
-                <p class="summary-item"><strong>Last Sleep:</strong> <span id="lastSleep">N/A</span> (<span id="timeSinceLastSleep"></span>)</p>
+                <p class="summary-item"><strong data-lang="lastMilkLabel">Last Milk:</strong> <span id="lastMilk">N/A</span> (<span id="timeSinceLastMilk"></span>)</p>
+                <p class="summary-item"><strong data-lang="nextFeedLabel">Next Feed:</strong> <span id="nextFeedSuggestion">N/A</span></p>
+                <p class="summary-item"><strong data-lang="dailyAvgMilkLabel">Daily Average Milk:</strong> <span id="dailyMilkAverage">N/A</span></p>
+                <p class="summary-item"><strong data-lang="lastDiaperLabel">Last Diaper:</strong> <span id="lastDiaper">N/A</span> (<span id="timeSinceLastDiaper"></span>)</p>
+                <p class="summary-item"><strong data-lang="nextDiaperCheckLabel">Next Diaper Check:</strong> <span id="nextDiaperCheck">N/A</span></p>
+                <p class="summary-item"><strong data-lang="dailyAvgDiapersLabel">Daily Average Diapers:</strong> <span id="dailyDiaperAverage">N/A</span></p>
+                <p class="summary-item"><strong data-lang="lastSleepLabel">Last Sleep:</strong> <span id="lastSleep">N/A</span> (<span id="timeSinceLastSleep"></span>)</p>
+                <p class="summary-item"><strong data-lang="lastVitaminDLabel">Last Vitamin D:</strong> <span id="lastVitaminD">N/A</span> (<span id="timeSinceLastVitaminD"></span>)</p>
             </div>
 
             <div id="breastfeedingTimerSection" class="hidden">
-                <h3>🤱 Breastfeeding Timer</h3>
+                <h3 data-lang="bfTimerTitle">🤱 Breastfeeding Timer</h3>
                 <div class="timer-display" id="timerDisplay">00:00:00</div>
-                <button id="startTimerBtn" onclick="startTimer()">Start Timer</button>
-                <button id="pauseTimerBtn" onclick="pauseTimer()" class="hidden">Pause Timer</button>
-                <button id="resetTimerBtn" onclick="resetTimer()" class="secondary">Reset Timer</button>
-                <button id="logTimerBtn" onclick="logTimerAsMilk()" class="accent hidden">Log as Milk Intake</button>
+                <button id="startTimerBtn" onclick="startTimer()" data-lang="startTimerBtn">Start Timer</button>
+                <button id="pauseTimerBtn" onclick="pauseTimer()" class="hidden" data-lang="pauseTimerBtn">Pause Timer</button>
+                <button id="resetTimerBtn" onclick="resetTimer()" class="secondary" data-lang="resetTimerBtn">Reset Timer</button>
+                <button id="logTimerBtn" onclick="logTimerAsMilk()" class="accent hidden" data-lang="logTimerAsMilkBtn">Log as Milk Intake</button>
+            </div>
+             
+            <div id="developmentalAdviceSection" class="hidden">
+                <h3 data-lang="devAdviceTitle">💡 Developmental Tip</h3>
+                <p id="adviceText"></p>
             </div>
 
-            <h3>Event Log</h3>
-            <ul id="eventLog" class="event-log">
-                <!-- Events will be populated here -->
-            </ul>
+            <h3 data-lang="eventLogTitle">Event Log</h3>
+            <ul id="eventLog" class="event-log"></ul>
         </div>
 
         <div id="noBabiesMessage" style="text-align:center; padding: 20px; background-color: var(--secondary-color); border-radius: 8px;">
-            <h2>Welcome!</h2>
-            <p>No babies added yet. Click "Add New Baby" to get started.</p>
+            <h2 data-lang="welcomeTitle">Welcome!</h2>
+            <p data-lang="noBabiesYetMsg">No babies added yet. Click "Add New Baby" to get started.</p>
         </div>
     </div>
 
@@ -326,39 +401,343 @@
     <div id="logModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLogModal()">×</span>
-            <h2 id="modalTitle">Log Entry</h2>
+            <h2 id="modalTitle"></h2>
             <form id="logEntryForm">
-                <!-- Dynamic fields will be inserted here by JS -->
                 <div id="modalFields"></div>
-                <button type="button" onclick="saveLogEntry()">Save Entry</button>
+                <button type="button" onclick="saveLogEntry()" data-lang="saveEntryBtn">Save Entry</button>
             </form>
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeSettingsModal()">×</span>
+            <h2 id="settingsModalTitle" data-lang="settingsModalTitle">Settings</h2>
+            <div>
+                <label for="defaultMilkAmountInput" data-lang="defaultMilkAmountLabel">Default Milk Amount (ml):</label>
+                <input type="number" id="defaultMilkAmountInput" placeholder="e.g., 120">
+            </div>
+            <!-- Add more settings here if needed -->
+            <button onclick="saveSettings()" data-lang="saveSettingsBtn">Save Settings</button>
+        </div>
+    </div>
+
+
     <script>
+        // --- Localization ---
+        const locales = {
+            en: {
+                appName: "Baby Care Hub 🍼",
+                selectBaby: "Select Baby:",
+                addNewBabyBtn: "➕ Add New Baby",
+                editBabyBtn: "✏️ Edit Baby",
+                deleteBabyBtn: "🗑️ Delete Current Baby",
+                settingsBtn: "⚙️ Settings",
+                babyFormTitleAdd: "➕ Add New Baby Profile",
+                babyFormTitleEdit: "✏️ Edit Baby Profile",
+                babyNameLabel: "Name:",
+                babyNamePlaceholder: "e.g., Baby A",
+                babyDobLabel: "Date of Birth:",
+                babyPhotoLabel: "Photo Upload (optional):",
+                saveBabyBtn: "Save Baby Profile",
+                updateBabyBtn: "Update Baby Profile",
+                cancelBtn: "Cancel",
+                profileDobPrefix: "DOB:",
+                profileAgePrefix: "Age:",
+                quickActionsTitle: "Quick Actions",
+                logMilkBtn: "🥛 Log Milk",
+                logDiaperBtn: "👶 Log Diaper",
+                logSleepBtn: "😴 Log Sleep",
+                addNoteBtn: "📝 Add Note",
+                fastLoggingTitle: "⚡️ Fast Logging",
+                fastLogMilkBtn: "🥛 Milk (Default)",
+                fastLogPeeBtn: "💧 Pee",
+                fastLogPooBtn: "💩 Poo",
+                fastLogVitaminDBtn: "☀️ Vit. D",
+                summaryTitle: "Summary",
+                lastMilkLabel: "Last Milk:",
+                nextFeedLabel: "Next Feed:",
+                dailyAvgMilkLabel: "Daily Average Milk:",
+                lastDiaperLabel: "Last Diaper:",
+                nextDiaperCheckLabel: "Next Diaper Check:",
+                dailyAvgDiapersLabel: "Daily Average Diapers:",
+                lastSleepLabel: "Last Sleep:",
+                lastVitaminDLabel: "Last Vitamin D:",
+                bfTimerTitle: "🤱 Breastfeeding Timer",
+                startTimerBtn: "Start Timer",
+                resumeTimerBtn: "Resume Timer",
+                pauseTimerBtn: "Pause Timer",
+                resetTimerBtn: "Reset Timer",
+                logTimerAsMilkBtn: "Log as Milk Intake",
+                devAdviceTitle: "💡 Developmental Tip",
+                eventLogTitle: "Event Log",
+                welcomeTitle: "Welcome!",
+                noBabiesYetMsg: 'No babies added yet. Click "Add New Baby" to get started.',
+                logModalTitleMilk: "🥛 Log Milk Intake",
+                logModalTitleDiaper: "👶 Log Diaper Change",
+                logModalTitleSleep: "😴 Log Sleep",
+                logModalTitleNote: "📝 Add Note",
+                logModalDateLabel: "Date:",
+                logModalTimeLabel: "Time:",
+                milkAmountLabel: "Amount (ml) / Duration (min):",
+                milkAmountPlaceholder: "e.g., 120 or 15 for duration",
+                milkTypeLabel: "Type:",
+                milkTypeBreastLeft: "Breast (Left)",
+                milkTypeBreastRight: "Breast (Right)",
+                milkTypeBreastBoth: "Breast (Both)",
+                milkTypeBreastTimed: "Breast (Timed)",
+                milkTypeFormula: "Formula",
+                milkTypeExpressed: "Expressed Milk",
+                notesLabel: "Notes (optional):",
+                notesPlaceholderMilk: "e.g., Baby was fussy",
+                notesPlaceholderDiaper: "e.g., Rash cream applied",
+                notesPlaceholderSleep: "e.g., Slept soundly in crib",
+                diaperTypeLabel: "Type:",
+                diaperTypeWet: "Wet",
+                diaperTypeDirty: "Dirty",
+                diaperTypeBoth: "Wet & Dirty",
+                sleepDurationLabel: "Duration (minutes):",
+                sleepDurationPlaceholder: "e.g., 90",
+                generalNoteLabel: "Note:",
+                generalNotePlaceholder: "e.g., First smile today!",
+                saveEntryBtn: "Save Entry",
+                settingsModalTitle: "Settings",
+                defaultMilkAmountLabel: "Default Milk Amount (ml):",
+                saveSettingsBtn: "Save Settings",
+                alertEnterNameDob: "Please enter baby name and date of birth.",
+                alertBabyAdded: (name) => `Baby "${name}" added successfully!`,
+                alertBabyUpdated: (name) => `Baby "${name}" updated successfully!`,
+                alertBabyDeleted: (name) => `${name} has been deleted.`,
+                alertNoBabySelectedDelete: "No baby selected to delete.",
+                alertNoBabyToEdit: "Please select a baby to edit.",
+                alertConfirmDeleteBaby: (name) => `Are you sure you want to delete ${name} and all their data? This cannot be undone.`,
+                alertConfirmDeleteEvent: "Are you sure you want to delete this event?",
+                alertEnterDateTime: "Please enter date and time for the log.",
+                alertEnterMilkAmount: "Please enter milk amount/duration.",
+                alertEnterSleepDuration: "Please enter sleep duration.",
+                alertEnterNote: "Please enter your note.",
+                alertTimerShort: "Timer duration is too short to log meaningfully (less than 30 seconds).",
+                alertTimerNotRunning: "Timer not running or duration is zero.",
+                alertNoBabyLog: "Please select or add a baby first.",
+                alertDefaultMilkPrompt: "Default milk amount not set. Please set it in Settings or enter amount for this feed:",
+                alertVitDLogged: "Vitamin D logged successfully!",
+                alertDiaperLogged: (type) => `${type} diaper logged successfully!`,
+                alertMilkLogged: "Milk logged successfully!",
+                notificationChecking: "Checking notification permissions...",
+                notificationEnabled: "✅ Notifications enabled.",
+                notificationDenied: "❌ Notifications denied. Please enable in browser settings if desired.",
+                notificationRequest: "🔔 <button onclick=\"requestNotificationPermission()\">Enable Notifications</button> for reminders.",
+                notificationTitle: "Baby Care Hub",
+                notificationBodyEnabled: "Notifications are now enabled!",
+                notificationDiaperTitle: "Diaper Check Time!",
+                notificationDiaperBody: (name) => `It's time to check ${name}'s diaper!`,
+                notificationFeedTitle: "Feeding Time Reminder!",
+                notificationFeedBody: (name) => `It's likely time to feed ${name}!`,
+                noEventsYet: "No events logged yet.",
+                logDetailsMilk: (amount, milkType, notes) => `🥛 Milk: ${amount}${milkType === 'breast_timed' ? 'min (Timed)' : 'ml'} (${milkType}). ${notes ? 'Notes: ' + notes : ''}`,
+                logDetailsDiaper: (diaperType, notes) => `👶 Diaper: ${diaperType}. ${notes ? 'Notes: ' + notes : ''}`,
+                logDetailsSleep: (duration, notes) => `😴 Sleep: ${duration} minutes. ${notes ? 'Notes: ' + notes : ''}`,
+                logDetailsNote: (noteText) => `📝 Note: ${noteText}`,
+                logDetailsVitaminD: "☀️ Vitamin D: Taken",
+                ageDays: (days) => `${days} days`,
+                ageMonths: (months) => `${months} months`,
+                ageYearsMonths: (years, months) => `${years} years, ${months} months`,
+                advice: { // **YOU NEED TO EXPAND THIS SECTION SIGNIFICANTLY**
+                    months: [ // 0-1m, 1-2m, ..., 11-12m
+                        ["Talk to your baby, they love the sound of your voice!", "Make eye contact and smile during feeds."],
+                        ["Introduce supervised tummy time for short periods.", "Show high-contrast black and white patterns."],
+                        ["Gently massage your baby to promote bonding and relaxation.", "Sing simple songs and lullabies."],
+                        ["Play peek-a-boo. It helps develop object permanence.", "Provide safe toys for grasping and mouthing."],
+                        ["Read colorful board books together, pointing at pictures.", "Describe what you are doing throughout the day."],
+                        ["Encourage reaching for toys.", "Support them in a sitting position with pillows."],
+                        ["Introduce new textures through safe-to-touch objects.", "Let them explore their reflection in a baby-safe mirror."],
+                        ["Play games that involve clapping hands or waving bye-bye.", "Start introducing simple, mashed solid foods if ready."],
+                        ["Help your baby practice pulling up to stand with support.", "Hide toys under a blanket for them to find."],
+                        ["Encourage cruising along furniture.", "Name body parts during bath time or dressing."],
+                        ["Roll a soft ball back and forth.", "Let them 'help' turn pages in a book."],
+                        ["Celebrate their first birthday! Offer new tastes and textures in food.", "Encourage simple imitation games."]
+                    ],
+                    years: [ // 1y, 2y, 3y, 4y, 5y
+                        ["Encourage walking and exploring in safe environments.", "Start using simple words and encourage them to repeat."],
+                        ["Offer crayons and paper for scribbling.", "Engage in parallel play with other children."],
+                        ["Ask simple 'what' and 'where' questions.", "Teach them to identify colors and shapes."],
+                        ["Encourage imaginative play with dolls or toy cars.", "Involve them in simple household chores like putting toys away."],
+                        ["Practice counting and recognizing numbers.", "Read longer stories and discuss the plot."]
+                    ]
+                }
+            },
+            fr: {
+                appName: "Centre de Soins Bébé 🍼",
+                selectBaby: "Sélectionner Bébé :",
+                addNewBabyBtn: "➕ Ajouter Nouveau Bébé",
+                editBabyBtn: "✏️ Modifier Bébé",
+                deleteBabyBtn: "🗑️ Supprimer Bébé Actuel",
+                settingsBtn: "⚙️ Paramètres",
+                babyFormTitleAdd: "➕ Ajouter Profil Nouveau Bébé",
+                babyFormTitleEdit: "✏️ Modifier Profil Bébé",
+                babyNameLabel: "Nom :",
+                babyNamePlaceholder: "ex: Bébé A",
+                babyDobLabel: "Date de Naissance :",
+                babyPhotoLabel: "Télécharger Photo (optionnel) :",
+                saveBabyBtn: "Enregistrer Profil Bébé",
+                updateBabyBtn: "Mettre à Jour Profil Bébé",
+                cancelBtn: "Annuler",
+                profileDobPrefix: "DDN :",
+                profileAgePrefix: "Âge :",
+                quickActionsTitle: "Actions Rapides",
+                logMilkBtn: "🥛 Enregistrer Lait",
+                logDiaperBtn: "👶 Enregistrer Couche",
+                logSleepBtn: "😴 Enregistrer Sommeil",
+                addNoteBtn: "📝 Ajouter Note",
+                fastLoggingTitle: "⚡️ Enregistrement Rapide",
+                fastLogMilkBtn: "🥛 Lait (Défaut)",
+                fastLogPeeBtn: "💧 Pipi",
+                fastLogPooBtn: "💩 Caca",
+                fastLogVitaminDBtn: "☀️ Vit. D",
+                summaryTitle: "Résumé",
+                lastMilkLabel: "Dernier Lait :",
+                nextFeedLabel: "Prochain Repas :",
+                dailyAvgMilkLabel: "Moy. Lait/Jour :",
+                lastDiaperLabel: "Dernière Couche :",
+                nextDiaperCheckLabel: "Prochain Contrôle Couche :",
+                dailyAvgDiapersLabel: "Moy. Couches/Jour :",
+                lastSleepLabel: "Dernier Sommeil :",
+                lastVitaminDLabel: "Dernière Vit. D :",
+                bfTimerTitle: "🤱 Minuteur Allaitement",
+                startTimerBtn: "Démarrer Minuteur",
+                resumeTimerBtn: "Reprendre Minuteur",
+                pauseTimerBtn: "Pause Minuteur",
+                resetTimerBtn: "Réinitialiser Minuteur",
+                logTimerAsMilkBtn: "Enregistrer comme Prise de Lait",
+                devAdviceTitle: "💡 Conseil de Développement",
+                eventLogTitle: "Journal d'Événements",
+                welcomeTitle: "Bienvenue !",
+                noBabiesYetMsg: 'Aucun bébé ajouté pour le moment. Cliquez sur "Ajouter Nouveau Bébé" pour commencer.',
+                logModalTitleMilk: "🥛 Enregistrer Prise de Lait",
+                logModalTitleDiaper: "👶 Enregistrer Changement de Couche",
+                logModalTitleSleep: "😴 Enregistrer Sommeil",
+                logModalTitleNote: "📝 Ajouter Note",
+                logModalDateLabel: "Date :",
+                logModalTimeLabel: "Heure :",
+                milkAmountLabel: "Quantité (ml) / Durée (min) :",
+                milkAmountPlaceholder: "ex: 120 ou 15 pour durée",
+                milkTypeLabel: "Type :",
+                milkTypeBreastLeft: "Sein (Gauche)",
+                milkTypeBreastRight: "Sein (Droit)",
+                milkTypeBreastBoth: "Sein (Les deux)",
+                milkTypeBreastTimed: "Sein (Minuté)",
+                milkTypeFormula: "Formule",
+                milkTypeExpressed: "Lait Tiré",
+                notesLabel: "Notes (optionnel) :",
+                notesPlaceholderMilk: "ex: Bébé était agité",
+                notesPlaceholderDiaper: "ex: Crème anti-rougeurs appliquée",
+                notesPlaceholderSleep: "ex: A bien dormi dans son berceau",
+                diaperTypeLabel: "Type :",
+                diaperTypeWet: "Mouillée",
+                diaperTypeDirty: "Sale",
+                diaperTypeBoth: "Mouillée et Sale",
+                sleepDurationLabel: "Durée (minutes) :",
+                sleepDurationPlaceholder: "ex: 90",
+                generalNoteLabel: "Note :",
+                generalNotePlaceholder: "ex: Premier sourire aujourd'hui !",
+                saveEntryBtn: "Enregistrer Entrée",
+                settingsModalTitle: "Paramètres",
+                defaultMilkAmountLabel: "Quantité de Lait par Défaut (ml) :",
+                saveSettingsBtn: "Enregistrer Paramètres",
+                alertEnterNameDob: "Veuillez entrer le nom et la date de naissance du bébé.",
+                alertBabyAdded: (name) => `Bébé "${name}" ajouté avec succès !`,
+                alertBabyUpdated: (name) => `Bébé "${name}" mis à jour avec succès !`,
+                alertBabyDeleted: (name) => `${name} a été supprimé.`,
+                alertNoBabySelectedDelete: "Aucun bébé sélectionné à supprimer.",
+                alertNoBabyToEdit: "Veuillez sélectionner un bébé à modifier.",
+                alertConfirmDeleteBaby: (name) => `Êtes-vous sûr de vouloir supprimer ${name} et toutes ses données ? Cette action est irréversible.`,
+                alertConfirmDeleteEvent: "Êtes-vous sûr de vouloir supprimer cet événement ?",
+                alertEnterDateTime: "Veuillez entrer la date et l'heure pour l'entrée.",
+                alertEnterMilkAmount: "Veuillez entrer la quantité/durée de lait.",
+                alertEnterSleepDuration: "Veuillez entrer la durée du sommeil.",
+                alertEnterNote: "Veuillez entrer votre note.",
+                alertTimerShort: "La durée du minuteur est trop courte pour être enregistrée de manière significative (moins de 30 secondes).",
+                alertTimerNotRunning: "Minuteur non démarré ou durée nulle.",
+                alertNoBabyLog: "Veuillez d'abord sélectionner ou ajouter un bébé.",
+                alertDefaultMilkPrompt: "Quantité de lait par défaut non définie. Veuillez la définir dans les Paramètres ou entrer la quantité pour ce repas :",
+                alertVitDLogged: "Vitamine D enregistrée avec succès !",
+                alertDiaperLogged: (type) => `Couche ${type === 'wet' ? 'mouillée' : 'sale'} enregistrée avec succès !`,
+                alertMilkLogged: "Lait enregistré avec succès !",
+                notificationChecking: "Vérification des permissions de notification...",
+                notificationEnabled: "✅ Notifications activées.",
+                notificationDenied: "❌ Notifications refusées. Veuillez les activer dans les paramètres du navigateur si désiré.",
+                notificationRequest: "🔔 <button onclick=\"requestNotificationPermission()\">Activer les Notifications</button> pour les rappels.",
+                notificationTitle: "Centre de Soins Bébé",
+                notificationBodyEnabled: "Les notifications sont maintenant activées !",
+                notificationDiaperTitle: "Contrôle de Couche !",
+                notificationDiaperBody: (name) => `Il est temps de vérifier la couche de ${name} !`,
+                notificationFeedTitle: "Rappel de Repas !",
+                notificationFeedBody: (name) => `Il est probablement temps de nourrir ${name} !`,
+                noEventsYet: "Aucun événement enregistré pour le moment.",
+                logDetailsMilk: (amount, milkType, notes) => `🥛 Lait : ${amount}${milkType === 'breast_timed' ? 'min (Minuté)' : 'ml'} (${milkType}). ${notes ? 'Notes : ' + notes : ''}`,
+                logDetailsDiaper: (diaperType, notes) => `👶 Couche : ${diaperType}. ${notes ? 'Notes : ' + notes : ''}`,
+                logDetailsSleep: (duration, notes) => `😴 Sommeil : ${duration} minutes. ${notes ? 'Notes : ' + notes : ''}`,
+                logDetailsNote: (noteText) => `📝 Note : ${noteText}`,
+                logDetailsVitaminD: "☀️ Vitamine D : Prise",
+                ageDays: (days) => `${days} jours`,
+                ageMonths: (months) => `${months} mois`,
+                ageYearsMonths: (years, months) => `${years} ans, ${months} mois`,
+                advice: { // **VOUS DEVEZ ÉTENDRE CETTE SECTION DE MANIÈRE SIGNIFICATIVE**
+                    months: [ // 0-1m, 1-2m, ..., 11-12m
+                        ["Parlez à votre bébé, il adore le son de votre voix !", "Établissez un contact visuel et souriez pendant les tétées."],
+                        ["Introduisez des moments sur le ventre sous surveillance pendant de courtes périodes.", "Montrez des motifs noirs et blancs à fort contraste."],
+                        ["Massez doucement votre bébé pour favoriser le lien affectif et la relaxation.", "Chantez des chansons simples et des berceuses."],
+                        ["Jouez à coucou-caché. Cela aide à développer la permanence de l'objet.", "Fournissez des jouets sûrs à saisir et à mettre en bouche."],
+                        ["Lisez ensemble des livres cartonnés colorés, en pointant les images.", "Décrivez ce que vous faites tout au long de la journée."],
+                        ["Encouragez-le à attraper des jouets.", "Soutenez-le en position assise avec des coussins."],
+                        ["Introduisez de nouvelles textures à travers des objets sûrs au toucher.", "Laissez-le explorer son reflet dans un miroir sécurisé pour bébé."],
+                        ["Jouez à des jeux qui impliquent de taper dans les mains ou de dire au revoir.", "Commencez à introduire des aliments solides simples et écrasés s'il est prêt."],
+                        ["Aidez votre bébé à s'entraîner à se mettre debout avec un support.", "Cachez des jouets sous une couverture pour qu'il les trouve."],
+                        ["Encouragez-le à se déplacer en se tenant aux meubles.", "Nommez les parties du corps pendant le bain ou l'habillage."],
+                        ["Faites rouler une balle molle d'avant en arrière.", "Laissez-le 'aider' à tourner les pages d'un livre."],
+                        ["Célébrez son premier anniversaire ! Offrez de nouveaux goûts et textures alimentaires.", "Encouragez les jeux d'imitation simples."]
+                    ],
+                    years: [ // 1an, 2ans, 3ans, 4ans, 5ans
+                        ["Encouragez la marche et l'exploration dans des environnements sûrs.", "Commencez à utiliser des mots simples et encouragez-le à les répéter."],
+                        ["Offrez des crayons et du papier pour gribouiller.", "Participez à des jeux parallèles avec d'autres enfants."],
+                        ["Posez des questions simples comme 'quoi' et 'où'.", "Apprenez-lui à identifier les couleurs et les formes."],
+                        ["Encouragez le jeu imaginatif avec des poupées ou des petites voitures.", "Impliquez-le dans des tâches ménagères simples comme ranger les jouets."],
+                        ["Entraînez-vous à compter et à reconnaître les chiffres.", "Lisez des histoires plus longues et discutez de l'intrigue."]
+                    ]
+                }
+            }
+        };
+        let currentLang = 'en'; // Default language
+
         let babies = [];
         let events = [];
         let currentBabyId = null;
         let notificationPermission = 'default';
-        let isEditing = false; // New flag for add/edit mode
+        let isEditing = false;
 
         let diaperCheckIntervalId = null;
-        let feedCheckIntervalId = null; // New interval for feed reminders
+        let feedCheckIntervalId = null;
 
-        // Timer variables
         let timerInterval = null;
         let timerSeconds = 0;
         let timerRunning = false;
 
+        let appSettings = {
+            defaultMilkAmount: null
+        };
+
         const DB_NAME = 'babyCareAppDB';
+        const SETTINGS_KEY = 'babyCareAppSettings';
+        const LANG_KEY = 'babyCareAppLang';
+
 
         // DOM Elements
         const babySelect = document.getElementById('babySelect');
-        const babyForm = document.getElementById('babyForm'); // Renamed from addBabyForm
-        const babyFormTitle = document.getElementById('babyFormTitle'); // New
-        const babyFormPhotoPreview = document.getElementById('babyFormPhotoPreview'); // New
-        const formPhoto = document.getElementById('formPhoto'); // New
-        const saveBabyButton = document.getElementById('saveBabyButton'); // New
+        const babyForm = document.getElementById('babyForm');
+        const babyFormTitle = document.getElementById('babyFormTitle');
+        const formPhoto = document.getElementById('formPhoto');
+        const saveBabyButton = document.getElementById('saveBabyButton');
 
         const babyNameInput = document.getElementById('babyName');
         const babyDobInput = document.getElementById('babyDob');
@@ -371,9 +750,8 @@
         const profileDobP = document.getElementById('profileDob');
         const profileAgeP = document.getElementById('profileAge');
         const profilePhotoImg = document.getElementById('profilePhoto');
-        const editBabyButton = document.getElementById('editBabyButton'); // New
+        const editBabyButton = document.getElementById('editBabyButton');
 
-        // Summary Spans
         const lastMilkSpan = document.getElementById('lastMilk');
         const timeSinceLastMilkSpan = document.getElementById('timeSinceLastMilk');
         const nextFeedSuggestionSpan = document.getElementById('nextFeedSuggestion');
@@ -386,27 +764,93 @@
 
         const lastSleepSpan = document.getElementById('lastSleep');
         const timeSinceLastSleepSpan = document.getElementById('timeSinceLastSleep');
+        const lastVitaminDSpan = document.getElementById('lastVitaminD'); // New
+        const timeSinceLastVitaminDSpan = document.getElementById('timeSinceLastVitaminD'); // New
         
         const logModal = document.getElementById('logModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalFields = document.getElementById('modalFields');
         let currentLogType = '';
 
-        // Timer DOM Elements
         const timerDisplay = document.getElementById('timerDisplay');
         const startTimerBtn = document.getElementById('startTimerBtn');
         const pauseTimerBtn = document.getElementById('pauseTimerBtn');
-        const resetTimerBtn = document.getElementById('resetTimerBtn');
         const logTimerBtn = document.getElementById('logTimerBtn');
         const breastfeedingTimerSection = document.getElementById('breastfeedingTimerSection');
+        
+        const settingsModal = document.getElementById('settingsModal');
+        const defaultMilkAmountInput = document.getElementById('defaultMilkAmountInput');
+
+        const developmentalAdviceSection = document.getElementById('developmentalAdviceSection');
+        const adviceText = document.getElementById('adviceText');
+
+
+        // --- Language Functions ---
+        function _(key, ...args) {
+            let string = locales[currentLang][key] || key;
+            if (typeof string === 'function') {
+                return string(...args);
+            }
+            return string;
+        }
+
+        function updateUIText() {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                el.textContent = _(key);
+            });
+            document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-lang-placeholder');
+                el.placeholder = _(key);
+            });
+             document.querySelectorAll('[data-lang-notification]').forEach(el => {
+                const key = el.getAttribute('data-lang-notification');
+                if (key === 'checking' && notificationPermission === 'default') {
+                     el.innerHTML = _('notificationRequest');
+                } else if (key === 'checking') {
+                    // This will be updated by setupNotificationPermission
+                }
+            });
+
+
+            // Update dynamic texts not covered by data-lang if necessary
+            if (babyForm.classList.contains('hidden')) {
+                 // no action needed for hidden form
+            } else {
+                babyFormTitle.textContent = isEditing ? _('babyFormTitleEdit') : _('babyFormTitleAdd');
+                saveBabyButton.textContent = isEditing ? _('updateBabyBtn') : _('saveBabyBtn');
+            }
+            if (currentBabyId) {
+                displayBabyProfile(currentBabyId); // Re-render profile with new language
+            } else {
+                 updateBabySelect(); // Handles "No babies yet"
+            }
+             setupNotificationPermission(); // Re-render notification status with new language
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem(LANG_KEY, lang);
+            document.documentElement.lang = lang;
+            document.getElementById('langEnBtn').classList.toggle('active', lang === 'en');
+            document.getElementById('langFrBtn').classList.toggle('active', lang === 'fr');
+            updateUIText();
+        }
 
 
         // --- Initialization ---
         window.onload = () => {
+            const storedLang = localStorage.getItem(LANG_KEY);
+            if (storedLang && locales[storedLang]) {
+                currentLang = storedLang;
+            }
+            setLanguage(currentLang); // This will also call updateUIText
+
+            loadSettings();
             loadData();
             updateBabySelect();
+
             if (babies.length > 0) {
-                // If a previous baby was selected, try to load that one
                 const initialBabyId = babies.some(b => b.id === currentBabyId) ? currentBabyId : babies[0].id;
                 currentBabyId = initialBabyId;
                 babySelect.value = initialBabyId;
@@ -415,13 +859,38 @@
             } else {
                 babyProfileDiv.classList.add('hidden');
                 noBabiesMessage.classList.remove('hidden');
-                editBabyButton.classList.add('hidden'); // Hide edit button if no babies
+                editBabyButton.classList.add('hidden');
             }
-            setupNotificationPermission();
-            startDiaperAndFeedCheckSchedulers(); // Start all background schedulers
+            // setupNotificationPermission is called by setLanguage -> updateUIText
+            startDiaperAndFeedCheckSchedulers();
         };
 
-        // --- Data Persistence (localStorage) ---
+        // --- Settings Management ---
+        function loadSettings() {
+            const storedSettings = localStorage.getItem(SETTINGS_KEY);
+            if (storedSettings) {
+                appSettings = JSON.parse(storedSettings);
+            }
+            defaultMilkAmountInput.value = appSettings.defaultMilkAmount || '';
+        }
+
+        function saveSettings() {
+            appSettings.defaultMilkAmount = parseInt(defaultMilkAmountInput.value) || null;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+            alert(_('saveSettingsBtn') + ' ' + _('genericSavedSuffix', 'Paramètres')); // Placeholder, improve alert
+            closeSettingsModal();
+        }
+
+        function showSettingsModal() {
+            defaultMilkAmountInput.value = appSettings.defaultMilkAmount || '';
+            settingsModal.style.display = 'flex';
+        }
+        function closeSettingsModal() {
+            settingsModal.style.display = 'none';
+        }
+
+
+        // --- Data Persistence ---
         function saveData() {
             const dataToSave = {
                 babies: babies,
@@ -441,28 +910,23 @@
             }
         }
 
-        // --- Baby Management (Add/Edit) ---
-
-        // Helper to process photo upload (returns a Promise for Base64 string or default URL)
+        // --- Baby Management ---
         function processPhotoFile(photoFile, existingPhotoUrl, babyName) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => { // Removed reject for simplicity, always resolve with a URL
                 if (photoFile) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                        resolve(reader.result); // Base64 string
+                        resolve(reader.result);
                     };
-                    reader.onerror = (error) => {
-                        console.error("FileReader error:", error);
-                        reject('Error reading photo file.');
+                    reader.onerror = () => {
+                        console.error("FileReader error");
+                        resolve(`https://via.placeholder.com/80?text=${babyName ? babyName.charAt(0) : '?'}`);
                     };
                     reader.readAsDataURL(photoFile);
-                } else if (existingPhotoUrl && existingPhotoUrl.startsWith('data:image/')) {
-                    resolve(existingPhotoUrl); // Keep existing Base64 photo
-                } else if (existingPhotoUrl && existingPhotoUrl.startsWith('http')) {
-                    resolve(existingPhotoUrl); // Keep existing placeholder URL
-                }
-                else {
-                    resolve(`https://via.placeholder.com/80?text=${babyName ? babyName.charAt(0) : '👶'}`); // Default placeholder
+                } else if (existingPhotoUrl) {
+                    resolve(existingPhotoUrl);
+                } else {
+                    resolve(`https://via.placeholder.com/80?text=${babyName ? babyName.charAt(0) : '?'}`);
                 }
             });
         }
@@ -474,26 +938,25 @@
             if (isEditing) {
                 const baby = babies.find(b => b.id === currentBabyId);
                 if (!baby) {
-                    alert("Please select a baby to edit.");
+                    alert(_('alertNoBabyToEdit'));
                     hideBabyForm();
                     return;
                 }
-                babyFormTitle.textContent = '✏️ Edit Baby Profile';
-                saveBabyButton.textContent = 'Update Baby Profile';
+                babyFormTitle.textContent = _('babyFormTitleEdit');
+                saveBabyButton.textContent = _('updateBabyBtn');
                 babyNameInput.value = baby.name;
                 babyDobInput.value = baby.dob;
-                formPhoto.src = baby.photo; // Display current photo
-                babyPhotoInput.value = ''; // Clear file input for a new selection
-                babyFormPhotoPreview.classList.remove('hidden'); // Show photo preview
+                formPhoto.src = baby.photo;
+                babyPhotoInput.value = '';
             } else {
-                babyFormTitle.textContent = '➕ Add New Baby Profile';
-                saveBabyButton.textContent = 'Save Baby Profile';
+                babyFormTitle.textContent = _('babyFormTitleAdd');
+                saveBabyButton.textContent = _('saveBabyBtn');
                 babyNameInput.value = '';
                 babyDobInput.value = '';
                 babyPhotoInput.value = '';
-                formPhoto.src = `https://via.placeholder.com/80?text=👶`; // Default placeholder
-                babyFormPhotoPreview.classList.remove('hidden'); // Keep photo preview visible
+                formPhoto.src = `https://via.placeholder.com/80?text=👶`;
             }
+             babyFormPhotoPreview.classList.remove('hidden');
         }
 
         function hideBabyForm() {
@@ -506,7 +969,7 @@
             const photoFile = babyPhotoInput.files[0];
 
             if (!name || !dob) {
-                alert('Please enter baby name and date of birth.');
+                alert(_('alertEnterNameDob'));
                 return;
             }
 
@@ -532,59 +995,45 @@
                     babies.push(newBaby);
                     saveData();
                     updateBabySelect();
-                    currentBabyId = newBaby.id; // Automatically select the new baby
+                    currentBabyId = newBaby.id;
                     babySelect.value = newBaby.id;
                     displayBabyProfile(newBaby.id);
                     hideBabyForm();
                     noBabiesMessage.classList.add('hidden');
-                    alert(`Baby "${name}" added successfully!`);
-                })
-                .catch(error => {
-                    alert(`Error adding baby: ${error}`);
+                    alert(_('alertBabyAdded', name));
                 });
         }
 
         function updateBaby(name, dob, photoFile) {
             const baby = babies.find(b => b.id === currentBabyId);
-            if (!baby) {
-                alert("Error: Baby not found for update.");
-                hideBabyForm();
-                return;
-            }
+            if (!baby) return;
 
             processPhotoFile(photoFile, baby.photo, name)
                 .then(photoBase64 => {
                     baby.name = name;
                     baby.dob = dob;
-                    baby.photo = photoBase64; // Update photo
+                    baby.photo = photoBase64;
                     saveData();
-                    updateBabySelect(); // Update select if name changed
-                    displayBabyProfile(currentBabyId); // Re-render profile
+                    updateBabySelect();
+                    displayBabyProfile(currentBabyId);
                     hideBabyForm();
-                    alert(`Baby "${name}" updated successfully!`);
-                })
-                .catch(error => {
-                    alert(`Error updating baby: ${error}`);
+                    alert(_('alertBabyUpdated', name));
                 });
         }
 
         function deleteCurrentBaby() {
             if (!currentBabyId) {
-                alert("No baby selected to delete.");
+                alert(_('alertNoBabySelectedDelete'));
                 return;
             }
             const babyToDelete = babies.find(b => b.id === currentBabyId);
             if (!babyToDelete) return;
 
-            if (confirm(`Are you sure you want to delete ${babyToDelete.name} and all their data? This cannot be undone.`)) {
+            if (confirm(_('alertConfirmDeleteBaby', babyToDelete.name))) {
                 babies = babies.filter(baby => baby.id !== currentBabyId);
-                events = events.filter(event => event.babyId !== currentBabyId); // Also delete associated events
+                events = events.filter(event => event.babyId !== currentBabyId);
                 
-                if (babies.length > 0) {
-                    currentBabyId = babies[0].id; // Select the first baby remaining
-                } else {
-                    currentBabyId = null; // No babies left
-                }
+                currentBabyId = babies.length > 0 ? babies[0].id : null;
                 
                 saveData();
                 updateBabySelect();
@@ -594,10 +1043,10 @@
                 } else {
                     babyProfileDiv.classList.add('hidden');
                     noBabiesMessage.classList.remove('hidden');
-                    editBabyButton.classList.add('hidden'); // Hide edit button
+                    editBabyButton.classList.add('hidden');
                 }
-                alert(`${babyToDelete.name} has been deleted.`);
-                resetTimer(); // Reset timer if current baby was deleted
+                alert(_('alertBabyDeleted', babyToDelete.name));
+                resetTimer();
             }
         }
 
@@ -605,15 +1054,18 @@
             babySelect.innerHTML = '';
             if (babies.length === 0) {
                 const option = document.createElement('option');
-                option.textContent = 'No babies yet';
+                option.textContent = _('noBabiesYetMsg').split('.')[0]; // Shorten "No babies yet"
                 option.disabled = true;
                 babySelect.appendChild(option);
-                document.querySelector('.baby-selector button.danger').classList.add('hidden'); // Hide delete button
-                editBabyButton.classList.add('hidden'); // Hide edit button
+                document.querySelector('.baby-selector button.danger').classList.add('hidden');
+                editBabyButton.classList.add('hidden');
+                noBabiesMessage.classList.remove('hidden');
+                babyProfileDiv.classList.add('hidden');
                 return;
             }
+            noBabiesMessage.classList.add('hidden');
             document.querySelector('.baby-selector button.danger').classList.remove('hidden');
-            editBabyButton.classList.remove('hidden'); // Show edit button
+            editBabyButton.classList.remove('hidden');
 
 
             babies.forEach(baby => {
@@ -629,9 +1081,9 @@
 
         babySelect.addEventListener('change', (e) => {
             currentBabyId = e.target.value;
-            saveData(); // Save the new currentBabyId
+            saveData();
             displayBabyProfile(currentBabyId);
-            resetTimer(); // Reset timer when switching babies
+            resetTimer();
         });
 
         function displayBabyProfile(babyId) {
@@ -639,21 +1091,25 @@
             if (!baby) {
                 babyProfileDiv.classList.add('hidden');
                 noBabiesMessage.classList.remove('hidden');
-                editBabyButton.classList.add('hidden'); // Hide edit button
+                editBabyButton.classList.add('hidden');
+                developmentalAdviceSection.classList.add('hidden');
                 return;
             }
 
             babyProfileDiv.classList.remove('hidden');
             noBabiesMessage.classList.add('hidden');
-            editBabyButton.classList.remove('hidden'); // Show edit button
+            editBabyButton.classList.remove('hidden');
 
             profileNameH2.textContent = baby.name;
-            profileDobP.textContent = `DOB: ${new Date(baby.dob).toLocaleDateString()}`;
-            profileAgeP.textContent = `Age: ${calculateAge(baby.dob)}`;
-            profilePhotoImg.src = baby.photo; // Use Base64 string directly
+            profileDobP.textContent = `${_('profileDobPrefix')} ${new Date(baby.dob).toLocaleDateString(currentLang)}`;
+            const ageInfo = calculateAge(baby.dob);
+            profileAgeP.textContent = `${_('profileAgePrefix')} ${ageInfo.text}`;
+            profilePhotoImg.src = baby.photo;
             profilePhotoImg.alt = `${baby.name}'s photo`;
             
-            breastfeedingTimerSection.classList.remove('hidden'); // Show timer section for selected baby
+            breastfeedingTimerSection.classList.remove('hidden');
+            displayDevelopmentalAdvice(ageInfo.totalMonths, ageInfo.totalYears);
+
 
             renderEventLog(babyId);
             updateSummary(babyId);
@@ -666,88 +1122,114 @@
             ageMonths -= dob.getMonth();
             ageMonths += today.getMonth();
             
-            if (ageMonths < 0) ageMonths = 0; // Should not happen if DOB is in past
+            let totalYears = 0;
+            let text = "";
+
+            if (ageMonths < 0) ageMonths = 0;
 
             if (ageMonths < 1) {
                 const ageDays = Math.floor((today - dob) / (1000 * 60 * 60 * 24));
-                return `${ageDays} days`;
+                text = _('ageDays', ageDays);
+            } else if (ageMonths < 12) { // Changed from 24 to 12 for monthly advice up to 1 year
+                text = _('ageMonths', ageMonths);
+            } else {
+                totalYears = Math.floor(ageMonths / 12);
+                const remainingMonths = ageMonths % 12;
+                text = _('ageYearsMonths', totalYears, remainingMonths);
             }
-            if (ageMonths < 24) {
-                return `${ageMonths} months`;
-            }
-            const ageYears = Math.floor(ageMonths / 12);
-            const remainingMonths = ageMonths % 12;
-            return `${ageYears} years, ${remainingMonths} months`;
+            return { text: text, totalMonths: ageMonths, totalYears: totalYears };
         }
+
+        function displayDevelopmentalAdvice(totalMonths, totalYears) {
+            let advicePool = [];
+            if (totalMonths < 12) { // Use monthly advice for the first year
+                advicePool = locales[currentLang].advice.months[totalMonths] || [];
+            } else if (totalYears <= 5) { // Use yearly advice from 1 to 5 years
+                 // totalYears will be 1 for 12-23 months, 2 for 24-35 months etc.
+                 // advice.years is 0-indexed for 1-year-olds, 1 for 2-year-olds...
+                advicePool = locales[currentLang].advice.years[totalYears - 1] || [];
+            }
+
+            if (advicePool.length > 0) {
+                const randomIndex = Math.floor(Math.random() * advicePool.length);
+                adviceText.textContent = advicePool[randomIndex];
+                developmentalAdviceSection.classList.remove('hidden');
+            } else {
+                adviceText.textContent = ""; // No advice for this age or not populated
+                developmentalAdviceSection.classList.add('hidden');
+            }
+        }
+
 
         // --- Event Logging ---
         function showLogModal(type) {
             if (!currentBabyId) {
-                alert("Please select or add a baby first.");
+                alert(_('alertNoBabyLog'));
                 return;
             }
             currentLogType = type;
-            modalFields.innerHTML = ''; // Clear previous fields
+            modalFields.innerHTML = '';
             let fieldsHtml = '';
             const now = new Date();
-            const currentTime = now.toTimeString().substring(0,5); // HH:MM
-            const currentDate = now.toISOString().substring(0,10); // YYYY-MM-DD
+            const currentTime = now.toTimeString().substring(0,5);
+            const currentDate = now.toISOString().substring(0,10);
 
             fieldsHtml += `
-                <label for="logDate">Date:</label>
+                <label for="logDate">${_('logModalDateLabel')}</label>
                 <input type="date" id="logDate" value="${currentDate}">
-                <label for="logTime">Time:</label>
+                <label for="logTime">${_('logModalTimeLabel')}</label>
                 <input type="time" id="logTime" value="${currentTime}">
             `;
 
             switch (type) {
                 case 'milk':
-                    modalTitle.textContent = '🥛 Log Milk Intake';
+                    modalTitle.textContent = _('logModalTitleMilk');
                     fieldsHtml += `
-                        <label for="milkAmount">Amount (ml) / Duration (min):</label>
-                        <input type="number" id="milkAmount" placeholder="e.g., 120 or 15 for duration">
-                        <label for="milkType">Type:</label>
+                        <label for="milkAmount">${_('milkAmountLabel')}</label>
+                        <input type="number" id="milkAmount" placeholder="${_('milkAmountPlaceholder')}">
+                        <label for="milkType">${_('milkTypeLabel')}</label>
                         <select id="milkType">
-                            <option value="breast_left">Breast (Left)</option>
-                            <option value="breast_right">Breast (Right)</option>
-                            <option value="breast_both">Breast (Both)</option>
-                            <option value="breast_timed">Breast (Timed)</option>
-                            <option value="formula">Formula</option>
-                            <option value="expressed_milk">Expressed Milk</option>
+                            <option value="breast_left">${_('milkTypeBreastLeft')}</option>
+                            <option value="breast_right">${_('milkTypeBreastRight')}</option>
+                            <option value="breast_both">${_('milkTypeBreastBoth')}</option>
+                            <option value="breast_timed">${_('milkTypeBreastTimed')}</option>
+                            <option value="formula">${_('milkTypeFormula')}</option>
+                            <option value="expressed_milk">${_('milkTypeExpressed')}</option>
                         </select>
-                        <label for="milkNotes">Notes (optional):</label>
-                        <textarea id="milkNotes" placeholder="e.g., Baby was fussy"></textarea>
+                        <label for="milkNotes">${_('notesLabel')}</label>
+                        <textarea id="milkNotes" placeholder="${_('notesPlaceholderMilk')}"></textarea>
                     `;
                     break;
                 case 'diaper':
-                    modalTitle.textContent = '👶 Log Diaper Change';
+                    modalTitle.textContent = _('logModalTitleDiaper');
                     fieldsHtml += `
-                        <label for="diaperType">Type:</label>
+                        <label for="diaperType">${_('diaperTypeLabel')}</label>
                         <select id="diaperType">
-                            <option value="wet">Wet</option>
-                            <option value="dirty">Dirty</option>
-                            <option value="both">Wet & Dirty</option>
+                            <option value="wet">${_('diaperTypeWet')}</option>
+                            <option value="dirty">${_('diaperTypeDirty')}</option>
+                            <option value="both">${_('diaperTypeBoth')}</option>
                         </select>
-                        <label for="diaperNotes">Notes (optional):</label>
-                        <textarea id="diaperNotes" placeholder="e.g., Rash cream applied"></textarea>
+                        <label for="diaperNotes">${_('notesLabel')}</label>
+                        <textarea id="diaperNotes" placeholder="${_('notesPlaceholderDiaper')}"></textarea>
                     `;
                     break;
                 case 'sleep':
-                    modalTitle.textContent = '😴 Log Sleep';
+                    modalTitle.textContent = _('logModalTitleSleep');
                     fieldsHtml += `
-                        <label for="sleepDuration">Duration (minutes):</label>
-                        <input type="number" id="sleepDuration" placeholder="e.g., 90">
-                        <label for="sleepNotes">Notes (optional):</label>
-                        <textarea id="sleepNotes" placeholder="e.g., Slept soundly in crib"></textarea>
+                        <label for="sleepDuration">${_('sleepDurationLabel')}</label>
+                        <input type="number" id="sleepDuration" placeholder="${_('sleepDurationPlaceholder')}">
+                        <label for="sleepNotes">${_('notesLabel')}</label>
+                        <textarea id="sleepNotes" placeholder="${_('notesPlaceholderSleep')}"></textarea>
                     `;
                     break;
                 case 'note':
-                    modalTitle.textContent = '📝 Add Note';
+                    modalTitle.textContent = _('logModalTitleNote');
                      fieldsHtml += `
-                        <label for="generalNote">Note:</label>
-                        <textarea id="generalNote" placeholder="e.g., First smile today!"></textarea>
+                        <label for="generalNote">${_('generalNoteLabel')}</label>
+                        <textarea id="generalNote" placeholder="${_('generalNotePlaceholder')}"></textarea>
                     `;
                     break;
+                // No modal for vitaminD, it's fast-add only for now
             }
             modalFields.innerHTML = fieldsHtml;
             logModal.style.display = 'flex';
@@ -763,7 +1245,7 @@
             const date = document.getElementById('logDate').value;
             const time = document.getElementById('logTime').value;
             if (!date || !time) {
-                alert("Please enter date and time for the log.");
+                alert(_('alertEnterDateTime'));
                 return;
             }
             const timestamp = new Date(`${date}T${time}`).toISOString();
@@ -782,8 +1264,8 @@
                     eventData.amount = document.getElementById('milkAmount').value;
                     eventData.milkType = document.getElementById('milkType').value;
                     eventData.notes = document.getElementById('milkNotes').value;
-                    if (!eventData.amount) { alert("Please enter milk amount/duration."); return; }
-                    if (baby) baby.notifiedForFeed = false; // Reset notification flag for this baby
+                    if (!eventData.amount) { alert(_('alertEnterMilkAmount')); return; }
+                    if (baby) baby.notifiedForFeed = false;
                     break;
                 case 'diaper':
                     eventData.diaperType = document.getElementById('diaperType').value;
@@ -793,11 +1275,11 @@
                 case 'sleep':
                     eventData.duration = document.getElementById('sleepDuration').value;
                     eventData.notes = document.getElementById('sleepNotes').value;
-                    if (!eventData.duration) { alert("Please enter sleep duration."); return; }
+                    if (!eventData.duration) { alert(_('alertEnterSleepDuration')); return; }
                     break;
                 case 'note':
                     eventData.noteText = document.getElementById('generalNote').value;
-                    if (!eventData.noteText) { alert("Please enter your note."); return; }
+                    if (!eventData.noteText) { alert(_('alertEnterNote')); return; }
                     break;
             }
 
@@ -807,13 +1289,81 @@
             updateSummary(currentBabyId);
             closeLogModal();
         }
+
+        // --- Fast Logging Functions ---
+        function fastLogMilk() {
+            if (!currentBabyId) { alert(_('alertNoBabyLog')); return; }
+            let amount = appSettings.defaultMilkAmount;
+            if (!amount) {
+                const userInput = prompt(_('alertDefaultMilkPrompt'));
+                if (userInput === null || userInput.trim() === "") return; // User cancelled or entered nothing
+                amount = parseInt(userInput);
+                if (isNaN(amount) || amount <= 0) {
+                    alert(_('alertEnterMilkAmount')); return;
+                }
+            }
+
+            const now = new Date();
+            const eventData = {
+                id: 'event_' + Date.now(),
+                babyId: currentBabyId,
+                type: 'milk',
+                timestamp: now.toISOString(),
+                amount: amount,
+                milkType: 'formula', // Default for fast log, or make it configurable
+                notes: _('fastLoggingTitle') // "Fast Logging"
+            };
+            events.push(eventData);
+            const baby = babies.find(b => b.id === currentBabyId);
+            if (baby) baby.notifiedForFeed = false;
+            saveData();
+            renderEventLog(currentBabyId);
+            updateSummary(currentBabyId);
+            alert(_('alertMilkLogged'));
+        }
+
+        function fastLogDiaper(type) { // type is 'wet' or 'dirty'
+            if (!currentBabyId) { alert(_('alertNoBabyLog')); return; }
+            const now = new Date();
+            const eventData = {
+                id: 'event_' + Date.now(),
+                babyId: currentBabyId,
+                type: 'diaper',
+                timestamp: now.toISOString(),
+                diaperType: type,
+                notes: _('fastLoggingTitle')
+            };
+            events.push(eventData);
+            scheduleNextDiaperCheck(currentBabyId, now.toISOString());
+            saveData();
+            renderEventLog(currentBabyId);
+            updateSummary(currentBabyId);
+            alert(_('alertDiaperLogged', type === 'wet' ? _('diaperTypeWet') : _('diaperTypeDirty')));
+        }
+
+        function fastLogVitaminD() {
+            if (!currentBabyId) { alert(_('alertNoBabyLog')); return; }
+            const now = new Date();
+            const eventData = {
+                id: 'event_' + Date.now(),
+                babyId: currentBabyId,
+                type: 'vitaminD',
+                timestamp: now.toISOString(),
+                notes: _('fastLoggingTitle')
+            };
+            events.push(eventData);
+            saveData();
+            renderEventLog(currentBabyId);
+            updateSummary(currentBabyId);
+            alert(_('alertVitDLogged'));
+        }
         
         function deleteEvent(eventId) {
-            if (confirm("Are you sure you want to delete this event?")) {
+            if (confirm(_('alertConfirmDeleteEvent'))) {
                 events = events.filter(event => event.id !== eventId);
                 saveData();
-                renderEventLog(currentBabyId); // Re-render for the current baby
-                updateSummary(currentBabyId);   // Update summary as well
+                renderEventLog(currentBabyId);
+                updateSummary(currentBabyId);
             }
         }
 
@@ -821,29 +1371,44 @@
             eventLogUl.innerHTML = '';
             const babyEvents = events
                 .filter(event => event.babyId === babyId)
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             if (babyEvents.length === 0) {
-                eventLogUl.innerHTML = '<li>No events logged yet.</li>';
+                eventLogUl.innerHTML = `<li>${_('noEventsYet')}</li>`;
                 return;
             }
 
             babyEvents.forEach(event => {
                 const li = document.createElement('li');
-                const eventTime = new Date(event.timestamp).toLocaleString();
+                const eventTime = new Date(event.timestamp).toLocaleString(currentLang, {dateStyle: 'short', timeStyle: 'short'});
                 let details = '';
+                let milkTypeDisplay = event.milkType; // Default
+                if (event.milkType && locales[currentLang]['milkType' + event.milkType.charAt(0).toUpperCase() + event.milkType.slice(1).replace('_', '')]) {
+                    milkTypeDisplay = _('milkType' + event.milkType.charAt(0).toUpperCase() + event.milkType.slice(1).replace('_', ''));
+                } else if (event.milkType) { // Fallback for types not fully translated e.g. breast_timed
+                    milkTypeDisplay = event.milkType.replace('_', ' ');
+                }
+
+
                 switch (event.type) {
                     case 'milk':
-                        details = `🥛 Milk: ${event.amount}ml ${event.milkType === 'breast_timed' ? '(Timed)' : ''} (${event.milkType}). ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        details = _('logDetailsMilk', event.amount, milkTypeDisplay, event.notes);
                         break;
                     case 'diaper':
-                        details = `👶 Diaper: ${event.diaperType}. ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        let diaperTypeDisplay = event.diaperType;
+                        if(event.diaperType === 'wet') diaperTypeDisplay = _('diaperTypeWet');
+                        else if(event.diaperType === 'dirty') diaperTypeDisplay = _('diaperTypeDirty');
+                        else if(event.diaperType === 'both') diaperTypeDisplay = _('diaperTypeBoth');
+                        details = _('logDetailsDiaper', diaperTypeDisplay, event.notes);
                         break;
                     case 'sleep':
-                        details = `😴 Sleep: ${event.duration} minutes. ${event.notes ? 'Notes: ' + event.notes : ''}`;
+                        details = _('logDetailsSleep', event.duration, event.notes);
                         break;
                     case 'note':
-                        details = `📝 Note: ${event.noteText}`;
+                        details = _('logDetailsNote', event.noteText);
+                        break;
+                    case 'vitaminD':
+                        details = _('logDetailsVitaminD');
                         break;
                 }
                 li.innerHTML = `<strong>${eventTime}</strong>: ${details} <button class="danger" style="float: right; padding: 3px 6px; font-size: 0.8em;" onclick="deleteEvent('${event.id}')">X</button>`;
@@ -851,111 +1416,121 @@
             });
         }
 
-        // Helper to format time differences (e.g., "5m ago", "2h from now")
         function formatTimeDifference(ms) {
             const absMs = Math.abs(ms);
-            const sign = ms < 0 ? 'from now' : 'ago';
+            const prefix = ms < 0 ? _('timeFromNowPrefix', '') : ''; // e.g. "in " or ""
+            const suffix = ms < 0 ? _('timeFromNowSuffix', 'from now') : _('timeAgoSuffix', 'ago');
+            
             const seconds = Math.floor(absMs / 1000);
             const minutes = Math.floor(seconds / 60);
             const hours = Math.floor(minutes / 60);
             const days = Math.floor(hours / 24);
 
-            if (days > 0) return `${days}d ${hours % 24}h ${sign}`;
-            if (hours > 0) return `${hours}h ${minutes % 60}m ${sign}`;
-            if (minutes > 0) return `${minutes}m ${seconds % 60}s ${sign}`;
-            if (seconds > 0) return `${seconds}s ${sign}`;
-            return 'just now';
+            if (days > 0) return `${prefix}${days}d ${hours % 24}h ${suffix}`;
+            if (hours > 0) return `${prefix}${hours}h ${minutes % 60}m ${suffix}`;
+            if (minutes > 0) return `${prefix}${minutes}m ${seconds % 60}s ${suffix}`;
+            if (seconds > 0) return `${prefix}${seconds}s ${suffix}`;
+            return _('timeJustNow', 'just now');
         }
 
-        // Calculates average interval between consecutive events (newest to oldest)
+
         function calculateAverageInterval(eventsArray) {
-            if (eventsArray.length < 2) return null; // Need at least two events for an interval
-            
+            if (eventsArray.length < 2) return null;
             let totalInterval = 0;
             for (let i = 0; i < eventsArray.length - 1; i++) {
                 const currentEventTime = new Date(eventsArray[i].timestamp).getTime();
                 const nextEventTime = new Date(eventsArray[i+1].timestamp).getTime();
                 totalInterval += (currentEventTime - nextEventTime);
             }
-            return totalInterval / (eventsArray.length - 1); // Average interval in ms
+            return totalInterval / (eventsArray.length - 1);
         }
 
         function updateSummary(babyId) {
             const babyEvents = events
                 .filter(event => event.babyId === babyId)
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-            const lastMilkEvent = babyEvents.find(e => e.type === 'milk');
-            const lastDiaperEvent = babyEvents.find(e => e.type === 'diaper');
-            const lastSleepEvent = babyEvents.find(e => e.type === 'sleep');
             const now = new Date();
+            const timeOpts = {hour: '2-digit', minute:'2-digit'};
 
-            // Last Milk
-            lastMilkSpan.textContent = lastMilkEvent ? `${new Date(lastMilkEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastMilkEvent.amount}ml ${lastMilkEvent.milkType})` : 'N/A';
+            // Milk
+            const lastMilkEvent = babyEvents.find(e => e.type === 'milk');
+            let milkTypeDisplaySummary = lastMilkEvent ? lastMilkEvent.milkType : '';
+            if (lastMilkEvent && lastMilkEvent.milkType && locales[currentLang]['milkType' + lastMilkEvent.milkType.charAt(0).toUpperCase() + lastMilkEvent.milkType.slice(1).replace('_','')]) {
+                 milkTypeDisplaySummary = _('milkType' + lastMilkEvent.milkType.charAt(0).toUpperCase() + lastMilkEvent.milkType.slice(1).replace('_',''));
+            } else if (lastMilkEvent && lastMilkEvent.milkType) {
+                 milkTypeDisplaySummary = lastMilkEvent.milkType.replace('_',' ');
+            }
+
+            lastMilkSpan.textContent = lastMilkEvent ? `${new Date(lastMilkEvent.timestamp).toLocaleTimeString(currentLang, timeOpts)} (${lastMilkEvent.amount}${lastMilkEvent.milkType === 'breast_timed' ? 'min' : 'ml'} ${milkTypeDisplaySummary})` : 'N/A';
             timeSinceLastMilkSpan.textContent = lastMilkEvent ? formatTimeDifference(now - new Date(lastMilkEvent.timestamp)) : '';
-
-            // Next Feed Suggestion
+            
             const milkEventsForBaby = babyEvents.filter(e => e.type === 'milk');
             if (lastMilkEvent && milkEventsForBaby.length > 0) {
-                const averageFeedInterval = calculateAverageInterval(milkEventsForBaby); // in ms
+                const averageFeedInterval = calculateAverageInterval(milkEventsForBaby);
                 let nextFeedTime;
                 if (averageFeedInterval) {
                     nextFeedTime = new Date(new Date(lastMilkEvent.timestamp).getTime() + averageFeedInterval);
                 } else {
-                    // If only one milk event, suggest a default (e.g., 3 hours from last)
-                    nextFeedTime = new Date(new Date(lastMilkEvent.timestamp).getTime() + 3 * 60 * 60 * 1000); // 3 hours
+                    nextFeedTime = new Date(new Date(lastMilkEvent.timestamp).getTime() + 3 * 60 * 60 * 1000); // Default 3 hours
                 }
-                nextFeedSuggestionSpan.textContent = `${nextFeedTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${formatTimeDifference(nextFeedTime - now)})`;
+                nextFeedSuggestionSpan.textContent = `${nextFeedTime.toLocaleTimeString(currentLang, timeOpts)} (${formatTimeDifference(nextFeedTime - now)})`;
                 nextFeedSuggestionSpan.style.color = nextFeedTime < now ? 'var(--danger-color)' : 'var(--accent-color)';
-
-                // Update baby's nextFeedSuggestion in data for scheduler
                 const baby = babies.find(b => b.id === babyId);
                 if (baby) {
                     baby.nextFeedSuggestion = nextFeedTime.toISOString();
-                    saveData(); // Save updated baby object with new suggestion
+                    // No need to saveData here, it's derived. Save if it's a user-settable reminder.
                 }
             } else {
-                nextFeedSuggestionSpan.textContent = 'N/A (Log a feed to estimate)';
+                nextFeedSuggestionSpan.textContent = 'N/A';
                 nextFeedSuggestionSpan.style.color = 'inherit';
             }
-
-            // Daily Average Milk
             const twentyFourHoursAgo = now.getTime() - (24 * 60 * 60 * 1000);
             const milkEventsLast24h = milkEventsForBaby.filter(e => new Date(e.timestamp).getTime() >= twentyFourHoursAgo);
             const totalMilkAmount = milkEventsLast24h.reduce((sum, e) => sum + (parseInt(e.amount) || 0), 0);
-            dailyMilkAverageSpan.textContent = milkEventsLast24h.length > 0 ? `${totalMilkAmount}ml / ${milkEventsLast24h.length} feeds (last 24h)` : 'N/A';
+            dailyMilkAverageSpan.textContent = milkEventsLast24h.length > 0 ? `${totalMilkAmount}ml / ${milkEventsLast24h.length} ${_('feedsSuffix', 'feeds')} (last 24h)` : 'N/A';
 
+            // Diaper
+            const lastDiaperEvent = babyEvents.find(e => e.type === 'diaper');
+             let diaperTypeDisplaySummary = lastDiaperEvent ? lastDiaperEvent.diaperType : '';
+             if(lastDiaperEvent && lastDiaperEvent.diaperType === 'wet') diaperTypeDisplaySummary = _('diaperTypeWet');
+             else if(lastDiaperEvent && lastDiaperEvent.diaperType === 'dirty') diaperTypeDisplaySummary = _('diaperTypeDirty');
+             else if(lastDiaperEvent && lastDiaperEvent.diaperType === 'both') diaperTypeDisplaySummary = _('diaperTypeBoth');
 
-            // Last Diaper
-            lastDiaperSpan.textContent = lastDiaperEvent ? `${new Date(lastDiaperEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastDiaperEvent.diaperType})` : 'N/A';
+            lastDiaperSpan.textContent = lastDiaperEvent ? `${new Date(lastDiaperEvent.timestamp).toLocaleTimeString(currentLang, timeOpts)} (${diaperTypeDisplaySummary})` : 'N/A';
             timeSinceLastDiaperSpan.textContent = lastDiaperEvent ? formatTimeDifference(now - new Date(lastDiaperEvent.timestamp)) : '';
-
-            // Next Diaper Check
             const baby = babies.find(b => b.id === babyId);
             if (baby && baby.nextDiaperCheck) {
                 const nextCheckTime = new Date(baby.nextDiaperCheck);
-                nextDiaperCheckSpan.textContent = `${nextCheckTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${formatTimeDifference(nextCheckTime - now)})`;
+                nextDiaperCheckSpan.textContent = `${nextCheckTime.toLocaleTimeString(currentLang, timeOpts)} (${formatTimeDifference(nextCheckTime - now)})`;
                 nextDiaperCheckSpan.style.color = nextCheckTime < now ? 'var(--danger-color)' : 'var(--accent-color)';
             } else {
-                nextDiaperCheckSpan.textContent = 'N/A (Log a diaper to schedule)';
+                nextDiaperCheckSpan.textContent = 'N/A';
                 nextDiaperCheckSpan.style.color = 'inherit';
             }
-
-            // Daily Average Diapers
             const diaperEventsLast24h = babyEvents.filter(e => e.type === 'diaper' && new Date(e.timestamp).getTime() >= twentyFourHoursAgo);
-            dailyDiaperAverageSpan.textContent = diaperEventsLast24h.length > 0 ? `${diaperEventsLast24h.length} changes (last 24h)` : 'N/A';
+            dailyDiaperAverageSpan.textContent = diaperEventsLast24h.length > 0 ? `${diaperEventsLast24h.length} ${_('changesSuffix', 'changes')} (last 24h)` : 'N/A';
 
-
-            // Last Sleep
-            lastSleepSpan.textContent = lastSleepEvent ? `${new Date(lastSleepEvent.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} (${lastSleepEvent.duration} min)` : 'N/A';
+            // Sleep
+            const lastSleepEvent = babyEvents.find(e => e.type === 'sleep');
+            lastSleepSpan.textContent = lastSleepEvent ? `${new Date(lastSleepEvent.timestamp).toLocaleTimeString(currentLang, timeOpts)} (${lastSleepEvent.duration} min)` : 'N/A';
             timeSinceLastSleepSpan.textContent = lastSleepEvent ? formatTimeDifference(now - new Date(lastSleepEvent.timestamp)) : '';
+            
+            // Vitamin D
+            const lastVitaminDEvent = babyEvents.find(e => e.type === 'vitaminD');
+            lastVitaminDSpan.textContent = lastVitaminDEvent ? `${new Date(lastVitaminDEvent.timestamp).toLocaleTimeString(currentLang, timeOpts)}` : 'N/A';
+            timeSinceLastVitaminDSpan.textContent = lastVitaminDEvent ? formatTimeDifference(now - new Date(lastVitaminDEvent.timestamp)) : '';
+
+            // After updating summary, if current baby matches, save data for nextFeedSuggestion and nextDiaperCheck
+            if (baby) saveData();
         }
+
 
         // --- Notifications & Scheduling ---
         function setupNotificationPermission() {
             const statusDiv = document.getElementById('notificationStatus');
             if (!('Notification' in window)) {
-                statusDiv.textContent = 'This browser does not support desktop notifications.';
+                statusDiv.textContent = _('notificationBrowserSupportError', 'This browser does not support desktop notifications.');
                 statusDiv.className = 'notification-status notification-denied';
                 notificationPermission = 'denied';
                 return;
@@ -963,15 +1538,15 @@
 
             if (Notification.permission === 'granted') {
                 notificationPermission = 'granted';
-                statusDiv.textContent = '✅ Notifications enabled.';
+                statusDiv.textContent = _('notificationEnabled');
                 statusDiv.className = 'notification-status notification-granted';
             } else if (Notification.permission === 'denied') {
                 notificationPermission = 'denied';
-                statusDiv.textContent = '❌ Notifications denied. Please enable in browser settings if desired.';
+                statusDiv.textContent = _('notificationDenied');
                 statusDiv.className = 'notification-status notification-denied';
             } else {
                 notificationPermission = 'default';
-                statusDiv.innerHTML = '🔔 <button onclick="requestNotificationPermission()">Enable Notifications</button> for reminders.';
+                statusDiv.innerHTML = _('notificationRequest');
                 statusDiv.className = 'notification-status notification-default';
             }
         }
@@ -979,9 +1554,9 @@
         function requestNotificationPermission() {
             Notification.requestPermission().then(permission => {
                 notificationPermission = permission;
-                setupNotificationPermission(); // Update UI based on new permission
+                setupNotificationPermission(); // Update UI
                 if (permission === 'granted') {
-                    showNotification('Baby Care Hub', 'Notifications are now enabled!');
+                    showNotification(_('notificationTitle'), _('notificationBodyEnabled'));
                 }
             });
         }
@@ -990,31 +1565,27 @@
             if (notificationPermission === 'granted') {
                 const options = {
                     body: body,
-                    icon: 'https://via.placeholder.com/48?text=🍼' // A generic icon
+                    icon: 'https://via.placeholder.com/48?text=🍼'
                 };
+                let fullTitle = title;
                 if (babyName) {
-                    title = `${babyName}: ${title}`;
+                    fullTitle = `${babyName}: ${title}`;
                 }
-                new Notification(title, options);
+                new Notification(fullTitle, options);
             }
         }
 
         function scheduleNextDiaperCheck(babyId, lastDiaperTimestamp) {
             const baby = babies.find(b => b.id === babyId);
             if (!baby) return;
-
-            // Schedule next check 3 hours from last change (configurable)
             const DIAPER_CHECK_INTERVAL_HOURS = 3;
-            const nextCheckTime = new Date(lastDiaperTimestamp);
+            const nextCheckTime = new Date(new Date(lastDiaperTimestamp).getTime()); // Ensure it's a new Date object from string
             nextCheckTime.setHours(nextCheckTime.getHours() + DIAPER_CHECK_INTERVAL_HOURS);
-            
             baby.nextDiaperCheck = nextCheckTime.toISOString();
-            saveData();
-            updateSummary(babyId); // Update summary immediately
+            // saveData called in updateSummary or calling function
         }
         
         function startDiaperAndFeedCheckSchedulers() {
-            // Clear existing intervals to prevent duplicates if function is called again
             if (diaperCheckIntervalId) clearInterval(diaperCheckIntervalId);
             if (feedCheckIntervalId) clearInterval(feedCheckIntervalId);
 
@@ -1023,45 +1594,34 @@
                 babies.forEach(baby => {
                     if (baby.nextDiaperCheck) {
                         const nextCheck = new Date(baby.nextDiaperCheck);
-                        // Give a small buffer (e.g., 5 seconds) past the scheduled time before notifying
-                        if (nextCheck <= now && (now.getTime() - nextCheck.getTime() < 5000)) { 
-                            showNotification('Diaper Check Time!', `It's time to check ${baby.name}'s diaper!`, baby.name);
-                            
-                            // Prevent re-notification until a new diaper is logged.
-                            // A real app might set nextDiaperCheck to null or a much later time.
-                            // For this example, we clear it.
-                            baby.nextDiaperCheck = null; 
+                        if (nextCheck <= now && (now.getTime() - nextCheck.getTime() < 60000)) { // Notify if within 1 min past due
+                            showNotification(_('notificationDiaperTitle'), _('notificationDiaperBody', baby.name), baby.name);
+                            baby.nextDiaperCheck = null; // Clear to prevent re-notification
                             saveData();
-                            if (baby.id === currentBabyId) {
-                                updateSummary(baby.id); // Update UI for the current baby
-                            }
+                            if (baby.id === currentBabyId) updateSummary(baby.id);
                         }
                     }
                 });
-            }, 30 * 1000); // Check every 30 seconds for pending notifications
+            }, 30 * 1000);
 
             feedCheckIntervalId = setInterval(() => {
                 const now = new Date();
                 babies.forEach(baby => {
-                    // Check if baby.nextFeedSuggestion exists and is in the past, AND we haven't notified yet
-                    if (baby.nextFeedSuggestion) {
+                    if (baby.nextFeedSuggestion && !baby.notifiedForFeed) {
                         const nextFeed = new Date(baby.nextFeedSuggestion);
-                        // Trigger if passed the suggested time, but only if not already notified for this specific suggestion
-                        if (nextFeed <= now && !baby.notifiedForFeed) {
-                            showNotification('Feeding Time Reminder!', `It's likely time to feed ${baby.name}!`, baby.name);
-                            baby.notifiedForFeed = true; // Mark as notified
-                            saveData(); // Save the updated baby object
-                            if (baby.id === currentBabyId) {
-                                updateSummary(baby.id); // Update UI
-                            }
-                        } else if (nextFeed > now && baby.notifiedForFeed) {
-                            // If the suggestion moves to the future (e.g., new feed logged), reset the flag
-                            baby.notifiedForFeed = false;
+                        if (nextFeed <= now) {
+                            showNotification(_('notificationFeedTitle'), _('notificationFeedBody', baby.name), baby.name);
+                            baby.notifiedForFeed = true;
                             saveData();
+                            if (baby.id === currentBabyId) updateSummary(baby.id);
                         }
+                    } else if (baby.nextFeedSuggestion && baby.notifiedForFeed) {
+                         const nextFeed = new Date(baby.nextFeedSuggestion);
+                         if (nextFeed > now) baby.notifiedForFeed = false; // Reset if suggestion moves to future
+                         saveData();
                     }
                 });
-            }, 30 * 1000); // Check every 30 seconds
+            }, 30 * 1000);
         }
 
         // --- Breastfeeding Timer ---
@@ -1081,7 +1641,7 @@
             timerRunning = true;
             startTimerBtn.classList.add('hidden');
             pauseTimerBtn.classList.remove('hidden');
-            logTimerBtn.classList.add('hidden'); // Hide log button until paused/reset
+            logTimerBtn.classList.add('hidden');
 
             timerInterval = setInterval(() => {
                 timerSeconds++;
@@ -1094,7 +1654,7 @@
             timerRunning = false;
             clearInterval(timerInterval);
             startTimerBtn.classList.remove('hidden');
-            startTimerBtn.textContent = "Resume Timer";
+            startTimerBtn.textContent = _('resumeTimerBtn');
             pauseTimerBtn.classList.add('hidden');
             if (timerSeconds > 0) logTimerBtn.classList.remove('hidden');
         }
@@ -1105,55 +1665,46 @@
             timerSeconds = 0;
             updateTimerDisplay();
             startTimerBtn.classList.remove('hidden');
-            startTimerBtn.textContent = "Start Timer";
+            startTimerBtn.textContent = _('startTimerBtn');
             pauseTimerBtn.classList.add('hidden');
             logTimerBtn.classList.add('hidden');
         }
         
         function logTimerAsMilk() {
             if (!currentBabyId || timerSeconds === 0) {
-                alert("Timer not running or duration is zero.");
+                alert(_('alertTimerNotRunning'));
                 return;
             }
-
             const durationMinutes = Math.round(timerSeconds / 60);
-            if (durationMinutes === 0 && timerSeconds < 30) { // Allow logging if duration is short but not zero
-                alert("Timer duration is too short to log meaningfully (less than 30 seconds).");
+            if (durationMinutes === 0 && timerSeconds < 30) {
+                alert(_('alertTimerShort'));
                 return;
             }
-
-            // Temporarily store these values as showLogModal will reset modalFields
             const logDuration = timerSeconds; 
-
             showLogModal('milk');
-            
-            // Pre-fill modal fields after they are rendered by showLogModal
             setTimeout(() => {
-                document.getElementById('milkAmount').value = durationMinutes; // Log in minutes
+                document.getElementById('milkAmount').value = durationMinutes;
                 document.getElementById('milkType').value = 'breast_timed';
-                document.getElementById('milkNotes').value = `Timed feed: ${formatTime(logDuration)}`;
-            }, 100); // Small delay to ensure modal fields are ready
-
-            resetTimer(); // Reset timer after preparing the log entry
+                document.getElementById('milkNotes').value = `${_('bfTimerTitle')}: ${formatTime(logDuration)}`;
+            }, 100);
+            resetTimer();
         }
 
-
-        // Close modal on escape key
+        // --- Modal Global Handlers ---
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 closeLogModal();
-                hideBabyForm(); // Also close baby form
+                hideBabyForm();
+                closeSettingsModal();
             }
         });
-
-        // Close modal on outside click
         window.addEventListener('click', (event) => {
-            if (event.target === logModal) {
-                closeLogModal();
+            if (event.target === logModal) closeLogModal();
+            if (event.target === babyForm && !babyForm.contains(event.target) && !event.target.closest('.baby-selector button') && !event.target.closest('#editBabyButton')) {
+                // Check if click is outside the form and not on buttons that open it
+                // This condition is a bit tricky; might need refinement if issues arise
             }
-            if (event.target === babyForm) { // Close babyForm if clicked outside
-                hideBabyForm();
-            }
+            if (event.target === settingsModal) closeSettingsModal();
         });
 
     </script>
