@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptaVault - Secure Local Storage</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for longer content */
+            min-height: 100vh;
+            padding-top: 20px; /* Add some padding at the top */
+        }
+
+        #app-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        #auth-status {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        #lock-status.unlocked {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        #lock-status.locked {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+
+        button, .button-like-label {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 5px;
+            transition: background-color 0.2s ease;
+        }
+        .button-like-label {
+            display: inline-block; /* So it behaves like a button */
+        }
+
+
+        button:hover, .button-like-label:hover {
+            background-color: #2980b9;
+        }
+
+        button#logout-button {
+            background-color: #e74c3c;
+        }
+        button#logout-button:hover {
+            background-color: #c0392b;
+        }
+
+
+        .actions-bar {
+            margin-bottom: 20px;
+        }
+
+        #items-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            padding: 10px;
+        }
+
+        .item-entry {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-entry:last-child {
+            border-bottom: none;
+        }
+
+        .item-entry:hover {
+            background-color: #ecf0f1;
+        }
+
+        .item-entry .item-name {
+            font-weight: bold;
+        }
+        .item-entry .item-type {
+            font-size: 0.8em;
+            color: #777;
+            background-color: #eee;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+
+        #auth-screen {
+            text-align: center;
+            padding: 30px;
+        }
+
+        #auth-screen input[type="password"] {
+            display: block;
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        .message.error {
+            color: #c0392b;
+        }
+        .message.success {
+            color: #27ae60;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; /* Use flex for centering */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative; /* For close button positioning */
+            max-height: 80vh; /* Max height */
+            overflow-y: auto; /* Scroll if content too tall */
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right; /* Old school, but fine for a simple X */
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="password"],
+        .modal-content input[type="file"],
+        .modal-content select,
+        .modal-content textarea {
+            width: calc(100% - 22px); /* Account for padding */
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .password-input-container {
+            display: flex;
+            align-items: center;
+        }
+        .password-input-container input[type="password"],
+        .password-input-container input[type="text"] { /* For when toggled */
+            flex-grow: 1;
+            margin-right: 5px; /* Space before buttons */
+        }
+        .password-input-container button {
+            padding: 8px 10px; /* Smaller padding for inline buttons */
+            font-size: 0.8em;
+            margin-left: 0; /* Reset margin */
+        }
+
+
+        #view-item-content {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            word-wrap: break-word; /* Ensure long strings wrap */
+            white-space: pre-wrap; /* Preserve whitespace and newlines */
+        }
+        #view-item-content strong {
+            display: inline-block;
+            min-width: 100px; /* Align values somewhat */
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>CryptaVault</h1>
+            <div id="auth-status">
+                <span id="lock-status">Locked</span>
+                <button id="logout-button" style="display:none;">Logout</button>
+            </div>
+        </header>
+
+        <main id="main-content" style="display:none;">
+            <div class="actions-bar">
+                <button id="add-item-button">Add New Item</button>
+                <button id="export-data-button">Export Data</button>
+                <label class="button-like-label">Import Data <input type="file" id="import-file-input" accept=".json" style="display:none;"></label>
+                <button id="help-button">Help</button>
+            </div>
+            <div id="items-list">
+                <!-- Items will be rendered here -->
+            </div>
+        </main>
+
+        <div id="auth-screen">
+            <h2>Welcome to CryptaVault</h2>
+            <div id="setup-form" style="display:none;">
+                <p>Create a strong Master Password. <strong>If you forget this, your data will be lost forever.</strong></p>
+                <input type="password" id="setup-password" placeholder="Master Password">
+                <input type="password" id="setup-confirm-password" placeholder="Confirm Master Password">
+                <button id="create-vault-button">Create Vault</button>
+            </div>
+            <div id="login-form" style="display:none;">
+                <p>Enter your Master Password to unlock CryptaVault.</p>
+                <input type="password" id="login-password" placeholder="Master Password">
+                <button id="unlock-vault-button">Unlock Vault</button>
+            </div>
+            <p id="auth-message" class="message"></p>
+        </div>
+
+        <!-- Add/Edit Item Modal -->
+        <div id="item-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('item-modal')">×</span>
+                <h3 id="modal-title">Add New Item</h3>
+                <input type="hidden" id="item-id">
+                <label for="item-type">Type:</label>
+                <select id="item-type">
+                    <option value="password">Password</option>
+                    <option value="note">Note</option>
+                    <option value="file">File</option>
+                </select>
+
+                <div id="fields-password" class="type-fields">
+                    <label for="item-name">Name/Website:</label>
+                    <input type="text" id="item-name" placeholder="e.g., My Bank">
+                    <label for="item-username">Username:</label>
+                    <input type="text" id="item-username" placeholder="e.g., user123">
+                    <label for="item-password-value">Password:</label>
+                    <div class="password-input-container">
+                        <input type="password" id="item-password-value" placeholder="Enter password">
+                        <button type="button" id="toggle-password-visibility">Show</button>
+                         <button type="button" id="generate-password">Generate</button>
+                    </div>
+                    <label for="item-notes">Extra Notes:</label>
+                    <textarea id="item-notes" placeholder="e.g., Security questions, PIN"></textarea>
+                </div>
+
+                <div id="fields-note" class="type-fields" style="display:none;">
+                    <label for="note-title">Title:</label>
+                    <input type="text" id="note-title" placeholder="e.g., My Secret Idea">
+                    <label for="note-content">Content:</label>
+                    <textarea id="note-content" rows="10" placeholder="Your secure note..."></textarea>
+                </div>
+
+                <div id="fields-file" class="type-fields" style="display:none;">
+                    <label for="file-name">File Name (optional):</label>
+                    <input type="text" id="file-name-input" placeholder="e.g., MyPassport.pdf">
+                    <label for="file-input">Select File:</label>
+                    <input type="file" id="file-input-element">
+                    <p id="file-preview-name"></p>
+                </div>
+                <button id="save-item-button">Save Item</button>
+                <p id="modal-message" class="message"></p>
+            </div>
+        </div>
+        
+        <!-- View Item Modal -->
+        <div id="view-item-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('view-item-modal')">×</span>
+                <h3 id="view-modal-title">View Item</h3>
+                <div id="view-item-content">
+                    <!-- Decrypted content will be shown here -->
+                </div>
+                 <button id="copy-password-button" style="display:none;">Copy Password</button>
+            </div>
+        </div>
+
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeModal('help-modal')">×</span>
+                <h2>How CryptaVault Works</h2>
+                <p>CryptaVault is a secure, front-end only application for storing your sensitive data.</p>
+                <h4>Key Features & Security:</h4>
+                <ul>
+                    <li><strong>Local Storage:</strong> All your data (passwords, notes, files) is stored exclusively on <em>your device's browser</em> using IndexedDB. Nothing is ever sent to any server.</li>
+                    <li><strong>Master Password:</strong> You secure your vault with a Master Password. This password is used to derive an encryption key. <strong>It is never stored. If you forget it, your data is permanently inaccessible.</strong> There is no recovery option.</li>
+                    <li><strong>Strong Encryption:</strong>
+                        <ul>
+                            <li>Your Master Password is processed with PBKDF2 (a key derivation function) using a unique salt to create a strong encryption key.</li>
+                            <li>All your data items are individually encrypted using AES-GCM, a robust and authenticated encryption algorithm. This means your data is both confidential and protected against tampering.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Data Types:</strong> You can store passwords (with username, website, notes), general notes, and files (images, PDFs, documents), which are stored base64 encoded and then encrypted.</li>
+                    <li><strong>Export/Import:</strong> You can export all your encrypted data as a JSON file. This file contains your encrypted items and the salt needed for your Master Password. You can import this file back into CryptaVault (on the same or a different device/browser). The import will replace any existing data.</li>
+                    <li><strong>Security Considerations:</strong>
+                        <ul>
+                            <li>The security of CryptaVault relies on the strength of your Master Password and the security of your device and browser.</li>
+                            <li>Ensure your device is free from malware. Malicious software (like keyloggers) or compromised browser extensions could potentially intercept your Master Password as you type it.</li>
+                            <li>Your derived encryption key exists in your browser's memory only while the vault is unlocked. Closing the tab or browser clears it.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h4>Usage:</h4>
+                <ol>
+                    <li><strong>First Use:</strong> Create a strong Master Password. Remember it!</li>
+                    <li><strong>Unlocking:</strong> Enter your Master Password to access your vault.</li>
+                    <li><strong>Adding Items:</strong> Click "Add New Item", choose the type, fill in the details, and save.</li>
+                    <li><strong>Viewing/Editing:</strong> Click on an item in the list to view its details. Editing is available from the view.</li>
+                    <li><strong>Deleting:</strong> Delete items from their view/edit screen.</li>
+                    <li><strong>Export:</strong> Click "Export Data" to save an encrypted backup of your vault. Keep this file safe.</li>
+                    <li><strong>Import:</strong> Click "Import Data" and select your previously exported JSON file. <strong>Warning: Importing will overwrite any current data in the vault.</strong></li>
+                    <li><strong>Logout:</strong> Click "Logout" to lock your vault. It also locks automatically when you close the browser/tab.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // crypto.js content
+        const CryptaVaultCrypto = (() => {
+            const PBKDF2_ITERATIONS = 100000; // NIST recommendation: at least 10,000. More is better.
+            const SALT_LENGTH = 16; // 128 bits
+            const IV_LENGTH = 12;   // 96 bits for AES-GCM is recommended
+
+            // TextEncoder/Decoder are globally available in modern browsers
+            const enc = new TextEncoder();
+            const dec = new TextDecoder();
+
+            function arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+
+            function base64ToArrayBuffer(base64) {
+                const binary_string = window.atob(base64);
+                const len = binary_string.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binary_string.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            async function generateSalt() {
+                return window.crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+            }
+
+            async function deriveKey(password, salt) {
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    "raw",
+                    enc.encode(password),
+                    { name: "PBKDF2" },
+                    false,
+                    ["deriveKey"]
+                );
+                return window.crypto.subtle.deriveKey(
+                    {
+                        name: "PBKDF2",
+                        salt: salt,
+                        iterations: PBKDF2_ITERATIONS,
+                        hash: "SHA-256",
+                    },
+                    keyMaterial,
+                    { name: "AES-GCM", length: 256 },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+            }
+
+            async function encryptData(key, data) { // data can be string or ArrayBuffer
+                const iv = window.crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+                let dataToEncrypt;
+
+                if (typeof data === 'string') {
+                    dataToEncrypt = enc.encode(data);
+                } else if (data instanceof ArrayBuffer) {
+                    dataToEncrypt = data;
+                } else {
+                    throw new Error("Data to encrypt must be a string or ArrayBuffer");
+                }
+
+                const ciphertext = await window.crypto.subtle.encrypt(
+                    {
+                        name: "AES-GCM",
+                        iv: iv,
+                    },
+                    key,
+                    dataToEncrypt
+                );
+                return {
+                    iv: arrayBufferToBase64(iv),
+                    ciphertext: arrayBufferToBase64(ciphertext),
+                };
+            }
+
+            async function decryptData(key, ivBase64, ciphertextBase64, asString = true) {
+                const iv = base64ToArrayBuffer(ivBase64);
+                const ciphertext = base64ToArrayBuffer(ciphertextBase64);
+                try {
+                    const decryptedBuffer = await window.crypto.subtle.decrypt(
+                        {
+                            name: "AES-GCM",
+                            iv: iv,
+                        },
+                        key,
+                        ciphertext
+                    );
+                    if (asString) {
+                        return dec.decode(decryptedBuffer);
+                    }
+                    return decryptedBuffer; // Return ArrayBuffer for files
+                } catch (e) {
+                    console.error("Decryption failed:", e);
+                    throw new Error("Decryption failed. Incorrect master password or corrupted data.");
+                }
+            }
+            
+            function generateStrongPassword(length = 16) {
+                const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+                let password = "";
+                const randomValues = new Uint32Array(length);
+                window.crypto.getRandomValues(randomValues);
+                for (let i = 0; i < length; i++) {
+                    password += charset[randomValues[i] % charset.length];
+                }
+                return password;
+            }
+
+            return {
+                generateSalt,
+                deriveKey,
+                encryptData,
+                decryptData,
+                arrayBufferToBase64,
+                base64ToArrayBuffer,
+                generateStrongPassword
+            };
+        })();
+    </script>
+    <script>
+        // db.js content
+        const CryptaVaultDB = (() => {
+            const DB_NAME = "CryptaVaultDB";
+            const DB_VERSION = 1;
+            const ITEMS_STORE_NAME = "items";
+            const META_STORE_NAME = "metadata"; // For salt
+            let db;
+
+            async function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                    request.onupgradeneeded = (event) => {
+                        db = event.target.result;
+                        if (!db.objectStoreNames.contains(ITEMS_STORE_NAME)) {
+                            db.createObjectStore(ITEMS_STORE_NAME, { keyPath: "id", autoIncrement: true });
+                        }
+                        if (!db.objectStoreNames.contains(META_STORE_NAME)) {
+                            db.createObjectStore(META_STORE_NAME, { keyPath: "key" });
+                        }
+                    };
+
+                    request.onsuccess = (event) => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+
+                    request.onerror = (event) => {
+                        console.error("Database error:", event.target.errorCode);
+                        reject(event.target.errorCode);
+                    };
+                });
+            }
+
+            async function getDB() {
+                if (!db) {
+                    db = await initDB();
+                }
+                return db;
+            }
+
+            async function saveSalt(saltArrayBuffer) {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(META_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(META_STORE_NAME);
+                    const saltString = CryptaVaultCrypto.arrayBufferToBase64(saltArrayBuffer);
+                    const request = store.put({ key: "pbkdf2_salt", value: saltString });
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject("Failed to save salt: " + event.target.error);
+                });
+            }
+
+            async function getSalt() {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(META_STORE_NAME, "readonly");
+                    const store = transaction.objectStore(META_STORE_NAME);
+                    const request = store.get("pbkdf2_salt");
+                    request.onsuccess = () => {
+                        if (request.result && request.result.value) {
+                            resolve(CryptaVaultCrypto.base64ToArrayBuffer(request.result.value));
+                        } else {
+                            resolve(null); // No salt found
+                        }
+                    };
+                    request.onerror = (event) => reject("Failed to get salt: " + event.target.error);
+                });
+            }
+
+            async function addItem(itemData) { // itemData = {type, encryptedContent, iv, displayName, fileName?, mimeType?}
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const request = store.add(itemData);
+                    request.onsuccess = (event) => resolve(event.target.result); // Returns the ID
+                    request.onerror = (event) => reject("Failed to add item: " + event.target.error);
+                });
+            }
+            
+            async function updateItem(id, itemData) {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const getRequest = store.get(id);
+
+                    getRequest.onsuccess = () => {
+                        if (!getRequest.result) {
+                            reject("Item not found for update");
+                            return;
+                        }
+                        const updatedData = { ...getRequest.result, ...itemData, id: id }; // Ensure ID is preserved
+                        const putRequest = store.put(updatedData);
+                        putRequest.onsuccess = () => resolve();
+                        putRequest.onerror = (event) => reject("Failed to update item: " + event.target.error);
+                    };
+                    getRequest.onerror = (event) => reject("Failed to retrieve item for update: " + event.target.error);
+                });
+            }
+
+
+            async function getItem(id) {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readonly");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject("Failed to get item: " + event.target.error);
+                });
+            }
+
+            async function getAllItems() {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readonly");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject("Failed to get all items: " + event.target.error);
+                });
+            }
+
+            async function deleteItem(id) {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject("Failed to delete item: " + event.target.error);
+                });
+            }
+
+            async function clearAllItems() {
+                const currentDb = await getDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = currentDb.transaction(ITEMS_STORE_NAME, "readwrite");
+                    const store = transaction.objectStore(ITEMS_STORE_NAME);
+                    const request = store.clear();
+                    request.onsuccess = () => resolve();
+                    request.onerror = (event) => reject("Failed to clear items: " + event.target.error);
+                });
+            }
+
+            return {
+                initDB,
+                saveSalt,
+                getSalt,
+                addItem,
+                updateItem,
+                getItem,
+                getAllItems,
+                deleteItem,
+                clearAllItems
+            };
+        })();
+    </script>
+    <script>
+        // app.js content
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- State Variables ---
+            let masterKey = null;
+            let currentSalt = null; // Store the salt used to derive masterKey
+
+            // --- DOM Elements ---
+            const authScreen = document.getElementById('auth-screen');
+            const mainContent = document.getElementById('main-content');
+            const setupForm = document.getElementById('setup-form');
+            const loginForm = document.getElementById('login-form');
+            const authMessage = document.getElementById('auth-message');
+            const lockStatus = document.getElementById('lock-status');
+            const logoutButton = document.getElementById('logout-button');
+
+            const addItemButton = document.getElementById('add-item-button');
+            const itemsListDiv = document.getElementById('items-list');
+            const exportDataButton = document.getElementById('export-data-button');
+            const importFileInput = document.getElementById('import-file-input');
+            const helpButton = document.getElementById('help-button');
+
+            // Item Modal Elements
+            const itemModal = document.getElementById('item-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const itemIdInput = document.getElementById('item-id');
+            const itemTypeSelect = document.getElementById('item-type');
+            const fieldsPassword = document.getElementById('fields-password');
+            const itemNameInput = document.getElementById('item-name');
+            const itemUsernameInput = document.getElementById('item-username');
+            const itemPasswordValueInput = document.getElementById('item-password-value');
+            const togglePasswordVisibilityButton = document.getElementById('toggle-password-visibility');
+            const generatePasswordButton = document.getElementById('generate-password');
+            const itemNotesTextarea = document.getElementById('item-notes');
+            const fieldsNote = document.getElementById('fields-note');
+            const noteTitleInput = document.getElementById('note-title');
+            const noteContentTextarea = document.getElementById('note-content');
+            const fieldsFile = document.getElementById('fields-file');
+            const fileNameInput = document.getElementById('file-name-input');
+            const fileInputElement = document.getElementById('file-input-element');
+            const filePreviewName = document.getElementById('file-preview-name');
+            const saveItemButton = document.getElementById('save-item-button');
+            const modalMessage = document.getElementById('modal-message');
+            
+            // View Item Modal Elements
+            const viewItemModal = document.getElementById('view-item-modal');
+            const viewModalTitle = document.getElementById('view-modal-title');
+            const viewItemContent = document.getElementById('view-item-content');
+            const copyPasswordButton = document.getElementById('copy-password-button');
+
+
+            // Help Modal
+            const helpModal = document.getElementById('help-modal');
+
+            // --- Initialization ---
+            async function initializeApp() {
+                try {
+                    await CryptaVaultDB.initDB();
+                    currentSalt = await CryptaVaultDB.getSalt();
+                    if (currentSalt) {
+                        loginForm.style.display = 'block';
+                        setupForm.style.display = 'none';
+                    } else {
+                        setupForm.style.display = 'block';
+                        loginForm.style.display = 'none';
+                    }
+                    authScreen.style.display = 'block';
+                    mainContent.style.display = 'none';
+                } catch (error) {
+                    console.error("Initialization error:", error);
+                    authMessage.textContent = "Error initializing application. Check console.";
+                    authMessage.className = 'message error';
+                }
+            }
+
+            // --- Authentication ---
+            document.getElementById('create-vault-button').addEventListener('click', async () => {
+                const password = document.getElementById('setup-password').value;
+                const confirmPassword = document.getElementById('setup-confirm-password').value;
+                authMessage.textContent = '';
+
+                if (!password || password.length < 8) { // Basic check
+                    authMessage.textContent = "Password must be at least 8 characters long.";
+                    authMessage.className = 'message error';
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    authMessage.textContent = "Passwords do not match.";
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                try {
+                    currentSalt = await CryptaVaultCrypto.generateSalt();
+                    masterKey = await CryptaVaultCrypto.deriveKey(password, currentSalt);
+                    await CryptaVaultDB.saveSalt(currentSalt);
+                    
+                    document.getElementById('setup-password').value = ''; // Clear password fields
+                    document.getElementById('setup-confirm-password').value = '';
+                    unlockUI();
+                } catch (error) {
+                    console.error("Vault creation error:", error);
+                    authMessage.textContent = "Could not create vault. " + error.message;
+                    authMessage.className = 'message error';
+                }
+            });
+
+            document.getElementById('unlock-vault-button').addEventListener('click', async () => {
+                const password = document.getElementById('login-password').value;
+                authMessage.textContent = '';
+
+                if (!password) {
+                    authMessage.textContent = "Please enter your master password.";
+                    authMessage.className = 'message error';
+                    return;
+                }
+
+                try {
+                    if (!currentSalt) { // Should not happen if login form is shown
+                         authMessage.textContent = "Error: Salt not found. Try re-initializing.";
+                         authMessage.className = 'message error';
+                         return;
+                    }
+                    masterKey = await CryptaVaultCrypto.deriveKey(password, currentSalt);
+                    
+                    await CryptaVaultDB.getAllItems(); 
+
+                    document.getElementById('login-password').value = ''; 
+                    unlockUI();
+                } catch (error) {
+                    console.error("Unlock error:", error);
+                    masterKey = null; 
+                    authMessage.textContent = "Failed to unlock. Incorrect password or corrupted data.";
+                    authMessage.className = 'message error';
+                }
+            });
+
+            logoutButton.addEventListener('click', () => {
+                lockUI();
+            });
+
+            function unlockUI() {
+                authScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                lockStatus.textContent = 'Unlocked';
+                lockStatus.className = 'unlocked';
+                logoutButton.style.display = 'inline-block';
+                authMessage.textContent = '';
+                loadItems();
+            }
+
+            function lockUI() {
+                masterKey = null; 
+                authScreen.style.display = 'block';
+                mainContent.style.display = 'none';
+                loginForm.style.display = 'block'; 
+                setupForm.style.display = 'none';
+                lockStatus.textContent = 'Locked';
+                lockStatus.className = 'locked';
+                logoutButton.style.display = 'none';
+                itemsListDiv.innerHTML = ''; 
+                if (document.getElementById('login-password')) { 
+                    document.getElementById('login-password').value = ''; 
+                    document.getElementById('login-password').focus();
+                }
+                closeAllModals();
+            }
+            
+            let visibilityTimeout;
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "hidden") {
+                    visibilityTimeout = setTimeout(() => {
+                        if (masterKey) { 
+                            console.log("Auto-locking due to inactivity while tab hidden.");
+                            lockUI();
+                        }
+                    }, 60 * 1000 * 5); 
+                } else {
+                    clearTimeout(visibilityTimeout);
+                }
+            });
+
+
+            // --- Item Management ---
+            addItemButton.addEventListener('click', () => openItemModal());
+
+            itemTypeSelect.addEventListener('change', () => {
+                updateModalFields(itemTypeSelect.value);
+            });
+            
+            togglePasswordVisibilityButton.addEventListener('click', () => {
+                const isPassword = itemPasswordValueInput.type === 'password';
+                itemPasswordValueInput.type = isPassword ? 'text' : 'password';
+                togglePasswordVisibilityButton.textContent = isPassword ? 'Hide' : 'Show';
+            });
+
+            generatePasswordButton.addEventListener('click', () => {
+                itemPasswordValueInput.type = 'text'; 
+                itemPasswordValueInput.value = CryptaVaultCrypto.generateStrongPassword();
+                togglePasswordVisibilityButton.textContent = 'Hide';
+            });
+
+
+            fileInputElement.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    filePreviewName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+                    if (!fileNameInput.value) { 
+                        fileNameInput.value = file.name;
+                    }
+                } else {
+                    filePreviewName.textContent = '';
+                }
+            });
+
+            function updateModalFields(type, item = null) {
+                fieldsPassword.style.display = 'none';
+                fieldsNote.style.display = 'none';
+                fieldsFile.style.display = 'none';
+                modalMessage.textContent = '';
+
+                itemPasswordValueInput.type = 'password'; 
+                togglePasswordVisibilityButton.textContent = 'Show';
+
+
+                if (type === 'password') {
+                    fieldsPassword.style.display = 'block';
+                    itemNameInput.value = item ? item.displayName : '';
+                    itemUsernameInput.value = item && item.username ? item.username : '';
+                    itemPasswordValueInput.value = item && item.passwordValue ? item.passwordValue : '';
+                    itemNotesTextarea.value = item && item.notes ? item.notes : '';
+                } else if (type === 'note') {
+                    fieldsNote.style.display = 'block';
+                    noteTitleInput.value = item ? item.displayName : '';
+                    noteContentTextarea.value = item && item.content ? item.content : '';
+                } else if (type === 'file') {
+                    fieldsFile.style.display = 'block';
+                    fileNameInput.value = item ? item.displayName : ''; 
+                    fileInputElement.value = ''; 
+                    filePreviewName.textContent = item ? `Current file: ${item.displayName}` : 'No file selected';
+                }
+            }
+
+            function openItemModal(itemToEdit = null) {
+                itemIdInput.value = itemToEdit ? itemToEdit.id : '';
+                modalTitle.textContent = itemToEdit ? 'Edit Item' : 'Add New Item';
+                const type = itemToEdit ? itemToEdit.type : itemTypeSelect.value;
+                itemTypeSelect.value = type;
+                itemTypeSelect.disabled = !!itemToEdit; 
+
+                if (itemToEdit && itemToEdit.encryptedContent) {
+                     updateModalFields(type, itemToEdit.decryptedData || {}); 
+                } else {
+                    updateModalFields(type); 
+                }
+                itemModal.style.display = 'flex';
+            }
+            
+            window.closeModal = (modalId) => { 
+                document.getElementById(modalId).style.display = 'none';
+                modalMessage.textContent = '';
+                if (modalId === 'item-modal') { 
+                    fileInputElement.value = null;
+                    filePreviewName.textContent = '';
+                    itemTypeSelect.disabled = false; 
+                }
+            };
+
+            function closeAllModals() {
+                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            }
+
+            saveItemButton.addEventListener('click', async () => {
+                if (!masterKey) {
+                    modalMessage.textContent = "Error: Vault is locked or key is missing.";
+                    modalMessage.className = 'message error';
+                    return;
+                }
+                modalMessage.textContent = '';
+                const id = itemIdInput.value ? parseInt(itemIdInput.value) : null;
+                const type = itemTypeSelect.value;
+                let dataToEncrypt;
+                let displayName;
+                let itemSpecificData = { type };
+
+                try {
+                    if (type === 'password') {
+                        displayName = itemNameInput.value.trim();
+                        if (!displayName) throw new Error("Name/Website is required for passwords.");
+                        dataToEncrypt = JSON.stringify({
+                            username: itemUsernameInput.value.trim(),
+                            password: itemPasswordValueInput.value, 
+                            notes: itemNotesTextarea.value.trim()
+                        });
+                        itemSpecificData.displayName = displayName;
+                    } else if (type === 'note') {
+                        displayName = noteTitleInput.value.trim();
+                        if (!displayName) throw new Error("Title is required for notes.");
+                        dataToEncrypt = noteContentTextarea.value; 
+                        itemSpecificData.displayName = displayName;
+                    } else if (type === 'file') {
+                        const file = fileInputElement.files[0];
+                        displayName = fileNameInput.value.trim();
+
+                        if (id && !file && displayName) { 
+                             const existingItem = await CryptaVaultDB.getItem(id);
+                             if (!existingItem) throw new Error("Original item not found for metadata update.");
+                            
+                             await CryptaVaultDB.updateItem(id, {displayName});
+                             modalMessage.textContent = "File name updated successfully!";
+                             modalMessage.className = 'message success';
+                             loadItems();
+                             setTimeout(() => closeModal('item-modal'), 1500);
+                             return; 
+                        }
+
+                        if (!file) throw new Error("No file selected.");
+                        if (!displayName) displayName = file.name; 
+                        
+                        itemSpecificData.displayName = displayName;
+                        itemSpecificData.fileName = file.name; 
+                        itemSpecificData.mimeType = file.type;
+                        
+                        dataToEncrypt = await readFileAsArrayBuffer(file);
+                    } else {
+                        throw new Error("Invalid item type.");
+                    }
+
+                    const { iv, ciphertext } = await CryptaVaultCrypto.encryptData(masterKey, dataToEncrypt);
+                    itemSpecificData.encryptedContent = ciphertext;
+                    itemSpecificData.iv = iv;
+
+                    if (id) { 
+                        await CryptaVaultDB.updateItem(id, itemSpecificData);
+                        modalMessage.textContent = "Item updated successfully!";
+                    } else { 
+                        await CryptaVaultDB.addItem(itemSpecificData);
+                        modalMessage.textContent = "Item added successfully!";
+                    }
+                    modalMessage.className = 'message success';
+                    loadItems();
+                    setTimeout(() => closeModal('item-modal'), 1500);
+
+                } catch (error) {
+                    console.error("Save item error:", error);
+                    modalMessage.textContent = "Error saving item: " + error.message;
+                    modalMessage.className = 'message error';
+                }
+            });
+
+            async function loadItems() {
+                if (!masterKey) {
+                    itemsListDiv.innerHTML = '<p>Vault is locked.</p>';
+                    return;
+                }
+                try {
+                    const items = await CryptaVaultDB.getAllItems();
+                    itemsListDiv.innerHTML = ''; 
+                    if (items.length === 0) {
+                        itemsListDiv.innerHTML = '<p>No items stored yet. Click "Add New Item" to start.</p>';
+                        return;
+                    }
+                    items.sort((a,b) => (a.displayName || "").localeCompare(b.displayName || "")); 
+
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item-entry';
+                        itemDiv.dataset.itemId = item.id;
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'item-name';
+                        nameSpan.textContent = item.displayName || `Item ID: ${item.id}`; 
+                        
+                        const typeSpan = document.createElement('span');
+                        typeSpan.className = 'item-type';
+                        typeSpan.textContent = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+
+                        itemDiv.appendChild(nameSpan);
+                        itemDiv.appendChild(typeSpan);
+                        
+                        itemDiv.addEventListener('click', () => viewItem(item.id));
+                        itemsListDiv.appendChild(itemDiv);
+                    });
+                } catch (error) {
+                    console.error("Error loading items:", error);
+                    itemsListDiv.innerHTML = `<p class="message error">Error loading items: ${error.message}</p>`;
+                }
+            }
+
+            async function viewItem(id) {
+                if (!masterKey) {
+                    alert("Vault is locked!"); 
+                    return;
+                }
+                try {
+                    const item = await CryptaVaultDB.getItem(id);
+                    if (!item) {
+                        alert("Item not found!");
+                        return;
+                    }
+
+                    viewModalTitle.textContent = `View: ${item.displayName || 'Item'}`;
+                    viewItemContent.innerHTML = '<em>Decrypting...</em>'; 
+                    copyPasswordButton.style.display = 'none'; 
+                    copyPasswordButton.onclick = null; 
+
+                    let decryptedData;
+                    let displayHtml = '';
+
+                    if (item.type === 'file') {
+                        decryptedData = await CryptaVaultCrypto.decryptData(masterKey, item.iv, item.encryptedContent, false); 
+                        displayHtml = `
+                            <p><strong>Type:</strong> File</p>
+                            <p><strong>Original Filename:</strong> ${escapeHtml(item.fileName || 'N/A')}</p>
+                            <p><strong>Stored As:</strong> ${escapeHtml(item.displayName)}</p>
+                            <p><strong>MIME Type:</strong> ${escapeHtml(item.mimeType || 'N/A')}</p>
+                            <p><strong>Size:</strong> ${(decryptedData.byteLength / 1024).toFixed(2)} KB</p>
+                            <button id="download-file-button">Download File</button>
+                        `;
+                        viewItemContent.innerHTML = displayHtml;
+                        document.getElementById('download-file-button').onclick = () => {
+                            downloadFile(decryptedData, item.displayName || item.fileName, item.mimeType);
+                        };
+                    } else {
+                        const decryptedJsonString = await CryptaVaultCrypto.decryptData(masterKey, item.iv, item.encryptedContent, true); 
+                        if (item.type === 'password') {
+                            decryptedData = JSON.parse(decryptedJsonString);
+                            displayHtml = `
+                                <p><strong>Type:</strong> Password</p>
+                                <p><strong>Name/Website:</strong> ${escapeHtml(item.displayName)}</p>
+                                <p><strong>Username:</strong> ${escapeHtml(decryptedData.username || '')}</p>
+                                <p><strong>Password:</strong> <span id="revealed-password" style="font-family: monospace;">••••••••</span> 
+                                   <button id="reveal-actual-password">Show</button></p>
+                                <p><strong>Notes:</strong></p><pre>${escapeHtml(decryptedData.notes || '')}</pre>
+                            `;
+                            viewItemContent.innerHTML = displayHtml;
+                            copyPasswordButton.style.display = 'inline-block';
+                            copyPasswordButton.textContent = 'Copy Password';
+                            copyPasswordButton.onclick = () => copyToClipboard(decryptedData.password, copyPasswordButton);
+                            
+                            document.getElementById('reveal-actual-password').onclick = function() {
+                                const passSpan = document.getElementById('revealed-password');
+                                if (this.textContent === 'Show') {
+                                    passSpan.textContent = escapeHtml(decryptedData.password);
+                                    this.textContent = 'Hide';
+                                } else {
+                                    passSpan.textContent = '••••••••';
+                                    this.textContent = 'Show';
+                                }
+                            };
+
+                        } else if (item.type === 'note') {
+                            decryptedData = decryptedJsonString; 
+                            displayHtml = `
+                                <p><strong>Type:</strong> Note</p>
+                                <p><strong>Title:</strong> ${escapeHtml(item.displayName)}</p>
+                                <p><strong>Content:</strong></p><pre>${escapeHtml(decryptedData)}</pre>
+                            `;
+                             viewItemContent.innerHTML = displayHtml;
+                        }
+                    }
+                    
+                    const editButton = document.createElement('button');
+                    editButton.textContent = 'Edit';
+                    editButton.style.marginRight = '10px';
+                    editButton.onclick = () => {
+                        closeModal('view-item-modal');
+                        const editPayload = { 
+                            id: item.id, 
+                            type: item.type, 
+                            displayName: item.displayName,
+                            decryptedData: {} 
+                        };
+                        if (item.type === 'password') {
+                            editPayload.decryptedData.username = decryptedData.username;
+                            editPayload.decryptedData.passwordValue = decryptedData.password;
+                            editPayload.decryptedData.notes = decryptedData.notes;
+                        } else if (item.type === 'note') {
+                            editPayload.decryptedData.content = decryptedData;
+                        } 
+                        openItemModal(editPayload);
+                    };
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.style.backgroundColor = '#e74c3c';
+                    deleteButton.onclick = async () => {
+                        if (confirm(`Are you sure you want to delete "${item.displayName || 'this item'}"? This cannot be undone.`)) {
+                            try {
+                                await CryptaVaultDB.deleteItem(item.id);
+                                closeModal('view-item-modal');
+                                loadItems();
+                            } catch (err) {
+                                console.error("Error deleting item:", err);
+                                alert("Failed to delete item: " + err.message);
+                            }
+                        }
+                    };
+                    viewItemContent.appendChild(document.createElement('hr'));
+                    viewItemContent.appendChild(editButton);
+                    viewItemContent.appendChild(deleteButton);
+
+                    viewItemModal.style.display = 'flex';
+
+                } catch (error) {
+                    console.error("Error viewing item:", error);
+                    viewItemContent.innerHTML = `<p class="message error">Could not decrypt or display item. ${error.message}</p>`;
+                    viewItemModal.style.display = 'flex'; 
+                }
+            }
+
+            function copyToClipboard(text, buttonElement) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = buttonElement.textContent;
+                    buttonElement.textContent = 'Copied!';
+                    setTimeout(() => {
+                        buttonElement.textContent = originalText;
+                    }, 2000);
+                    setTimeout(() => {
+                        navigator.clipboard.writeText('').catch(err => console.warn("Could not clear clipboard", err));
+                    }, 15000); 
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    buttonElement.textContent = 'Copy Failed';
+                     setTimeout(() => {
+                        buttonElement.textContent = originalText;
+                    }, 2000);
+                });
+            }
+
+
+            // --- Import / Export ---
+            exportDataButton.addEventListener('click', async () => {
+                if (!masterKey || !currentSalt) {
+                    alert("Vault must be unlocked to export data.");
+                    return;
+                }
+                try {
+                    const items = await CryptaVaultDB.getAllItems();
+                    const exportData = {
+                        salt: CryptaVaultCrypto.arrayBufferToBase64(currentSalt), 
+                        items: items.map(item => ({ 
+                            type: item.type,
+                            displayName: item.displayName,
+                            encryptedContent: item.encryptedContent, 
+                            iv: item.iv, 
+                            fileName: item.fileName, 
+                            mimeType: item.mimeType  
+                        }))
+                    };
+                    
+                    const jsonString = JSON.stringify(exportData, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `cryptavault_export_${new Date().toISOString().slice(0,10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert("Data exported successfully!");
+                } catch (error) {
+                    console.error("Export error:", error);
+                    alert("Error exporting data: " + error.message);
+                }
+            });
+
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!masterKey) {
+                    alert("Unlock your vault with your CURRENT Master Password before importing. The import process will then use the password you provide if needed for the imported file's data.");
+                    importFileInput.value = ''; 
+                    return;
+                }
+
+                if (!confirm("IMPORTANT: Importing data will WIPE all current data in your vault. Are you sure you want to proceed?")) {
+                    importFileInput.value = ''; 
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const importedBundle = JSON.parse(e.target.result);
+                        if (!importedBundle.salt || !Array.isArray(importedBundle.items)) {
+                            throw new Error("Invalid import file format.");
+                        }
+                        
+                        const importedSaltArrayBuffer = CryptaVaultCrypto.base64ToArrayBuffer(importedBundle.salt);
+                        
+                        const passwordForImport = prompt("Enter the Master Password that was used for the data in the IMPORT file:");
+                        
+                        if(!passwordForImport) {
+                            alert("Master password for import is required.");
+                            importFileInput.value = ''; return;
+                        }
+
+                        let tempImportKey;
+                        try {
+                            tempImportKey = await CryptaVaultCrypto.deriveKey(passwordForImport, importedSaltArrayBuffer);
+                            if (importedBundle.items.length > 0) {
+                                const firstItem = importedBundle.items[0];
+                                await CryptaVaultCrypto.decryptData(tempImportKey, firstItem.iv, firstItem.encryptedContent, firstItem.type !== 'file');
+                            }
+                        } catch (err) {
+                            console.error("Import key derivation/test failed:", err);
+                            alert("Import failed: The Master Password provided does not seem to match the data in the import file, or the file is corrupt.");
+                            importFileInput.value = ''; 
+                            return;
+                        }
+
+                        await CryptaVaultDB.clearAllItems(); 
+                        await CryptaVaultDB.saveSalt(importedSaltArrayBuffer); 
+
+                        for (const item of importedBundle.items) {
+                            await CryptaVaultDB.addItem({ 
+                                type: item.type,
+                                displayName: item.displayName,
+                                encryptedContent: item.encryptedContent,
+                                iv: item.iv,
+                                fileName: item.fileName,
+                                mimeType: item.mimeType
+                            });
+                        }
+                        
+                        currentSalt = importedSaltArrayBuffer; 
+                        masterKey = tempImportKey; 
+
+                        alert("Data imported successfully! Your vault now uses the data and password configuration from the imported file.");
+                        loadItems();
+
+                    } catch (error) {
+                        console.error("Import error:", error);
+                        alert("Error importing data: " + error.message);
+                    } finally {
+                        importFileInput.value = ''; 
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // --- Helper Functions ---
+            function readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+            
+            function readFileAsBase64(file) { 
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result.split(',')[1]); 
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function downloadFile(arrayBuffer, fileName, mimeType) {
+                const blob = new Blob([arrayBuffer], { type: mimeType || 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') return '';
+                return unsafe
+                     .replace(/&/g, "&")
+                     .replace(/</g, "<")
+                     .replace(/>/g, ">")
+                     .replace(/"/g, "\"")
+                     .replace(/'/g, "'");
+            }
+
+            // --- Help Modal ---
+            helpButton.addEventListener('click', () => {
+                helpModal.style.display = 'flex';
+            });
+            
+            // Close modals on ESC key
+            document.addEventListener('keydown', (event) => {
+                if (event.key === "Escape") {
+                    closeAllModals();
+                }
+            });
+
+            // --- Start the app ---
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
